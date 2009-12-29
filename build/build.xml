@@ -1,0 +1,93 @@
+<project name="JavaStatistics" default="test">
+	
+	<property name="project" value="JavaStatistics" />
+	<property name="sourcedir" value="${basedir}/../src" />
+    <property name="targetdir"  value="${basedir}/../bin"/>
+	<property name="librarydir" value="${basedir}/../lib" />
+	<property name="javadocdir" value="${basedir}/../javadoc" />
+	<property name="thirdpartydir" value="${basedir}/../../thirdparty" />
+
+	<fileset id="thirdpartylibs" dir="${thirdpartydir}">
+		<include name="ApacheCommonsMath/2.0/commons-math-2.0.jar" />
+		<include name="jsc/1.0/jsc.jar" />
+		<include name="restlet/1.1.6/lib/org.restlet.jar" />
+		<include name="restlet/1.1.6/lib/com.noelios.restlet.jar" />
+	    <include name="restlet/1.1.6/lib/com.noelios.restlet.ext.servlet_2.5.jar" />
+		<include name="junit/4.7/lib/junit-4.7.jar" />
+		<include name="jfreechart/1.0/lib/jfreechart-1.0.13.jar" /> 
+		<include name="jfreechart/1.0/lib/jcommon-1.0.16.jar" /> 
+	</fileset>
+	
+	<path id="librariespath">
+		<fileset refid="thirdpartylibs"/>
+	</path>
+		
+    <target name="clean">
+    	<delete dir="${targetdir}"/>
+        <mkdir dir="${targetdir}"/>
+        <delete dir="${librarydir}"/>
+        <mkdir dir="${librarydir}"/>
+    </target>
+
+	<target name="javadoc">
+      <javadoc
+           access="public"
+           destdir="${javadocdir}"
+           author="true"
+           version="true"
+           use="true"
+           windowtitle="UC Denver Biostatistics - Java Statistics Package API Specification"
+         >
+        <fileset dir="${sourcedir}" defaultexcludes="yes">
+            <include name="**/*.java"/>
+            <exclude name="**/test/**/*.java" />
+        </fileset>
+      </javadoc>
+	</target>
+	
+    <target name="compile" depends="clean">
+      <javac debug="true"
+             deprecation="on"
+			 listfiles="true"
+			 debuglevel="lines,vars,source"
+			 srcdir="${sourcedir}"
+             destdir="${targetdir}"
+             classpathref="librariespath"
+      />
+    </target>
+
+	<target name="compress" depends="compile,javadoc">
+		<jar destfile="${librarydir}/${project}.jar" basedir="${targetdir}" includes="**/*.class">
+			<manifest>
+				<attribute name="Author" value="${user.name}"/>
+				<section name="Shared">
+					<attribute name="Title" value="${project}"/>
+					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
+				</section>
+				<section name="Copyright">
+					<attribute name="Copy" value="(C) CU Denver Biostatistics Department"/>
+				</section>
+			</manifest>
+		</jar>
+		<copy file="${librarydir}/${project}.jar" todir="${targetdir}"/>
+	</target>	
+		
+	<target name="test" depends="compress">
+		<echoproperties/>
+		<echo message="java.class.path = ${java.class.path}"/>
+		<junit printsummary="yes" haltonfailure="yes">
+		  <classpath>
+			<fileset refid="thirdpartylibs" />
+		  	<pathelement location="${basedir}/../bin"/>
+		  </classpath>
+		  <formatter type="plain"/>
+		  <test name="edu.cudenver.bios.powersamplesize.test.TestPowerStudentT" haltonfailure="no" outfile="result">
+		    <formatter type="xml"/>
+		  </test>
+		  <test name="edu.cudenver.bios.powersamplesize.test.TestSampleSizeStudentT" haltonfailure="no" outfile="result">
+			 <formatter type="xml"/>
+		  </test>
+		</junit>
+	</target>
+	
+</project>
