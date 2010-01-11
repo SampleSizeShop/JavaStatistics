@@ -43,7 +43,13 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     
     RealMatrix betaOriginal = null;
     
+    // used if only fixed predictors
     RealMatrix sigma = null;
+    
+    /* variance/ covariances required for baseline covariate */
+    RealMatrix correlationCovariateOutcome = null;
+    RealMatrix sigmaCovariate = null;
+    RealMatrix sigmaOutcome = null;
     
     RealMatrix betweenSubjectContrast = null;
     
