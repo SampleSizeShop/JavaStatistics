@@ -128,7 +128,7 @@ public class PowerGLMM implements Power
             RealMatrix error = 
                 simulateError(normalDist, powerParams.getDesign().getRowDimension(),
                         powerParams.getBeta().getColumnDimension(),
-                        powerParams.getSigma());         
+                        powerParams.getSigmaError());         
             
             // calculate simulated Y based on Y = X beta + error
             RealMatrix Ysim = (X.multiply(powerParams.getBeta())).add(error);
@@ -146,7 +146,7 @@ public class PowerGLMM implements Power
             // based on the simulated errors
             LinearModelPowerSampleSizeParameters simulatedParams = new LinearModelPowerSampleSizeParameters(powerParams);
             simulatedParams.setBeta(betaHat);
-            simulatedParams.setSigma(sigmaHat);
+            simulatedParams.setSigmaError(sigmaHat);
             
             // calculate the observed F for the simulation
             double fobs = getObservedF(simulatedParams, ndf, ddf);
@@ -201,7 +201,7 @@ public class PowerGLMM implements Power
     {
         // convenience variables
         RealMatrix beta = params.getBeta();
-        RealMatrix sigma = params.getSigma();
+        RealMatrix sigma = params.getSigmaError();
         RealMatrix theta0 = params.getTheta();
         RealMatrix X = params.getDesign();
         RealMatrix C = params.getBetweenSubjectContrast();
@@ -513,6 +513,6 @@ public class PowerGLMM implements Power
         int nX = params.getDesign().getRowDimension();
         
         RealMatrix U = params.getWithinSubjectContrast();
-        return U.transpose().multiply(params.getSigma().multiply(U)).scalarMultiply(nX - rankX);
+        return U.transpose().multiply(params.getSigmaError().multiply(U)).scalarMultiply(nX - rankX);
     }
 }

@@ -72,7 +72,7 @@ public class TestSampleSizeGLMM extends TestCase
         params.setTheta(new Array2DRowRealMatrix(theta0));
         // build sigma matrix
         double [][] sigma = {{2.05}};
-        params.setSigma(new Array2DRowRealMatrix(sigma));
+        params.setSigmaError(new Array2DRowRealMatrix(sigma));
         // build design matrix
         double[][] essenceData = {{1,0},{0,1}};
         EssenceMatrix essenceMatrix = new EssenceMatrix(essenceData);

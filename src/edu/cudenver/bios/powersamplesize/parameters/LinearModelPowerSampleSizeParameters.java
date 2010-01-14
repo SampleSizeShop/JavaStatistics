@@ -44,10 +44,10 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     RealMatrix betaOriginal = null;
     
     // used if only fixed predictors
-    RealMatrix sigma = null;
+    RealMatrix sigmaError = null;
     
     /* variance/ covariances required for baseline covariate */
-    RealMatrix correlationCovariateOutcome = null;
+    RealMatrix rhoCovariateOutcome = null;
     RealMatrix sigmaCovariate = null;
     RealMatrix sigmaOutcome = null;
     
@@ -81,7 +81,7 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
         this.betaOriginal = new Array2DRowRealMatrix(beta.getData());
         this.design = params.getDesign();
         this.designEssence = params.getDesignEssence();
-        this.sigma = params.getSigma();
+        this.sigmaError = params.getSigmaError();
         this.theta = params.getTheta();
         this.betweenSubjectContrast = params.getBetweenSubjectContrast();
         this.withinSubjectContrast = params.getWithinSubjectContrast();
@@ -110,14 +110,14 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
         this.betaOriginal = new Array2DRowRealMatrix(beta.getData());
     }
 
-    public RealMatrix getSigma()
+    public RealMatrix getSigmaError()
     {
-        return sigma;
+        return sigmaError;
     }
 
-    public void setSigma(RealMatrix sigma)
+    public void setSigmaError(RealMatrix sigmaError)
     {
-        this.sigma = sigma;
+        this.sigmaError = sigmaError;
     }
 
     public RealMatrix getBetweenSubjectContrast()

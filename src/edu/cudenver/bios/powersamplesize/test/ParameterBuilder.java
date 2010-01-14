@@ -23,8 +23,8 @@ public class ParameterBuilder
 	        double [][] theta0 = {{0}};
 	        params.setTheta(new Array2DRowRealMatrix(theta0));
 	        // build sigma matrix
-	        double [][] sigma = {{2.05}};
-	        params.setSigma(new Array2DRowRealMatrix(sigma));
+	        double [][] sigmaError = {{2.05}};
+	        params.setSigmaError(new Array2DRowRealMatrix(sigmaError));
 	        // build design matrix
 	        if (!essenceOnly)
 	        {

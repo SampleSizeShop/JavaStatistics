@@ -132,7 +132,7 @@ public class SampleSizeGLMM implements SampleSize
     {
         // convenience variables
         RealMatrix beta = params.getBeta();
-        RealMatrix sigma = params.getSigma();
+        RealMatrix sigma = params.getSigmaError();
         RealMatrix theta0 = params.getTheta();
         EssenceMatrix essenceX = params.getDesignEssence();
         RealMatrix C = params.getBetweenSubjectContrast();
