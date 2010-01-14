@@ -46,9 +46,9 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     // used if only fixed predictors
     RealMatrix sigmaError = null;
     
-    /* variance/ covariances required for baseline covariate */
-    RealMatrix rhoCovariateOutcome = null;
-    RealMatrix sigmaCovariate = null;
+    /* variance/ covariances required for random gaussian covariates */
+    RealMatrix sigmaOutcomeGaussianRandom = null;
+    RealMatrix sigmaGaussianRandom = null;
     RealMatrix sigmaOutcome = null;
     
     RealMatrix betweenSubjectContrast = null;
@@ -118,6 +118,36 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     public void setSigmaError(RealMatrix sigmaError)
     {
         this.sigmaError = sigmaError;
+    }
+    
+    public RealMatrix getSigmaOutcomeGaussianRandom()
+    {
+        return sigmaOutcomeGaussianRandom;
+    }
+
+    public void setSigmaOutcomeGaussianRandom(RealMatrix sigmaOutcomeGaussianRandom)
+    {
+        this.sigmaOutcomeGaussianRandom = sigmaOutcomeGaussianRandom;
+    }
+
+    public RealMatrix getSigmaGaussianRandom()
+    {
+        return sigmaGaussianRandom;
+    }
+
+    public void setSigmaGaussianRandom(RealMatrix sigmaGaussianRandom)
+    {
+        this.sigmaGaussianRandom = sigmaGaussianRandom;
+    }
+
+    public RealMatrix getSigmaOutcome()
+    {
+        return sigmaOutcome;
+    }
+
+    public void setSigmaOutcome(RealMatrix sigmaOutcome)
+    {
+        this.sigmaOutcome = sigmaOutcome;
     }
 
     public RealMatrix getBetweenSubjectContrast()

@@ -12,7 +12,9 @@ import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
+import edu.cudenver.bios.matrix.ColumnMetaData;
 import edu.cudenver.bios.matrix.EssenceMatrix;
+import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
 
@@ -57,6 +59,9 @@ public class PowerGLMM implements Power
         LinearModelPowerSampleSizeParameters powerParams = (LinearModelPowerSampleSizeParameters) params;
         // make sure all of the matrix inputs are appropriate
         validateParameters(powerParams);
+        
+        // update the parameters as needed - used for random covariates
+        updateParameters(powerParams);
         
         // calculate degrees of freedom
         RealMatrix C = powerParams.getBetweenSubjectContrast();
@@ -104,6 +109,9 @@ public class PowerGLMM implements Power
     {
         LinearModelPowerSampleSizeParameters powerParams = (LinearModelPowerSampleSizeParameters) params;
         validateParameters(powerParams); //  check inputs
+        
+        // update parameters as needed - used for random predictors to set sigmaE, betaG
+        updateParameters(powerParams);
         
         // calculate numerator degrees of freedom - these don't change with simulation
         RealMatrix C = powerParams.getBetweenSubjectContrast();
@@ -201,11 +209,16 @@ public class PowerGLMM implements Power
     {
         // convenience variables
         RealMatrix beta = params.getBeta();
-        RealMatrix sigma = params.getSigmaError();
         RealMatrix theta0 = params.getTheta();
         RealMatrix X = params.getDesign();
+        EssenceMatrix XEssence = params.getDesignEssence();
+        int numRandom = (XEssence != null ? XEssence.getRandomPredictorCount() : 0);
         RealMatrix C = params.getBetweenSubjectContrast();
         RealMatrix U = params.getWithinSubjectContrast();
+        RealMatrix sigmaE = params.getSigmaError();
+        RealMatrix sigmaG = params.getSigmaGaussianRandom();
+        RealMatrix sigmaY = params.getSigmaOutcome();
+        RealMatrix sigmaYG = params.getSigmaOutcomeGaussianRandom();
         
         // validate alpha level, 0 < alpha < 1
         if (params.getAlpha() <= 0 || params.getAlpha() >= 1)
@@ -213,15 +226,17 @@ public class PowerGLMM implements Power
         // make sure sample size > 1
         if (params.getSampleSize() <= 1)
             throw new IllegalArgumentException("Sample size must be greater than 1.  Invalid value: " + params.getSampleSize());
-        
+        // only allow at most 1 random predictor
+        // TODO: handle multiple random predictors
+        if (numRandom > 1)
+            throw new IllegalArgumentException("Two many random predictors - at most 1 is allowed");
+
         // make sure all required matrices have been specified
         // note, we don't check U (within subject contrast), since it may be null in univariate cases
         if (beta == null) 
             throw new IllegalArgumentException("No beta (regression coefficients) matrix specified");
         if (X == null)
             throw new IllegalArgumentException("No design matrix specified");
-        if (sigma== null)
-            throw new IllegalArgumentException("No sigma (error) matrix specified");
         if (C == null)
             throw new IllegalArgumentException("No between subject contrast (C) matrix specified");
         if (theta0 == null)
@@ -233,9 +248,38 @@ public class PowerGLMM implements Power
             params.setWithinSubjectContrast(U);
         }
         
+        // different variance/covariance matrices are specified depending on the presence
+        // of random covariate
+        if (numRandom == 0)
+        {
+            if (sigmaE == null)
+                throw new IllegalArgumentException("No sigma (error) matrix specified");
+            if (!sigmaE.isSquare())
+                throw new IllegalArgumentException("Sigma error matrix must be square");
+            if (U.getRowDimension() != sigmaE.getRowDimension())
+                throw new IllegalArgumentException("Within subject contrast does not conform with sigma matrix");
+        }
+        else if (numRandom == 1)
+        {
+            if (sigmaG == null)
+                throw new IllegalArgumentException("No variance/covariance matrix specified for gaussian predictors");
+            if (sigmaY == null)
+                throw new IllegalArgumentException("No variance/covariance matrix specified for response variables");
+            if (sigmaYG == null)
+                throw new IllegalArgumentException("No outcome / gaussian predictor covariance matrix specified");
+            
+            // check conformance
+            if (U.getRowDimension() != sigmaY.getRowDimension())
+                throw new IllegalArgumentException("Within subject contrast does not conform with sigma matrix");
+            if (sigmaG.getRowDimension() != sigmaYG.getColumnDimension())
+                throw new IllegalArgumentException("Outcome / Gaussian predictor covariance matrix does not conform with variance matrix for the gaussian predictor");
+            if (!sigmaY.isSquare())
+                throw new IllegalArgumentException("Variance/covariance matrix for response variables must be square");
+            if (!sigmaG.isSquare())
+                throw new IllegalArgumentException("Variance/covariance matrix for gaussian predictors must be square");
+        }
+        
         // check dimensionality 
-        if (U.getRowDimension() != sigma.getRowDimension())
-            throw new IllegalArgumentException("Within subject contrast does not conform with sigma matrix");
         if (C.getColumnDimension() != beta.getRowDimension())
             throw new IllegalArgumentException("Between subject contrast does not conform with beta matrix");
         if (beta.getColumnDimension() != U.getRowDimension())
@@ -253,18 +297,49 @@ public class PowerGLMM implements Power
         int rankX = new SingularValueDecompositionImpl(X).getRank();
         if (rankX != X.getColumnDimension())
             throw new IllegalArgumentException("Design matrix is not full rank");
-        
-        // make sure we only have at most 1 random predictor
-        // TODO: handle multiple random predictors
-        EssenceMatrix XEssence = params.getDesignEssence();
-        if (XEssence != null && XEssence.getRandomPredictorCount() > 1)
-            throw new IllegalArgumentException("Two many random predictors - at most 1 is allowed");
 
         // make sure design matrix is symmetric and positive definite
         // TODO: how to check this?
     }
     
-
+    private void updateParameters(LinearModelPowerSampleSizeParameters params)
+    {
+        EssenceMatrix XEssence = params.getDesignEssence();
+        
+        int numRandom = (XEssence != null ? XEssence.getRandomPredictorCount() : 0);
+        if (numRandom == 1)
+        {
+            RealMatrix sigmaG = params.getSigmaGaussianRandom();
+            RealMatrix sigmaY = params.getSigmaOutcome();
+            RealMatrix sigmaYG = params.getSigmaOutcomeGaussianRandom();
+            
+            // set the sigma error matrix to [sigmaY - sigmaYG * sigmaG-1 * sigmaGY] 
+            RealMatrix sigmaGY = sigmaYG.transpose();
+            RealMatrix sigmaGInverse = new LUDecompositionImpl(sigmaG).getSolver().getInverse();
+            params.setSigmaError(sigmaY.subtract(sigmaYG.multiply(sigmaGInverse.multiply(sigmaGY))));
+            
+            // calculate the betaG matrix and fill in the placeholder row for the random predictor
+            RealMatrix beta = params.getBeta();
+            // first, find the random predictor column index
+            // TODO: maybe a more convenient function on EssenceMatrix class?
+            int randomCol = -1;
+            for (int col = 0; col < XEssence.getColumnDimension(); col++)
+            {
+                ColumnMetaData colMD = XEssence.getColumnMetaData(col);
+                if (colMD.getPredictorType() == PredictorType.RANDOM)
+                {
+                    randomCol = col;
+                    break;
+                }
+            }
+            RealMatrix betaG = sigmaGInverse.multiply(sigmaGY);
+            for (int col = 0; col < betaG.getColumnDimension(); col++)
+            {
+                beta.setEntry(randomCol, col, betaG.getEntry(0, col));
+            }
+        }
+    }
+    
     /**
      * Calculate the denominator degrees of freedom for the specified test
      * 
