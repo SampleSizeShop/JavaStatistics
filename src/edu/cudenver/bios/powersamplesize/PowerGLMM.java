@@ -17,6 +17,7 @@ import edu.cudenver.bios.matrix.EssenceMatrix;
 import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
+import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.PowerMethod;
 
 /**
  * Calculate power for the general linear multivariate model
@@ -63,25 +64,17 @@ public class PowerGLMM implements Power
         // update the parameters as needed - used for random covariates
         updateParameters(powerParams);
         
-        // calculate degrees of freedom
-        RealMatrix C = powerParams.getBetweenSubjectContrast();
-        RealMatrix U = powerParams.getWithinSubjectContrast();
-        // if multivariate, then numerator df is a*b, for univariate then numerator df just a.
-        int ndf = (U != null ? C.getRowDimension() * U.getColumnDimension() : C.getRowDimension());
-        // denominator df depends on test
-        int ddf = getDenominatorDF(powerParams);
-        
-        // get the approximate critical F value from a central F distribution
-        FishersF centralFDist = new FishersF(ndf, ddf);
-        double Fcrit = centralFDist.inverseCdf(1 - powerParams.getAlpha());
-        
-        // calculate the non-centrality parameter for the specified test statistic
-        double nonCentralityParam = ndf * getObservedF(powerParams, ndf, ddf);
-        
-        // create a non-central F distribution (F distribution under the alternative hypothesis)
-        NoncentralFishersF nonCentralFDist = new NoncentralFishersF(ndf, ddf, nonCentralityParam);
-        // return power based on the non-central F
-        return (1 - nonCentralFDist.cdf(Fcrit));  
+        switch (powerParams.getPowerMethod())
+        {
+        case CONDITIONAL_POWER:
+        	return getConditionalPower(powerParams);
+        case QUANTILE_POWER:
+        	return getQuantilePower(powerParams);
+        case UNCONDITIONAL_POWER:
+        	return getUnconditionalPower(powerParams);
+        default:
+        	return getConditionalPower(powerParams);
+        }
     }
 
     /**
@@ -338,6 +331,40 @@ public class PowerGLMM implements Power
                 beta.setEntry(randomCol, col, betaG.getEntry(0, col));
             }
         }
+    }
+    
+    
+    private double getConditionalPower(LinearModelPowerSampleSizeParameters powerParams)
+    {
+        // calculate degrees of freedom
+        RealMatrix C = powerParams.getBetweenSubjectContrast();
+        RealMatrix U = powerParams.getWithinSubjectContrast();
+        // if multivariate, then numerator df is a*b, for univariate then numerator df just a.
+        int ndf = C.getRowDimension() * U.getColumnDimension();
+        // denominator df depends on test
+        int ddf = getDenominatorDF(powerParams);
+        
+        // get the approximate critical F value from a central F distribution
+        FishersF centralFDist = new FishersF(ndf, ddf);
+        double Fcrit = centralFDist.inverseCdf(1 - powerParams.getAlpha());
+        
+        // calculate the non-centrality parameter for the specified test statistic
+        double nonCentralityParam = ndf * getObservedF(powerParams, ndf, ddf);
+        
+        // create a non-central F distribution (F distribution under the alternative hypothesis)
+        NoncentralFishersF nonCentralFDist = new NoncentralFishersF(ndf, ddf, nonCentralityParam);
+        // return power based on the non-central F
+        return (1 - nonCentralFDist.cdf(Fcrit));  
+    }
+    
+    private double getUnconditionalPower(LinearModelPowerSampleSizeParameters params)
+    {
+    	return 0.0;
+    }
+    
+    private double getQuantilePower(LinearModelPowerSampleSizeParameters params)
+    {
+    	return 0.0;
     }
     
     /**

@@ -30,6 +30,9 @@ public class EssenceMatrix extends Array2DRowRealMatrix
     // indicates how many times the row should be repeated in the full design matrix
     RowMetaData[] rowMetaData = null;
     
+    // random seed for expanding random covariates in the essence matrix
+    int randomSeed = 1234;
+    
     /**
      * Constructor.  Creates an essence matrix from a real matrix.
      * Column and row meta data are set to default values
@@ -201,6 +204,7 @@ public class EssenceMatrix extends Array2DRowRealMatrix
             // note, the jsc library takes a standard deviation, not a variance so
             // we take the square root
             dist = new Normal(colMD.getMean(), Math.sqrt(colMD.getVariance()));
+            dist.setSeed(randomSeed);
         }
         
         int essenceRow = 0;
@@ -381,4 +385,15 @@ public class EssenceMatrix extends Array2DRowRealMatrix
 
         }
     }
+    
+	public int getRandomSeed()
+	{
+		return randomSeed;
+	}
+
+	public void setRandomSeed(int randomSeed)
+	{
+		this.randomSeed = randomSeed;
+	}
+    
 }

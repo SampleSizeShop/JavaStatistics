@@ -30,11 +30,11 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
         HOTELLING_LAWLEY_TRACE
     };
     
-    public enum RandomPredictorAdjustment
+    public enum PowerMethod
     {
         CONDITIONAL_POWER,
-        QUANTILE_POWER,
-        INTEGRATION
+        UNCONDITIONAL_POWER,
+        QUANTILE_POWER
     };
     
     TestStatistic testStatistic = TestStatistic.NONE;
@@ -61,8 +61,7 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     
     EssenceMatrix designEssence = null;
     
-    RandomPredictorAdjustment randomPredictorAdjustment = 
-        RandomPredictorAdjustment.CONDITIONAL_POWER;
+    PowerMethod powerMethod = PowerMethod.CONDITIONAL_POWER;
     
     /**
      * Constructor.  Creates an empty set of linear model power parameters
@@ -86,7 +85,7 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
         this.betweenSubjectContrast = params.getBetweenSubjectContrast();
         this.withinSubjectContrast = params.getWithinSubjectContrast();
         this.testStatistic = params.getTestStatistic();
-        this.randomPredictorAdjustment = params.getRandomPredictorAdjustment();
+        this.powerMethod = params.getPowerMethod();
     }
     
     public TestStatistic getTestStatistic()
@@ -206,15 +205,15 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
         this.designEssence = designEssence;
     }
 
-    public RandomPredictorAdjustment getRandomPredictorAdjustment()
+    public PowerMethod getPowerMethod()
     {
-        return randomPredictorAdjustment;
+        return powerMethod;
     }
 
-    public void setRandomPredictorAdjustment(
-            RandomPredictorAdjustment randomPredictorAdjustment)
+    public void setPowerMethod(
+            PowerMethod powerMethod)
     {
-        this.randomPredictorAdjustment = randomPredictorAdjustment;
+        this.powerMethod = powerMethod;
     }
     
     /**
