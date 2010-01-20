@@ -62,6 +62,7 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     EssenceMatrix designEssence = null;
     
     PowerMethod powerMethod = PowerMethod.CONDITIONAL_POWER;
+    double quantile = 0.50;
     
     /**
      * Constructor.  Creates an empty set of linear model power parameters
@@ -280,6 +281,16 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     		// TODO: wtf?
     	}
     	return delta;
+    }
+
+    public double getQuantile()
+    {
+        return quantile;
+    }
+
+    public void setQuantile(double quantile)
+    {
+        this.quantile = quantile;
     }
     
 }

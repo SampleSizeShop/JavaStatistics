@@ -4,6 +4,9 @@ import jsc.distributions.FishersF;
 import jsc.distributions.NoncentralFishersF;
 import jsc.distributions.Normal;
 
+import org.apache.commons.math.analysis.UnivariateRealFunction;
+import org.apache.commons.math.analysis.solvers.UnivariateRealSolver;
+import org.apache.commons.math.analysis.solvers.UnivariateRealSolverFactory;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.CholeskyDecompositionImpl;
 import org.apache.commons.math.linear.InvalidMatrixException;
@@ -17,7 +20,6 @@ import edu.cudenver.bios.matrix.EssenceMatrix;
 import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
-import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.PowerMethod;
 
 /**
  * Calculate power for the general linear multivariate model
@@ -33,7 +35,29 @@ import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizePa
  */
 public class PowerGLMM implements Power
 {
-
+    private static final double STARTING_NON_CENTRALITY = 100;
+    /**
+     * Class 
+     * Private class passed into bisection solver from Apache Commons Math
+     * @author kreidles
+     *
+     */
+    private class NonCentralityQuantileFunction implements UnivariateRealFunction
+    {
+        LinearModelPowerSampleSizeParameters params;
+        
+        public NonCentralityQuantileFunction(LinearModelPowerSampleSizeParameters params)
+        {
+            this.params = params;
+        }
+        
+        public double value(double n)
+        {
+            return nonCentralityCDF(params, n) - params.getQuantile();
+        }
+    }
+    
+    
     /**
      * Calculate power for the general linear multivariate model based on
      * the input matrices.
@@ -364,7 +388,25 @@ public class PowerGLMM implements Power
     
     private double getQuantilePower(LinearModelPowerSampleSizeParameters params)
     {
-    	return 0.0;
+        // calculate degrees of freedom
+        RealMatrix C = params.getBetweenSubjectContrast();
+        RealMatrix U = params.getWithinSubjectContrast();
+        // if multivariate, then numerator df is a*b, for univariate then numerator df just a.
+        int ndf = C.getRowDimension() * U.getColumnDimension();
+        // denominator df depends on test
+        int ddf = getDenominatorDF(params);
+        
+        // get the approximate critical F value from a central F distribution
+        FishersF centralFDist = new FishersF(ndf, ddf);
+        double Fcrit = centralFDist.inverseCdf(1 - params.getAlpha());
+        
+        // calculate the non-centrality parameter for the specified test statistic
+        double nonCentralityParam = nonCentralityInverseCDF(params);
+        
+        // create a non-central F distribution (F distribution under the alternative hypothesis)
+        NoncentralFishersF nonCentralFDist = new NoncentralFishersF(ndf, ddf, nonCentralityParam);
+        // return power based on the non-central F
+        return (1 - nonCentralFDist.cdf(Fcrit));  
     }
     
     /**
@@ -492,6 +534,62 @@ public class PowerGLMM implements Power
         
         double fobs = ((association) / ndf)/ ((1 - association) / ddf);
         return fobs;
+    }
+    
+    private double nonCentralityCDF(LinearModelPowerSampleSizeParameters params, double w)
+    {        
+        // TODO: Davies algorithm for exact non-centrality CDF
+        // for now, just uses Satterthwaite approximation for the CDF of the non-centrality
+        // parameter
+        
+        // get the critical value
+        double FCrit = 0;
+        // get the numerator degrees of freedom
+        double ndf = 2;
+        // get the denominator degrees of freedom
+        double ddf = 2;
+        // create a central F to approximate the distribution of the non-centrality parameter
+        FishersF centralFDist = new FishersF(ndf, ddf);
+        // return power based on the non-central F
+        return centralFDist.cdf(FCrit);
+    }
+    
+    /**
+     * Returns the non-centrality value associated with the specified
+     * quantile from the distribution of the non-centrality parameter.
+     * 
+     * Uses a bisection algorithm to find the value (Apache's bisection solver class) 
+     * 
+     * @param quantile
+     * @return
+     */
+    private double nonCentralityInverseCDF(LinearModelPowerSampleSizeParameters params)
+    {
+        UnivariateRealSolverFactory factory = UnivariateRealSolverFactory.newInstance();
+        UnivariateRealSolver solver = factory.newBisectionSolver();
+
+        NonCentralityQuantileFunction quantFunc = new NonCentralityQuantileFunction(params);
+        
+        try
+        {
+            double upperBound = getQuantileUpperBound(params);
+            return solver.solve(quantFunc, 0, upperBound);
+        }
+        catch (Exception e)
+        {
+            throw new IllegalArgumentException("Failed to determine non-centrality quantile: " + e.getMessage());
+        }
+    }
+    
+    private double getQuantileUpperBound(LinearModelPowerSampleSizeParameters params)
+    {
+        double upperBound = STARTING_NON_CENTRALITY;
+        
+        for(double probNonCentral = 0.0; probNonCentral < params.getQuantile(); upperBound *= 2)
+        {
+            probNonCentral = nonCentralityCDF(params, upperBound);
+        }
+        return upperBound;
     }
     
     /**
