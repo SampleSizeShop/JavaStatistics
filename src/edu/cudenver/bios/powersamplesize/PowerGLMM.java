@@ -37,30 +37,7 @@ import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizePa
  *
  */
 public class PowerGLMM implements Power
-{
-    private static final double STARTING_NON_CENTRALITY = 100;
-    /**
-     * Class 
-     * Private class passed into bisection solver from Apache Commons Math
-     * @author kreidles
-     *
-     */
-    private class NonCentralityQuantileFunction implements UnivariateRealFunction
-    {
-        LinearModelPowerSampleSizeParameters params;
-        
-        public NonCentralityQuantileFunction(LinearModelPowerSampleSizeParameters params)
-        {
-            this.params = params;
-        }
-        
-        public double value(double n)
-        {
-            return nonCentralityCDF(params, n) - params.getQuantile();
-        }
-    }
-    
-    
+{   
     /**
      * Calculate power for the general linear multivariate model based on
      * the input matrices.
@@ -410,7 +387,9 @@ public class PowerGLMM implements Power
         double Fcrit = centralFDist.inverseCdf(1 - params.getAlpha());
         
         // calculate the non-centrality parameter for the specified test statistic
-        double nonCentralityParam = nonCentralityInverseCDF(params);
+        PowerGLMMNonCentralityDistribution nonCentralityDist = 
+            new PowerGLMMNonCentralityDistribution(params, false);
+        double nonCentralityParam = nonCentralityDist.inverseCDF(params.getQuantile());
         
         // create a non-central F distribution (F distribution under the alternative hypothesis)
         NoncentralFishersF nonCentralFDist = new NoncentralFishersF(ndf, ddf, nonCentralityParam);
@@ -543,174 +522,6 @@ public class PowerGLMM implements Power
         
         double fobs = ((association) / ndf)/ ((1 - association) / ddf);
         return fobs;
-    }
-    
-    private double nonCentralityCDF(LinearModelPowerSampleSizeParameters params, double w)
-    throws IllegalArgumentException
-    {        
-        // TODO: Davies algorithm for exact non-centrality CDF
-        // for now, just uses Satterthwaite approximation for the CDF of the non-centrality
-        // parameter
-        try
-        {
-            // get design matrix for fixed parameters only
-            RealMatrix F = params.getDesignEssence().getFullDesignFixed();
-            int qF = F.getColumnDimension();
-            int a = params.getBetweenSubjectContrast().getRowDimension();
-            int N = F.getRowDimension();
-            // TODO: generate C-fixed / C-gaussian
-            RealMatrix Cfixed = getFixedContrast(params);
-            RealMatrix Cgaussian = params.getBetweenSubjectContrast();
-            // build intermediate terms h1, S
-            RealMatrix FtFinverse = 
-                new LUDecompositionImpl(F.transpose().multiply(F)).getSolver().getInverse();
-            RealMatrix P = Cfixed.multiply(FtFinverse).multiply(F.transpose());
-            RealMatrix PPt = P.multiply(P.transpose());
-            RealMatrix T1 = new LUDecompositionImpl(PPt).getSolver().getInverse();
-            RealMatrix rootT1 = null;
-            rootT1 = new CholeskyDecompositionImpl(T1).getL();
-            RealMatrix theta0 = params.getTheta();
-            RealMatrix C = params.getBetweenSubjectContrast();
-            RealMatrix B = params.getBeta();
-            RealMatrix U = params.getWithinSubjectContrast();
-            // thetaHat = C * Beta * U
-            RealMatrix thetaHat = C.multiply(B.multiply(U));
-            // thetaHat - thetaNull.  Multiple by negative one to do subtraction
-            RealMatrix thetaDiff = thetaHat.subtract(theta0);
-            // TODO: specific to HLT or UNIREP
-            RealMatrix sigmaStar = U.transpose().multiply(params.getSigmaError()).multiply(U);
-            RealMatrix sigmaStarInverse = new LUDecompositionImpl(sigmaStar).getSolver().getInverse();
-            double H1 = thetaDiff.transpose().multiply(T1).multiply(thetaDiff).multiply(sigmaStarInverse).getTrace();
-            double b0 = 1 - w / H1;
-            // matrix which represents the non-centrality parameter as a linear combination of chi-squared r.v.'s
-            RealMatrix S = 
-                rootT1.transpose().multiply(thetaDiff).multiply(sigmaStarInverse).multiply(thetaDiff.transpose()).multiply(rootT1).scalarMultiply(1/H1);
-
-            // we use the S matrix to generate the F-critical, numerical df's, and denominator df's 
-            // for a central F distribution.  The resulting F distribution is used as an approximation
-            // for the distribution of the non-centrality parameter
-            // See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details
-            double[] sEigenValues = new EigenDecompositionImpl(S, MathUtils.SAFE_MIN).getRealEigenvalues();
-            // count the # of positive eigen values
-            int sStar = 0;
-            for(double value: sEigenValues) 
-            {
-                if (value > 0) sStar++;
-            }
-            double mz = 1; // TODO: calculate this correctly
-            double m1Positive = 0;
-            double m1Negative = 0;
-            double m2Positive = 0;
-            double m2Negative = 0;
-            //
-            int numPositive = 0;
-            int numNegative = 0;
-            double nu;
-            double delta;
-            double lambda;
-            for(int k = 0; k < a; k++)
-            {
-                if (k == 0)
-                {
-                    // initial chi-square term is central (delta=0) with N-qf df, and lambda = b0
-                    nu = N - qF;
-                    lambda = b0;
-                    delta = 0;
-                }
-                else if (k >= 1 && k <= sStar)
-                {
-                    // for k = 1 to sStar, chi-square term is non-central (delta = mz^2), 1 df,
-                    // lambda = (b0 - kth eigen value of S)
-                    nu = 1;
-                    lambda = b0 - sEigenValues[k];
-                    delta = mz * mz;
-                }
-                else
-                {
-                    // for k = sStar+1 to a, chi-sqaure term is non-central (delta = mz^2), 1 df,
-                    // lambda = b0
-                    nu = 1;
-                    lambda = b0;
-                    delta = mz * mz;
-                }
-                
-                // accumulate terms
-                if (lambda > 0)
-                {
-                    // positive terms
-                    numPositive++;
-                    m1Positive += lambda * (nu + delta);
-                    m2Positive += lambda * lambda * 2* (nu + delta);
-                }
-                else if (lambda < 0)
-                {
-                    // negative terms - we take absolute value of lambda where needed
-                    numNegative++;
-                    m1Negative += -1 * lambda * (nu + delta);
-                    m2Negative += lambda * lambda * 2* (nu + delta);
-                }
-                // TODO: what if lamba == 0?
-            }
-            
-            // handle special cases
-            
-            // handle general case
-            double nuStarPositive = 2 * (m1Positive * m1Positive) / m2Positive;
-            double nuStarNegative = 2 * (m1Negative * m1Negative) / m2Negative;
-            double lambdaStarPositive = m1Positive / (2 * m1Positive);
-            double lambdaStarNegative =  m2Negative / (2 * m2Negative);
-            // create a central F to approximate the distribution of the non-centrality parameter
-            FishersF centralFDist = new FishersF(nuStarPositive, nuStarNegative);
-            // return power based on the non-central F
-            return centralFDist.cdf((nuStarNegative*lambdaStarNegative)/(nuStarPositive*lambdaStarPositive));
-        }
-        catch (Exception e)
-        {
-            throw new IllegalArgumentException(e);
-        }
-    }
-    
-    private RealMatrix getFixedContrast(LinearModelPowerSampleSizeParameters params)
-    {
-        return new Array2DRowRealMatrix();
-    }
-    
-    /**
-     * Returns the non-centrality value associated with the specified
-     * quantile from the distribution of the non-centrality parameter.
-     * 
-     * Uses a bisection algorithm to find the value (Apache's bisection solver class) 
-     * 
-     * @param quantile
-     * @return
-     */
-    private double nonCentralityInverseCDF(LinearModelPowerSampleSizeParameters params)
-    {
-        UnivariateRealSolverFactory factory = UnivariateRealSolverFactory.newInstance();
-        UnivariateRealSolver solver = factory.newBisectionSolver();
-
-        NonCentralityQuantileFunction quantFunc = new NonCentralityQuantileFunction(params);
-        
-        try
-        {
-            double upperBound = getQuantileUpperBound(params);
-            return solver.solve(quantFunc, 0, upperBound);
-        }
-        catch (Exception e)
-        {
-            throw new IllegalArgumentException("Failed to determine non-centrality quantile: " + e.getMessage());
-        }
-    }
-    
-    private double getQuantileUpperBound(LinearModelPowerSampleSizeParameters params)
-    {
-        double upperBound = STARTING_NON_CENTRALITY;
-        
-        for(double probNonCentral = 0.0; probNonCentral < params.getQuantile(); upperBound *= 2)
-        {
-            probNonCentral = nonCentralityCDF(params, upperBound);
-        }
-        return upperBound;
     }
     
     /**

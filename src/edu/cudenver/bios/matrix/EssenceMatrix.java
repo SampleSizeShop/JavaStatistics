@@ -414,6 +414,8 @@ public class EssenceMatrix extends Array2DRowRealMatrix
 		this.randomSeed = randomSeed;
 	}
     
+	// TODO: does this still work for sample size calculations since we are not
+	// passing a size into getFullDesignMatrix
 	public RealMatrix getFullDesignFixed()
 	{
 	    int[] rows = new int[getFullDesignMatrix().getRowDimension()];
