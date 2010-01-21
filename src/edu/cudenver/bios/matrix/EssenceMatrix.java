@@ -30,6 +30,9 @@ public class EssenceMatrix extends Array2DRowRealMatrix
     // indicates how many times the row should be repeated in the full design matrix
     RowMetaData[] rowMetaData = null;
     
+    // count of #random predictors
+    int randomPredictorCount = 0;
+    
     // random seed for expanding random covariates in the essence matrix
     int randomSeed = 1234;
     
@@ -92,6 +95,11 @@ public class EssenceMatrix extends Array2DRowRealMatrix
         if (columnMetaData != null)
         {
             this.columnMetaData = columnMetaData;
+            for(ColumnMetaData colMDEntry: columnMetaData)
+            {
+                if (colMDEntry.getPredictorType() == PredictorType.RANDOM)
+                    randomPredictorCount++;
+            }
         }
         if (rowMetaData != null)
         {
@@ -106,15 +114,7 @@ public class EssenceMatrix extends Array2DRowRealMatrix
      */
     public int getRandomPredictorCount()
     {
-        int count = 0;
-        for(ColumnMetaData md : columnMetaData)
-        {
-            if (md.getPredictorType() != PredictorType.FIXED)
-            {
-                count++;
-            }
-        }
-        return count;
+        return randomPredictorCount;
     }
     
     /**
@@ -252,7 +252,18 @@ public class EssenceMatrix extends Array2DRowRealMatrix
         if (column < 0 || column >= columnMetaData.length)
             throw new IllegalArgumentException("Requested column [" + column + "] is outside matrix bounds");
         else
+        {
+            PredictorType currentType = columnMetaData[column].getPredictorType();
+            // adjust the random predictor count
+            if (currentType == PredictorType.FIXED && 
+                    metaData.getPredictorType() == PredictorType.RANDOM)
+                randomPredictorCount++;
+            else if (currentType == PredictorType.RANDOM && 
+                    metaData.getPredictorType() == PredictorType.FIXED)
+                randomPredictorCount--;
+            // reset the meta data
             columnMetaData[column] = metaData;
+        }
     }
     
     /**
@@ -268,6 +279,13 @@ public class EssenceMatrix extends Array2DRowRealMatrix
         if (metaData == null || metaData.length != this.getColumnDimension())
             throw new IllegalArgumentException("Invalid column meta data.  Must have same number of columns as matrix data");
         columnMetaData = metaData;
+        // reset the random predictor count
+        randomPredictorCount = 0;
+        for(ColumnMetaData colMDEntry: columnMetaData)
+        {
+            if (colMDEntry.getPredictorType() == PredictorType.RANDOM)
+                randomPredictorCount++;
+        }
     }
     
     /**
@@ -396,4 +414,23 @@ public class EssenceMatrix extends Array2DRowRealMatrix
 		this.randomSeed = randomSeed;
 	}
     
+	public RealMatrix getFullDesignFixed()
+	{
+	    int[] rows = new int[getFullDesignMatrix().getRowDimension()];
+	    int[] cols = new int[getColumnDimension() - getRandomPredictorCount()];
+	    // include all rows
+	    for(int r = 0; r < getRowDimension(); r++) rows[r] = r;
+	    // only include columns for fixed predictors
+	    int i = 0;
+	    for(int c = 0; c < getColumnDimension(); c++)
+	    {
+	        if (columnMetaData[c].getPredictorType() == PredictorType.FIXED)
+	        {
+	            cols[i] = c;
+	            i++;
+	        }
+	    }
+	    return getFullDesignMatrix().getSubMatrix(rows, cols); 
+	}
+
 }
