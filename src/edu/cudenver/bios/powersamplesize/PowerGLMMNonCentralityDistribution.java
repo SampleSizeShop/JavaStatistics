@@ -18,6 +18,14 @@ import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.TestStatistic;
 
+/**
+ * Class representing the distribution of the non-centrality parameter in
+ * the general linear multivariate model.  Used by the PowerGLMM class 
+ * for computing unconditional and quantile power.
+ * 
+ * @see PowerGLMM
+ * @author Sarah Kreidler
+ */
 public class PowerGLMMNonCentralityDistribution
 {
     private static final double STARTING_NON_CENTRALITY = 100;    
@@ -35,10 +43,9 @@ public class PowerGLMMNonCentralityDistribution
     protected boolean exact;
     
     /**
-     * Class 
-     * Private class passed into bisection solver from Apache Commons Math
-     * @author kreidles
-     *
+     * Function calculating the difference between the probability of a target quantile 
+     * and the  (used by the bisection solver from Apache Commons Math)
+     * @see org.apache.commons.math.analysis.UnivariateRealFunction
      */
     private class NonCentralityQuantileFunction implements UnivariateRealFunction
     {
@@ -245,10 +252,6 @@ public class PowerGLMMNonCentralityDistribution
         
         if (params.getTestStatistic() == TestStatistic.UNIREP)
         {
-//            B=NCOL(SIGSTAR);
-//            EPSILON=(TRACE(SIGSTAR)##2)/(B#TRACE(SIGSTAR*SIGSTAR));
-//            SIGSTARI=I(B)#(B#EPSILON/TRACE(SIGSTAR)); 
-//            END;
             int b = sigmaStar.getColumnDimension();
             // get discrepancy from sphericity for unirep test
             double sigmaStarTrace = sigmaStar.getTrace();
