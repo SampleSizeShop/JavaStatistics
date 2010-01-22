@@ -77,8 +77,7 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     public LinearModelPowerSampleSizeParameters(LinearModelPowerSampleSizeParameters params)
     {
         super(params);
-        this.beta = params.getBeta();
-        this.betaOriginal = new Array2DRowRealMatrix(beta.getData());
+        this.setBeta(params.getBeta());
         this.design = params.getDesign();
         this.designEssence = params.getDesignEssence();
         this.sigmaError = params.getSigmaError();
@@ -107,7 +106,10 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     public void setBeta(RealMatrix beta)
     {
         this.beta = beta;
-        this.betaOriginal = new Array2DRowRealMatrix(beta.getData());
+        if (beta != null)
+            this.betaOriginal = new Array2DRowRealMatrix(beta.getData());
+        else
+            this.betaOriginal = null;
     }
 
     public RealMatrix getSigmaError()
