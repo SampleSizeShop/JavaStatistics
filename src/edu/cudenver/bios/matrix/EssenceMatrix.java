@@ -418,10 +418,11 @@ public class EssenceMatrix extends Array2DRowRealMatrix
 	// passing a size into getFullDesignMatrix
 	public RealMatrix getFullDesignFixed()
 	{
-	    int[] rows = new int[getFullDesignMatrix().getRowDimension()];
+	    int designRows = getFullDesignMatrix().getRowDimension();
+	    int[] rows = new int[designRows];
 	    int[] cols = new int[getColumnDimension() - getRandomPredictorCount()];
 	    // include all rows
-	    for(int r = 0; r < getRowDimension(); r++) rows[r] = r;
+	    for(int r = 0; r < designRows; r++) rows[r] = r;
 	    // only include columns for fixed predictors
 	    int i = 0;
 	    for(int c = 0; c < getColumnDimension(); c++)

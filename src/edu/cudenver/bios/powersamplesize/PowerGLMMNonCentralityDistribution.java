@@ -226,21 +226,44 @@ public class PowerGLMMNonCentralityDistribution
     {
         EssenceMatrix essenceX = params.getDesignEssence();
         RealMatrix C = params.getBetweenSubjectContrast();
-        int[] rows = new int[C.getRowDimension()];
+        // determine which column contains the random predictor and include 
+        // all columns representing fixed predictors
+        // TODO: will need to modify this code for support of multiple random predictors
+        int randCol = -1;
         int[] cols = new int[C.getColumnDimension() - essenceX.getRandomPredictorCount()];
-        // include all rows
-        for(int r = 0; r < C.getRowDimension(); r++) rows[r] = r;
-        // only include columns for fixed predictors
-        int i = 0;
+        int colIdx = 0;
         for(int c = 0; c < C.getColumnDimension(); c++)
         {
             ColumnMetaData colMD = essenceX.getColumnMetaData(c);
-            if (colMD.getPredictorType() == PredictorType.FIXED)
+            if (colMD.getPredictorType() == PredictorType.RANDOM)
             {
-                cols[i] = c;
-                i++;
+                randCol = c;
+            }
+            else if (colMD.getPredictorType() == PredictorType.FIXED)
+            {
+                cols[colIdx] = c;
+                colIdx++;
             }
         }
+        // count the number of rows which do not contain the random column
+        int fixedRowCount = 0;
+        for(int r = 0; r < C.getRowDimension(); r++)
+        {
+            if (C.getEntry(r, randCol) == 0) fixedRowCount++;
+        }
+        if (fixedRowCount == 0) throw new IllegalArgumentException("No fixed comparisons in contrast matrix");
+        // now include the "fixed" rows of the between subject contrast in the final submatrix
+        int[] rows = new int[fixedRowCount];
+        int rowIdx = 0;
+        for(int r = 0; r < C.getRowDimension(); r++)
+        {
+            if (C.getEntry(r, randCol) == 0) 
+            {
+                rows[rowIdx] = r;
+                rowIdx++;
+            }
+        }
+
         return C.getSubMatrix(rows, cols); 
     }
     

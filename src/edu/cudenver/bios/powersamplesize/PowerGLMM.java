@@ -520,7 +520,7 @@ public class PowerGLMM implements Power
             throw new IllegalArgumentException("Unknown statistic, cannot compute non-centrality parameter.");
         }
         
-        double fobs = ((association) / ndf)/ ((1 - association) / ddf);
+        double fobs = ((association) / (double) ndf)/ ((1 - association) / (double) ddf);
         return fobs;
     }
     

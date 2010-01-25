@@ -81,6 +81,9 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
         this.design = params.getDesign();
         this.designEssence = params.getDesignEssence();
         this.sigmaError = params.getSigmaError();
+        this.sigmaGaussianRandom = params.getSigmaGaussianRandom();
+        this.sigmaOutcome = params.getSigmaOutcome();
+        this.sigmaOutcomeGaussianRandom = params.getSigmaOutcomeGaussianRandom();
         this.theta = params.getTheta();
         this.betweenSubjectContrast = params.getBetweenSubjectContrast();
         this.withinSubjectContrast = params.getWithinSubjectContrast();
