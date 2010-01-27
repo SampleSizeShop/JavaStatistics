@@ -32,7 +32,7 @@ public class PowerGLMMNonCentralityDistribution
 
     // intermediate forms 
     protected RealMatrix T1 = null;
-    protected RealMatrix rootT1 = null;
+    protected RealMatrix FT1 = null;
     protected RealMatrix S = null;
     protected double H1;
     int qF;
@@ -82,7 +82,7 @@ public class PowerGLMMNonCentralityDistribution
             RealMatrix P = Cfixed.multiply(FtFinverse).multiply(F.transpose());
             RealMatrix PPt = P.multiply(P.transpose());
             T1 = new LUDecompositionImpl(PPt).getSolver().getInverse();
-            rootT1 = new CholeskyDecompositionImpl(T1).getL();
+            FT1 = new CholeskyDecompositionImpl(T1).getL();
             RealMatrix theta0 = params.getTheta();
             RealMatrix C = params.getBetweenSubjectContrast();
             RealMatrix B = params.getBeta();
@@ -93,9 +93,10 @@ public class PowerGLMMNonCentralityDistribution
             RealMatrix thetaDiff = thetaHat.subtract(theta0);
             // TODO: specific to HLT or UNIREP
             RealMatrix sigmaStarInverse = getSigmaStarInverse(params);
-            H1 = thetaDiff.transpose().multiply(T1).multiply(thetaDiff).multiply(sigmaStarInverse).getTrace();
+            RealMatrix H1matrix = thetaDiff.transpose().multiply(T1).multiply(thetaDiff).multiply(sigmaStarInverse);
+            H1 = H1matrix.getTrace();
             // matrix which represents the non-centrality parameter as a linear combination of chi-squared r.v.'s
-            S = rootT1.transpose().multiply(thetaDiff).multiply(sigmaStarInverse).multiply(thetaDiff.transpose()).multiply(rootT1).scalarMultiply(1/H1);
+            S = FT1.transpose().multiply(thetaDiff).multiply(sigmaStarInverse).multiply(thetaDiff.transpose()).multiply(FT1).scalarMultiply(1/H1);
         }
         catch (Exception e)
         {
@@ -108,6 +109,7 @@ public class PowerGLMMNonCentralityDistribution
     {
         try
         {
+
             double b0 = 1 - w / H1;
             // we use the S matrix to generate the F-critical, numerical df's, and denominator df's 
             // for a central F distribution.  The resulting F distribution is used as an approximation
@@ -176,7 +178,9 @@ public class PowerGLMMNonCentralityDistribution
             }
 
             // handle special cases
-
+            if (numNegative == 0) return 0;
+            if (numPositive == 0) return 1;
+            
             // handle general case
             double nuStarPositive = 2 * (m1Positive * m1Positive) / m2Positive;
             double nuStarNegative = 2 * (m1Negative * m1Negative) / m2Negative;
