@@ -25,7 +25,7 @@ public class TestPowerGLMM extends TestCase
     private static final double ALPHA = 0.01;    
     private static final double MEAN = 9.75;
     private static final double VARIANCE = 4.3;
-    private static final double[] BETA_SCALE = {0, 0.5,2};
+    private static final double[] BETA_SCALE = {0.5,2};
     private static final double[] SIGMA_SCALE = {1,2};
     private static final int[] SAMPLE_SIZE = {20,40};
 
@@ -240,13 +240,27 @@ public class TestPowerGLMM extends TestCase
         // build beta matrix
         double [][] beta = {{1,0,0},{0,0,0},{0,0,0},{0,0,0}};
         params.setBeta(new Array2DRowRealMatrix(beta));
-        // build theta null matrix
-        double [][] theta0 = {{0,0},{0,0},{0,0}};
-        params.setTheta(new Array2DRowRealMatrix(theta0));
 
-        // build between subject contrast
-        double [][] between = {{1,-1,0,0},{1,0,-1,0},{1,0,0,-1}};
-        params.setBetweenSubjectContrast(new Array2DRowRealMatrix(between));
+        if (hasRandom)
+        {
+            // build theta null matrix
+            double [][] theta0 = {{0,0},{0,0}};
+            params.setTheta(new Array2DRowRealMatrix(theta0));
+            
+            // build between subject contrast
+            double [][] between = {{1,-1,0,0},{1,0,-1,0}};
+            params.setBetweenSubjectContrast(new Array2DRowRealMatrix(between));
+        }
+        else
+        {
+            // build theta null matrix
+            double [][] theta0 = {{0,0},{0,0},{0,0}};
+            params.setTheta(new Array2DRowRealMatrix(theta0));
+            
+            // build between subject contrast
+            double [][] between = {{1,-1,0,0},{1,0,-1,0},{1,0,0,-1}};
+            params.setBetweenSubjectContrast(new Array2DRowRealMatrix(between));
+        }
 
         // build within subject contrast
         double [][] within = {{1,1},{-1,0},{0,-1}};

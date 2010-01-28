@@ -34,6 +34,7 @@ public class PowerGLMMNonCentralityDistribution
     protected RealMatrix T1 = null;
     protected RealMatrix FT1 = null;
     protected RealMatrix S = null;
+    protected double mz = Double.NaN;
     protected double H1;
     int qF;
     int a;
@@ -76,11 +77,16 @@ public class PowerGLMMNonCentralityDistribution
             N = F.getRowDimension();
             // get fixed contrasts
             RealMatrix Cfixed = getFixedContrast(params);
+            RealMatrix CGaussian = getGaussianContrast(params);
             // build intermediate terms h1, S
             RealMatrix FtFinverse = 
                 new LUDecompositionImpl(F.transpose().multiply(F)).getSolver().getInverse();
+            FtFinverse = FtFinverse.scalarMultiply(1/(double) N);
             RealMatrix P = Cfixed.multiply(FtFinverse).multiply(F.transpose());
             RealMatrix PPt = P.multiply(P.transpose());
+            RealMatrix mg = P.transpose().multiply(T1).multiply(CGaussian);
+            // mz = mg / FINISH
+            
             T1 = new LUDecompositionImpl(PPt).getSolver().getInverse();
             FT1 = new CholeskyDecompositionImpl(T1).getL();
             RealMatrix theta0 = params.getTheta();
@@ -115,6 +121,7 @@ public class PowerGLMMNonCentralityDistribution
             // for a central F distribution.  The resulting F distribution is used as an approximation
             // for the distribution of the non-centrality parameter
             // See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details
+            // TODO: move this into constructor since not dependent on w?
             double[] sEigenValues = new EigenDecompositionImpl(S, MathUtils.SAFE_MIN).getRealEigenvalues();
             // count the # of positive eigen values
             int sStar = 0;
@@ -226,47 +233,52 @@ public class PowerGLMMNonCentralityDistribution
         return upperBound;
     }
     
-    private RealMatrix getFixedContrast(LinearModelPowerSampleSizeParameters params)
+    /**
+     * Returns the column representing the single random predictor if specified
+     * (note, this function will require modification if we support multiple random predictors)
+     * @param params
+     * @return
+     */
+    private RealMatrix getGaussianContrast(LinearModelPowerSampleSizeParameters params)
     {
         EssenceMatrix essenceX = params.getDesignEssence();
         RealMatrix C = params.getBetweenSubjectContrast();
-        // determine which column contains the random predictor and include 
-        // all columns representing fixed predictors
-        // TODO: will need to modify this code for support of multiple random predictors
         int randCol = -1;
-        int[] cols = new int[C.getColumnDimension() - essenceX.getRandomPredictorCount()];
-        int colIdx = 0;
         for(int c = 0; c < C.getColumnDimension(); c++)
         {
             ColumnMetaData colMD = essenceX.getColumnMetaData(c);
             if (colMD.getPredictorType() == PredictorType.RANDOM)
             {
                 randCol = c;
+                break; 
             }
-            else if (colMD.getPredictorType() == PredictorType.FIXED)
+        }
+        if (randCol >= 0)
+            return C.getColumnMatrix(randCol);
+        else
+            return null;      
+    }
+    
+    private RealMatrix getFixedContrast(LinearModelPowerSampleSizeParameters params)
+    {
+        EssenceMatrix essenceX = params.getDesignEssence();
+        RealMatrix C = params.getBetweenSubjectContrast();
+        // include all columns representing fixed predictors
+        // TODO: will need to modify this code for support of multiple random predictors
+        int[] cols = new int[C.getColumnDimension() - essenceX.getRandomPredictorCount()];
+        int colIdx = 0;
+        for(int c = 0; c < C.getColumnDimension(); c++)
+        {
+            ColumnMetaData colMD = essenceX.getColumnMetaData(c);
+            if (colMD.getPredictorType() == PredictorType.FIXED)
             {
                 cols[colIdx] = c;
                 colIdx++;
             }
         }
-        // count the number of rows which do not contain the random column
-        int fixedRowCount = 0;
-        for(int r = 0; r < C.getRowDimension(); r++)
-        {
-            if (C.getEntry(r, randCol) == 0) fixedRowCount++;
-        }
-        if (fixedRowCount == 0) throw new IllegalArgumentException("No fixed comparisons in contrast matrix");
-        // now include the "fixed" rows of the between subject contrast in the final submatrix
-        int[] rows = new int[fixedRowCount];
-        int rowIdx = 0;
-        for(int r = 0; r < C.getRowDimension(); r++)
-        {
-            if (C.getEntry(r, randCol) == 0) 
-            {
-                rows[rowIdx] = r;
-                rowIdx++;
-            }
-        }
+        // include all rows
+        int[] rows = new int[C.getRowDimension()];
+        for(int r = 0; r < C.getRowDimension(); r++) rows[r] = r;
 
         return C.getSubMatrix(rows, cols); 
     }

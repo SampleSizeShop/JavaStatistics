@@ -4,18 +4,13 @@ import jsc.distributions.FishersF;
 import jsc.distributions.NoncentralFishersF;
 import jsc.distributions.Normal;
 
-import org.apache.commons.math.analysis.UnivariateRealFunction;
-import org.apache.commons.math.analysis.solvers.UnivariateRealSolver;
-import org.apache.commons.math.analysis.solvers.UnivariateRealSolverFactory;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.CholeskyDecompositionImpl;
-import org.apache.commons.math.linear.EigenDecompositionImpl;
 import org.apache.commons.math.linear.InvalidMatrixException;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
-import org.apache.commons.math.util.MathUtils;
 
 import edu.cudenver.bios.matrix.ColumnMetaData;
 import edu.cudenver.bios.matrix.EssenceMatrix;
