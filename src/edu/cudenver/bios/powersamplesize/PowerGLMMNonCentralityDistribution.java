@@ -34,11 +34,13 @@ public class PowerGLMMNonCentralityDistribution
     protected RealMatrix T1 = null;
     protected RealMatrix FT1 = null;
     protected RealMatrix S = null;
-    protected double mz = Double.NaN;
+    protected RealMatrix mzSq = null;
     protected double H1;
     int qF;
     int a;
     int N;
+    double[] sEigenValues;
+    int sStar = 0;
     // indicates if an "exact" cdf should be calculated via Davie's algorithm or
     // with the Satterthwaite approximation from Glueck & Muller
     protected boolean exact;
@@ -83,19 +85,17 @@ public class PowerGLMMNonCentralityDistribution
                 new LUDecompositionImpl(F.transpose().multiply(F)).getSolver().getInverse();
             FtFinverse = FtFinverse.scalarMultiply(1/(double) N);
             RealMatrix P = Cfixed.multiply(FtFinverse).multiply(F.transpose());
-            RealMatrix PPt = P.multiply(P.transpose());
-            RealMatrix mg = P.transpose().multiply(T1).multiply(CGaussian);
-            // mz = mg / FINISH
-            
+            RealMatrix PPt = P.multiply(P.transpose());            
             T1 = new LUDecompositionImpl(PPt).getSolver().getInverse();
-            FT1 = new CholeskyDecompositionImpl(T1).getL();
+            FT1 = new CholeskyDecompositionImpl(T1).getLT();
+            // calculate theta difference
             RealMatrix theta0 = params.getTheta();
             RealMatrix C = params.getBetweenSubjectContrast();
             RealMatrix B = params.getBeta();
             RealMatrix U = params.getWithinSubjectContrast();
             // thetaHat = C * Beta * U
             RealMatrix thetaHat = C.multiply(B.multiply(U));
-            // thetaHat - thetaNull.  Multiple by negative one to do subtraction
+            // thetaHat - thetaNull.  
             RealMatrix thetaDiff = thetaHat.subtract(theta0);
             // TODO: specific to HLT or UNIREP
             RealMatrix sigmaStarInverse = getSigmaStarInverse(params);
@@ -103,6 +103,30 @@ public class PowerGLMMNonCentralityDistribution
             H1 = H1matrix.getTrace();
             // matrix which represents the non-centrality parameter as a linear combination of chi-squared r.v.'s
             S = FT1.transpose().multiply(thetaDiff).multiply(sigmaStarInverse).multiply(thetaDiff.transpose()).multiply(FT1).scalarMultiply(1/H1);
+            // we use the S matrix to generate the F-critical, numerical df's, and denominator df's 
+            // for a central F distribution.  The resulting F distribution is used as an approximation
+            // for the distribution of the non-centrality parameter
+            // See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details
+            // TODO: move this into constructor since not dependent on w?
+            EigenDecompositionImpl sEigenDecomp = new EigenDecompositionImpl(S, MathUtils.SAFE_MIN);
+            sEigenValues = sEigenDecomp.getRealEigenvalues();
+            // count the # of positive eigen values
+            for(double value: sEigenValues) 
+            {
+                if (value > 0) sStar++;
+            }
+            
+            // mz = mg / FINISH
+            double stddevG = getStdDevG(params.getDesignEssence());
+            mzSq = sEigenDecomp.getD().transpose().multiply(FT1.transpose()).multiply(CGaussian).scalarMultiply(1/stddevG);
+            for(int i = 0; i < mzSq.getRowDimension(); i++)
+            {
+                for (int j = 0; j < mzSq.getColumnDimension(); j++)
+                {
+                    double entry = mzSq.getEntry(i, j);
+                    mzSq.setEntry(i, j, entry*entry);
+                }
+            }
         }
         catch (Exception e)
         {
@@ -115,21 +139,7 @@ public class PowerGLMMNonCentralityDistribution
     {
         try
         {
-
             double b0 = 1 - w / H1;
-            // we use the S matrix to generate the F-critical, numerical df's, and denominator df's 
-            // for a central F distribution.  The resulting F distribution is used as an approximation
-            // for the distribution of the non-centrality parameter
-            // See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details
-            // TODO: move this into constructor since not dependent on w?
-            double[] sEigenValues = new EigenDecompositionImpl(S, MathUtils.SAFE_MIN).getRealEigenvalues();
-            // count the # of positive eigen values
-            int sStar = 0;
-            for(double value: sEigenValues) 
-            {
-                if (value > 0) sStar++;
-            }
-            double mz = 1; // TODO: calculate this correctly
             double m1Positive = 0;
             double m1Negative = 0;
             double m2Positive = 0;
@@ -155,7 +165,7 @@ public class PowerGLMMNonCentralityDistribution
                     // lambda = (b0 - kth eigen value of S)
                     nu = 1;
                     lambda = b0 - sEigenValues[k];
-                    delta = mz * mz;
+                    delta = mzSq.getEntry(k, 0);
                 }
                 else
                 {
@@ -163,7 +173,7 @@ public class PowerGLMMNonCentralityDistribution
                     // lambda = b0
                     nu = 1;
                     lambda = b0;
-                    delta = mz * mz;
+                    delta = mzSq.getEntry(k, 0);
                 }
 
                 // accumulate terms
@@ -182,6 +192,7 @@ public class PowerGLMMNonCentralityDistribution
                     m2Negative += lambda * lambda * 2* (nu + delta);
                 }
                 // TODO: what if lamba == 0?
+                int foo = 2;
             }
 
             // handle special cases
@@ -196,7 +207,8 @@ public class PowerGLMMNonCentralityDistribution
             // create a central F to approximate the distribution of the non-centrality parameter
             FishersF centralFDist = new FishersF(nuStarPositive, nuStarNegative);
             // return power based on the non-central F
-            return centralFDist.cdf((nuStarNegative*lambdaStarNegative)/(nuStarPositive*lambdaStarPositive));
+            double prob = centralFDist.cdf((nuStarNegative*lambdaStarNegative)/(nuStarPositive*lambdaStarPositive));
+            return prob;
         }
         catch (Exception e)
         {
@@ -228,7 +240,8 @@ public class PowerGLMMNonCentralityDistribution
         
         for(double probNonCentral = 0.0; probNonCentral < quantile; upperBound *= 2)
         {
-            probNonCentral = cdf(upperBound);
+            double prob = cdf(upperBound);
+            probNonCentral = prob;
         }
         return upperBound;
     }
@@ -304,5 +317,19 @@ public class PowerGLMMNonCentralityDistribution
             // stat should only be HLT at this point  (exception is thrown by valdiateParams otherwise)
             return new LUDecompositionImpl(sigmaStar).getSolver().getInverse();
         }
+    }
+    
+    private double getStdDevG(EssenceMatrix essence)
+    throws IllegalArgumentException
+    {
+        for(int c = 0; c < essence.getColumnDimension(); c++)
+        {
+            ColumnMetaData colMD = essence.getColumnMetaData(c);
+            if (colMD.getPredictorType() == PredictorType.RANDOM)
+            {
+                return Math.sqrt(colMD.getVariance());
+            }
+        }
+        throw new IllegalArgumentException("Failed to calculate sigmaG - No random predictor");
     }
 }
