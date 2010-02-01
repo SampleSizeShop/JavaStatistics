@@ -71,7 +71,7 @@ public class PowerGLMMNonCentralityDistribution
     {
         this.exact = exact;
         try
-        {            
+        {                        
             // get design matrix for fixed parameters only
             RealMatrix F = params.getDesignEssence().getFullDesignFixed();
             qF = F.getColumnDimension();
@@ -83,11 +83,10 @@ public class PowerGLMMNonCentralityDistribution
             // build intermediate terms h1, S
             RealMatrix FtFinverse = 
                 new LUDecompositionImpl(F.transpose().multiply(F)).getSolver().getInverse();
-            FtFinverse = FtFinverse.scalarMultiply(1/(double) N);
             RealMatrix P = Cfixed.multiply(FtFinverse).multiply(F.transpose());
             RealMatrix PPt = P.multiply(P.transpose());            
             T1 = new LUDecompositionImpl(PPt).getSolver().getInverse();
-            FT1 = new CholeskyDecompositionImpl(T1).getLT();
+            FT1 = new CholeskyDecompositionImpl(T1).getL();
             // calculate theta difference
             RealMatrix theta0 = params.getTheta();
             RealMatrix C = params.getBetweenSubjectContrast();
@@ -116,7 +115,6 @@ public class PowerGLMMNonCentralityDistribution
                 if (value > 0) sStar++;
             }
             
-            // mz = mg / FINISH
             double stddevG = getStdDevG(params.getDesignEssence());
             mzSq = sEigenDecomp.getD().transpose().multiply(FT1.transpose()).multiply(CGaussian).scalarMultiply(1/stddevG);
             for(int i = 0; i < mzSq.getRowDimension(); i++)

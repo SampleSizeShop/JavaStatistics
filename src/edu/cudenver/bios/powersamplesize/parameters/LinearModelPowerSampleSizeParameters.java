@@ -26,7 +26,7 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
         NONE,
         UNIREP,
         WILKS_LAMBDA,
-        PILLAU_BARTLETT_TRACE,
+        PILLAI_BARTLETT_TRACE,
         HOTELLING_LAWLEY_TRACE
     };
     
@@ -35,6 +35,14 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
         CONDITIONAL_POWER,
         UNCONDITIONAL_POWER,
         QUANTILE_POWER
+    };
+    
+    public enum UnivariateCorrection 
+    {
+        NONE,
+        BOX,
+        GEISSER_GREENHOUSE,
+        HUYNH_FELDT
     };
     
     TestStatistic testStatistic = TestStatistic.NONE;
@@ -64,6 +72,8 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     PowerMethod powerMethod = PowerMethod.CONDITIONAL_POWER;
     double quantile = 0.50;
     
+    UnivariateCorrection univariateCorrection = UnivariateCorrection.NONE;
+    
     /**
      * Constructor.  Creates an empty set of linear model power parameters
      */
@@ -89,6 +99,7 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
         this.withinSubjectContrast = params.getWithinSubjectContrast();
         this.testStatistic = params.getTestStatistic();
         this.powerMethod = params.getPowerMethod();
+        this.univariateCorrection = params.getUnivariateCorrection();
     }
     
     public TestStatistic getTestStatistic()
@@ -296,6 +307,16 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     public void setQuantile(double quantile)
     {
         this.quantile = quantile;
+    }
+
+    public UnivariateCorrection getUnivariateCorrection()
+    {
+        return univariateCorrection;
+    }
+
+    public void setUnivariateCorrection(UnivariateCorrection univariateCorrection)
+    {
+        this.univariateCorrection = univariateCorrection;
     }
     
 }

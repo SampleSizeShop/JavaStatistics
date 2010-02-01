@@ -1,16 +1,20 @@
 package edu.cudenver.bios.powersamplesize;
 
+import java.io.FileWriter;
+
 import jsc.distributions.FishersF;
 import jsc.distributions.NoncentralFishersF;
 import jsc.distributions.Normal;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.CholeskyDecompositionImpl;
+import org.apache.commons.math.linear.EigenDecompositionImpl;
 import org.apache.commons.math.linear.InvalidMatrixException;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
+import org.apache.commons.math.util.MathUtils;
 
 import edu.cudenver.bios.matrix.ColumnMetaData;
 import edu.cudenver.bios.matrix.EssenceMatrix;
@@ -18,6 +22,7 @@ import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.TestStatistic;
+import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.UnivariateCorrection;
 
 /**
  * Calculate power for the general linear multivariate model
@@ -33,6 +38,8 @@ import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizePa
  */
 public class PowerGLMM implements Power
 {   
+    double unirepEpsilon = Double.NaN;
+    
     /**
      * Calculate power for the general linear multivariate model based on
      * the input matrices.
@@ -62,6 +69,9 @@ public class PowerGLMM implements Power
         
         // update the parameters as needed - used for random covariates
         updateParameters(powerParams);
+        
+        // unset the univariate epsilon - this is cached to avoid multiple calculations
+        unirepEpsilon = Double.NaN;
         
         switch (powerParams.getPowerMethod())
         {
@@ -105,13 +115,13 @@ public class PowerGLMM implements Power
         // update parameters as needed - used for random predictors to set sigmaE, betaG
         updateParameters(powerParams);
         
-        // calculate numerator degrees of freedom - these don't change with simulation
-        RealMatrix C = powerParams.getBetweenSubjectContrast();
-        RealMatrix U = powerParams.getWithinSubjectContrast();
-        // if multivariate, then numerator df is a*b, for univariate then numerator df just a.
-        int ndf = C.getRowDimension() * U.getColumnDimension();
-        // denominator df depends on test, but none of the simulated matrices
-        int ddf = getDenominatorDF(powerParams);  
+        // unset the univariate epsilon - this is cached to avoid multiple calculations
+        unirepEpsilon = Double.NaN;
+        
+        // calculate numerator degrees of freedom
+        double ndf = getNumeratorDF(powerParams);
+        // calculate denominator df 
+        double ddf = getDenominatorDF(powerParams);
         
         // get total observations, N, and rank of design matrix
         RealMatrix X = powerParams.getDesign();
@@ -130,6 +140,12 @@ public class PowerGLMM implements Power
                         powerParams.getBeta().getColumnDimension(),
                         powerParams.getSigmaError());         
             
+//            try {
+//            FileWriter fout = new FileWriter("C:\\Documents and Settings\\kreidles\\Desktop\\errorMatrix.txt");
+//            fout.write(error.toString());
+//            fout.close();
+//            }
+//            catch(Exception e) {}
             // calculate simulated Y based on Y = X beta + error
             RealMatrix Ysim = (X.multiply(powerParams.getBeta())).add(error);
             // calculate beta-Hat
@@ -185,7 +201,7 @@ public class PowerGLMM implements Power
         try
         {            
             RealMatrix sqrtMatrix = new CholeskyDecompositionImpl(sigma).getL();
-            return randomNormals.multiply(sqrtMatrix);
+            return randomNormals.multiply(sqrtMatrix); 
         }
         catch (Exception e)
         {
@@ -254,7 +270,7 @@ public class PowerGLMM implements Power
         else if (numRandom == 1)
         {
             // make sure the test statistic is either HLT or UNIREP if there is a random
-            // covariate (results not published for Wilk's Lambda or Pillau-Bartlett 
+            // covariate (results not published for Wilk's Lambda or Pillai-Bartlett 
             if (params.getTestStatistic() != TestStatistic.HOTELLING_LAWLEY_TRACE &&
                     params.getTestStatistic() != TestStatistic.UNIREP)
                 throw new IllegalArgumentException("With a random covariate, only Hotelling-Lawley and Unirep test statistics are supported");
@@ -341,17 +357,15 @@ public class PowerGLMM implements Power
     
     private double getConditionalPower(LinearModelPowerSampleSizeParameters powerParams)
     {
-        // calculate degrees of freedom
-        RealMatrix C = powerParams.getBetweenSubjectContrast();
-        RealMatrix U = powerParams.getWithinSubjectContrast();
-        // if multivariate, then numerator df is a*b, for univariate then numerator df just a.
-        int ndf = C.getRowDimension() * U.getColumnDimension();
-        // denominator df depends on test
-        int ddf = getDenominatorDF(powerParams);
+        // get the degrees of freedom for the central and non-central
+        // F distributions used for the power calculation
+        // calculate numerator degrees of freedom
+        double ndf = getNumeratorDF(powerParams);
+        // calculate denominator df 
+        double ddf = getDenominatorDF(powerParams);
         
         // get the approximate critical F value from a central F distribution
-        FishersF centralFDist = new FishersF(ndf, ddf);
-        double Fcrit = centralFDist.inverseCdf(1 - powerParams.getAlpha());
+        double Fcrit = getCriticalF(ndf, ddf, powerParams);
         
         // calculate the non-centrality parameter for the specified test statistic
         double nonCentralityParam = ndf * getObservedF(powerParams, ndf, ddf);
@@ -364,24 +378,39 @@ public class PowerGLMM implements Power
     
     private double getUnconditionalPower(LinearModelPowerSampleSizeParameters params)
     {
-    	return 0.0;
+        // get the degrees of freedom for the central and non-central
+        // F distributions used for the power calculation
+        // calculate numerator degrees of freedom
+        double ndf = getNumeratorDF(params);
+        // calculate denominator df 
+        double ddf = getDenominatorDF(params);
+        
+        // get the approximate critical F value from a central F distribution
+        double Fcrit = getCriticalF(ndf, ddf, params);
+        
+        // determine unconditional power by integrating over all possible values 
+        // of the non-centrality parameter
+        // TODO: write me :-)
+        
+        return 0;
+        
     }
     
     private double getQuantilePower(LinearModelPowerSampleSizeParameters params)
     {
-        // calculate degrees of freedom
-        RealMatrix C = params.getBetweenSubjectContrast();
-        RealMatrix U = params.getWithinSubjectContrast();
-        // if multivariate, then numerator df is a*b, for univariate then numerator df just a.
-        int ndf = C.getRowDimension() * U.getColumnDimension();
-        // denominator df depends on test
-        int ddf = getDenominatorDF(params);
+        // get the degrees of freedom for the central and non-central
+        // F distributions used for the power calculation
+        // calculate numerator degrees of freedom
+        double ndf = getNumeratorDF(params);
+        // calculate denominator df 
+        double ddf = getDenominatorDF(params);
         
         // get the approximate critical F value from a central F distribution
-        FishersF centralFDist = new FishersF(ndf, ddf);
-        double Fcrit = centralFDist.inverseCdf(1 - params.getAlpha());
+        double Fcrit = getCriticalF(ndf, ddf, params);
         
         // calculate the non-centrality parameter for the specified test statistic
+        // For quantile power, we get the value from the distribution of the non-centrality
+        // parameter which corresponds to the specified quantile
         PowerGLMMNonCentralityDistribution nonCentralityDist = 
             new PowerGLMMNonCentralityDistribution(params, false);
         double nonCentralityParam = nonCentralityDist.inverseCDF(params.getQuantile());
@@ -393,13 +422,133 @@ public class PowerGLMM implements Power
     }
     
     /**
+     * Calculate the critical F value for the specified test. 
+     * 
+     * @param ndf numerator degrees of freedom for central F
+     * @param ddf denominator degrees of freedom for central F
+     * @param params linear model inputs
+     * 
+     */
+    private double getCriticalF(double ndf, double ddf, 
+            LinearModelPowerSampleSizeParameters params)
+    throws IllegalArgumentException
+    {                
+        double correctedNdf = ndf;
+        double correctedDdf = ddf;
+        
+        if (params.getTestStatistic() == TestStatistic.UNIREP &&
+                params.getUnivariateCorrection() != UnivariateCorrection.NONE)
+        {
+            int N = params.getDesign().getRowDimension();
+            int r = new SingularValueDecompositionImpl(params.getDesign()).getRank();
+            double a = params.getBetweenSubjectContrast().getRowDimension();
+            double b = params.getWithinSubjectContrast().getColumnDimension();
+
+            // calculate critical F for univariate approach to repeated measures
+            // using the specified correction method.
+            switch(params.getUnivariateCorrection())
+            {
+            case GEISSER_GREENHOUSE:
+                break;
+            case BOX:
+                correctedNdf = a;
+                correctedDdf = (N - r);
+                break;
+            case HUYNH_FELDT:
+                break;
+            default:
+                correctedNdf = ndf;
+                correctedDdf = ddf;
+            }
+        }
+        
+        FishersF centralFDist = new FishersF(correctedNdf, correctedDdf);
+        return centralFDist.inverseCdf(1 - params.getAlpha());
+    }
+    
+    /**
+     * Calculate the numerator degrees of freedom for the specified test
+     * 
+     * @param powerParams input matrices
+     * @return numerator degrees of freedom
+     * @throws IllegalArgumentException
+     */
+    private double getNumeratorDF(LinearModelPowerSampleSizeParameters params)
+    throws IllegalArgumentException
+    {
+        RealMatrix C = params.getBetweenSubjectContrast();
+        RealMatrix U = params.getWithinSubjectContrast();
+        
+        if (params.getTestStatistic() == TestStatistic.UNIREP)
+        {
+            // TODO: add corrected versions
+            return C.getRowDimension() * U.getColumnDimension() * getUnivariateCorrectionFactor(params, true);
+        }
+        else
+        {
+            // all other cases
+            return C.getRowDimension() * U.getColumnDimension();
+        }
+    }
+    
+    private double getUnivariateCorrectionFactor(LinearModelPowerSampleSizeParameters params, boolean useCached)
+    {
+        // handle uncorrected unirep test
+        if (params.getUnivariateCorrection() == UnivariateCorrection.NONE)
+            return 1;
+        
+        // either calculate or use cached value for unirep epsilon
+        // since this computation is reasonably expensive, we try to
+        // only perform it once 
+        if (useCached && !Double.isNaN(unirepEpsilon))
+        {
+            // return the cached value
+            return unirepEpsilon;
+        }
+        else
+        {
+            // we are either not using the cached value or the correction epsilon
+            // has not yet been calculated for this parameter set
+            RealMatrix U = params.getWithinSubjectContrast();
+            RealMatrix X = params.getDesign();
+            int b = new SingularValueDecompositionImpl(U).getRank();
+            int r = new SingularValueDecompositionImpl(U).getRank();
+            RealMatrix sigmaStar = U.transpose().multiply(params.getSigmaError().multiply(U));
+            double[] eigenValues = new EigenDecompositionImpl(sigmaStar, MathUtils.SAFE_MIN).getRealEigenvalues();
+            double sumLambdaSquared = 0;
+            double sumLambda = 0;
+            for(double value: eigenValues)
+            {
+                sumLambda += value;
+                sumLambdaSquared += value * value;
+            }
+            unirepEpsilon = (sumLambda*sumLambda) / (b * (sumLambdaSquared));
+
+            switch(params.getUnivariateCorrection())
+            {
+            case GEISSER_GREENHOUSE:
+                unirepEpsilon = 1;
+                break;
+            case BOX:
+                break;
+            case HUYNH_FELDT:
+                unirepEpsilon = 1;
+                break;
+            default:
+                unirepEpsilon = 1;
+            }
+            return unirepEpsilon;
+        }
+    }
+    
+    /**
      * Calculate the denominator degrees of freedom for the specified test
      * 
      * @param powerParams input matrices
      * @return denominator degrees of freedom
      * @throws IllegalArgumentException
      */
-    private int getDenominatorDF(LinearModelPowerSampleSizeParameters powerParams)
+    private double getDenominatorDF(LinearModelPowerSampleSizeParameters powerParams)
     throws IllegalArgumentException
     {
         RealMatrix X = powerParams.getDesign();
@@ -417,7 +566,7 @@ public class PowerGLMM implements Power
         // minimum of a and b dimensions
         int s = (a < b) ? a : b;  
         
-        int df = -1;
+        double df = -1;
         switch (powerParams.getTestStatistic())
         {
         case WILKS_LAMBDA:
@@ -436,13 +585,13 @@ public class PowerGLMM implements Power
             }
             break;
         }
-        case PILLAU_BARTLETT_TRACE:
+        case PILLAI_BARTLETT_TRACE:
         {
             df = s * ((N - r) - b + s);
             break;
         }
         case UNIREP:
-            df = b*(N - r);
+            df = b*(N - r)*getUnivariateCorrectionFactor(powerParams, true);
             break;
         case HOTELLING_LAWLEY_TRACE:
         {
@@ -465,7 +614,7 @@ public class PowerGLMM implements Power
      * @param denominator degrees of freedom
      * @return non-centrality parameter for the specific test statistic
      */
-    private double getObservedF(LinearModelPowerSampleSizeParameters powerParams, int ndf, int ddf)
+    private double getObservedF(LinearModelPowerSampleSizeParameters powerParams, double ndf, double ddf)
     throws IllegalArgumentException
     {
         
@@ -499,13 +648,13 @@ public class PowerGLMM implements Power
                 association = 1 - Math.pow(W, 1/g);
             }
             break;
-        case PILLAU_BARTLETT_TRACE:
-            double PB = getPillauBartlettTrace(hypothesisSumOfSquares, errorSumOfSquares);
+        case PILLAI_BARTLETT_TRACE:
+            double PB = getPillaiBartlettTrace(hypothesisSumOfSquares, errorSumOfSquares);
             association = PB / s;
             break;
         case UNIREP:
             double REP = getUnirep(hypothesisSumOfSquares, errorSumOfSquares);
-            association = REP / (1 + REP);
+            association = (REP / (1 + REP)) * getUnivariateCorrectionFactor(powerParams, true);
             break;
         case HOTELLING_LAWLEY_TRACE:
             double HLT = getHotellingLawleyTrace(hypothesisSumOfSquares, errorSumOfSquares);
@@ -518,6 +667,8 @@ public class PowerGLMM implements Power
         double fobs = ((association) / (double) ndf)/ ((1 - association) / (double) ddf);
         return fobs;
     }
+
+
     
     /**
      * Compute a Wilks Lamba statistic
@@ -542,16 +693,16 @@ public class PowerGLMM implements Power
     }
     
     /**
-     * Compute a Pillau Bartlett Trace statistic
+     * Compute a Pillai Bartlett Trace statistic
      * 
      * @param H hypothesis sum of squares matrix
      * @param E error sum of squares matrix
      * @returns F statistic
      */
-    private double getPillauBartlettTrace(RealMatrix H, RealMatrix E)
+    private double getPillaiBartlettTrace(RealMatrix H, RealMatrix E)
     {
         if (!H.isSquare() || !E.isSquare() || H.getColumnDimension() != E.getRowDimension())
-            throw new InvalidMatrixException("Failed to compute Pillau-Bartlett Trace: hypothesis and error matrices must be square and same dimensions");
+            throw new InvalidMatrixException("Failed to compute Pillai-Bartlett Trace: hypothesis and error matrices must be square and same dimensions");
         
         RealMatrix T = H.add(E);
         RealMatrix inverseT = new LUDecompositionImpl(T).getSolver().getInverse();

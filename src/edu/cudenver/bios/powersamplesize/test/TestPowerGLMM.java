@@ -15,30 +15,34 @@ import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizePa
 import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.PowerMethod;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.TestStatistic;
+import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.UnivariateCorrection;
 
 import junit.framework.TestCase;
 
 public class TestPowerGLMM extends TestCase
 {
-    private static final int SIMULATION_SIZE = 100000;
+    private static final int SIMULATION_SIZE = 10000;
     private static final double PRECISION = 0.01;
-    private static final double ALPHA = 0.01;    
+    private static final double ALPHA = 0.05;    
     private static final double MEAN = 9.75;
-    private static final double VARIANCE = 4.3;
-    private static final double[] BETA_SCALE = {0.5,2};
+    private static final double VARIANCE = 2.0;
+    private static final double[] BETA_SCALE = {0,1,2};
     private static final double[] SIGMA_SCALE = {1,2};
-    private static final int[] SAMPLE_SIZE = {20,40};
+    private static final int[] SAMPLE_SIZE = {20};
 
-    private void testValidUnivariateFixed()
+    public void testValidUnivariateFixed()
     {
         LinearModelPowerSampleSizeParameters goodParams = buildValidUnivariateInputs();
 
         PowerGLMM calc = new PowerGLMM();
         goodParams.setTestStatistic(TestStatistic.UNIREP);
         checkPower("Valid Univariate, Fixed, UNIREP", calc, goodParams);
+        goodParams.setUnivariateCorrection(UnivariateCorrection.BOX);
+        checkPower("Valid Univariate, Fixed, UNIREP, BOX correction", calc, goodParams);
+        
         goodParams.setTestStatistic(TestStatistic.HOTELLING_LAWLEY_TRACE);
         checkPower("Valid Univariate, Fixed, HLT",calc, goodParams);
-        goodParams.setTestStatistic(TestStatistic.PILLAU_BARTLETT_TRACE);
+        goodParams.setTestStatistic(TestStatistic.PILLAI_BARTLETT_TRACE);
         checkPower("Valid Univariate, Fixed, PB",calc, goodParams);
         goodParams.setTestStatistic(TestStatistic.WILKS_LAMBDA);
         checkPower("Valid Univariate, Fixed, W",calc, goodParams);        
@@ -54,25 +58,27 @@ public class TestPowerGLMM extends TestCase
 
     }
 
-    private void testValidMultivariateFixed()
+    public void testValidMultivariateFixed()
     {
-        LinearModelPowerSampleSizeParameters goodParams = buildValidMultivariateInputs(false);
+        LinearModelPowerSampleSizeParameters goodParams = buildValidMultivariateFixedInputs();
 
         PowerGLMM calc = new PowerGLMM();
-//        goodParams.setTestStatistic(TestStatistic.UNIREP);
-//        checkPower("Valid Multivariate, Fixed, UNIREP", calc, goodParams);
-        goodParams.setTestStatistic(TestStatistic.HOTELLING_LAWLEY_TRACE);
-        checkPower("Valid Multivariate, Fixed, HLT",calc, goodParams);
-        goodParams.setTestStatistic(TestStatistic.PILLAU_BARTLETT_TRACE);
-        checkPower("Valid Multivariate, Fixed, PB",calc, goodParams);
-        goodParams.setTestStatistic(TestStatistic.WILKS_LAMBDA);
-        checkPower("Valid Multivariate, Fixed, W",calc, goodParams);        
+        goodParams.setTestStatistic(TestStatistic.UNIREP);
+        checkPower("Valid Multivariate, Fixed, UNIREP", calc, goodParams);
+        goodParams.setUnivariateCorrection(UnivariateCorrection.BOX);
+        checkPower("Valid Multivariate, Fixed, UNIREP", calc, goodParams);
+//        goodParams.setTestStatistic(TestStatistic.HOTELLING_LAWLEY_TRACE);
+//        checkPower("Valid Multivariate, Fixed, HLT",calc, goodParams);
+//        goodParams.setTestStatistic(TestStatistic.Pillai_BARTLETT_TRACE);
+//        checkPower("Valid Multivariate, Fixed, PB",calc, goodParams);
+//        goodParams.setTestStatistic(TestStatistic.WILKS_LAMBDA);
+//        checkPower("Valid Multivariate, Fixed, W",calc, goodParams);        
 
     }
 
     private void testInvalidMultivariateFixed()
     {
-        LinearModelPowerSampleSizeParameters goodParams = buildValidMultivariateInputs(false);
+        LinearModelPowerSampleSizeParameters goodParams = buildValidMultivariateFixedInputs();
 
         goodParams.setSigmaError(null);
         PowerGLMM calc = new PowerGLMM();
@@ -81,27 +87,20 @@ public class TestPowerGLMM extends TestCase
 
     }
 
-    public void testValidMultivariateRandom()
+    private void testValidMultivariateRandom()
     {
-        LinearModelPowerSampleSizeParameters goodParams = buildValidMultivariateInputs(true);
+        LinearModelPowerSampleSizeParameters goodParams = buildValidMultivariateRandomInputs();
         goodParams.setPowerMethod(PowerMethod.QUANTILE_POWER);
         PowerGLMM calc = new PowerGLMM();
         goodParams.setTestStatistic(TestStatistic.UNIREP);
         checkPower("Valid Multivariate, Random, UNIREP", calc, goodParams);
         goodParams.setTestStatistic(TestStatistic.HOTELLING_LAWLEY_TRACE);
         checkPower("Valid Multivariate, Random, HLT",calc, goodParams);
-        goodParams.setTestStatistic(TestStatistic.PILLAU_BARTLETT_TRACE);
-        checkPower("Valid Multivariate, Random, PB",calc, goodParams);
-        goodParams.setTestStatistic(TestStatistic.WILKS_LAMBDA);
-        checkPower("Valid Multivariate, Random, W",calc, goodParams);  
-
-
-
     }
 
-    public void testInvalidMultivariateRandom()
+    private void testInvalidMultivariateRandom()
     {
-        LinearModelPowerSampleSizeParameters goodParams = buildValidMultivariateInputs(true);
+        LinearModelPowerSampleSizeParameters goodParams = buildValidMultivariateRandomInputs();
 
 
 
@@ -141,7 +140,7 @@ public class TestPowerGLMM extends TestCase
                         new LinearModelPowerSampleSizeParameters(params);
                     // scale the inputs
                     testParams.setBeta(params.getBeta().scalarMultiply(betaScale));
-                    //testParams.setSigmaError(params.getSigmaError().scalarMultiply(sigmaScale));
+                    testParams.setSigmaError(params.getSigmaError().scalarMultiply(sigmaScale));
                     testParams.setSampleSize(sampleSize);
                     try
                     {
@@ -192,7 +191,49 @@ public class TestPowerGLMM extends TestCase
     }   
 
 
-    private LinearModelPowerSampleSizeParameters buildValidMultivariateInputs(boolean hasRandom)
+    private LinearModelPowerSampleSizeParameters buildValidMultivariateFixedInputs()
+    {
+        LinearModelPowerSampleSizeParameters params = new LinearModelPowerSampleSizeParameters();
+        params.setAlpha(ALPHA);
+
+        int Q = 4;
+        // create design matrix
+        RealMatrix essenceData = MatrixUtils.createRealIdentityMatrix(Q);
+        EssenceMatrix essence = new EssenceMatrix(essenceData);
+        essence.setRowMetaData(0, new RowMetaData(5,1));
+        essence.setRowMetaData(1, new RowMetaData(5,1));
+        essence.setRowMetaData(2, new RowMetaData(5,1));
+        essence.setRowMetaData(3, new RowMetaData(5,1));
+        params.setDesignEssence(essence);
+        
+        // build sigma matrix
+        double rho = 0.4;
+        double [][] sigma = {{1,rho,rho},{rho,1,rho},{rho,rho,1}};
+        params.setSigmaError(new Array2DRowRealMatrix(sigma));
+        
+        // build beta matrix
+        double [][] beta = {{1,0,0},{0,0,0},{0,0,0},{0,0,0}};
+        params.setBeta(new Array2DRowRealMatrix(beta));
+
+        // build theta null matrix
+        double [][] theta0 = {{0,0},{0,0},{0,0}};
+        params.setTheta(new Array2DRowRealMatrix(theta0));
+
+        // build between subject contrast
+        double [][] between = {{1,-1,0,0},{1,0,-1,0},{1,0,0,-1}};
+        params.setBetweenSubjectContrast(new Array2DRowRealMatrix(between));
+
+        // build within subject contrast
+        double [][] within = {{1,1},{-1,0},{0,-1}};
+        params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
+
+        RealMatrix U = params.getWithinSubjectContrast();
+        RealMatrix upu = U.multiply(U.transpose());
+        
+        return params;     
+    }   
+    
+    private LinearModelPowerSampleSizeParameters buildValidMultivariateRandomInputs()
     {
         LinearModelPowerSampleSizeParameters params = new LinearModelPowerSampleSizeParameters();
         params.setAlpha(ALPHA);
@@ -206,66 +247,45 @@ public class TestPowerGLMM extends TestCase
         essence.setRowMetaData(1, new RowMetaData(5,1));
         essence.setRowMetaData(2, new RowMetaData(5,1));
         essence.setRowMetaData(3, new RowMetaData(5,1));
-        if (hasRandom)
-        {
-            // add a random column with specified mean/variance
-            ColumnMetaData randColMD = new ColumnMetaData();
-            randColMD.setPredictorType(PredictorType.RANDOM);
-            randColMD.setMean(MEAN);
-            randColMD.setVariance(VARIANCE);
-            essence.setColumnMetaData(3, randColMD);
-            
-            // build sigma G matrix
-            double[][] sigmaG = {{VARIANCE,1,1},{1,VARIANCE,1},{1,1,VARIANCE}};
-            params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
-            
-            // build sigma Y matrix
-            double rho = 0.4;
-            double [][] sigmaY = {{1,rho,rho},{rho,1,rho},{rho,rho,1}};
-            params.setSigmaOutcome(new Array2DRowRealMatrix(sigmaY));
-
-            // build sigma YG
-            double rhoYG = 0.8;
-            double [][] sigmaYG = {{rhoYG,rho,rho},{rho,rhoYG,rho},{rho,rho,rhoYG}};
-            params.setSigmaOutcomeGaussianRandom(new Array2DRowRealMatrix(sigmaYG));
-        }
-        else
-        {
-            // build sigma matrix
-            double rho = 0.4;
-            double [][] sigma = {{1,rho,rho},{rho,1,rho},{rho,rho,1}};
-            params.setSigmaError(new Array2DRowRealMatrix(sigma));
-        }
         params.setDesignEssence(essence);
+        
+        // add a random column with specified mean/variance
+        ColumnMetaData randColMD = new ColumnMetaData();
+        randColMD.setPredictorType(PredictorType.RANDOM);
+        randColMD.setMean(MEAN);
+        randColMD.setVariance(VARIANCE);
+        essence.setColumnMetaData(3, randColMD);
+
+        // build sigma G matrix
+        double[][] sigmaG = {{VARIANCE,1,1},{1,VARIANCE,1},{1,1,VARIANCE}};
+        params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
+
+        // build sigma Y matrix
+        double rho = 0.4;
+        double [][] sigmaY = {{1,rho,rho},{rho,1,rho},{rho,rho,1}};
+        params.setSigmaOutcome(new Array2DRowRealMatrix(sigmaY));
+
+        // build sigma YG
+        double rhoYG = 0.8;
+        double [][] sigmaYG = {{rhoYG,rho,rho},{rho,rhoYG,rho},{rho,rho,rhoYG}};
+        params.setSigmaOutcomeGaussianRandom(new Array2DRowRealMatrix(sigmaYG));
+
         // build beta matrix
-        double [][] beta = {{1,0,0},{0,0,0},{0,0,0},{0,0,0}};
+        double [][] beta = {{1,0,0},{0,2,0},{0,0,0},{0,0,0}};
         params.setBeta(new Array2DRowRealMatrix(beta));
 
-        if (hasRandom)
-        {
-            // build theta null matrix
-            double [][] theta0 = {{0,0},{0,0}};
-            params.setTheta(new Array2DRowRealMatrix(theta0));
-            
-            // build between subject contrast
-            double [][] between = {{1,-1,0,0},{1,0,-1,0}};
-            params.setBetweenSubjectContrast(new Array2DRowRealMatrix(between));
-        }
-        else
-        {
-            // build theta null matrix
-            double [][] theta0 = {{0,0},{0,0},{0,0}};
-            params.setTheta(new Array2DRowRealMatrix(theta0));
-            
-            // build between subject contrast
-            double [][] between = {{1,-1,0,0},{1,0,-1,0},{1,0,0,-1}};
-            params.setBetweenSubjectContrast(new Array2DRowRealMatrix(between));
-        }
+        // build theta null matrix
+        double [][] theta0 = {{0,0},{0,0}};
+        params.setTheta(new Array2DRowRealMatrix(theta0));
+
+        // build between subject contrast
+        double [][] between = {{1,-1,0,0},{1,0,-1,0}};
+        params.setBetweenSubjectContrast(new Array2DRowRealMatrix(between));
 
         // build within subject contrast
         double [][] within = {{1,1},{-1,0},{0,-1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
 
         return params;     
-    }   
+    }
 }
