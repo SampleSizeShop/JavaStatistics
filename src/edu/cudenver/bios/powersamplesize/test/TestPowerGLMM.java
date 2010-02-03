@@ -17,19 +17,29 @@ import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizePa
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.TestStatistic;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.UnivariateCorrection;
 
+import jsc.distributions.Normal;
+import jsc.onesample.Ttest;
 import junit.framework.TestCase;
 
 public class TestPowerGLMM extends TestCase
 {
     private static final int SIMULATION_SIZE = 10000;
-    private static final double PRECISION = 0.01;
+    private static final double UNIT_TEST_ALPHA = 0.01;
     private static final double ALPHA = 0.05;    
     private static final double MEAN = 9.75;
     private static final double VARIANCE = 2.0;
     private static final double[] BETA_SCALE = {0,1,2};
     private static final double[] SIGMA_SCALE = {1,2};
     private static final int[] SAMPLE_SIZE = {20};
-
+    private Normal normalDist;
+    private DecimalFormat Number;
+    
+    public void setUp()
+    {
+        normalDist = new Normal();
+        Number = new DecimalFormat("#0.0000");
+    }
+    
     public void testValidUnivariateFixed()
     {
         LinearModelPowerSampleSizeParameters goodParams = buildValidUnivariateInputs();
@@ -37,9 +47,9 @@ public class TestPowerGLMM extends TestCase
         PowerGLMM calc = new PowerGLMM();
         goodParams.setTestStatistic(TestStatistic.UNIREP);
         checkPower("Valid Univariate, Fixed, UNIREP", calc, goodParams);
+        // make sure unirep corrections don't mess up the univariate case
         goodParams.setUnivariateCorrection(UnivariateCorrection.BOX);
         checkPower("Valid Univariate, Fixed, UNIREP, BOX correction", calc, goodParams);
-        
         goodParams.setTestStatistic(TestStatistic.HOTELLING_LAWLEY_TRACE);
         checkPower("Valid Univariate, Fixed, HLT",calc, goodParams);
         goodParams.setTestStatistic(TestStatistic.PILLAI_BARTLETT_TRACE);
@@ -48,14 +58,13 @@ public class TestPowerGLMM extends TestCase
         checkPower("Valid Univariate, Fixed, W",calc, goodParams);        
     }
 
-    private void testInvalidUnivariateFixed()
+    public void testInvalidUnivariateFixed()
     {
         LinearModelPowerSampleSizeParameters goodParams = buildValidUnivariateInputs();
         goodParams.setBeta(null);
         PowerGLMM calc = new PowerGLMM();
         goodParams.setTestStatistic(TestStatistic.UNIREP);
         checkPowerFail("Invalid Beta, Univariate, Fixed, UNIREP", calc, goodParams);
-
     }
 
     public void testValidMultivariateFixed()
@@ -63,16 +72,20 @@ public class TestPowerGLMM extends TestCase
         LinearModelPowerSampleSizeParameters goodParams = buildValidMultivariateFixedInputs();
 
         PowerGLMM calc = new PowerGLMM();
+        goodParams.setTestStatistic(TestStatistic.HOTELLING_LAWLEY_TRACE);
+        checkPower("Valid Multivariate, Fixed, HLT",calc, goodParams);
+        goodParams.setTestStatistic(TestStatistic.PILLAI_BARTLETT_TRACE);
+        checkPower("Valid Multivariate, Fixed, PB",calc, goodParams);
+        goodParams.setTestStatistic(TestStatistic.WILKS_LAMBDA);
+        checkPower("Valid Multivariate, Fixed, W",calc, goodParams);       
         goodParams.setTestStatistic(TestStatistic.UNIREP);
         checkPower("Valid Multivariate, Fixed, UNIREP", calc, goodParams);
         goodParams.setUnivariateCorrection(UnivariateCorrection.BOX);
-        checkPower("Valid Multivariate, Fixed, UNIREP", calc, goodParams);
-//        goodParams.setTestStatistic(TestStatistic.HOTELLING_LAWLEY_TRACE);
-//        checkPower("Valid Multivariate, Fixed, HLT",calc, goodParams);
-//        goodParams.setTestStatistic(TestStatistic.Pillai_BARTLETT_TRACE);
-//        checkPower("Valid Multivariate, Fixed, PB",calc, goodParams);
-//        goodParams.setTestStatistic(TestStatistic.WILKS_LAMBDA);
-//        checkPower("Valid Multivariate, Fixed, W",calc, goodParams);        
+        checkPower("Valid Multivariate, Fixed, UNIREP, BOX", calc, goodParams);
+        goodParams.setUnivariateCorrection(UnivariateCorrection.GEISSER_GREENHOUSE);
+        checkPower("Valid Multivariate, Fixed, UNIREP, GG", calc, goodParams);
+        goodParams.setUnivariateCorrection(UnivariateCorrection.HUYNH_FELDT);
+        checkPower("Valid Multivariate, Fixed, UNIREP, HF", calc, goodParams);
 
     }
 
@@ -80,7 +93,7 @@ public class TestPowerGLMM extends TestCase
     {
         LinearModelPowerSampleSizeParameters goodParams = buildValidMultivariateFixedInputs();
 
-        goodParams.setSigmaError(null);
+        goodParams.setSigmaGaussianRandom(null);
         PowerGLMM calc = new PowerGLMM();
         goodParams.setTestStatistic(TestStatistic.UNIREP);
         checkPowerFail("Invalid Beta, Multivariate, Fixed, UNIREP", calc, goodParams);
@@ -112,11 +125,11 @@ public class TestPowerGLMM extends TestCase
         {
             double calculated = calc.getCalculatedPower(params);
             double simulated = calc.getSimulatedPower((PowerSampleSizeParameters) params, SIMULATION_SIZE);
-            assert(!(Math.abs(simulated - calculated) < PRECISION));
+            assertFalse(powersAreSame(calculated, simulated));
         }
         catch(Exception e)
         {
-            System.out.println(label + ">> Recognized invalid inputs");
+            System.out.println(label + ">> Recognized invalid inputs: " + e.getMessage());
             assert(true);
         }
 
@@ -124,18 +137,15 @@ public class TestPowerGLMM extends TestCase
 
     private void checkPower(String label, PowerGLMM calc, LinearModelPowerSampleSizeParameters params)
     {
-        int tests = 0; // number of tests run
-        int matches = 0; // number of matches between calculated and simulated power
-        DecimalFormat Number = new DecimalFormat("#0.0000");
-
+        int tests = 0;
+        int matches = 0;
 
         for(double sigmaScale : SIGMA_SCALE)
         {
             for(double betaScale : BETA_SCALE)
             {
                 for(int sampleSize: SAMPLE_SIZE)
-                {
-                    tests++;     
+                {  
                     LinearModelPowerSampleSizeParameters testParams = 
                         new LinearModelPowerSampleSizeParameters(params);
                     // scale the inputs
@@ -149,7 +159,8 @@ public class TestPowerGLMM extends TestCase
 
                         System.out.println(label + "["+sigmaScale+","+betaScale+","+sampleSize
                                 +"]>> Calculated power: " + Number.format(calculated) + ", simulated power: " + Number.format(simulated));
-                        if (Math.abs(simulated - calculated) < PRECISION) matches++;
+                        tests++;
+                        if (powersAreSame(calculated, simulated)) matches++;
                     }
                     catch(Exception e)
                     {
@@ -159,6 +170,7 @@ public class TestPowerGLMM extends TestCase
                 }
             }
         }
+        
         assertEquals(tests, matches);
     }
 
@@ -233,6 +245,15 @@ public class TestPowerGLMM extends TestCase
         return params;     
     }   
     
+    private boolean powersAreSame(double calc, double sim)
+    {
+        double z = Math.abs((sim - calc) / Math.sqrt((sim * (1 - sim)) / SIMULATION_SIZE));
+        
+        double p = 2 * normalDist.upperTailProb(z);
+        System.out.println("(p = " + Number.format(p) + ")");
+        return (p > UNIT_TEST_ALPHA);
+    }
+    
     private LinearModelPowerSampleSizeParameters buildValidMultivariateRandomInputs()
     {
         LinearModelPowerSampleSizeParameters params = new LinearModelPowerSampleSizeParameters();
@@ -288,4 +309,6 @@ public class TestPowerGLMM extends TestCase
 
         return params;     
     }
+    
+    
 }
