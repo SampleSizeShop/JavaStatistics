@@ -99,6 +99,7 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
         this.withinSubjectContrast = params.getWithinSubjectContrast();
         this.testStatistic = params.getTestStatistic();
         this.powerMethod = params.getPowerMethod();
+        this.quantile = params.getQuantile();
         this.univariateCorrection = params.getUnivariateCorrection();
     }
     
