@@ -1,6 +1,7 @@
 package edu.cudenver.bios.powersamplesize;
 
-import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import jsc.distributions.FishersF;
 import jsc.distributions.NoncentralFishersF;
@@ -40,6 +41,29 @@ public class PowerGLMM implements Power
 {   
     double unirepEpsilon = Double.NaN;
     double unirepEpsilonExpectedValue = Double.NaN;
+    
+    // for the unirep test, the degrees of freedom change depending on two 
+    // factors - data analysis (i.e. simulation or model fit) vs. power analysis,
+    // and whether we need df for the F distribution under the null or the 
+    // alternative hypothesis
+    private enum DegreesOfFreedomType
+    {
+    	POWER_NULL,
+    	POWER_ALTERNATIVE,
+    	DATA_ANALYSIS_NULL
+    };
+    
+    private class EigenValueMultiplicityPair
+    {
+    	public double eigenValue;
+    	public double multiplicity;
+    	
+    	public EigenValueMultiplicityPair(double eigenValue, double multiplicity)
+    	{
+    		this.eigenValue = eigenValue;
+    		this.multiplicity = multiplicity;
+    	}
+    };
     
     /**
      * Calculate power for the general linear multivariate model based on
@@ -117,9 +141,9 @@ public class PowerGLMM implements Power
         
         // get degrees of freedom for F distribution under null hypothesis
         // calculate numerator degrees of freedom
-        double ndf = getNumeratorDF(powerParams, true);
+        double ndf = getNumeratorDF(powerParams, DegreesOfFreedomType.DATA_ANALYSIS_NULL);
         // calculate denominator df 
-        double ddf = getDenominatorDF(powerParams, true);
+        double ddf = getDenominatorDF(powerParams, DegreesOfFreedomType.DATA_ANALYSIS_NULL);
         
         // get total observations, N, and rank of design matrix
         RealMatrix X = powerParams.getDesign();
@@ -160,8 +184,7 @@ public class PowerGLMM implements Power
             double fobs = getObservedF(simulatedParams, ddf);
 
             // get the p-value from a central F distribution
-            FishersF centralFDist = new FishersF(ndf, ddf);
-            double pvalue = 1 - centralFDist.cdf(fobs);
+            double pvalue = FishersF.upperTailProb(fobs, ndf, ddf);
 
             // check if we reject the null hypothesis
             if (pvalue <= params.getAlpha())
@@ -318,7 +341,6 @@ public class PowerGLMM implements Power
         
         // update the sigma error if we have a baseline covariate
         EssenceMatrix XEssence = params.getDesignEssence();
-        
         int numRandom = (XEssence != null ? XEssence.getRandomPredictorCount() : 0);
         if (numRandom == 1)
         {
@@ -357,10 +379,10 @@ public class PowerGLMM implements Power
     private double getConditionalPower(LinearModelPowerSampleSizeParameters params)
     {
         // get the degrees of freedom for the central F distribution under null hypothesis
-        double nullNdf = getNumeratorDF(params, true);
-        double nullDdf = getDenominatorDF(params, true);
+        double nullNdf = getNumeratorDF(params, DegreesOfFreedomType.POWER_NULL);
+        double nullDdf = getDenominatorDF(params, DegreesOfFreedomType.POWER_NULL);
         // get the approximate critical F value (central F) under the null hypothesis
-        double Fcrit = getCriticalF(nullNdf, nullDdf, params);
+        double Fcrit = getCriticalF(nullNdf, nullDdf, params.getAlpha());
         
         // calculate the non-centrality parameter for the specified test statistic
         double a = params.getBetweenSubjectContrast().getRowDimension();
@@ -372,8 +394,8 @@ public class PowerGLMM implements Power
 
         // get the degrees of freedom for the non-central F under the alternative hypothesis
         // (these only change for the corrected Unirep test)
-        double altNdf = getNumeratorDF(params, false);
-        double altDdf = getDenominatorDF(params, false);
+        double altNdf = getNumeratorDF(params, DegreesOfFreedomType.POWER_ALTERNATIVE);
+        double altDdf = getDenominatorDF(params, DegreesOfFreedomType.POWER_ALTERNATIVE);
         // create a non-central F distribution (F distribution under the alternative hypothesis)
         NoncentralFishersF nonCentralFDist = new NoncentralFishersF(altNdf, altDdf, nonCentralityParam);
         // return power based on the non-central F
@@ -383,10 +405,10 @@ public class PowerGLMM implements Power
     private double getUnconditionalPower(LinearModelPowerSampleSizeParameters params)
     {
         // get the degrees of freedom for the central F distribution under null hypothesis
-        double nullNdf = getNumeratorDF(params, true);
-        double nullDdf = getDenominatorDF(params, true);
+        double nullNdf = getNumeratorDF(params, DegreesOfFreedomType.POWER_NULL);
+        double nullDdf = getDenominatorDF(params, DegreesOfFreedomType.POWER_NULL);
         // get the approximate critical F value (central F) under the null hypothesis
-        double Fcrit = getCriticalF(nullNdf, nullDdf, params);
+        double Fcrit = getCriticalF(nullNdf, nullDdf, params.getAlpha());
         
         // determine unconditional power by integrating over all possible values 
         // of the non-centrality parameter
@@ -399,10 +421,10 @@ public class PowerGLMM implements Power
     private double getQuantilePower(LinearModelPowerSampleSizeParameters params)
     {
         // get the degrees of freedom for the central F distribution under null hypothesis
-        double nullNdf = getNumeratorDF(params, true);
-        double nullDdf = getDenominatorDF(params, true);
+        double nullNdf = getNumeratorDF(params, DegreesOfFreedomType.POWER_NULL);
+        double nullDdf = getDenominatorDF(params, DegreesOfFreedomType.POWER_NULL);
         // get the approximate critical F value (central F) under the null hypothesis
-        double Fcrit = getCriticalF(nullNdf, nullDdf, params);
+        double Fcrit = getCriticalF(nullNdf, nullDdf, params.getAlpha());
         
         // calculate the non-centrality parameter for the specified test statistic
         // For quantile power, we get the value from the distribution of the non-centrality
@@ -413,8 +435,8 @@ public class PowerGLMM implements Power
         
         // get the degrees of freedom for the non-central F under the alternative hypothesis
         // (these only change for the corrected Unirep test)
-        double altNdf = getNumeratorDF(params, false);
-        double altDdf = getDenominatorDF(params, false);
+        double altNdf = getNumeratorDF(params, DegreesOfFreedomType.POWER_ALTERNATIVE);
+        double altDdf = getDenominatorDF(params, DegreesOfFreedomType.POWER_ALTERNATIVE);
         // create a non-central F distribution (F distribution under the alternative hypothesis)
         NoncentralFishersF nonCentralFDist = new NoncentralFishersF(altNdf, altDdf, nonCentralityParam);
         // return power based on the non-central F
@@ -429,12 +451,11 @@ public class PowerGLMM implements Power
      * @param params linear model inputs
      * 
      */
-    private double getCriticalF(double ndf, double ddf, 
-            LinearModelPowerSampleSizeParameters params)
+    private double getCriticalF(double ndf, double ddf, double alpha)
     throws IllegalArgumentException
     {                                
         FishersF centralFDist = new FishersF(ndf, ddf);
-        return centralFDist.inverseCdf(1 - params.getAlpha());
+        return centralFDist.inverseCdf(1 - alpha);
     }
     
     /**
@@ -450,45 +471,52 @@ public class PowerGLMM implements Power
      * @return numerator degrees of freedom
      * @throws IllegalArgumentException
      */
-    private double getNumeratorDF(LinearModelPowerSampleSizeParameters params, boolean underNullHypothesis)
+    private double getNumeratorDF(LinearModelPowerSampleSizeParameters params, DegreesOfFreedomType dfType)
     throws IllegalArgumentException
     {
         double a = params.getBetweenSubjectContrast().getRowDimension();
         double b = params.getWithinSubjectContrast().getColumnDimension();
-        double df;
+        
+        // For Wilks, Hotelling-Lawley, and Pillai-Bartlett, the numerator df is always a* b
+        double df = a * b;
         
         if (params.getTestStatistic() == TestStatistic.UNIREP)
         {
-            if (underNullHypothesis)
-            {
-                // unirep numerator df under null hypothesis
-                switch(params.getUnivariateCorrection())
-                {
-                case GEISSER_GREENHOUSE:
-                case HUYNH_FELDT:
-                    // a * b * E[epsilon]
-                    df = a * b * this.unirepEpsilonExpectedValue;
-                    break;
-                case BOX:
-                    // a
-                    df = a;
-                    break;
-                default: // uncorrected, a*b
-                    df = a * b;
-                    break;
-                }
-            }
-            else
-            {
-                // unirep alternative hypotheses: a*b*epsilon 
-                df = a * b * this.unirepEpsilon;
-            }
-        }
-        else
-        {
-            // all other cases - same df used for both null and alternative
-            // for wilks, HLT, PB
-            df = a * b;
+        	// for the unirep test, the degrees of freedom change for power under the null vs alternative, and
+        	// also if we are doing data analysis under the null hypothesis
+    		switch(params.getUnivariateCorrection())
+    		{
+    		case GEISSER_GREENHOUSE:
+    		case HUYNH_FELDT:
+    		{
+    			// GG, HF correction, we multiply the ndf by the epsilon estimate for
+    			// power analysis (under alternative) and for data analysis.  For power under
+    			// the null, we multiply by the expected value of the epsilon estimate
+    			if (dfType == DegreesOfFreedomType.POWER_NULL)
+    				df = a * b * this.unirepEpsilonExpectedValue;
+    			else
+    				df = a * b * this.unirepEpsilon;
+    			break;
+    		}
+    		case BOX:
+    			// for the conservative, or "Box" test, we adjust by epsilon only for
+    			// power analysis under the alternative.  The ndf are the same for power
+    			// under the null and for data analysis
+    			if (dfType == DegreesOfFreedomType.POWER_ALTERNATIVE)
+    				df = a * b * this.unirepEpsilon;
+    			else
+    				df = a;
+    			break;
+    		default: 
+    			// in the uncorrected, we adjust by epsilon only for
+    			// power analysis under the alternative.  The ndf are the same for power
+    			// under the null and for data analysis
+    			if (dfType == DegreesOfFreedomType.POWER_ALTERNATIVE)
+    				df = a * b * this.unirepEpsilon;
+    			else
+    				df = a * b;
+    			break;
+    		}
         }
         
         return df;
@@ -496,47 +524,137 @@ public class PowerGLMM implements Power
     
     private void calculateUnirepCorrection(LinearModelPowerSampleSizeParameters params)
     {          
-        // handle uncorrected unirep test
-        if (params.getUnivariateCorrection() == UnivariateCorrection.NONE)
-        {
-            this.unirepEpsilon = 1;
-            this.unirepEpsilonExpectedValue = 1;
-        }
-        else
-        {
-            // we are either not using the cached value or the correction epsilon
-            // has not yet been calculated for this parameter set
-            RealMatrix U = params.getWithinSubjectContrast();
-            RealMatrix X = params.getDesign();
-            int b = new SingularValueDecompositionImpl(U).getRank();
-            int r = new SingularValueDecompositionImpl(U).getRank();
-            RealMatrix sigmaStar = U.transpose().multiply(params.getSigmaError().multiply(U));
-            double[] eigenValues = new EigenDecompositionImpl(sigmaStar, MathUtils.SAFE_MIN).getRealEigenvalues();
-            double sumLambdaSquared = 0;
-            double sumLambda = 0;
-            for(double value: eigenValues)
-            {
-                sumLambda += value;
-                sumLambdaSquared += value * value;
-            }
-            double epsilon = (sumLambda*sumLambda) / (b * (sumLambdaSquared));
+    	RealMatrix U = params.getWithinSubjectContrast();
+    	RealMatrix X = params.getDesign();
+    	int b = new SingularValueDecompositionImpl(U).getRank();
+    	int r = new SingularValueDecompositionImpl(U).getRank();
+    	int N = X.getRowDimension();
+    	// get the sigmaStar matrix: U' *sigmaError * U
+    	RealMatrix sigmaStar = U.transpose().multiply(params.getSigmaError().multiply(U));
+    	sigmaStar = sigmaStar.scalarMultiply(1/sigmaStar.getTrace()); // normalize sigma*
 
-            switch(params.getUnivariateCorrection())
-            {
-            case GEISSER_GREENHOUSE:
-                unirepEpsilon = epsilon;
-                break;
-            case BOX:
-                unirepEpsilon = epsilon;
-                unirepEpsilonExpectedValue = 1;
-                break;
-            case HUYNH_FELDT:
-                unirepEpsilon = 1;
-                break;
-            default:
-                unirepEpsilon = 1;
-            }
-        }
+    	// get the eigen values of the normalized sigmaStar matrix
+    	double[] eigenValues = new EigenDecompositionImpl(sigmaStar, MathUtils.SAFE_MIN).getRealEigenvalues();
+    	if (eigenValues.length <= 0) throw new IllegalArgumentException("Failed to compute eigenvalues for sigma* matrix");
+    	Arrays.sort(eigenValues); // put eigenvalues in ascending order
+
+    	// calculate epsilon (correction for violation of sphericity)
+    	// to avoid looping over the eigenvalues twice, we also calculate the multiplicity for distinct eigenvalues
+    	
+    	// list of distinct eigenvalues with multiplicity
+    	ArrayList<EigenValueMultiplicityPair> distinctEigenValues = new ArrayList<EigenValueMultiplicityPair>();
+    	// initialize values for the first eigen value
+    	double first = eigenValues[0];
+    	distinctEigenValues.add(new EigenValueMultiplicityPair(first, 1));
+    	double sumLambda = first;
+		double sumLambdaSquared = first * first;
+		
+    	// loop over remaining eigen values, saving distinct eigen values
+    	for(int i = 1; i < eigenValues.length; i++)
+    	{
+    		double value = eigenValues[i];
+    		// build the sum & sum of squares of eigen values
+    		sumLambda += value;
+    		sumLambdaSquared += value * value;
+    		
+    		// determine if this is a distinct eigen value and calculate multiplicity
+			EigenValueMultiplicityPair prev = distinctEigenValues.get(distinctEigenValues.size()-1);
+			if (Math.abs(prev.eigenValue - value) > MathUtils.SAFE_MIN)
+			{
+				// found new distinct eigen value
+				distinctEigenValues.add(new EigenValueMultiplicityPair(value, 1));
+			}
+			else
+			{
+				// repeat of same eigenvalue, so  increment the multiplicity
+				prev.multiplicity++;
+			}
+    	}
+    	
+    	// calculate estimate of epsilon (correction for violation of spehericity assumption)
+    	unirepEpsilon = (sumLambda*sumLambda) / (b * (sumLambdaSquared));
+    	// the Huynh-Feldt test uses a bias-corrected version of the epsilon estimate
+    	if (params.getUnivariateCorrection() == UnivariateCorrection.HUYNH_FELDT)
+    		unirepEpsilon = (N*b*unirepEpsilon - 2)/(b*(N - r - b*unirepEpsilon));
+
+    	// For Geisser-Greenhouse and Huynh Feldt, we also need the expected value of the epsilon
+    	// estimate.  Note, the estimates of epsilon represent different functions of the
+    	// eigenvalues, so the resulting derivatives and expected values are specific to each test
+    	if (params.getUnivariateCorrection() == UnivariateCorrection.GEISSER_GREENHOUSE)
+    	{
+    		// calculate the expected value of the epsilon estimate
+    		// E[f(lambda)] = f(lambda) + g1 / (N - r)
+    		// see Muller, Barton (1989) for details
+    		double g1 = 0;
+    		for(EigenValueMultiplicityPair evmI : distinctEigenValues)
+    		{
+    			double firstDerivative = 
+    				((2 * sumLambda)/(b * sumLambdaSquared) - 
+    					(2 * evmI.eigenValue * sumLambda * sumLambda)/(b*sumLambdaSquared*sumLambdaSquared));
+    			
+    			double secondDerivative = 
+    				(2 / (b * sumLambdaSquared) - 
+    					(8*evmI.eigenValue*sumLambda)/(b*sumLambdaSquared*sumLambdaSquared) + 
+    						(8*evmI.eigenValue*evmI.eigenValue*sumLambda*sumLambda)/(b*sumLambdaSquared*sumLambdaSquared*sumLambdaSquared) - 
+    							(2*sumLambda*sumLambda)/(b*sumLambdaSquared*sumLambdaSquared)); //TODO: finish
+    			
+    			// accumulate the first term of g1 (sum over distinct eigen vals of 1st derivative * eigen val ^2 * multiplicity)
+    			g1 += secondDerivative * evmI.eigenValue * evmI.eigenValue * evmI.multiplicity;
+    			// loop over elements not equal to current
+    			for(EigenValueMultiplicityPair evmJ : distinctEigenValues)
+    			{
+    				if (evmI != evmJ)
+    				{
+    					// accumulate second term of g1
+    					g1 += ((firstDerivative * evmI.eigenValue * evmI.multiplicity * evmJ.eigenValue * evmJ.multiplicity) /
+    							(evmI.eigenValue - evmJ.eigenValue));
+    				}
+    			}
+    		}
+    		
+    		this.unirepEpsilonExpectedValue = unirepEpsilon  + g1 / (N - r);
+    	}
+    	else if (params.getUnivariateCorrection() == UnivariateCorrection.HUYNH_FELDT)
+    	{
+    		// calculate the expected value of the epsilon estimate
+    		// E[h(lambda)] = h(lambda) + g1 / (N - r)
+    		// h(lambda) = h1(lambda) / (b*h2(lambda)
+    		// see Muller, Barton (1989) for details
+    		double h1 = N * sumLambda * sumLambda - 2 * sumLambdaSquared;
+    		double h2 = (N - r) * sumLambdaSquared - (sumLambda * sumLambda);
+    		double g1 = 0;
+    		for(EigenValueMultiplicityPair evmI : distinctEigenValues)
+    		{
+    			// derivatives of sub-equations comprising epsilon estimator
+    			double h1firstDerivative = (2 * N * sumLambda) - (4 *evmI.eigenValue); // TODO: finish
+    			double h1secondDerivative = 2 * N - 4;
+    				
+    			double h2firstDerivative = (2 * (N - r) * evmI.eigenValue) - (2 * sumLambda); 
+    			double h2SecondDerivative = 2 * (N - r) - 2;
+
+    			// derivatives of estimate of epsilon
+    			double firstDerivative = (h1firstDerivative / h2) - ((h1 * h2firstDerivative) / h2 * h2); 
+    			double secondDerivative = 
+    				((h1secondDerivative / h2) - (2 * h1firstDerivative * h2firstDerivative)/(h2 * h2) + 
+    						(2 * h1 * h2firstDerivative * h2firstDerivative)/(h2 * h2 * h2) - (h1 * h2SecondDerivative)/(h2 * h2));
+    			
+    			// accumulate the first term of g1 (sum over distinct eigen vals of 1st derivative * eigen val ^2 * multiplicity)
+    			g1 += secondDerivative * evmI.eigenValue * evmI.eigenValue * evmI.multiplicity;
+    			// loop over elements not equal to current
+    			for(EigenValueMultiplicityPair evmJ : distinctEigenValues)
+    			{
+    				if (evmI != evmJ)
+    				{
+    					// accumulate second term of g1
+    					g1 += ((firstDerivative * evmI.eigenValue * evmI.multiplicity * evmJ.eigenValue * evmJ.multiplicity) /
+    							(evmI.eigenValue - evmJ.eigenValue));
+    				}
+    			}
+    		}
+    		
+    		this.unirepEpsilonExpectedValue = unirepEpsilon  + g1 / (N - r);
+    	}
+    		     
     }
     
     /**
@@ -553,7 +671,7 @@ public class PowerGLMM implements Power
      * @throws IllegalArgumentException
      */
     private double getDenominatorDF(LinearModelPowerSampleSizeParameters powerParams,
-            boolean underNullHypothesis)
+            DegreesOfFreedomType dfType)
     throws IllegalArgumentException
     {
         RealMatrix X = powerParams.getDesign();
@@ -574,6 +692,16 @@ public class PowerGLMM implements Power
         double df = -1;
         switch (powerParams.getTestStatistic())
         {
+        case HOTELLING_LAWLEY_TRACE:
+        {
+            df = s * ((N - r) - b -1) + 2;
+            break;
+        }
+        case PILLAI_BARTLETT_TRACE:
+        {
+            df = s * ((N - r) - b + s);
+            break;
+        }
         case WILKS_LAMBDA:
         {
             if (a*a*b*b <= 4)
@@ -586,43 +714,47 @@ public class PowerGLMM implements Power
                 if (gDenominator == 0)
                     throw new IllegalArgumentException("Within and between subject contrasts yielded divide by zero: row of C=" + a + ", cols of U=" + b);
                 double g = Math.sqrt((a*a*b*b - 4) / gDenominator);
-                df = (int) Math.round(g*((N - r) - (b - a +1)/2) - (a*b - 2)/2);
+                df = (g*((N - r) - (b - a +1)/2)) - (a*b - 2)/2;
             }
-            break;
-        }
-        case PILLAI_BARTLETT_TRACE:
-        {
-            df = s * ((N - r) - b + s);
             break;
         }
         case UNIREP:
         {
-            if (underNullHypothesis)
-            {
-                // unirep numerator df under null hypothesis
-                switch(powerParams.getUnivariateCorrection())
-                {
-                case GEISSER_GREENHOUSE:
-                case HUYNH_FELDT:
-                    df = b*(N - r)*this.unirepEpsilonExpectedValue;
-                    break;
-                case BOX:
-                    df = N - r;
-                default: // uncorrected
+        	// for the unirep test, the degrees of freedom change for power under the null vs alternative, and
+        	// also if we are doing data analysis under the null hypothesis
+        	switch(powerParams.getUnivariateCorrection())
+        	{
+        	case GEISSER_GREENHOUSE:
+        	case HUYNH_FELDT:
+        	{
+        		// GG, HF correction, we multiply the ddf by the epsilon estimate for
+        		// power analysis (under alternative) and for data analysis.  For power under
+        		// the null, we multiply by the expected value of the epsilon estimate
+        		if (dfType == DegreesOfFreedomType.POWER_NULL)
+        			df = b*(N - r)*this.unirepEpsilonExpectedValue;
+        		else
+        			df = b*(N - r)*this.unirepEpsilon;
+        		break;
+        	}
+        	case BOX:
+        		// for the conservative, or "Box" test, we adjust by epsilon only for
+        		// power analysis under the alternative.  The ddf are the same for power
+        		// under the null and for data analysis
+        		if (dfType == DegreesOfFreedomType.POWER_ALTERNATIVE)
+        			df = b*(N - r) * this.unirepEpsilon;
+        		else
+        			df = (N - r);
+        		break;
+        	default: 
+        		// in the uncorrected test, we adjust by epsilon only for
+        		// power analysis under the alternative.  The ddf are the same for power
+        		// under the null and for data analysis
+        		if (dfType == DegreesOfFreedomType.POWER_ALTERNATIVE)
+        			df = b*(N - r) * this.unirepEpsilon;
+        		else
                     df = b*(N - r);
-                }
-                df = b*(N - r)*this.unirepEpsilonExpectedValue;
-            }
-            else
-            {
-                // unirep under alternative hypothesis
-                df = b*(N - r)*this.unirepEpsilon;
-            }
-            break;
-        }
-        case HOTELLING_LAWLEY_TRACE:
-        {
-            df = s * ((N - r) - b -1) + 2;
+        		break;
+        	}
             break;
         }
         default:
@@ -644,7 +776,6 @@ public class PowerGLMM implements Power
     private double getObservedF(LinearModelPowerSampleSizeParameters powerParams, double ddf)
     throws IllegalArgumentException
     {
-        
         // calculate the hypothesis and error sum of squares matrices
         RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(powerParams);
         RealMatrix errorSumOfSquares = getErrorSumOfSquares(powerParams);
@@ -691,8 +822,7 @@ public class PowerGLMM implements Power
             throw new IllegalArgumentException("Unknown statistic, cannot compute non-centrality parameter.");
         }
         
-        double fobs = ((association) / (a*b)) / ((1 - association) / (double) ddf);
-        return fobs;
+        return ((association) / (a*b)) / ((1 - association) / ddf);
     }
 
 
