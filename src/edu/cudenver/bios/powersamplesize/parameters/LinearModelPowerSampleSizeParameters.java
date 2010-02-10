@@ -45,6 +45,19 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
         HUYNH_FELDT
     };
     
+    public enum MomentApproximationMethod
+    {
+        NONE,
+        PILLAI_ONE_MOMENT,
+        PILLAI_ONE_MOMENT_OMEGA_MULT,
+        MCKEON_TWO_MOMENT,
+        MCKEON_TWO_MOMENT_OMEGA_MULT,
+        MULLER_TWO_MOMENT,
+        MULLER_TWO_MOMENT_OMEGA_MULT,
+        RAO_TWO_MOMENT,
+        RAO_TWO_MOMENT_OMEGA_MULT
+    };
+    
     TestStatistic testStatistic = TestStatistic.NONE;
     
     RealMatrix beta = null;
@@ -73,6 +86,9 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     double quantile = 0.50;
     
     UnivariateCorrection univariateCorrection = UnivariateCorrection.NONE;
+    
+    MomentApproximationMethod momentMethod =
+        MomentApproximationMethod.NONE;
     
     /**
      * Constructor.  Creates an empty set of linear model power parameters
@@ -319,5 +335,16 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     {
         this.univariateCorrection = univariateCorrection;
     }
+
+    public MomentApproximationMethod getMomentMethod()
+    {
+        return momentMethod;
+    }
+
+    public void setMomentMethod(MomentApproximationMethod momentMethod)
+    {
+        this.momentMethod = momentMethod;
+    }
+    
     
 }
