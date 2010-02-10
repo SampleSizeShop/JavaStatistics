@@ -7,9 +7,9 @@ import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
 
-public class WilksLambdaGLMMTest extends GLMMTest
+public class GLMMTestWilksLambda extends GLMMTest
 {
-    public WilksLambdaGLMMTest(LinearModelPowerSampleSizeParameters params)
+    public GLMMTestWilksLambda(LinearModelPowerSampleSizeParameters params)
     {
         super(params);
     }

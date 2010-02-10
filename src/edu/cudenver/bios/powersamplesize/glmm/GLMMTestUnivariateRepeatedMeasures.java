@@ -12,7 +12,7 @@ import org.apache.commons.math.util.MathUtils;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.UnivariateCorrection;
 
-public class UnivariateRepeatedMeasuresGLMMTest extends GLMMTest
+public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
 {
     double unirepEpsilon = Double.NaN;
     double unirepEpsilonExpectedValue = Double.NaN;
@@ -29,7 +29,7 @@ public class UnivariateRepeatedMeasuresGLMMTest extends GLMMTest
         }
     };
     
-    public UnivariateRepeatedMeasuresGLMMTest(LinearModelPowerSampleSizeParameters params)
+    public GLMMTestUnivariateRepeatedMeasures(LinearModelPowerSampleSizeParameters params)
     {
         super(params);
         

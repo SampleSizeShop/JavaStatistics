@@ -10,13 +10,13 @@ public class GLMMTestFactory
         switch (params.getTestStatistic())
         {
         case WILKS_LAMBDA:
-            return new WilksLambdaGLMMTest(params);
+            return new GLMMTestWilksLambda(params);
         case HOTELLING_LAWLEY_TRACE:
-            return new HotellingLawleyGLMMTest(params);
+            return new GLMMTestHotellingLawley(params);
         case UNIREP:
-            return new UnivariateRepeatedMeasuresGLMMTest(params);
+            return new GLMMTestUnivariateRepeatedMeasures(params);
         case PILLAI_BARTLETT_TRACE:
-            return new PillaiBartlettGLMMTest(params);
+            return new GLMMTestPillaiBartlett(params);
         default:
             throw new IllegalArgumentException("Unknown GLMM test statistic");
         }

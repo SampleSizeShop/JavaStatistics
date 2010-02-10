@@ -6,28 +6,14 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
-import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.MomentApproximationMethod;
 
-public class HotellingLawleyGLMMTest extends GLMMTest
-{    
-    public HotellingLawleyGLMMTest(LinearModelPowerSampleSizeParameters params)
+public class GLMMTestPillaiBartlett extends GLMMTest
+{
+    public GLMMTestPillaiBartlett(LinearModelPowerSampleSizeParameters params)
     {
         super(params);
-    }
+    }   
     
-    /**
-     * Calculate the denominator degrees of freedom for the specified test, based on
-     * whether the null or alternative hypothesis is assumed true.  Note, the null/alternative
-     * degrees of freedom vary only for the corrected forms of the univariate approach to
-     * repeated measures test.
-     * 
-     * @param powerParams input matrices
-     * @param underNullHypothesis if true, returns degrees of freedom for central F distribution 
-     * under the null hypothesis.  If false, returns degrees of freedom for non-central F under 
-     * the alternative hypothesis.
-     * @return numerator degrees of freedom
-     * @throws IllegalArgumentException
-     */
     @Override
     public double getDenominatorDF(DistributionType type)
     {
@@ -46,19 +32,7 @@ public class HotellingLawleyGLMMTest extends GLMMTest
         // minimum of a and b dimensions
         int s = (a < b) ? a : b;  
         
-        double df = Double.NaN;
-        if (params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT ||
-                params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT)
-        {
-            df = s * ((N - r) - b -1) + 2;
-        }
-        else
-        {
-            df = (N - r) * (N - r) - (N - r) * (2 * b + 3) + b * (b + 3);
-            df = df / ((N - r) * (a  + b + 1) - (a + 2 * b + b * b - 1));
-            df = 4 + (a * b + 2) * df;
-        }
-        // TODO Auto-generated method stub
+        double df = s * ((N - r) - b + s);
         return df;
     }
 
@@ -71,26 +45,13 @@ public class HotellingLawleyGLMMTest extends GLMMTest
         return a*b*getObservedF(type);
     }
 
-    /**
-     * Calculate the numerator degrees of freedom for the specified test, based on
-     * whether the null or alternative hypothesis is assumed true.  Note, the null/alternative
-     * degrees of freedom vary only for the corrected forms of the univariate approach to
-     * repeated measures test.
-     * 
-     * @param powerParams input matrices
-     * @param underNullHypothesis if true, returns degrees of freedom for central F distribution 
-     * under the null hypothesis.  If false, returns degrees of freedom for non-central F under 
-     * the alternative hypothesis.
-     * @return numerator degrees of freedom
-     * @throws IllegalArgumentException
-     */
     @Override
     public double getNumeratorDF(DistributionType type)
     {
         double a = params.getBetweenSubjectContrast().getRowDimension();
         double b = params.getWithinSubjectContrast().getColumnDimension();
-        
-        return a * b;
+        double df = a * b;
+        return df;
     }
 
     @Override
@@ -112,28 +73,30 @@ public class HotellingLawleyGLMMTest extends GLMMTest
         
         double association = 0.0;
         
-        double HLT = getHotellingLawleyTrace(hypothesisSumOfSquares, errorSumOfSquares);
-        association = (HLT/s) / (1 + (HLT/s));
+        double PB = getPillaiBartlettTrace(hypothesisSumOfSquares, errorSumOfSquares);
+        association = PB / s;
         
         double ddf = getDenominatorDF(type);
         return ((association) / (a*b)) / ((1 - association) / ddf);
     }
-
+    
     /**
-     * Compute a Hotelling-Lawley Trace statistic
+     * Compute a Pillai Bartlett Trace statistic
      * 
      * @param H hypothesis sum of squares matrix
      * @param E error sum of squares matrix
      * @returns F statistic
      */
-    private double getHotellingLawleyTrace(RealMatrix H, RealMatrix E)
+    private double getPillaiBartlettTrace(RealMatrix H, RealMatrix E)
     {
         if (!H.isSquare() || !E.isSquare() || H.getColumnDimension() != E.getRowDimension())
-            throw new InvalidMatrixException("Failed to compute Hotelling Lawley Trace: hypothesis and error matrices must be square and same dimensions");
+            throw new InvalidMatrixException("Failed to compute Pillai-Bartlett Trace: hypothesis and error matrices must be square and same dimensions");
         
-        RealMatrix inverseE = new LUDecompositionImpl(E).getSolver().getInverse();
-        RealMatrix HinverseE = H.multiply(inverseE);
+        RealMatrix T = H.add(E);
+        RealMatrix inverseT = new LUDecompositionImpl(T).getSolver().getInverse();
+
+        RealMatrix HinverseT = H.multiply(inverseT);
         
-        return HinverseE.getTrace();
+        return HinverseT.getTrace();
     }
 }
