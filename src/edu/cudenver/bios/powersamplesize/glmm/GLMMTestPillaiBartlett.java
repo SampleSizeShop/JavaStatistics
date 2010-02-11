@@ -6,6 +6,7 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
+import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.MomentApproximationMethod;
 
 public class GLMMTestPillaiBartlett extends GLMMTest
 {
@@ -22,27 +23,74 @@ public class GLMMTestPillaiBartlett extends GLMMTest
         RealMatrix U = params.getWithinSubjectContrast();
         
         // a = #rows in between subject contrast matrix, C
-        int a = C.getRowDimension();
+        double a = C.getRowDimension();
         // b = #columns in within subject contrast matrix
-        int b = U.getColumnDimension();
+        double b = U.getColumnDimension();
         // N = total number of subjects (rows in design matrix, X)
-        int N = X.getRowDimension();
+        double N = X.getRowDimension();
         // r = rank of design matrix, X
-        int r = new SingularValueDecompositionImpl(X).getRank();
+        double r = new SingularValueDecompositionImpl(X).getRank();
         // minimum of a and b dimensions
-        int s = (a < b) ? a : b;  
+        double s = (a < b) ? a : b;  
         
-        double df = s * ((N - r) - b + s);
+        double df = Double.NaN;
+        if (params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT ||
+                params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT)
+        {
+            df = s * ((N - r) - b + s);
+        }
+        else
+        {
+            double mu1= a * b / (N - r + a);
+            double factor1 = (N - r + a - b) / (N - r + a - 1);
+            double factor2 = (N - r) / (N - r + a + 2);
+            double variance = 2 * a * b * factor1 * factor2 / ((N - r + a)*(N - r + a));
+            double mu2 = variance + mu1 * mu1;
+            double m1 = mu1 / s;
+            double m2 = mu2 / (s*s);
+            double denom = m2 - m1 * m1;
+            df = 2 * (m1 - m2) * (1 - m1) / denom;
+        }
+
         return df;
     }
 
     @Override
     public double getNonCentrality(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        // calculate the hypothesis and error sum of squares matrices
+        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
+        RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
         
-        return a*b*getObservedF(type);
+        RealMatrix C = params.getBetweenSubjectContrast();
+        RealMatrix U = params.getWithinSubjectContrast();
+        RealMatrix B = params.getBeta();
+        
+        // check if we are uni or multi variate
+        double p = B.getColumnDimension();
+        // a = #rows in between subject contrast matrix, C
+        double a = C.getRowDimension();
+        // b = #columns in within subject contrast matrix, U
+        double b = U.getColumnDimension();
+       // minimum of a and b dimensions
+        double s = (a < b) ? a : b;  
+        
+        double PB = getPillaiBartlettTrace(hypothesisSumOfSquares, errorSumOfSquares);
+        
+        if ((s == 1 && p > 1) ||
+                params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT ||
+                params.getMomentMethod() == MomentApproximationMethod.MULLER_TWO_MOMENT_OMEGA_MULT)
+        {
+            RealMatrix X = params.getDesign();
+            int r = new SingularValueDecompositionImpl(X).getRank();
+            int N = X.getRowDimension();
+            PB *= ((double)(N - r)/(double)N);
+            return N * s * PB / (s - PB);
+        }
+        else
+        {
+            return getDenominatorDF(type) * PB / (s - PB);
+        }
     }
 
     @Override
@@ -50,7 +98,32 @@ public class GLMMTestPillaiBartlett extends GLMMTest
     {
         double a = params.getBetweenSubjectContrast().getRowDimension();
         double b = params.getWithinSubjectContrast().getColumnDimension();
-        double df = a * b;
+        double s = (a < b) ? a : b;  
+        
+        double df = Double.NaN;
+        if (params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT ||
+                params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT)
+        {
+            df = a * b;
+        }
+        else
+        {
+            RealMatrix X = params.getDesign();
+            // N = total number of subjects (rows in design matrix, X)
+            double N = X.getRowDimension();
+            // r = rank of design matrix, X
+            double r = new SingularValueDecompositionImpl(X).getRank();
+            double mu1= a * b / (N - r + a);
+            double factor1 = (N - r + a - b) / (N - r + a - 1);
+            double factor2 = (N - r) / (N - r + a + 2);
+            double variance = 2 * a * b * factor1 * factor2 / ((N - r + a)*(N - r + a));
+            double mu2 = variance + mu1 * mu1;
+            double m1 = mu1 / s;
+            double m2 = mu2 / (s*s);
+            double denom = m2 - m1 * m1;
+            df = 2 * m1 * (m1 - m2) / denom;
+        }
+        
         return df;
     }
 
