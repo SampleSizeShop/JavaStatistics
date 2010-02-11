@@ -65,10 +65,39 @@ public class GLMMTestHotellingLawley extends GLMMTest
     @Override
     public double getNonCentrality(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        // calculate the hypothesis and error sum of squares matrices
+        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
+        RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
         
-        return a*b*getObservedF(type);
+        RealMatrix C = params.getBetweenSubjectContrast();
+        RealMatrix U = params.getWithinSubjectContrast();
+        RealMatrix B = params.getBeta();
+        
+        // check if we are uni or multi variate
+        double p = B.getColumnDimension();
+        // a = #rows in between subject contrast matrix, C
+        double a = C.getRowDimension();
+        // b = #columns in within subject contrast matrix, U
+        double b = U.getColumnDimension();
+       // minimum of a and b dimensions
+        double s = (a < b) ? a : b;  
+        
+        double HLT = getHotellingLawleyTrace(hypothesisSumOfSquares, errorSumOfSquares);
+        
+        if ((s == 1 && p > 1) ||
+                params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT ||
+                params.getMomentMethod() == MomentApproximationMethod.MCKEON_TWO_MOMENT_OMEGA_MULT)
+        {
+            RealMatrix X = params.getDesign();
+            int r = new SingularValueDecompositionImpl(X).getRank();
+            int N = X.getRowDimension();
+            HLT *= ((double)(N - r)/(double)N);
+            return N * s * HLT / s;
+        }
+        else
+        {
+            return getDenominatorDF(type) * HLT / s;
+        }
     }
 
     /**
