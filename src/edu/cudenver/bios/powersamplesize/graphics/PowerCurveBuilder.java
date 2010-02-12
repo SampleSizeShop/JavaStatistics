@@ -1,5 +1,7 @@
 package edu.cudenver.bios.powersamplesize.graphics;
 
+import java.awt.Color;
+
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.XYPlot;
@@ -10,6 +12,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 import edu.cudenver.bios.powersamplesize.Power;
 import edu.cudenver.bios.powersamplesize.SampleSize;
+import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
 
 /**
@@ -51,24 +54,33 @@ public class PowerCurveBuilder
     public JFreeChart getPowerCurve(PowerSampleSizeParameters params)
     throws IllegalArgumentException
     {
+        // select reasonable defaults for minimums and increments 
+        setDefaultIncrements(params);        
+        
     	// create a data series
     	XYSeries series = null;
     	if (bySampleSize)
     		series = buildSeriesPowerByN(params);
     	else
     		series = buildSeriesPowerbyMeanDifference(params);
-
+    	
         // complete the data set
         XYDataset powerData = new XYSeriesCollection(series);
+
         // use a spline renderer to make the connecting lines smooth
         XYSplineRenderer rend = new XYSplineRenderer();
         // turn off shapes displayed at each data point to make a smooth curve
         rend.setBaseShapesVisible(false);
+        rend.setSeriesPaint(0, Color.BLACK);
         // Create the line chart
         XYPlot plot = new XYPlot(powerData, new NumberAxis(xaxisLabel), 
                 new NumberAxis(yaxisLabel), rend);
+        plot.setDomainGridlinesVisible(false);
+        plot.setRangeGridlinesVisible(false);
+       
         JFreeChart chart = new JFreeChart(title, 
                 JFreeChart.DEFAULT_TITLE_FONT, plot, legend);
+        chart.setBackgroundPaint(Color.WHITE);
 
         return chart;
     }
@@ -206,5 +218,24 @@ public class PowerCurveBuilder
 		this.title = title;
 	}
     
-    
+    private void setDefaultIncrements(PowerSampleSizeParameters params)
+    {
+        if (params instanceof LinearModelPowerSampleSizeParameters)
+        {
+            LinearModelPowerSampleSizeParameters lmParams = 
+                (LinearModelPowerSampleSizeParameters) params;
+            
+            sampleSizeIncrement = lmParams.getDesignEssence().getMinimumSampleSize();
+            minimumSampleSize = 2*lmParams.getDesignEssence().getMinimumSampleSize();
+            minimumMeanDifference = 0;
+            meanDifferenceIncrement = 1;
+        }
+        else
+        {
+            sampleSizeIncrement = 1;
+            minimumSampleSize = 2;
+            minimumMeanDifference = 0;
+            meanDifferenceIncrement = 1;
+        }
+    }
 }
