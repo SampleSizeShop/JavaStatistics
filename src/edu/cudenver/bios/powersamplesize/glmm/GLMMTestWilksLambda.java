@@ -6,6 +6,7 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
+import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.MomentApproximationMethod;
 
 public class GLMMTestWilksLambda extends GLMMTest
 {
@@ -22,13 +23,13 @@ public class GLMMTestWilksLambda extends GLMMTest
         RealMatrix U = params.getWithinSubjectContrast();
         
         // a = #rows in between subject contrast matrix, C
-        int a = C.getRowDimension();
+        double a = C.getRowDimension();
         // b = #columns in within subject contrast matrix
-        int b = U.getColumnDimension();
+        double b = U.getColumnDimension();
         // N = total number of subjects (rows in design matrix, X)
-        int N = X.getRowDimension();
+        double N = X.getRowDimension();
         // r = rank of design matrix, X
-        int r = new SingularValueDecompositionImpl(X).getRank();
+        double r = new SingularValueDecompositionImpl(X).getRank();
         
         double df = Double.NaN;
         if (a*a*b*b <= 4)
@@ -50,10 +51,45 @@ public class GLMMTestWilksLambda extends GLMMTest
     @Override
     public double getNonCentrality(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        // calculate the hypothesis and error sum of squares matrices
+        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
+        RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
         
-        return a*b*getObservedF(type);
+        RealMatrix C = params.getBetweenSubjectContrast();
+        RealMatrix U = params.getWithinSubjectContrast();
+        
+        // a = #rows in between subject contrast matrix, C
+        double a = C.getRowDimension();
+        // b = #columns in within subject contrast matrix, U
+        double b = U.getColumnDimension();
+        double s = (a < b) ? a : b;  
+        double p = params.getBeta().getColumnDimension();
+        
+        double adjustedW = Double.NaN;
+        double g = Double.NaN;
+        double W = getWilksLambda(hypothesisSumOfSquares, errorSumOfSquares);
+        if (a*a*b*b <= 4) 
+        {
+            adjustedW = W;
+        }
+        else
+        {
+            g = Math.sqrt((a*a*b*b - 4) / (a*a + b*b - 5));
+            adjustedW = Math.pow(W, 1/g);
+        }
+        
+        
+        if ((s == 1 && p > 1) ||
+                params.getMomentMethod() == MomentApproximationMethod.RAO_TWO_MOMENT_OMEGA_MULT)
+        {
+            RealMatrix X = params.getDesign();
+            double N = X.getRowDimension();
+            return N * g * (1 - adjustedW) / adjustedW;
+        }
+        else
+        {
+            return getDenominatorDF(type) * (1 - adjustedW) / adjustedW;
+        }
     }
 
     @Override
@@ -61,8 +97,8 @@ public class GLMMTestWilksLambda extends GLMMTest
     {
         double a = params.getBetweenSubjectContrast().getRowDimension();
         double b = params.getWithinSubjectContrast().getColumnDimension();
-        double df = a * b;
-        return df;
+
+        return a*b;
     }
 
     @Override
@@ -110,7 +146,22 @@ public class GLMMTestWilksLambda extends GLMMTest
         if (!H.isSquare() || !E.isSquare() || H.getColumnDimension() != E.getRowDimension())
             throw new InvalidMatrixException("Failed to compute Wilks Lambda: hypothesis and error matrices must be square and same dimensions");
         
-        RealMatrix T = H.add(E);
+        double a = params.getBetweenSubjectContrast().getRowDimension();
+        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double s = (a < b) ? a : b;  
+        double p = params.getBeta().getColumnDimension();
+        
+        RealMatrix adjustedH = H;
+        if ((s == 1 && p > 1) ||
+                params.getMomentMethod() == MomentApproximationMethod.RAO_TWO_MOMENT_OMEGA_MULT)
+        {
+            RealMatrix X = params.getDesign();
+            double r = new SingularValueDecompositionImpl(X).getRank();
+            double N = X.getRowDimension();
+            adjustedH = H.scalarMultiply((N - r)/N);
+        }
+        
+        RealMatrix T = adjustedH.add(E);
         RealMatrix inverseT = new LUDecompositionImpl(T).getSolver().getInverse();
 
         RealMatrix EinverseT = E.multiply(inverseT);
