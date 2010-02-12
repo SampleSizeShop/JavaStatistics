@@ -82,9 +82,7 @@ public class GLMMTestPillaiBartlett extends GLMMTest
                 params.getMomentMethod() == MomentApproximationMethod.MULLER_TWO_MOMENT_OMEGA_MULT)
         {
             RealMatrix X = params.getDesign();
-            int r = new SingularValueDecompositionImpl(X).getRank();
             int N = X.getRowDimension();
-            PB *= ((double)(N - r)/(double)N);
             return N * s * PB / (s - PB);
         }
         else
@@ -165,10 +163,26 @@ public class GLMMTestPillaiBartlett extends GLMMTest
         if (!H.isSquare() || !E.isSquare() || H.getColumnDimension() != E.getRowDimension())
             throw new InvalidMatrixException("Failed to compute Pillai-Bartlett Trace: hypothesis and error matrices must be square and same dimensions");
         
-        RealMatrix T = H.add(E);
+        double a = params.getBetweenSubjectContrast().getRowDimension();
+        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double s = (a < b) ? a : b;  
+        double p = params.getBeta().getColumnDimension();
+        
+        RealMatrix adjustedH = H;
+        if ((s == 1 && p > 1) ||
+                params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT ||
+                params.getMomentMethod() == MomentApproximationMethod.MULLER_TWO_MOMENT_OMEGA_MULT)
+        {
+            RealMatrix X = params.getDesign();
+            int r = new SingularValueDecompositionImpl(X).getRank();
+            int N = X.getRowDimension();
+            adjustedH = H.scalarMultiply(((double)(N - r)/(double)N));
+        }
+            
+        RealMatrix T = adjustedH.add(E);
         RealMatrix inverseT = new LUDecompositionImpl(T).getSolver().getInverse();
 
-        RealMatrix HinverseT = H.multiply(inverseT);
+        RealMatrix HinverseT = adjustedH.multiply(inverseT);
         
         return HinverseT.getTrace();
     }
