@@ -47,7 +47,8 @@ public class GLMMTestHotellingLawley extends GLMMTest
         int s = (a < b) ? a : b;  
         
         double df = Double.NaN;
-        if (params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT ||
+        if (type == DistributionType.DATA_ANALYSIS_NULL ||
+                params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT ||
                 params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT)
         {
             df = s * ((N - r) - b -1) + 2;
@@ -124,28 +125,13 @@ public class GLMMTestHotellingLawley extends GLMMTest
 
     @Override
     public double getObservedF(DistributionType type)
-    {
-        // calculate the hypothesis and error sum of squares matrices
-        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
-        RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
-        
-        RealMatrix C = params.getBetweenSubjectContrast();
-        RealMatrix U = params.getWithinSubjectContrast();
-        
+    {                
         // a = #rows in between subject contrast matrix, C
-        double a = C.getRowDimension();
+        double a = params.getBetweenSubjectContrast().getRowDimension();
         // b = #columns in within subject contrast matrix, U
-        double b = U.getColumnDimension();
-       // minimum of a and b dimensions
-        double s = (a < b) ? a : b;  
-        
-        double association = 0.0;
-        
-        double HLT = getHotellingLawleyTrace(hypothesisSumOfSquares, errorSumOfSquares);
-        association = (HLT/s) / (1 + (HLT/s));
-        
-        double ddf = getDenominatorDF(type);
-        return ((association) / (a*b)) / ((1 - association) / ddf);
+        double b = params.getWithinSubjectContrast().getColumnDimension();
+                
+        return getNonCentrality(type) / (a*b);
     }
 
     /**
