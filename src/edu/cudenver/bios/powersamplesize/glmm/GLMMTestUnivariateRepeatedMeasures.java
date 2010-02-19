@@ -5,15 +5,18 @@ import java.util.Arrays;
 
 import org.apache.commons.math.linear.EigenDecompositionImpl;
 import org.apache.commons.math.linear.InvalidMatrixException;
+import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 import org.apache.commons.math.util.MathUtils;
 
+import edu.cudenver.bios.matrix.GramSchmidtOrthonormalization;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
 import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.UnivariateCorrection;
 
 public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
-{
+{    
+    protected static final double TOLERANCE = 0.000000000001;
     double unirepEpsilon = Double.NaN;
     double unirepEpsilonExpectedValue = Double.NaN;
     
@@ -33,18 +36,21 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     {
         super(params);
         
+        // verify that U is orthonormal to an identity matrix
+        // if not, build an orthonormal U from the specified U matrix
+        createOrthonormalU();
+        
+        // pre-calculate the values for epsilon (correction for violation of sphericity)
         calculateUnirepCorrection();
+               
     }
     
     @Override
     public double getDenominatorDF(DistributionType type)
     {
         RealMatrix X = params.getDesign();
-        RealMatrix C = params.getBetweenSubjectContrast();
         RealMatrix U = params.getWithinSubjectContrast();
         
-        // a = #rows in between subject contrast matrix, C
-        int a = C.getRowDimension();
         // b = #columns in within subject contrast matrix
         int b = U.getColumnDimension();
         // N = total number of subjects (rows in design matrix, X)
@@ -192,14 +198,17 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         RealMatrix U = params.getWithinSubjectContrast();
         RealMatrix X = params.getDesign();
         int b = new SingularValueDecompositionImpl(U).getRank();
-        int r = new SingularValueDecompositionImpl(U).getRank();
+        int r = new SingularValueDecompositionImpl(X).getRank();
         int N = X.getRowDimension();
         // get the sigmaStar matrix: U' *sigmaError * U
         RealMatrix sigmaStar = U.transpose().multiply(params.getSigmaError().multiply(U));
-        sigmaStar = sigmaStar.scalarMultiply(1/sigmaStar.getTrace()); // normalize sigma*
-
+        // ensure symmetry
+        sigmaStar = sigmaStar.add(sigmaStar.transpose()).scalarMultiply(0.5); 
+        // normalize
+        sigmaStar = sigmaStar.scalarMultiply(1/sigmaStar.getTrace());
+        
         // get the eigen values of the normalized sigmaStar matrix
-        double[] eigenValues = new EigenDecompositionImpl(sigmaStar, MathUtils.SAFE_MIN).getRealEigenvalues();
+        double[] eigenValues = new EigenDecompositionImpl(sigmaStar, TOLERANCE).getRealEigenvalues();
         if (eigenValues.length <= 0) throw new IllegalArgumentException("Failed to compute eigenvalues for sigma* matrix");
         Arrays.sort(eigenValues); // put eigenvalues in ascending order
 
@@ -224,7 +233,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
             
             // determine if this is a distinct eigen value and calculate multiplicity
             EigenValueMultiplicityPair prev = distinctEigenValues.get(distinctEigenValues.size()-1);
-            if (Math.abs(prev.eigenValue - value) > MathUtils.SAFE_MIN)
+            if (Math.abs(prev.eigenValue - value) > TOLERANCE)
             {
                 // found new distinct eigen value
                 distinctEigenValues.add(new EigenValueMultiplicityPair(value, 1));
@@ -251,8 +260,9 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
             // E[f(lambda)] = f(lambda) + g1 / (N - r)
             // see Muller, Barton (1989) for details
             double g1 = 0;
-            for(EigenValueMultiplicityPair evmI : distinctEigenValues)
+            for(int i = 0; i < distinctEigenValues.size(); i++)
             {
+                EigenValueMultiplicityPair evmI = distinctEigenValues.get(i);
                 double firstDerivative = 
                     ((2 * sumLambda)/(b * sumLambdaSquared) - 
                         (2 * evmI.eigenValue * sumLambda * sumLambda)/(b*sumLambdaSquared*sumLambdaSquared));
@@ -266,10 +276,11 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
                 // accumulate the first term of g1 (sum over distinct eigen vals of 1st derivative * eigen val ^2 * multiplicity)
                 g1 += secondDerivative * evmI.eigenValue * evmI.eigenValue * evmI.multiplicity;
                 // loop over elements not equal to current
-                for(EigenValueMultiplicityPair evmJ : distinctEigenValues)
+                for(int j = 0; j < distinctEigenValues.size(); j++)
                 {
-                    if (evmI != evmJ)
+                    if (i != j)
                     {
+                        EigenValueMultiplicityPair evmJ = distinctEigenValues.get(j);
                         // accumulate second term of g1
                         g1 += ((firstDerivative * evmI.eigenValue * evmI.multiplicity * evmJ.eigenValue * evmJ.multiplicity) /
                                 (evmI.eigenValue - evmJ.eigenValue));
@@ -319,6 +330,34 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
             
             this.unirepEpsilonExpectedValue = unirepEpsilon  + g1 / (N - r);
         }
-                 
+    }
+    
+    private void createOrthonormalU()
+    {
+        RealMatrix U = params.getWithinSubjectContrast();
+        
+        RealMatrix UtU = U.transpose().multiply(U);
+        double upperLeft = UtU.getEntry(0, 0);
+        if (upperLeft != 0) UtU = UtU.scalarMultiply(1/upperLeft);
+        
+        RealMatrix diffFromIdentity = UtU.subtract(MatrixUtils.createRealIdentityMatrix(UtU.getRowDimension()));
+        
+        // get maximum value in U'U
+        double maxValue = Double.NEGATIVE_INFINITY;
+        for(int r = 0; r < diffFromIdentity.getRowDimension(); r++)
+        {
+            for(int c = 0; c < diffFromIdentity.getColumnDimension(); c++)
+            {
+                double entryVal = diffFromIdentity.getEntry(r, c);
+                if (entryVal > maxValue) maxValue = entryVal;
+            }
+        }
+        
+        if (maxValue > MathUtils.SAFE_MIN)
+        {
+            // U matrix deviates from Identity, so create one that is orthonormal
+            RealMatrix Utmp = new GramSchmidtOrthonormalization(U).getQ();
+            params.setWithinSubjectContrast(Utmp);
+        }
     }
 }
