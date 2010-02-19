@@ -1,34 +1,105 @@
+/** 
+ *  Copyright 2010 Sarah Kreidler
+ *  
+ *   This file is part of Foobar.
+ *
+ *   Foobar is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *    Foobar is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *    
+ *    You should have received a copy of the GNU General Public License
+ *    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ */
 package edu.cudenver.bios.matrix.test;
 
 import junit.framework.TestCase;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.ArrayRealVector;
-import org.apache.commons.math.linear.QRDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.linear.RealVector;
+import org.apache.commons.math.util.MathUtils;
 
 import edu.cudenver.bios.matrix.GramSchmidtOrthonormalization;
 
-public class TestMatrixOrthonormalization
+/**
+ * Unit test for GramSchmidtOrthonormalization.  Verifies that the Q, R
+ * matrices produced by the 
+ * 
+ * @see edu.cudenver.bios.matrix.GramSchmidtOrthonormalization
+ * @author Sarah Kreidler
+ *
+ */
+public class TestMatrixOrthonormalization extends TestCase
 {
-    public static void main(String args[])
+    protected static final double TOLERANCE = 0.00001; 
+    protected static final double[][] data = {{1,2},{-4,0},{0,2}};
+    // create a generic matrix
+    protected RealMatrix A = new Array2DRowRealMatrix(data);
+    // orthonormalize it
+    protected GramSchmidtOrthonormalization norm = new GramSchmidtOrthonormalization(A);
+    
+    /**
+     * Verify that the A = QxR for the Q, R matrices produced by the
+     * orthonormalization
+     */
+    public void testQRshouldBeA()
     {
-        double[][] data = {{1,-1},{-1,0},{0,-1}};
-
-       // RealVector v = new ArrayRealVector(data);
-        RealMatrix m = new Array2DRowRealMatrix(data);
-        GramSchmidtOrthonormalization norm = new GramSchmidtOrthonormalization(m);
         RealMatrix Q = norm.getQ();
-        System.out.println(Q);
-        System.out.println(norm.getR());
-//
-        System.out.println(Q.transpose().multiply(Q));
-        System.out.println(Q.multiply(norm.getR()));
-        
-        System.out.println(new QRDecompositionImpl(m).getQ());
+        RealMatrix R = norm.getR();
 
-        double norm2 = m.getFrobeniusNorm();
-        System.out.println("Norm=" + norm2);
+        // verify that QR = A
+        RealMatrix shouldBeOriginalMatrix = Q.multiply(R);
+        // Make sure that QR has same dimension as original A matrix
+        if (shouldBeOriginalMatrix.getRowDimension() != data.length ||
+                shouldBeOriginalMatrix.getColumnDimension() != data[0].length)
+        {
+            fail();
+        }
+        // make sure elements of QR match elements of A (within tolerance)
+        for(int r = 0; r < shouldBeOriginalMatrix.getRowDimension(); r++)
+        {
+            for(int c = 0; c < shouldBeOriginalMatrix.getColumnDimension(); c++)
+            {
+                if (MathUtils.compareTo(shouldBeOriginalMatrix.getEntry(r, c), data[r][c], TOLERANCE) != 0) 
+                    fail();
+            }
+        }
+        
+        assertTrue(true);
+    }
+    
+    /**
+     * Verify that the Q'Q = I for the Q matrix produced by the
+     * orthonormalization
+     */
+    public void testQQisIdentity()
+    {
+        RealMatrix Q = norm.getQ();
+        
+        // verify that Q'Q = identity
+        RealMatrix shouldBeIdentityMatrix = Q.transpose().multiply(Q);
+        // make sure the matrix is sqaure
+        if (!shouldBeIdentityMatrix.isSquare())
+        {
+            fail();
+        }
+        // make sure the diagonal elements are one (within tolerance), and off diagonals
+        // are zero (within tolerance)
+        for(int r = 0; r < shouldBeIdentityMatrix.getRowDimension(); r++)
+        {
+            for(int c = 0; c < shouldBeIdentityMatrix.getColumnDimension(); c++)
+            {
+                double shouldBeValue = (r == c) ? 1 : 0;
+                if (MathUtils.compareTo(shouldBeIdentityMatrix.getEntry(r, c), shouldBeValue, TOLERANCE) != 0) 
+                    fail();
+            }
+        }
+        assertTrue(true);
     }
 }
