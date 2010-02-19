@@ -345,7 +345,7 @@ public class PowerGLMM implements Power
         
         // calculate the non-centrality parameter for the specified test statistic 
         // under the null hypothesis
-        double nonCentralityParam = glmmTest.getNonCentrality(GLMMTest.DistributionType.POWER_NULL);
+        double nonCentralityParam = glmmTest.getNonCentrality(GLMMTest.DistributionType.POWER_ALTERNATIVE);
 
         // get the degrees of freedom for the non-central F under the alternative hypothesis
         // (these only change for the corrected Unirep test)
