@@ -247,9 +247,6 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         
         // calculate estimate of epsilon (correction for violation of spehericity assumption)
         unirepEpsilon = (sumLambda*sumLambda) / (b * (sumLambdaSquared));
-        // the Huynh-Feldt test uses a bias-corrected version of the epsilon estimate
-        if (params.getUnivariateCorrection() == UnivariateCorrection.HUYNH_FELDT)
-            unirepEpsilon = (N*b*unirepEpsilon - 2)/(b*(N - r - b*unirepEpsilon));
 
         // For Geisser-Greenhouse and Huynh Feldt, we also need the expected value of the epsilon
         // estimate.  Note, the estimates of epsilon represent different functions of the
@@ -299,28 +296,32 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
             double h1 = N * sumLambda * sumLambda - 2 * sumLambdaSquared;
             double h2 = (N - r) * sumLambdaSquared - (sumLambda * sumLambda);
             double g1 = 0;
-            for(EigenValueMultiplicityPair evmI : distinctEigenValues)
+            for(int i = 0; i < distinctEigenValues.size(); i++)
             {
+                EigenValueMultiplicityPair evmI = distinctEigenValues.get(i);
                 // derivatives of sub-equations comprising epsilon estimator
-                double h1firstDerivative = (2 * N * sumLambda) - (4 *evmI.eigenValue); // TODO: finish
+                double h1firstDerivative = (2 * N * sumLambda) - (4 *evmI.eigenValue); 
                 double h1secondDerivative = 2 * N - 4;
                     
                 double h2firstDerivative = (2 * (N - r) * evmI.eigenValue) - (2 * sumLambda); 
-                double h2SecondDerivative = 2 * (N - r) - 2;
+                double h2secondDerivative = 2 * (N - r) - 2;
 
                 // derivatives of estimate of epsilon
-                double firstDerivative = (h1firstDerivative / h2) - ((h1 * h2firstDerivative) / h2 * h2); 
+                double firstDerivative = ((h1firstDerivative) - ((h1 * h2firstDerivative) / h2)) / (h2 *b); 
                 double secondDerivative = 
-                    ((h1secondDerivative / h2) - (2 * h1firstDerivative * h2firstDerivative)/(h2 * h2) + 
-                            (2 * h1 * h2firstDerivative * h2firstDerivative)/(h2 * h2 * h2) - (h1 * h2SecondDerivative)/(h2 * h2));
+                    (h1secondDerivative - ((2*h1firstDerivative*h2firstDerivative)/(h2)) +  
+                            (2 * h1 * h2firstDerivative * h2firstDerivative)/(h2*h2) - 
+                                    (h1*h2secondDerivative)/(h2)) / 
+                                        (h2*b);
                 
                 // accumulate the first term of g1 (sum over distinct eigen vals of 1st derivative * eigen val ^2 * multiplicity)
                 g1 += secondDerivative * evmI.eigenValue * evmI.eigenValue * evmI.multiplicity;
                 // loop over elements not equal to current
-                for(EigenValueMultiplicityPair evmJ : distinctEigenValues)
+                for(int j = 0; j < distinctEigenValues.size(); j++)
                 {
-                    if (evmI != evmJ)
+                    if (i != j)
                     {
+                        EigenValueMultiplicityPair evmJ = distinctEigenValues.get(j);
                         // accumulate second term of g1
                         g1 += ((firstDerivative * evmI.eigenValue * evmI.multiplicity * evmJ.eigenValue * evmJ.multiplicity) /
                                 (evmI.eigenValue - evmJ.eigenValue));
@@ -328,7 +329,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
                 }
             }
             
-            this.unirepEpsilonExpectedValue = unirepEpsilon  + g1 / (N - r);
+            this.unirepEpsilonExpectedValue = (N*b*unirepEpsilon - 2)/(b*(N - r - b*unirepEpsilon))  + g1 / (N - r);
         }
     }
     
