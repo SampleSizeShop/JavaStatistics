@@ -42,7 +42,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         
         // pre-calculate the values for epsilon (correction for violation of sphericity)
         calculateUnirepCorrection();
-               
+        
     }
     
     @Override
@@ -331,6 +331,20 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
             
             this.unirepEpsilonExpectedValue = (N*b*unirepEpsilon - 2)/(b*(N - r - b*unirepEpsilon))  + g1 / (N - r);
         }
+        
+        // ensure that expected value is within bounds 1/b to 1
+        if (unirepEpsilonExpectedValue != Double.NaN)
+        {
+            if (unirepEpsilonExpectedValue < 1/b)
+            {
+                unirepEpsilonExpectedValue = 1/b;
+            }
+            else if (unirepEpsilonExpectedValue > 1)
+            {
+                unirepEpsilonExpectedValue = 1;
+            }
+        }
+        
     }
     
     private void createOrthonormalU()
