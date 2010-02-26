@@ -10,7 +10,6 @@ import org.apache.commons.math.linear.EigenDecompositionImpl;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.util.MathUtils;
 
 import edu.cudenver.bios.matrix.ColumnMetaData;
 import edu.cudenver.bios.matrix.EssenceMatrix;
@@ -29,8 +28,7 @@ import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizePa
  */
 public class NonCentralityDistribution
 {
-    private static final double STARTING_NON_CENTRALITY = 100;    
-
+    private static final double TOLERANCE = 0.000000000001;
     // intermediate forms 
     protected RealMatrix T1 = null;
     protected RealMatrix FT1 = null;
@@ -108,7 +106,7 @@ public class NonCentralityDistribution
             // for the distribution of the non-centrality parameter
             // See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details
             // TODO: move this into constructor since not dependent on w?
-            EigenDecompositionImpl sEigenDecomp = new EigenDecompositionImpl(S, MathUtils.SAFE_MIN);
+            EigenDecompositionImpl sEigenDecomp = new EigenDecompositionImpl(S, TOLERANCE);
             sEigenValues = sEigenDecomp.getRealEigenvalues();
             // count the # of positive eigen values
             for(double value: sEigenValues) 
@@ -123,7 +121,7 @@ public class NonCentralityDistribution
                 for (int j = 0; j < mzSq.getColumnDimension(); j++)
                 {
                     double entry = mzSq.getEntry(i, j);
-                    mzSq.setEntry(i, j, entry*entry);
+                    mzSq.setEntry(i, j, entry*entry); // TODO: is there an apache function to do this?
                 }
             }
         }
@@ -131,11 +129,12 @@ public class NonCentralityDistribution
         {
             throw new IllegalArgumentException(e.getMessage());
         }
-
     }
     
     public double cdf(double w)
     {
+        if (H1 <= 0) return 0;
+        if (H1 - w <= 0) return 1;
         try
         {
             double b0 = 1 - w / H1;
@@ -149,19 +148,36 @@ public class NonCentralityDistribution
             double nu;
             double delta;
             double lambda;
-            for(int k = 0; k < a; k++)
+            
+            // add in the first chi-squared term in the estimate of the non-centrality
+            // (expressed as a sum of weighted chi-squared r.v.s)
+            // initial chi-square term is central (delta=0) with N-qf df, and lambda = b0
+            nu = N - qF;
+            lambda = b0;
+            delta = 0;
+            // accumulate terms
+            if (lambda > 0)
             {
-                if (k == 0)
+                // positive terms
+                numPositive++;
+                m1Positive += lambda * (nu + delta);
+                m2Positive += lambda * lambda * 2* (nu + 2*delta);
+            }
+            else if (lambda < 0)
+            {
+                // negative terms - we take absolute value of lambda where needed
+                numNegative++;
+                m1Negative += -1 * lambda * (nu + delta);
+                m2Negative += lambda * lambda * 2* (nu + 2*delta);
+            }
+            
+            // accumulate the remaining terms 
+            for(int k = 0; k < sStar; k++)
+            {
+                if (k < sStar)
                 {
-                    // initial chi-square term is central (delta=0) with N-qf df, and lambda = b0
-                    nu = N - qF;
-                    lambda = b0;
-                    delta = 0;
-                }
-                else if (k >= 1 && k <= sStar)
-                {
-                    // for k = 1 to sStar, chi-square term is non-central (delta = mz^2), 1 df,
-                    // lambda = (b0 - kth eigen value of S)
+                    // for k = 1 (well, 0 in java array terms and 1 in the paper) to sStar, chi-square term is 
+                    // non-central (delta = mz^2), 1 df, lambda = (b0 - kth eigen value of S)
                     nu = 1;
                     lambda = b0 - sEigenValues[k];
                     delta = mzSq.getEntry(k, 0);
@@ -174,24 +190,22 @@ public class NonCentralityDistribution
                     lambda = b0;
                     delta = mzSq.getEntry(k, 0);
                 }
-
                 // accumulate terms
                 if (lambda > 0)
                 {
                     // positive terms
                     numPositive++;
                     m1Positive += lambda * (nu + delta);
-                    m2Positive += lambda * lambda * 2* (nu + delta);
+                    m2Positive += lambda * lambda * 2* (nu + 2*delta);
                 }
                 else if (lambda < 0)
                 {
                     // negative terms - we take absolute value of lambda where needed
                     numNegative++;
                     m1Negative += -1 * lambda * (nu + delta);
-                    m2Negative += lambda * lambda * 2* (nu + delta);
+                    m2Negative += lambda * lambda * 2* (nu + 2*delta);
                 }
-                // TODO: what if lamba == 0?
-                int foo = 2;
+                // Note, we deliberately ignore terms for which lambda == 0
             }
 
             // handle special cases
@@ -201,13 +215,13 @@ public class NonCentralityDistribution
             // handle general case
             double nuStarPositive = 2 * (m1Positive * m1Positive) / m2Positive;
             double nuStarNegative = 2 * (m1Negative * m1Negative) / m2Negative;
-            double lambdaStarPositive = m1Positive / (2 * m1Positive);
-            double lambdaStarNegative =  m2Negative / (2 * m2Negative);
+            double lambdaStarPositive = m2Positive / (2 * m1Positive);
+            double lambdaStarNegative =  m2Negative / (2 * m1Negative);
+
             // create a central F to approximate the distribution of the non-centrality parameter
             FishersF centralFDist = new FishersF(nuStarPositive, nuStarNegative);
             // return power based on the non-central F
-            double prob = centralFDist.cdf((nuStarNegative*lambdaStarNegative)/(nuStarPositive*lambdaStarPositive));
-            return prob;
+            return centralFDist.cdf((nuStarNegative*lambdaStarNegative)/(nuStarPositive*lambdaStarPositive));
         }
         catch (Exception e)
         {
@@ -224,27 +238,14 @@ public class NonCentralityDistribution
         
         try
         {
-            double upperBound = getQuantileUpperBound(quantile);
-            return solver.solve(quantFunc, 0, upperBound);
+            return solver.solve(quantFunc, 0, H1);
         }
         catch (Exception e)
         {
             throw new IllegalArgumentException("Failed to determine non-centrality quantile: " + e.getMessage());
         }
     }
-    
-    private double getQuantileUpperBound(double quantile)
-    {
-        double upperBound = STARTING_NON_CENTRALITY;
         
-        for(double probNonCentral = 0.0; probNonCentral < quantile; upperBound *= 2)
-        {
-            double prob = cdf(upperBound);
-            probNonCentral = prob;
-        }
-        return upperBound;
-    }
-    
     /**
      * Returns the column representing the single random predictor if specified
      * (note, this function will require modification if we support multiple random predictors)
