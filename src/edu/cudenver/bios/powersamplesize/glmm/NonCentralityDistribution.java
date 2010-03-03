@@ -70,7 +70,8 @@ public class NonCentralityDistribution
     {
         this.exact = exact;
         try
-        {                        
+        {                    
+            // TODO: need to calculate H0, need to adjust H1 for Unirep
             // get design matrix for fixed parameters only
             RealMatrix F = params.getDesignEssence().getFullDesignFixed();
             qF = F.getColumnDimension();
@@ -332,4 +333,10 @@ public class NonCentralityDistribution
         }
         throw new IllegalArgumentException("Failed to calculate sigmaG - No random predictor");
     }
+
+    public double getH1()
+    {
+        return H1;
+    }   
+    
 }
