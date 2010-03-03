@@ -4,6 +4,8 @@ import jsc.distributions.FishersF;
 import jsc.distributions.NoncentralFishersF;
 import jsc.distributions.Normal;
 
+import org.apache.commons.math.analysis.UnivariateRealFunction;
+import org.apache.commons.math.analysis.integration.TrapezoidIntegrator;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.CholeskyDecompositionImpl;
 import org.apache.commons.math.linear.LUDecompositionImpl;
@@ -34,7 +36,37 @@ import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizePa
  *
  */
 public class PowerGLMM implements Power
-{       
+{    
+    
+    /**
+     * Class passed into Apache's TrapezoidIntegrator function to compute
+     * unconditional power
+     */
+    private class UnconditionalPowerIntegrand implements UnivariateRealFunction
+    {
+        protected NonCentralityDistribution nonCentralityDist;
+        protected double Fcrit;
+        protected double ndf;
+        protected double ddf;
+
+        public UnconditionalPowerIntegrand(NonCentralityDistribution nonCentralityDist,
+                double Fcrit, double ndf, double ddf)
+        {
+            this.nonCentralityDist = nonCentralityDist;
+            this.Fcrit = Fcrit;
+            this.ndf = ndf;
+            this.ddf = ddf;
+        }
+        
+        public double value(double t)
+        {
+            NoncentralFishersF FdistTerm1 = new NoncentralFishersF(ndf, ddf, t);
+            NoncentralFishersF FdistTerm2 = new NoncentralFishersF(ndf+2, ddf, t);
+
+            return nonCentralityDist.cdf(t)*(FdistTerm1.cdf(Fcrit) - FdistTerm2.cdf((Fcrit*ndf)/(ndf+2)));
+        }
+    }
+    
     /**
      * Calculate power for the general linear multivariate model based on
      * the input matrices.
@@ -358,18 +390,34 @@ public class PowerGLMM implements Power
     }
     
     private double getUnconditionalPower(LinearModelPowerSampleSizeParameters params)
+    throws IllegalArgumentException
     {
         GLMMTest glmmTest = GLMMTestFactory.createGLMMTest(params);
 
         // get the approximate critical F value (central F) under the null hypothesis
         double Fcrit = glmmTest.getCriticalF(GLMMTest.DistributionType.POWER_NULL, params.getAlpha());
         
-        // determine unconditional power by integrating over all possible values 
-        // of the non-centrality parameter
-        // TODO: write me :-)
-        
-        return 0;
-        
+        // get the distribution of the noncentrality parameter
+        NonCentralityDistribution nonCentralityDist = new NonCentralityDistribution(params, false);
+        double ndf = glmmTest.getNumeratorDF(GLMMTest.DistributionType.POWER_NULL);
+        double ddf = glmmTest.getDenominatorDF(GLMMTest.DistributionType.POWER_NULL);
+        double h1 = nonCentralityDist.getH1();
+        // integrate over all value of non-centrality parameter from h0 to h1
+        UnconditionalPowerIntegrand integrand = 
+            new UnconditionalPowerIntegrand(nonCentralityDist, Fcrit, ndf, ddf);
+        TrapezoidIntegrator integrator = new TrapezoidIntegrator();
+        try
+        {
+            // create a noncentral F dist with non-centrality of H1
+            NoncentralFishersF fdist = new NoncentralFishersF(ndf, ddf, h1);
+            double integralResult = integrator.integrate(integrand, 0, h1);
+            
+            return 1 - fdist.cdf(Fcrit) - 0.5*integralResult;
+        }
+        catch (Exception e)
+        {
+            throw new IllegalArgumentException("Failed to integrate over non-centrality parameter: " + e.getMessage());
+        }        
     }
     
     private double getQuantilePower(LinearModelPowerSampleSizeParameters params)
