@@ -45,6 +45,14 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
         HUYNH_FELDT
     };
     
+    public enum UnivariateCdf
+    {
+        MULLER_BARTON_APPROX,
+        MULLER_EDWARDS_TAYLOR_APPROX,
+        MULLER_EDWARDS_TAYLOR_EXACT,
+        MULLER_EDWARDS_TAYLOR_EXACT_APPROX
+    };
+    
     public enum MomentApproximationMethod
     {
         NONE,
@@ -87,6 +95,8 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     
     UnivariateCorrection univariateCorrection = UnivariateCorrection.NONE;
     
+    UnivariateCdf univariateCdf = UnivariateCdf.MULLER_BARTON_APPROX;
+    
     MomentApproximationMethod momentMethod =
         MomentApproximationMethod.NONE;
     
@@ -117,6 +127,7 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
         this.powerMethod = params.getPowerMethod();
         this.quantile = params.getQuantile();
         this.univariateCorrection = params.getUnivariateCorrection();
+        this.univariateCdf = params.getUnivariateCdf();
         this.momentMethod = params.getMomentMethod();
     }
     
@@ -346,6 +357,15 @@ public class LinearModelPowerSampleSizeParameters extends PowerSampleSizeParamet
     {
         this.momentMethod = momentMethod;
     }
-    
+
+    public UnivariateCdf getUnivariateCdf()
+    {
+        return univariateCdf;
+    }
+
+    public void setUnivariateCdf(UnivariateCdf univariateCdf)
+    {
+        this.univariateCdf = univariateCdf;
+    }
     
 }
