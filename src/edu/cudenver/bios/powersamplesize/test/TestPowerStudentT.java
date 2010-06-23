@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 import edu.cudenver.bios.powersamplesize.PowerOneSampleStudentsT;
 import edu.cudenver.bios.powersamplesize.parameters.SimplePowerSampleSizeParameters;
+import jsc.distributions.StudentsT;
 import junit.framework.TestCase;
 
 public class TestPowerStudentT extends TestCase
@@ -20,9 +21,9 @@ public class TestPowerStudentT extends TestCase
     /* list of mu0, muA, sigma, alpha, sampleSize for simulating power */
     private double[][] simulationTestCases = 
     { 
-            {0,1,1,0.05,50}, 
-            {0,-1,1,0.05,50}, 
-            {20,22,4,0.05,34} 
+            {0,1,4,0.05,10}, 
+            {0,1,4,0.05,15}, 
+            {0,1,4,0.05,100}
     };
 
     public void setUp()
@@ -87,7 +88,7 @@ public class TestPowerStudentT extends TestCase
 
                 double simulatedPower = tpower.getSimulatedPower(params, SIMULATION_SAMPLE_SIZE);
                 double power = tpower.getCalculatedPower(params);
-                System.out.println("One-tail Simulated power: " + simulatedPower + ", Calculated power: " + power);
+                System.out.println("Two-tail Simulated power: " + simulatedPower + ", Calculated power: " + power);
                 if (Math.abs(simulatedPower - power) < PRECISION) successCount++;
             }
 
