@@ -5,12 +5,12 @@ import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
-import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
-import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.MomentApproximationMethod;
+import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
+import edu.cudenver.bios.power.parameters.GLMMPowerParameters.MomentApproximationMethod;
 
 public class GLMMTestHotellingLawley extends GLMMTest
 {    
-    public GLMMTestHotellingLawley(LinearModelPowerSampleSizeParameters params)
+    public GLMMTestHotellingLawley(GLMMPowerParameters params)
     {
         super(params);
     }
@@ -72,7 +72,7 @@ public class GLMMTestHotellingLawley extends GLMMTest
         
         RealMatrix C = params.getBetweenSubjectContrast();
         RealMatrix U = params.getWithinSubjectContrast();
-        RealMatrix B = params.getBeta();
+        RealMatrix B = params.getScaledBeta();
         
         // check if we are uni or multi variate
         double p = B.getColumnDimension();

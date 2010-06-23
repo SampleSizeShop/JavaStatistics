@@ -88,7 +88,7 @@ public class NonCentralityDistribution
             // calculate theta difference
             RealMatrix theta0 = params.getTheta();
             RealMatrix C = params.getBetweenSubjectContrast();
-            RealMatrix B = params.getBeta();
+            RealMatrix B = params.getScaledBeta();
             RealMatrix U = params.getWithinSubjectContrast();
             // thetaHat = C * Beta * U
             RealMatrix thetaHat = C.multiply(B.multiply(U));
@@ -299,7 +299,7 @@ public class NonCentralityDistribution
     {
         RealMatrix U = params.getWithinSubjectContrast();
         // sigma* = U'*sigmaE*U
-        RealMatrix sigmaStar = U.transpose().multiply(params.getSigmaError()).multiply(U);
+        RealMatrix sigmaStar = U.transpose().multiply(params.getScaledSigmaError()).multiply(U);
         
         if (params.getTest() == GLMMPowerParameters.Test.UNIREP)
         {

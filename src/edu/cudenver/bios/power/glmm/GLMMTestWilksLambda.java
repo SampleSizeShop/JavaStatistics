@@ -5,12 +5,12 @@ import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
-import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
-import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters.MomentApproximationMethod;
+import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
+import edu.cudenver.bios.power.parameters.GLMMPowerParameters.MomentApproximationMethod;
 
 public class GLMMTestWilksLambda extends GLMMTest
 {
-    public GLMMTestWilksLambda(LinearModelPowerSampleSizeParameters params)
+    public GLMMTestWilksLambda(GLMMPowerParameters params)
     {
         super(params);
     }

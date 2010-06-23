@@ -7,10 +7,9 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import edu.cudenver.bios.powersamplesize.parameters.LinearModelPowerSampleSizeParameters;
 
 public abstract class GLMMTest
-{
+{    
     // for the unirep test, the degrees of freedom change depending on two 
     // factors - data analysis (i.e. simulation or model fit) vs. power analysis,
     // and whether we need df for the F distribution under the null or the 
@@ -62,11 +61,11 @@ public abstract class GLMMTest
      * @param params matrices input by user
      * @return H matrix
      */
-    protected RealMatrix getHypothesisSumOfSquares(LinearModelPowerSampleSizeParameters params)
+    protected RealMatrix getHypothesisSumOfSquares(GLMMPowerParameters params)
     {
         // convenience variables
         RealMatrix C = params.getBetweenSubjectContrast();
-        RealMatrix B = params.getBeta();
+        RealMatrix B = params.getScaledBeta();
         RealMatrix U = params.getWithinSubjectContrast();
         RealMatrix theta0 = params.getTheta();
         RealMatrix X = params.getDesign();
@@ -95,7 +94,7 @@ public abstract class GLMMTest
      * @param params matrices input by the user
      * @return sum o
      */
-    protected RealMatrix getErrorSumOfSquares(LinearModelPowerSampleSizeParameters params)
+    protected RealMatrix getErrorSumOfSquares(GLMMPowerParameters params)
     {
         // get the rank of the design matrix, X
         int r = new SingularValueDecompositionImpl(params.getDesign()).getRank();
@@ -103,7 +102,7 @@ public abstract class GLMMTest
         int N = params.getDesign().getRowDimension();
         
         RealMatrix U = params.getWithinSubjectContrast();
-        return U.transpose().multiply(params.getSigmaError().multiply(U)).scalarMultiply(N - r
+        return U.transpose().multiply(params.getScaledSigmaError().multiply(U)).scalarMultiply(N - r
                 );
     }    
     

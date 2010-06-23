@@ -13,6 +13,7 @@ import org.apache.commons.math.analysis.solvers.UnivariateRealSolverFactory;
 
 import edu.cudenver.bios.power.parameters.OneSampleStudentsTPowerParameters;
 import edu.cudenver.bios.power.parameters.PowerParameters;
+import edu.cudenver.bios.power.parameters.OneSampleStudentsTPowerParameters.MeanPair;
 
 public class OneSampleStudentsTPowerCalculator implements PowerCalculator
 {
@@ -90,26 +91,30 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
         ArrayList<Power> results = new ArrayList<Power>();
         	
         // calculate the power for either one or two tails
-        for(Double alpha: studentsTParams.getAlphaList())
+        for(Double alpha = studentsTParams.getFirstAlpha(); alpha != null;
+                alpha = studentsTParams.getNextAlpha())
         {
-        	for(Double sigma: studentsTParams.getSigmaList())
-        	{
-        		for(OneSampleStudentsTPowerParameters.MeanPair means: studentsTParams.getMeansList())
-        		{
-        			for(Integer sampleSize: studentsTParams.getSampleSizeList())
-        			{
-        				try
-        				{
-        				results.add(calculatePower(alpha.doubleValue(), means.mu0, means.muA, 
-        						sigma.doubleValue(), sampleSize.intValue(), studentsTParams.isTwoTailed()));
-        				}
-        				catch (MathException me)
-        				{
-        					// TODO: what to do?
-        				}
-        			}
-        		}
-        	}
+            for(Double sigma = studentsTParams.getFirstSigma(); sigma != null;
+                    sigma = studentsTParams.getNextSigma())
+            {
+                for(MeanPair means = studentsTParams.getFirstMeans(); means != null;
+                        means = studentsTParams.getNextMeans())
+                {
+                    for(Integer sampleSize = params.getFirstSampleSize(); sampleSize != null; 
+                            sampleSize = params.getNextSampleSize())
+                    {
+                        try
+                        {
+                            results.add(calculatePower(alpha.doubleValue(), means.mu0, means.muA, 
+                                    sigma.doubleValue(), sampleSize.intValue(), studentsTParams.isTwoTailed()));
+                        }
+                        catch (MathException me)
+                        {
+                            // TODO: what to do?
+                        }
+                    }
+                }
+            }
         }
 
         return results;
@@ -118,27 +123,31 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
 	@Override
 	public List<Power> getSampleSize(PowerParameters params)
 	{
-        OneSampleStudentsTPowerParameters studentsTParams = (OneSampleStudentsTPowerParameters) params;
-        
-        ArrayList<Power> results = new ArrayList<Power>();
-        	
-        // calculate the power for either one or two tails
-        for(Double alpha: studentsTParams.getAlphaList())
-        {
-        	for(Double sigma: studentsTParams.getSigmaList())
-        	{
-        		for(OneSampleStudentsTPowerParameters.MeanPair means: studentsTParams.getMeansList())
-        		{
-        			for(Double power: studentsTParams.getPowerList())
-        			{
-        				results.add(calculateSampleSize(alpha.doubleValue(), means.mu0, means.muA, 
-    							sigma.doubleValue(), power.doubleValue(), studentsTParams.isTwoTailed()));
-        			}
-        		}
-        	}
-        }
+	    OneSampleStudentsTPowerParameters studentsTParams = (OneSampleStudentsTPowerParameters) params;
 
-        return results;
+	    ArrayList<Power> results = new ArrayList<Power>();
+
+	    // calculate the sample size for either one or two tails
+	    for(Double alpha = studentsTParams.getFirstAlpha(); alpha != null;
+	    alpha = studentsTParams.getNextAlpha())
+	    {
+	        for(Double sigma = studentsTParams.getFirstSigma(); sigma != null;
+	        sigma = studentsTParams.getNextSigma())
+	        {
+	            for(MeanPair means = studentsTParams.getFirstMeans(); means != null;
+	            means = studentsTParams.getNextMeans())
+	            {
+	                for(Double power = params.getFirstPower(); power != null; 
+	                power = params.getNextPower())
+	                {
+	                    results.add(calculateSampleSize(alpha.doubleValue(), means.mu0, means.muA, 
+	                            sigma.doubleValue(), power.doubleValue(), studentsTParams.isTwoTailed()));
+	                }
+	            }
+	        }
+	    }
+
+	    return results;
 	}
 
 	@Override
@@ -149,14 +158,18 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
         ArrayList<Power> results = new ArrayList<Power>();
         	
         // calculate the power for either one or two tails
-        for(Double alpha: studentsTParams.getAlphaList())
+        for(Double alpha = studentsTParams.getFirstAlpha(); alpha != null;
+        alpha = studentsTParams.getNextAlpha())
         {
-        	for(Double sigma: studentsTParams.getSigmaList())
-        	{
-        		for(OneSampleStudentsTPowerParameters.MeanPair means: studentsTParams.getMeansList())
-        		{
-        			for(Integer sampleSize: studentsTParams.getSampleSizeList())
-        			{
+            for(Double sigma = studentsTParams.getFirstSigma(); sigma != null;
+            sigma = studentsTParams.getNextSigma())
+            {
+                for(MeanPair means = studentsTParams.getFirstMeans(); means != null;
+                means = studentsTParams.getNextMeans())
+                {
+                    for(Integer sampleSize = params.getFirstSampleSize(); sampleSize != null; 
+                    sampleSize = params.getNextSampleSize())
+                    {
         				try
         				{
         					results.add(simulatePower(alpha.doubleValue(), means.mu0, means.muA,

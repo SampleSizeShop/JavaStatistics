@@ -20,10 +20,10 @@ public class OneSampleStudentsTPowerParameters extends PowerParameters
 	}
 	
     // means under the null and alternative hypotheses
-	ArrayList<MeanPair> meansList = new ArrayList<MeanPair>();
+	PeekableList<MeanPair> meansList = new PeekableList<MeanPair>();
     
     // estimated population std dev
-    ArrayList<Double> sigmaList = new ArrayList<Double>();
+	PeekableList<Double> sigmaList = new PeekableList<Double>();
     
     // indicates if a one or two tailed test should be performed
     boolean twoTailed = true;
@@ -59,15 +59,33 @@ public class OneSampleStudentsTPowerParameters extends PowerParameters
 		this.twoTailed = oneTailed;
 	}
 
-	public ArrayList<MeanPair> getMeansList()
-	{
-		return meansList;
-	}
-
-	public ArrayList<Double> getSigmaList()
-	{
-		return sigmaList;
-	}
+    public Double getFirstSigma()
+    {
+        return sigmaList.first();  
+    }
     
-	
+    public Double getNextSigma()
+    {
+        return sigmaList.next(); 
+    }
+    
+    public Double getCurrentSigma()
+    {
+        return sigmaList.current();
+    }
+    
+    public MeanPair getFirstMeans()
+    {
+        return meansList.first();  
+    }
+    
+    public MeanPair getNextMeans()
+    {
+        return meansList.next(); 
+    }
+    
+    public MeanPair getCurrentMeans()
+    {
+        return meansList.current();
+    }
 }

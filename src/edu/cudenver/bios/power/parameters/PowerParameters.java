@@ -1,9 +1,6 @@
 package edu.cudenver.bios.power.parameters;
 
 import java.util.ArrayList;
-import java.util.List;
-
-import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
 
 /**
 * Container class for power input parameters.  Most statistical tests
@@ -14,20 +11,60 @@ import edu.cudenver.bios.powersamplesize.parameters.PowerSampleSizeParameters;
 */
 public abstract class PowerParameters
 {
+    protected class PeekableList<T>
+    {
+        ArrayList<T> list = new ArrayList<T>();
+        T currentItem = null;
+        int currentIndex = -1;
+        
+        public void add(T object) { list.add(object); }
+        
+        public T first()
+        {
+            if (list.size() > 0)
+            {
+                currentItem = list.get(0);
+                currentIndex = 0;
+            }
+            return currentItem;
+        }
+        
+        public T next()
+        {
+            if (list.size() > 0 && currentIndex < list.size()-1)
+            {
+                currentIndex++;
+                currentItem = list.get(currentIndex);
+            }
+            else
+            {
+                currentItem = null;
+            }
+            return currentItem;
+        }
+        
+        public T current()
+        {
+            return currentItem;
+        }
+        
+        public int size() { return list.size(); }
+    }
+    
 	/**
 	 * List of power values
 	 */
-	ArrayList<Double> powerList = new ArrayList<Double>();
-
+    PeekableList<Double> powerList = new PeekableList<Double>();
+    
 	/**
 	 * List of sample size values
 	 */
-    ArrayList<Integer> sampleSizeList = new ArrayList<Integer>();
+    PeekableList<Integer> sampleSizeList = new PeekableList<Integer>();
     
     /**
-     * Alpha level (type I error level)
+     * power level (type I error level)
      */
-    ArrayList<Double> alphaList = new ArrayList<Double>();
+    PeekableList<Double> alphaList = new PeekableList<Double>();
     
     /**
      * Create an empty power parameter object
@@ -63,21 +100,49 @@ public abstract class PowerParameters
     {
     	alphaList.add(new Double(alpha));
     }
-
-	public ArrayList<Double> getPowerList()
-	{
-		return powerList;
-	}
-
-	public ArrayList<Integer> getSampleSizeList()
-	{
-		return sampleSizeList;
-	}
-
-	public ArrayList<Double> getAlphaList()
-	{
-		return alphaList;
-	}
     
+	public Double getFirstAlpha()
+	{
+	    return alphaList.first();
+	}
+	
+    public Double getNextAlpha()
+    {
+        return alphaList.next();
+    }
     
+    public Double getCurrentAlpha()
+    {
+        return alphaList.current();
+    }
+    
+    public Integer getFirstSampleSize()
+    {
+        return sampleSizeList.first();
+    }
+    
+    public Integer getNextSampleSize()
+    {
+        return sampleSizeList.next();
+    }
+    
+    public Integer getCurrentSampleSize()
+    {
+        return sampleSizeList.current();
+    }
+    
+    public Double getFirstPower()
+    {
+        return powerList.first();
+    }
+    
+    public Double getNextPower()
+    {
+        return powerList.next();
+    }
+    
+    public Double getCurrentPower()
+    {
+        return powerList.current();
+    }
 }

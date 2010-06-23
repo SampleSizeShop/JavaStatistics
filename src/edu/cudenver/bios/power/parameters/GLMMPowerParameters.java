@@ -1,6 +1,7 @@
 package edu.cudenver.bios.power.parameters;
 
 import java.util.ArrayList;
+import java.util.ListIterator;
 
 import org.apache.commons.math.linear.RealMatrix;
 import edu.cudenver.bios.matrix.EssenceMatrix;
@@ -24,7 +25,7 @@ public class GLMMPowerParameters extends PowerParameters
 	// the type of statistical test to use
 	public enum Test 
 	{
-		NONE,
+	    NONE,
 		UNIREP,
 		UNIREP_BOX,
 		UNIREP_GEISSER_GREENHOUSE,
@@ -66,12 +67,12 @@ public class GLMMPowerParameters extends PowerParameters
 
 	RealMatrix beta = null;
 	RealMatrix betaScaled = null;
-	ArrayList<Double> betaScaleList = new ArrayList<Double>();
+	PeekableList<Double> betaScaleList = new PeekableList<Double>();
 	
 	// used if only fixed predictors
 	RealMatrix sigmaError = null;
-	RealMatrix sigmaScaled = null;
-	ArrayList<Double> sigmaScaleList = new ArrayList<Double>();
+	RealMatrix sigmaErrorScaled = null;
+	PeekableList<Double> sigmaScaleList = new PeekableList<Double>();
 	
 	/* variance/ covariances required for random gaussian covariates */
 	RealMatrix sigmaOutcomeGaussianRandom = null;
@@ -106,7 +107,7 @@ public class GLMMPowerParameters extends PowerParameters
 		return test;
 	}
 
-	public void setTestStatistic(Test test)
+	public void setTest(Test test)
 	{
 		this.test = test;
 	}
@@ -272,19 +273,61 @@ public class GLMMPowerParameters extends PowerParameters
     public void addBetaScale(double scale)
     {
     	betaScaleList.add(new Double(scale));    	
+    }    
+	
+    public Double getFirstBetaScale()
+    {
+        Double betaScale = betaScaleList.first();
+        if (betaScale != null)
+            betaScaled = beta.scalarMultiply(betaScale.doubleValue());
+        return betaScale;
+    }
+    
+    public Double getNextBetaScale()
+    {
+        Double betaScale = betaScaleList.next();
+        if (betaScale != null)
+            betaScaled = beta.scalarMultiply(betaScale.doubleValue());
+        return betaScale;
+    }
+    
+    public Double getCurrentBetaScale()
+    {
+        return betaScaleList.current();
+    }
+	
+	public RealMatrix getScaledBeta()
+	{
+	    return (betaScaled != null ? betaScaled : beta);
+	}
+	
+	
+    public Double getFirstSigmaScale()
+    {
+        Double sigmaScale = sigmaScaleList.first();
+        if (sigmaScale != null)
+            sigmaErrorScaled = sigmaError.scalarMultiply(sigmaScale.doubleValue());
+        return sigmaScale;        
+    }
+    
+    public Double getNextSigmaScale()
+    {
+        Double sigmaScale = sigmaScaleList.next();
+        if (sigmaScale != null)
+            sigmaErrorScaled = sigmaError.scalarMultiply(sigmaScale.doubleValue());
+        return sigmaScale;    
+    }
+    
+    public Double getCurrentSigmaScale()
+    {
+        return sigmaScaleList.current();
+    }
+    
+    public RealMatrix getScaledSigmaError()
+    {
+        return (sigmaErrorScaled != null ? sigmaErrorScaled : sigmaError);
     }
 
-	public ArrayList<Double> getBetaScaleList()
-	{
-		return betaScaleList;
-	}
-
-	public ArrayList<Double> getSigmaScaleList()
-	{
-		return sigmaScaleList;
-	}
-    
-    
 }
 
 

@@ -14,7 +14,7 @@ import junit.framework.TestCase;
 
 public class TestPowerStudentT extends TestCase
 {
-    public static final int SIMULATION_SAMPLE_SIZE = 1000000;
+    public static final int SIMULATION_SAMPLE_SIZE = 10000;
     public static final double PRECISION = 0.01;
     
 	OneSampleStudentsTPowerParameters params = new OneSampleStudentsTPowerParameters();

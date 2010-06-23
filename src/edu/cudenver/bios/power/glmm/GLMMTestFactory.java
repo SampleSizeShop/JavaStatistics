@@ -9,12 +9,18 @@ public class GLMMTestFactory
     {
         switch (params.getTest())
         {
+        case UNIREP:
+            return new GLMMTestUnivariateRepeatedMeasures(params);
+        case UNIREP_BOX:
+            return new GLMMTestUnirepBox(params);
+        case UNIREP_GEISSER_GREENHOUSE:
+            return new GLMMTestUnirepGeisserGreenhouse(params);
+        case UNIREP_HUYNH_FELDT:
+            return new GLMMTestUnirepHuynhFeldt(params);
         case WILKS_LAMBDA:
             return new GLMMTestWilksLambda(params);
         case HOTELLING_LAWLEY_TRACE:
             return new GLMMTestHotellingLawley(params);
-        case UNIREP:
-            return new GLMMTestUnivariateRepeatedMeasures(params);
         case PILLAI_BARTLETT_TRACE:
             return new GLMMTestPillaiBartlett(params);
         default:
