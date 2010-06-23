@@ -26,7 +26,7 @@ public class OneSampleStudentsTPowerParameters extends PowerParameters
     ArrayList<Double> sigmaList = new ArrayList<Double>();
     
     // indicates if a one or two tailed test should be performed
-    boolean oneTailed;
+    boolean twoTailed = true;
     
     public OneSampleStudentsTPowerParameters()
     {
@@ -49,14 +49,14 @@ public class OneSampleStudentsTPowerParameters extends PowerParameters
     	meansList.add(new MeanPair(mu0, muA));
     }
 
-	public boolean isOneTailed()
+	public boolean isTwoTailed()
 	{
-		return oneTailed;
+		return twoTailed;
 	}
 
-	public void setOneTailed(boolean oneTailed)
+	public void setTwoTailed(boolean oneTailed)
 	{
-		this.oneTailed = oneTailed;
+		this.twoTailed = oneTailed;
 	}
 
 	public ArrayList<MeanPair> getMeansList()

@@ -1,30 +1,45 @@
 package edu.cudenver.bios.power;
 
 public abstract class Power
-{
-	double power;
+{	
+	String errMsg = null;
+	
+	double nominalPower;
+	
+	double actualPower; 
 	
 	double totalSampleSize;
 	
 	double alpha;
 	
-	public Power(double power, double totalSampleSize, double alpha)
+	public Power(double nominalPower, double actualPower, double totalSampleSize, double alpha)
 	{
-		this.power = power;
+		this.nominalPower = nominalPower;
+		this.actualPower = actualPower;
 		this.totalSampleSize = totalSampleSize;
 		this.alpha = alpha;
 	}
 	
 	public abstract String toXML();
-
-	public double getPower()
+	
+	public double getNominalPower()
 	{
-		return power;
+		return nominalPower;
 	}
 
-	public void setPower(double power)
+	public void setNominalPower(double nominalPower)
 	{
-		this.power = power;
+		this.nominalPower = nominalPower;
+	}
+
+	public double getActualPower()
+	{
+		return actualPower;
+	}
+
+	public void setActualPower(double actualPower)
+	{
+		this.actualPower = actualPower;
 	}
 
 	public double getTotalSampleSize()

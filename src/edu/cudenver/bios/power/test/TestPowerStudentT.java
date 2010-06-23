@@ -14,7 +14,7 @@ import junit.framework.TestCase;
 
 public class TestPowerStudentT extends TestCase
 {
-    public static final int SIMULATION_SAMPLE_SIZE = 10000;
+    public static final int SIMULATION_SAMPLE_SIZE = 1000000;
     public static final double PRECISION = 0.01;
     
 	OneSampleStudentsTPowerParameters params = new OneSampleStudentsTPowerParameters();
@@ -25,7 +25,7 @@ public class TestPowerStudentT extends TestCase
     	params.addAlpha(0.01);
     	params.addMeans(0, 1);
     	params.addMeans(20, 24);
-    	params.addVariance(5); 
+    	params.addVariance(4); 
     	params.addSampleSize(10);
     	params.addSampleSize(15);
     	params.addSampleSize(100);
@@ -37,7 +37,7 @@ public class TestPowerStudentT extends TestCase
     
     public void testPowerOneTailed()
     {
-    	params.setOneTailed(true);
+    	params.setTwoTailed(false);
         int successCount = 0;
         OneSampleStudentsTPowerCalculator calc = new OneSampleStudentsTPowerCalculator();
         
@@ -56,7 +56,7 @@ public class TestPowerStudentT extends TestCase
         		OneSampleStudentsTPower simulationResult = (OneSampleStudentsTPower) simulationResults.get(i);
         		System.out.println("CALCULATED: " + calcResult.toXML());
         		System.out.println("SIMULATED: " + simulationResult.toXML());
-                if (Math.abs(simulationResult.getPower() - calcResult.getPower()) < PRECISION) successCount++;
+                if (Math.abs(simulationResult.getActualPower() - calcResult.getActualPower()) < PRECISION) successCount++;
         	}
         }
         catch(Exception e)
@@ -72,7 +72,7 @@ public class TestPowerStudentT extends TestCase
     
     public void testPowerTwoTailed()
     {
-    	params.setOneTailed(false);
+    	params.setTwoTailed(true);
         int successCount = 0;
         OneSampleStudentsTPowerCalculator calc = new OneSampleStudentsTPowerCalculator();
         
@@ -91,7 +91,7 @@ public class TestPowerStudentT extends TestCase
         		OneSampleStudentsTPower simulationResult = (OneSampleStudentsTPower) simulationResults.get(i);
         		System.out.println("CALCULATED: " + calcResult.toXML());
         		System.out.println("SIMULATED: " + simulationResult.toXML());
-                if (Math.abs(simulationResult.getPower() - calcResult.getPower()) < PRECISION) successCount++;
+                if (Math.abs(simulationResult.getActualPower() - calcResult.getActualPower()) < PRECISION) successCount++;
         	}
         }
         catch(Exception e)
@@ -107,7 +107,7 @@ public class TestPowerStudentT extends TestCase
     
     public void testSampleSizeTwoTailed()
     {
-    	params.setOneTailed(false);
+    	params.setTwoTailed(true);
         int successCount = 0;
         OneSampleStudentsTPowerCalculator calc = new OneSampleStudentsTPowerCalculator();
         

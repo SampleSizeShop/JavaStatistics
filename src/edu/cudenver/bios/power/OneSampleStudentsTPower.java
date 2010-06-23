@@ -5,10 +5,10 @@ public class OneSampleStudentsTPower extends Power
 	double sigma;
 	double detectableDifference;
 	
-	public OneSampleStudentsTPower(double alpha, double power, int sampleSize, 
-			double detectableDifference, double sigma)
+	public OneSampleStudentsTPower(double alpha, double nominalPower, double actualPower,
+			int sampleSize, double detectableDifference, double sigma)
 	{
-		super(power, sampleSize, alpha);
+		super(nominalPower, actualPower, sampleSize, alpha);
 		this.sigma = sigma;
 		this.detectableDifference = detectableDifference;
 	}
@@ -35,7 +35,7 @@ public class OneSampleStudentsTPower extends Power
 
 	public String toXML()
 	{
-		return "<power alpha='"+ alpha +"' power='"+power+"' sampleSize='"+ totalSampleSize +
-			"' difference='"+detectableDifference +"' variance='"+ sigma +"'>";
+		return "<power alpha='"+ alpha +"' nominalPower='" + nominalPower + "' actualPower='"+ actualPower +
+			"' sampleSize='"+ totalSampleSize + "' difference='"+detectableDifference +"' sigma='"+ sigma +"' />";
 	}
 }
