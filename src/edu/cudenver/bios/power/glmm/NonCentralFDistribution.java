@@ -95,7 +95,7 @@ public class NonCentralFDistribution
     {
         ndf = numeratorDegreesOfFreedom;
         ddf = denominatorDegreesOfFreedom;
-        this.nonCentrality = denominatorDegreesOfFreedom;
+        nonCentrality = nonCentralityParameter;
         
         // set the method of approximation and initialize appropriately
         if ((ndf < Math.pow(10, 4.4) && ddf < Math.pow(10, 5.4) && 

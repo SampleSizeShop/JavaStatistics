@@ -115,11 +115,11 @@ public class GLMMPowerCalculator implements PowerCalculator
         for(Double alpha = params.getFirstAlpha(); alpha != null;
         alpha = params.getNextAlpha())
         {
-            for(Double betaScale = params.getFirstBetaScale(); betaScale != null;
-            betaScale = params.getNextBetaScale())
+            for(Double sigmaScale = params.getFirstSigmaScale(); sigmaScale != null;
+            sigmaScale = params.getNextSigmaScale())
             {
-                for(Double sigmaScale = params.getFirstSigmaScale(); sigmaScale != null;
-                sigmaScale = params.getNextSigmaScale())
+                for(Double betaScale = params.getFirstBetaScale(); betaScale != null;
+                betaScale = params.getNextBetaScale())
                 {
                     for(Integer sampleSize = params.getFirstSampleSize(); sampleSize != null; 
                     sampleSize = params.getNextSampleSize())

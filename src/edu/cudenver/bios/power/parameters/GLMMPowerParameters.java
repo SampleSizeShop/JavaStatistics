@@ -92,7 +92,7 @@ public class GLMMPowerParameters extends PowerParameters
 	PowerMethod powerMethod = PowerMethod.CONDITIONAL_POWER;
 	double quantile = 0.50;
 
-	UnivariateCdf univariateCdf = UnivariateCdf.MULLER_BARTON_APPROX;
+	UnivariateCdf univariateCdf = UnivariateCdf.MULLER_EDWARDS_TAYLOR_APPROX;
 
 	MomentApproximationMethod momentMethod =
 		MomentApproximationMethod.NONE;
@@ -109,6 +109,21 @@ public class GLMMPowerParameters extends PowerParameters
 
 	public void setTest(Test test)
 	{
+	    switch (test)
+	    {
+	    case HOTELLING_LAWLEY_TRACE:
+	        momentMethod = MomentApproximationMethod.MCKEON_TWO_MOMENT_OMEGA_MULT;
+	        break;
+	    case PILLAI_BARTLETT_TRACE:
+	        momentMethod = MomentApproximationMethod.MULLER_TWO_MOMENT;
+	        break;
+	    case WILKS_LAMBDA:
+	        momentMethod = MomentApproximationMethod.RAO_TWO_MOMENT_OMEGA_MULT;
+	        break;
+	    default:
+	        momentMethod = MomentApproximationMethod.NONE;
+	    }
+
 		this.test = test;
 	}
 
