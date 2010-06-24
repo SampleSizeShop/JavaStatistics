@@ -70,6 +70,7 @@ public class GLMMTestWilksLambda extends GLMMTest
         double W = getWilksLambda(hypothesisSumOfSquares, errorSumOfSquares);
         if (a*a*b*b <= 4) 
         {
+        	g = 1;
             adjustedW = W;
         }
         else

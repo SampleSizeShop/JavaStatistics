@@ -51,7 +51,7 @@ public class TestPowerGLMM extends TestCase
         for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values())
         {
             if (test == GLMMPowerParameters.Test.NONE) continue;
-            if (test != Test.WILKS_LAMBDA) continue;
+            //if (test != Test.WILKS_LAMBDA) continue;
 
             params.setTest(test);
             List<Power> results = calc.getPower(params);
