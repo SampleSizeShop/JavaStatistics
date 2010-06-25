@@ -3,8 +3,11 @@ package edu.cudenver.bios.power.glmm;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.apache.commons.math.linear.Array2DRowRealMatrix;
+import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.EigenDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math.linear.RealMatrixChangingVisitor;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
@@ -15,6 +18,21 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     double unirepEpsilon = Double.NaN;
     double unirepEpsilonExpectedValue = Double.NaN;
 
+    // class to sum the elements in a matrix
+    private class SummationVisitor implements RealMatrixChangingVisitor
+    {
+        double sum = 0;
+        
+        public void start(int rows, int columns, int startRow, int endRow, int startColumn, int endColumn) 
+        {
+            sum = 0;
+        }
+
+        public double visit(int row, int column, double value) { sum += value; return value; }
+        public double end() { return sum; }
+    }
+    
+    
     public GLMMTestUnirepGeisserGreenhouse(GLMMPowerParameters params)
     {
         super(params);
@@ -137,41 +155,58 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
         // calculate estimate of epsilon (correction for violation of spehericity assumption)
         unirepEpsilon = (sumLambda*sumLambda) / (b * (sumLambdaSquared));
 
+//         calculate the expected value of the epsilon estimate
+//         E[f(lambda)] = f(lambda) + g1 / (N - r)
+//         see Muller, Barton (1989) for details
+//        double g1 = 0;
+//        for(int i = 0; i < distinctEigenValues.size(); i++)
+//        {
+//            EigenValueMultiplicityPair evmI = distinctEigenValues.get(i);
+//            double firstDerivative = 
+//                ((2 * sumLambda)/(b * sumLambdaSquared) - 
+//                        (2 * evmI.eigenValue * sumLambda * sumLambda)/(b*sumLambdaSquared*sumLambdaSquared));
+//
+//            double secondDerivative = 
+//                (2 / (b * sumLambdaSquared) - 
+//                        (8*evmI.eigenValue*sumLambda)/(b*sumLambdaSquared*sumLambdaSquared) + 
+//                        (8*evmI.eigenValue*evmI.eigenValue*sumLambda*sumLambda)/(b*sumLambdaSquared*sumLambdaSquared*sumLambdaSquared) - 
+//                        (2*sumLambda*sumLambda)/(b*sumLambdaSquared*sumLambdaSquared)); 
+//
+//            // accumulate the first term of g1 (sum over distinct eigen vals of 1st derivative * eigen val ^2 * multiplicity)
+//            g1 += secondDerivative * evmI.eigenValue * evmI.eigenValue * evmI.multiplicity;
+//            // loop over elements not equal to current
+//            for(int j = 0; j < distinctEigenValues.size(); j++)
+//            {
+//                if (i != j)
+//                {
+//                    EigenValueMultiplicityPair evmJ = distinctEigenValues.get(j);
+//                    // accumulate second term of g1
+//                    g1 += ((firstDerivative * evmI.eigenValue * evmI.multiplicity * evmJ.eigenValue * evmJ.multiplicity) /
+//                            (evmI.eigenValue - evmJ.eigenValue));
+//                }
+//            }
+//        }
+//
+//        this.unirepEpsilonExpectedValue = unirepEpsilon  + g1 / (N - r);
+
         // calculate the expected value of the epsilon estimate
-        // E[f(lambda)] = f(lambda) + g1 / (N - r)
-        // see Muller, Barton (1989) for details
-        double g1 = 0;
-        for(int i = 0; i < distinctEigenValues.size(); i++)
+        // see Muller, Edwards, Taylor (2004) for details
+        
+        // build a vector with each eigen value repeated per its multiplicity
+        ArrayRealVector eigenColumnVector = new ArrayRealVector();
+        for(EigenValueMultiplicityPair evmp: distinctEigenValues) 
         {
-            EigenValueMultiplicityPair evmI = distinctEigenValues.get(i);
-            double firstDerivative = 
-                ((2 * sumLambda)/(b * sumLambdaSquared) - 
-                        (2 * evmI.eigenValue * sumLambda * sumLambda)/(b*sumLambdaSquared*sumLambdaSquared));
-
-            double secondDerivative = 
-                (2 / (b * sumLambdaSquared) - 
-                        (8*evmI.eigenValue*sumLambda)/(b*sumLambdaSquared*sumLambdaSquared) + 
-                        (8*evmI.eigenValue*evmI.eigenValue*sumLambda*sumLambda)/(b*sumLambdaSquared*sumLambdaSquared*sumLambdaSquared) - 
-                        (2*sumLambda*sumLambda)/(b*sumLambdaSquared*sumLambdaSquared)); //TODO: finish
-
-                        // accumulate the first term of g1 (sum over distinct eigen vals of 1st derivative * eigen val ^2 * multiplicity)
-            g1 += secondDerivative * evmI.eigenValue * evmI.eigenValue * evmI.multiplicity;
-            // loop over elements not equal to current
-            for(int j = 0; j < distinctEigenValues.size(); j++)
-            {
-                if (i != j)
-                {
-                    EigenValueMultiplicityPair evmJ = distinctEigenValues.get(j);
-                    // accumulate second term of g1
-                    g1 += ((firstDerivative * evmI.eigenValue * evmI.multiplicity * evmJ.eigenValue * evmJ.multiplicity) /
-                            (evmI.eigenValue - evmJ.eigenValue));
-                }
-            }
+            // there is probably a more memory-efficient method to do this. 
+            eigenColumnVector = eigenColumnVector.append(new ArrayRealVector((int) evmp.multiplicity, evmp.eigenValue));
         }
 
-        this.unirepEpsilonExpectedValue = unirepEpsilon  + g1 / (N - r);
-
-
+        RealMatrix outerProduct = eigenColumnVector.outerProduct(eigenColumnVector);
+        double sum = outerProduct.walkInOptimizedOrder(new SummationVisitor());
+        double nu = (N - r);
+        double expT1 = (2*nu*sumLambdaSquared) + (nu*nu*sumLambda*sumLambda);
+        double expT2 = (nu*(nu + 1)*sumLambdaSquared) + (nu*sum*sum);
+        unirepEpsilonExpectedValue = (1/(double)b)*(expT1/expT2);
+  
         // ensure that expected value is within bounds 1/b to 1
         if (unirepEpsilonExpectedValue != Double.NaN)
         {
