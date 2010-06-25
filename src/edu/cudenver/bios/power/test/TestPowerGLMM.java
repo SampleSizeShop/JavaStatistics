@@ -27,7 +27,7 @@ public class TestPowerGLMM extends TestCase
     private static final double UNIT_TEST_ALPHA = 0.01;
     private static final double MEAN = 9.75;
     private static final double VARIANCE = 2.0;
-    private static final double[] ALPHA_LIST = {0.01};    
+    private static final double[] ALPHA_LIST = {0.05};    
     private static final double[] BETA_SCALE_LIST = {0,0.5,1,1.5,2};
     private static final double[] SIGMA_SCALE_LIST = {1,2};
     private static final int[] SAMPLE_SIZE_LIST = {10};
@@ -41,7 +41,7 @@ public class TestPowerGLMM extends TestCase
 
     }
     
-    public void testValidUnivariateFixed()
+    private void testValidUnivariateFixed()
     {
         // build the inputs
         GLMMPowerParameters params = buildValidUnivariateInputs();
@@ -95,7 +95,7 @@ public class TestPowerGLMM extends TestCase
         }
     }
 
-    private void testValidMultivariateFixed()
+    public void testValidMultivariateFixed()
     {
         // build the inputs
         GLMMPowerParameters params = buildValidMultivariateFixedInputs();
@@ -323,7 +323,8 @@ public class TestPowerGLMM extends TestCase
         
         // build sigma matrix
         double rho = 0.4;
-        double [][] sigma = {{1,rho,rho},{rho,1,rho},{rho,rho,1}};
+        double [][] sigma = {{1,rho,rho},{rho,1,rho},{rho,rho,1}}; // compound symmetry
+        //double [][] sigma = {{1,0.2,0.3},{0.2,1,0.2},{0.3,0.2,1}}; // toeplitz
         params.setSigmaError(new Array2DRowRealMatrix(sigma));
         // add sigma scale values
         for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);

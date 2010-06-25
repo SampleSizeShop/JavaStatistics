@@ -7,6 +7,8 @@ import jsc.distributions.NoncentralFishersF;
 
 import org.apache.commons.math.analysis.UnivariateRealFunction;
 import org.apache.commons.math.analysis.integration.TrapezoidIntegrator;
+import org.apache.commons.math.analysis.solvers.UnivariateRealSolver;
+import org.apache.commons.math.analysis.solvers.UnivariateRealSolverFactory;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
@@ -21,6 +23,7 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters.Test;
 import edu.cudenver.bios.power.glmm.GLMMTest;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory;
 import edu.cudenver.bios.power.glmm.NonCentralityDistribution;
+import edu.cudenver.bios.powersamplesize.PowerGLMM;
 
 public class GLMMPowerCalculator implements PowerCalculator
 {
@@ -125,17 +128,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                     sampleSize = params.getNextSampleSize())
                     {
         			    // calculate the power
-        			    double power = Double.NaN;
-        				switch (params.getPowerMethod())
-        		        {
-        		        case QUANTILE_POWER:
-        		            power = getQuantilePower(params);
-        		        case UNCONDITIONAL_POWER:
-        		            power = getUnconditionalPower(params);
-        		        case CONDITIONAL_POWER:
-        		        default:
-        		            power = getConditionalPower(params);
-        		        }
+        			    double power = getPowerByType(params);
         				
         				// store the power result
                         results.add(new GLMMPower(alpha, power, power, sampleSize, betaScale, sigmaScale));
@@ -148,8 +141,43 @@ public class GLMMPowerCalculator implements PowerCalculator
 	}
 
 	@Override
-	public List<Power> getSampleSize(PowerParameters params)
+	public List<Power> getSampleSize(PowerParameters sampleSizeParams)
 	{
+        GLMMPowerParameters params = (GLMMPowerParameters) sampleSizeParams;
+        // make sure all of the matrix inputs are appropriate
+        validateMatrices(params);
+        
+        // precalculate any computationally expensive matrices/constants, 
+        // update the parameters as needed - used for random covariates
+        initialize(params);
+        
+        // list of power results
+        ArrayList<Power> results = new ArrayList<Power>();
+        
+        // calculate the power for either one or two tails
+        for(Double alpha = params.getFirstAlpha(); alpha != null;
+            alpha = params.getNextAlpha())
+        {
+            for(Double sigmaScale = params.getFirstSigmaScale(); sigmaScale != null;
+                sigmaScale = params.getNextSigmaScale())
+            {
+                for(Double betaScale = params.getFirstBetaScale(); betaScale != null;
+                    betaScale = params.getNextBetaScale())
+                {
+                    for(Double power = params.getFirstPower(); power != null; 
+                        power = params.getNextPower())
+                    {
+                        SizePowerPair sampleSize = getSampleSize(params);
+                        params.setSampleSize(sampleSize);
+                        results.add(new GLMMPower(alpha, power, getPowerByType(params), 
+                                sampleSize, betaScale, sigmaScale));
+
+                    }
+                }
+            }
+        }
+        
+        
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -309,6 +337,24 @@ public class GLMMPowerCalculator implements PowerCalculator
         // TODO: how to check this?		
 	}
 	
+	private double getPowerByType(GLMMPowerParameters params)
+	{
+        // calculate the power
+        double power = Double.NaN;
+        switch (params.getPowerMethod())
+        {
+        case QUANTILE_POWER:
+            power = getQuantilePower(params);
+        case UNCONDITIONAL_POWER:
+            power = getUnconditionalPower(params);
+        case CONDITIONAL_POWER:
+        default:
+            power = getConditionalPower(params);
+        }
+        
+        return power;
+	}
+	
     private double getConditionalPower(GLMMPowerParameters params)
     {
         GLMMTest glmmTest = GLMMTestFactory.createGLMMTest(params);
@@ -384,4 +430,61 @@ public class GLMMPowerCalculator implements PowerCalculator
         return (1 - nonCentralFDist.cdf(Fcrit));  
     }
 
+    /**
+     * Calculate power for the general linear multivariate model based on
+     * the input matrices.
+     * 
+     * For the mutivariate case, the following matrices must be specified
+     * <ul>
+     * <li>Essence design matrix - essence matrix for the model design
+     * <li>Beta matrix - estimated regression coefficients matrix
+     * <li>Sigma matrix - estimated errors matrix
+     * <li>Theta0 matrix - estimated null hypothesis matrix 
+     * <li>Between subject contrast matrix - defines comparisons between subjects
+     * <li>Within subject contrast matrix - defines comparisons within subjects
+     * (may be left null for univariate special case)
+     * </ul>
+     * 
+     * @param params Container for input matrices
+     * @return power
+     */
+    private int getSampleSize(GLMMPowerParameters params)
+            throws IllegalArgumentException
+    {
+        UnivariateRealSolverFactory factory = UnivariateRealSolverFactory.newInstance();
+        UnivariateRealSolver solver = factory.newBisectionSolver();
+
+        SampleSizeFunction sampleSizeFunc = new SampleSizeFunction(params);
+        
+        try
+        {
+            int upperBound = getUpperBound(params);
+            int minSampleSize = params.getDesignEssence().getMinimumSampleSize();
+            int adjSize = (int) Math.ceil(solver.solve(sampleSizeFunc, minSampleSize, upperBound));
+            // increment the calculated sample size to get a value
+            // that is a multiple of the minimum sample size
+            int remainder = adjSize % minSampleSize;
+            if (remainder != 0) adjSize += minSampleSize - remainder;
+            return adjSize;
+        }
+        catch (Exception e)
+        {
+            throw new IllegalArgumentException("Failed to calculate sample size: " + e.getMessage());
+        }
+    }
+
+    private int getUpperBound(GLMMPowerParameters params)
+    {
+        double desiredPower = params.getCurrentPower();
+        int upperBound = STARTING_SAMPLE_SIZE;
+        
+        for(double currentPower = 0.0; currentPower < desiredPower; upperBound *= 2)
+        {
+            RealMatrix design = params.getDesignEssence().getFullDesignMatrix(upperBound);
+            tmpParams.setDesign(design);
+            tmpParams.setSampleSize(upperBound);
+            currentPower = calc.getCalculatedPower(tmpParams);
+        }
+        return upperBound;
+    }
 }

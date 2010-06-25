@@ -29,9 +29,9 @@ public class TestPowerGLMM extends TestCase
     private static final double ALPHA = 0.05;    
     private static final double MEAN = 9.75;
     private static final double VARIANCE = 2.0;
-    private static final double[] BETA_SCALE = {1,2};
-    private static final double[] SIGMA_SCALE = {1,2.05};
-    private static final int[] SAMPLE_SIZE = {10};
+    private static final double[] BETA_SCALE = {0,0.5,1,1.5,2};
+    private static final double[] SIGMA_SCALE = {1,2};
+    private static final int[] SAMPLE_SIZE = {20};
     private Normal normalDist;
     private DecimalFormat Number;
     
@@ -68,7 +68,7 @@ public class TestPowerGLMM extends TestCase
         checkPowerFail("Invalid Beta, Univariate, Fixed, UNIREP", calc, goodParams);
     }
 
-    private void testValidMultivariateFixed()
+    public void testValidMultivariateFixed()
     {
         LinearModelPowerSampleSizeParameters goodParams = buildValidMultivariateFixedInputs();
 
@@ -121,7 +121,7 @@ public class TestPowerGLMM extends TestCase
 
     }
 
-    public void testValidMultivariateRandom()
+    private void testValidMultivariateRandom()
     {
         LinearModelPowerSampleSizeParameters goodParams = buildValidMultivariateRandomInputs();
         //goodParams.setPowerMethod(PowerMethod.QUANTILE_POWER);
