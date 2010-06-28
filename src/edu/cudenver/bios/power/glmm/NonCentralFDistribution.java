@@ -50,7 +50,7 @@ public class NonCentralFDistribution
     protected double ddf;
     protected double nonCentrality;
     // method of approximation
-    protected FMethod method;
+    protected FMethod method = FMethod.CDF;
     
     // non-central F distribution for use with the CDF method
     protected NoncentralFishersF nonCentralF= null;
@@ -181,18 +181,25 @@ public class NonCentralFDistribution
      */
     public double inverseCDF(double quantile)
     {
-        UnivariateRealSolverFactory factory = UnivariateRealSolverFactory.newInstance();
-        UnivariateRealSolver solver = factory.newBisectionSolver();
-
-        NonCentralFQuantileFunction quantFunc = new NonCentralFQuantileFunction(quantile);
-        
-        try
+        if (method == FMethod.CDF)
         {
-            return solver.solve(quantFunc, 0, 10);
+            return nonCentralF.inverseCdf(quantile);
         }
-        catch (Exception e)
+        else
         {
-            throw new IllegalArgumentException("Failed to determine non-centrality quantile: " + e.getMessage());
+            UnivariateRealSolverFactory factory = UnivariateRealSolverFactory.newInstance();
+            UnivariateRealSolver solver = factory.newBisectionSolver();
+
+            NonCentralFQuantileFunction quantFunc = new NonCentralFQuantileFunction(quantile);
+
+            try
+            {
+                return solver.solve(quantFunc, 0, 10);
+            }
+            catch (Exception e)
+            {
+                throw new IllegalArgumentException("Failed to determine non-centrality quantile: " + e.getMessage());
+            }
         }
     }
         

@@ -4,7 +4,6 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 import edu.cudenver.bios.matrix.ColumnMetaData;
@@ -16,21 +15,20 @@ import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters.Test;
 
 import jsc.distributions.Normal;
 import junit.framework.TestCase;
 
-public class TestPowerGLMM extends TestCase
+public class TestDetectableDifferenceGLMM extends TestCase
 {
     private static final int SIMULATION_SIZE = 10000;
     private static final double UNIT_TEST_ALPHA = 0.01;
     private static final double MEAN = 9.75;
     private static final double VARIANCE = 2.0;
     private static final double[] ALPHA_LIST = {0.05};    
-    private static final double[] BETA_SCALE_LIST = {0,0.5,1,1.5,2};
+    private static final int[] SAMPLE_SIZE_LIST = {10,15,20};
     private static final double[] SIGMA_SCALE_LIST = {1,2};
-    private static final int[] SAMPLE_SIZE_LIST = {5,10};
+    private static final double[] POWER_LIST = {0.7,0.8,0.9};
     private Normal normalDist;
     private DecimalFormat Number;
 
@@ -54,7 +52,7 @@ public class TestPowerGLMM extends TestCase
             //if (test != Test.WILKS_LAMBDA) continue;
 
             params.setTest(test);
-            List<Power> results = calc.getPower(params);
+            List<Power> results = calc.getDetectableDifference(params);
             //List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
             System.out.println("Multi?\tFixed?\tAlpha\tSigmaScale\tBetaScale\tTotal N\tPower");
             for(Power power: results)
@@ -81,7 +79,7 @@ public class TestPowerGLMM extends TestCase
             {
                 if (test == GLMMPowerParameters.Test.NONE) continue;
                 params.setTest(test);
-                List<Power> results = calc.getPower(params);
+                List<Power> results = calc.getDetectableDifference(params);
                 //List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
                 for(Power p: results)
                 {
@@ -106,7 +104,7 @@ public class TestPowerGLMM extends TestCase
         {
             if (test == GLMMPowerParameters.Test.NONE) continue;
             params.setTest(test);
-            List<Power> results = calc.getPower(params);
+            List<Power> results = calc.getDetectableDifference(params);
             System.out.println("Multi?\tFixed?\tAlpha\tSigmaScale\tBetaScale\tTotal N\tPower");
             for(Power power: results)
             {
@@ -133,7 +131,7 @@ public class TestPowerGLMM extends TestCase
             {
                 if (test == GLMMPowerParameters.Test.NONE) continue;
                 params.setTest(test);
-                List<Power> results = calc.getPower(params);
+                List<Power> results = calc.getDetectableDifference(params);
                 //List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
                 for(Power p: results)
                 {
@@ -161,7 +159,7 @@ public class TestPowerGLMM extends TestCase
         {
             if (test == GLMMPowerParameters.Test.NONE) continue;
             params.setTest(test);
-            List<Power> results = calc.getPower(params);
+            List<Power> results = calc.getDetectableDifference(params);
             //List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
             for(Power p: results)
             {
@@ -175,93 +173,6 @@ public class TestPowerGLMM extends TestCase
 
     }
 
-    private void testNonCentralityCDF()
-    {
-//        double[] testFCrits = {0.8223684, 1.2335526, 1.3748972, 1.439, 1.55,1.63,1.643333,1.65};
-//        LinearModelPowerSampleSizeParameters goodParams = buildValidMultivariateRandomInputs();
-//        goodParams.setTestStatistic(TestStatistic.HOTELLING_LAWLEY_TRACE);
-//        goodParams.setPowerMethod(PowerMethod.QUANTILE_POWER);
-//        goodParams.setQuantile(0.25);
-//        // build the error matrix
-//        RealMatrix sigmaYG = goodParams.getSigmaOutcomeGaussianRandom();
-//        RealMatrix sigmaG = goodParams.getSigmaGaussianRandom();
-//        RealMatrix sigmaY = goodParams.getSigmaOutcome();
-//        RealMatrix sigmaGY = sigmaYG.transpose();
-//        RealMatrix sigmaGInverse = new LUDecompositionImpl(sigmaG).getSolver().getInverse();
-//        goodParams.setSigmaError(sigmaY.subtract(sigmaYG.multiply(sigmaGInverse.multiply(sigmaGY))));
-//        
-//        NonCentralityDistribution nonCentralityDist = 
-//            new NonCentralityDistribution(goodParams, false);
-//        System.out.println("Starting cdf tests");
-//        for(double fcrit : testFCrits)
-//        {
-//            double prob = nonCentralityDist.cdf(fcrit);
-//            System.out.println("Crit=" + fcrit + " prob=" + prob);
-//        }
-//        
-//        double fval = nonCentralityDist.inverseCDF(goodParams.getQuantile());
-//        System.out.println("Quantile=" + goodParams.getQuantile() + " fval=" + fval);
-
-        assertTrue(true);
-    }
-    
-//    private void checkPowerFail(String label, PowerGLMM calc, LinearModelPowerSampleSizeParameters params)
-//    {
-//        try
-//        {
-//            double calculated = calc.getCalculatedPower(params);
-//            double simulated = calc.getSimulatedPower((PowerSampleSizeParameters) params, SIMULATION_SIZE);
-//            assertFalse(powersAreSame(calculated, simulated));
-//        }
-//        catch(Exception e)
-//        {
-//            System.out.println(label + ">> Recognized invalid inputs: " + e.getMessage());
-//            assert(true);
-//        }
-//
-//    }
-
-//    private void checkPower(String label, PowerGLMM calc, LinearModelPowerSampleSizeParameters params)
-//    {
-//        int tests = 0;
-//        int matches = 0;
-//
-//        for(double sigmaScale : SIGMA_SCALE)
-//        {
-//            for(double betaScale : BETA_SCALE)
-//            {
-//                for(int sampleSize: SAMPLE_SIZE)
-//                {  
-//                    LinearModelPowerSampleSizeParameters testParams = 
-//                        new LinearModelPowerSampleSizeParameters(params);
-//                    // scale the inputs
-//                    testParams.setBeta(params.getBeta().scalarMultiply(betaScale));
-//                    if (params.getSigmaError() != null)
-//                        testParams.setSigmaError(params.getSigmaError().scalarMultiply(sigmaScale));
-//                    else
-//                        testParams.setSigmaGaussianRandom(params.getSigmaGaussianRandom().scalarMultiply(sigmaScale));
-//                    testParams.setSampleSize(sampleSize);
-//                    try
-//                    {
-//                        double calculated = calc.getCalculatedPower(testParams);
-//                        double simulated = calc.getSimulatedPower(testParams, SIMULATION_SIZE);
-//
-//                        System.out.println(label + "["+sigmaScale+","+betaScale+","+sampleSize
-//                                +"]>> Calculated power: " + Number.format(calculated) + ", simulated power: " + Number.format(simulated));
-//                        tests++;
-//                        if (powersAreSame(calculated, simulated)) matches++;
-//                    }
-//                    catch(Exception e)
-//                    {
-//                        System.out.println(label + ">> Failed to calculate power: " + e.getMessage());
-//                    }        
-//
-//                }
-//            }
-//        }
-//        assertTrue(true);
-//        //assertEquals(tests, matches);
-//    }
 
     private GLMMPowerParameters buildValidUnivariateInputs()
     {
@@ -273,9 +184,7 @@ public class TestPowerGLMM extends TestCase
         // build beta matrix
         double [][] beta = {{0},{1}};
         params.setBeta(new Array2DRowRealMatrix(beta));
-        // add beta scale values
-        for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
-        
+
         // build theta null matrix
         double [][] theta0 = {{0}};
         params.setTheta(new Array2DRowRealMatrix(theta0));
@@ -292,9 +201,10 @@ public class TestPowerGLMM extends TestCase
         essenceMatrix.setRowMetaData(0, new RowMetaData(10,1));
         essenceMatrix.setRowMetaData(1, new RowMetaData(10,1));
         params.setDesignEssence(essenceMatrix);
-        // add sample size multipliers
+        // add powers
+        for(double power: POWER_LIST) params.addPower(power);
+        // add sample sizes
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
-        
         // build between subject contrast
         double [][] between = {{1,-1}};
         params.setBetweenSubjectContrast(new Array2DRowRealMatrix(between));
@@ -318,9 +228,11 @@ public class TestPowerGLMM extends TestCase
         essence.setRowMetaData(2, new RowMetaData(5,1));
         essence.setRowMetaData(3, new RowMetaData(5,1));
         params.setDesignEssence(essence);
-        // add sample size multipliers
+        // add powers
+        for(double power: POWER_LIST) params.addPower(power);
+        // add sample sizes
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
-        
+       
         // build sigma matrix
         double rho = 0.4;
         double [][] sigma = {{1,rho,rho},{rho,1,rho},{rho,rho,1}}; // compound symmetry
@@ -332,9 +244,7 @@ public class TestPowerGLMM extends TestCase
         // build beta matrix
         double [][] beta = {{1,0,0},{0,0,0},{0,0,0},{0,0,0}};
         params.setBeta(new Array2DRowRealMatrix(beta));
-        // add beta scale values
-        for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
-        
+
         // build theta null matrix
         double [][] theta0 = {{0,0},{0,0},{0,0}};
         params.setTheta(new Array2DRowRealMatrix(theta0));
@@ -386,6 +296,10 @@ public class TestPowerGLMM extends TestCase
         randColMD.setMean(MEAN);
         randColMD.setVariance(VARIANCE);
         essence.setColumnMetaData(2, randColMD);
+        // add powers
+        for(double power: POWER_LIST) params.addPower(power);
+        // add sample sizes
+        for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
 
         // build sigma G matrix
         double[][] sigmaG = {{1}};
@@ -407,9 +321,7 @@ public class TestPowerGLMM extends TestCase
         // build beta matrix
         double [][] beta = {{0.25,0},{0,0.25},{0.9,0}};
         params.setBeta(new Array2DRowRealMatrix(beta));
-        // add beta scale values
-        for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
-        
+
         // build theta null matrix
         double [][] theta0 = {{0,0}};
         params.setTheta(new Array2DRowRealMatrix(theta0));
@@ -427,3 +339,4 @@ public class TestPowerGLMM extends TestCase
     
     
 }
+

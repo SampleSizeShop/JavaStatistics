@@ -5,6 +5,7 @@ import java.util.ListIterator;
 
 import org.apache.commons.math.linear.RealMatrix;
 import edu.cudenver.bios.matrix.EssenceMatrix;
+import edu.cudenver.bios.power.parameters.PowerParameters.PeekableList;
 
 /**
  * Container class for matrix inputs for general linear model power calculations.
@@ -68,6 +69,7 @@ public class GLMMPowerParameters extends PowerParameters
 	RealMatrix beta = null;
 	RealMatrix betaScaled = null;
 	PeekableList<Double> betaScaleList = new PeekableList<Double>();
+	double betaScaleOverride = Double.NaN;
 	
 	// used if only fixed predictors
 	RealMatrix sigmaError = null;
@@ -100,9 +102,40 @@ public class GLMMPowerParameters extends PowerParameters
 	/**
 	 * Constructor.  Creates an empty set of linear model power parameters
 	 */
-	public GLMMPowerParameters() {}
+	public GLMMPowerParameters() 
+	{
+	    super();
+	}
 
-	public Test getTest()
+	/**
+	 * Copy constructor.
+	 * @param params
+	 */
+	public GLMMPowerParameters(GLMMPowerParameters params)
+    {
+        super();
+        this.test = params.getTest();
+        this.beta = params.getBeta();
+        this.betaScaled = params.getScaledBeta();
+        this.betaScaleList = params.getBetaScaleList();
+        this.sigmaError = params.getSigmaError();
+        this.sigmaErrorScaled = params.getScaledSigmaError();
+        this.sigmaScaleList = params.getSigmaScaleList();
+        this.sigmaOutcomeGaussianRandom = params.getSigmaOutcomeGaussianRandom();
+        this.sigmaGaussianRandom = params.getSigmaGaussianRandom();
+        this.sigmaOutcome = params.getSigmaOutcome();
+        this.betweenSubjectContrast = params.getBetweenSubjectContrast();
+        this.theta = params.getTheta();
+        this.withinSubjectContrast = params.getWithinSubjectContrast();
+        this.design = null;
+        this.designEssence = params.getDesignEssence();
+        this.powerMethod = params.getPowerMethod();
+        this.quantile = params.getQuantile();
+        this.univariateCdf = params.getUnivariateCdf();
+        this.momentMethod = params.getMomentMethod();
+    }
+
+    public Test getTest()
 	{
 		return test;
 	}
@@ -292,7 +325,9 @@ public class GLMMPowerParameters extends PowerParameters
 	
     public Double getFirstBetaScale()
     {
-        Double betaScale = betaScaleList.first();
+        Double betaScale = betaScaleOverride;
+        if (betaScale == Double.NaN)
+            betaScale = betaScaleList.first();
         if (betaScale != null)
             betaScaled = beta.scalarMultiply(betaScale.doubleValue());
         return betaScale;
@@ -300,7 +335,9 @@ public class GLMMPowerParameters extends PowerParameters
     
     public Double getNextBetaScale()
     {
-        Double betaScale = betaScaleList.next();
+        Double betaScale = betaScaleOverride;
+        if (betaScale == Double.NaN)
+            betaScale = betaScaleList.next();
         if (betaScale != null)
             betaScaled = beta.scalarMultiply(betaScale.doubleValue());
         return betaScale;
@@ -308,7 +345,10 @@ public class GLMMPowerParameters extends PowerParameters
     
     public Double getCurrentBetaScale()
     {
-        return betaScaleList.current();
+        if (betaScaleOverride != Double.NaN)
+            return betaScaleOverride;
+        else
+            return betaScaleList.current();
     }
 	
 	public RealMatrix getScaledBeta()
@@ -372,7 +412,34 @@ public class GLMMPowerParameters extends PowerParameters
     {
         return sampleSizeList.current();
     }
+    
+    public void setGroupSampleSize(int sampleSize)
+    {
+        designEssence.setGroupSampleSize(sampleSize);
+        design = null;
+    }
 
+    public PeekableList<Double> getBetaScaleList()
+    {
+        return betaScaleList;
+    }
+
+    public RealMatrix getSigmaErrorScaled()
+    {
+        return sigmaErrorScaled;
+    }
+
+    public PeekableList<Double> getSigmaScaleList()
+    {
+        return sigmaScaleList;
+    }
+
+    public void setBetaScale(double betaScale)
+    {
+        betaScaleOverride = betaScale;
+        if (betaScale != Double.NaN)
+            betaScaled = beta.scalarMultiply(betaScale);
+    }
 }
 
 
