@@ -173,7 +173,6 @@ public class TestDetectableDifferenceGLMM extends TestCase
 
     }
 
-
     private GLMMPowerParameters buildValidUnivariateInputs()
     {
         GLMMPowerParameters params = new GLMMPowerParameters();

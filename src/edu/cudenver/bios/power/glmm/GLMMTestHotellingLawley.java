@@ -36,15 +36,15 @@ public class GLMMTestHotellingLawley extends GLMMTest
         RealMatrix U = params.getWithinSubjectContrast();
         
         // a = #rows in between subject contrast matrix, C
-        int a = C.getRowDimension();
+        double a = (double) C.getRowDimension();
         // b = #columns in within subject contrast matrix
-        int b = U.getColumnDimension();
+        double b = (double) U.getColumnDimension();
         // N = total number of subjects (rows in design matrix, X)
-        int N = X.getRowDimension();
+        double N = (double) X.getRowDimension();
         // r = rank of design matrix, X
-        int r = new SingularValueDecompositionImpl(X).getRank();
+        double r = (double) new SingularValueDecompositionImpl(X).getRank();
         // minimum of a and b dimensions
-        int s = (a < b) ? a : b;  
+        double s = (a < b) ? a : b;  
         
         double df = Double.NaN;
         if (type == DistributionType.DATA_ANALYSIS_NULL ||
@@ -55,9 +55,9 @@ public class GLMMTestHotellingLawley extends GLMMTest
         }
         else
         {
-            df = (N - r) * (N - r) - (N - r) * (2 * b + 3) + b * (b + 3);
-            df = df / ((N - r) * (a  + b + 1) - (a + 2 * b + b * b - 1));
-            df = 4 + (a * b + 2) * df;
+            double t1 = (N - r) * (N - r) - (N - r) * (2 * b + 3) + b * (b + 3);
+            double t2 = ((N - r) * (a  + b + 1) - (a + 2 * b + b * b - 1));
+            df = 4 + (a * b + 2) * (t1/t2);
         }
         // TODO Auto-generated method stub
         return df;

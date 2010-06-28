@@ -230,6 +230,8 @@ public class NonCentralityDistribution
     
     public double inverseCDF(double quantile)
     {
+        if (H1 <= 0) return 0;
+
         UnivariateRealSolverFactory factory = UnivariateRealSolverFactory.newInstance();
         UnivariateRealSolver solver = factory.newBisectionSolver();
 

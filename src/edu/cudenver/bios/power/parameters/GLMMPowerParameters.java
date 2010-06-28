@@ -69,7 +69,6 @@ public class GLMMPowerParameters extends PowerParameters
 	RealMatrix beta = null;
 	RealMatrix betaScaled = null;
 	PeekableList<Double> betaScaleList = new PeekableList<Double>();
-	double betaScaleOverride = Double.NaN;
 	
 	// used if only fixed predictors
 	RealMatrix sigmaError = null;
@@ -325,9 +324,7 @@ public class GLMMPowerParameters extends PowerParameters
 	
     public Double getFirstBetaScale()
     {
-        Double betaScale = betaScaleOverride;
-        if (betaScale == Double.NaN)
-            betaScale = betaScaleList.first();
+        Double betaScale = betaScaleList.first();
         if (betaScale != null)
             betaScaled = beta.scalarMultiply(betaScale.doubleValue());
         return betaScale;
@@ -335,9 +332,7 @@ public class GLMMPowerParameters extends PowerParameters
     
     public Double getNextBetaScale()
     {
-        Double betaScale = betaScaleOverride;
-        if (betaScale == Double.NaN)
-            betaScale = betaScaleList.next();
+        Double betaScale = betaScaleList.next();
         if (betaScale != null)
             betaScaled = beta.scalarMultiply(betaScale.doubleValue());
         return betaScale;
@@ -345,10 +340,7 @@ public class GLMMPowerParameters extends PowerParameters
     
     public Double getCurrentBetaScale()
     {
-        if (betaScaleOverride != Double.NaN)
-            return betaScaleOverride;
-        else
-            return betaScaleList.current();
+        return betaScaleList.current();
     }
 	
 	public RealMatrix getScaledBeta()
@@ -434,9 +426,8 @@ public class GLMMPowerParameters extends PowerParameters
         return sigmaScaleList;
     }
 
-    public void setBetaScale(double betaScale)
+    public void scaleBeta(double betaScale)
     {
-        betaScaleOverride = betaScale;
         if (betaScale != Double.NaN)
             betaScaled = beta.scalarMultiply(betaScale);
     }

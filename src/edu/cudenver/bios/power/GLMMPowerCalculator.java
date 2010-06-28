@@ -131,7 +131,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         {
             try
             {
-                params.setBetaScale(betaScale);
+                params.scaleBeta(betaScale);
                 double calculatedPower = getPowerByType(params);
                 return params.getCurrentPower() - calculatedPower;
             }
@@ -488,8 +488,8 @@ public class GLMMPowerCalculator implements PowerCalculator
 
         // check rank of the design matrix
         int rankX = new SingularValueDecompositionImpl(X).getRank();
-        if (rankX != X.getColumnDimension())
-            throw new IllegalArgumentException("Design matrix is not full rank");
+        if (rankX != Math.min(X.getColumnDimension(), X.getRowDimension()))
+            throw new IllegalArgumentException("Design matrix is not full rank");            
 
         // make sure design matrix is symmetric and positive definite
         // TODO: how to check this?		
@@ -503,11 +503,14 @@ public class GLMMPowerCalculator implements PowerCalculator
         {
         case QUANTILE_POWER:
             power = getQuantilePower(params);
+            break;
         case UNCONDITIONAL_POWER:
             power = getUnconditionalPower(params);
+            break;
         case CONDITIONAL_POWER:
         default:
             power = getConditionalPower(params);
+            break;
         }
         
         return power;
@@ -655,7 +658,7 @@ public class GLMMPowerCalculator implements PowerCalculator
             throw new MathException("Failed to calculate sample size");
 
         // calculate the total N and return the values
-        params.setBetaScale(betaScale);
+        params.scaleBeta(betaScale);
         return new DetectableDifference(betaScale, getPowerByType(params));
     }
 
@@ -666,7 +669,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 
         for(double currentPower = 0.0; currentPower < desiredPower; upperBound *= 2)
         {
-            params.setBetaScale((double) upperBound);
+            params.scaleBeta((double) upperBound);
             currentPower = getPowerByType(params);
         }
         return upperBound;
