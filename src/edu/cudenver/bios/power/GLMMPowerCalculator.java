@@ -1,3 +1,23 @@
+/*
+ * Java Statistics.  A java library providing power/sample size estimation for 
+ * the general linear model.
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.power;
 
 import java.util.ArrayList;
@@ -5,6 +25,7 @@ import java.util.List;
 
 import jsc.distributions.NoncentralFishersF;
 
+import org.apache.commons.math.MathException;
 import org.apache.commons.math.analysis.UnivariateRealFunction;
 import org.apache.commons.math.analysis.integration.TrapezoidIntegrator;
 import org.apache.commons.math.analysis.solvers.UnivariateRealSolver;
@@ -32,36 +53,52 @@ public class GLMMPowerCalculator implements PowerCalculator
     private static final int MIN_SAMPLE_SIZE =  2; // need df > 0
     
     /**
-     * function to be used with apache's built-in bisection solver
+     * Simple class to contain sample size and actual power
+     * from a sample size calculation
+     */
+    private class SampleSize
+    {
+        public int sampleSize; // total sample size
+        public double actualPower; // calculated power associated with total sample size
+        
+        public SampleSize(int sampleSize, double actualPower)
+        {
+            this.sampleSize = sampleSize;
+            this.actualPower = actualPower;
+        }
+    }
+    
+    /**
+     * Function used with Apache's bisection solver to determine the 
+     * per-group sample size which most closely achieves the desired power
      */
     private class SampleSizeFunction implements UnivariateRealFunction
     {
     	GLMMPowerParameters params;
-        
+        double calculatedPower = Double.NaN;
         public SampleSizeFunction(GLMMPowerParameters params)
         {
             this.params = params;
+        }
+        
+        public double getCalculatedPower()
+        {
+            return calculatedPower;
         }
         
         public double value(double n)
         {
             try
             {
-//            	GLMMPowerParameters tmpParams = 
-//                    new GLMMPowerParameters(params);
-//                RealMatrix design = tmpParams.getDesignEssence().getFullDesignMatrix((int) n);
-//                tmpParams.setDesign(design);
-//                tmpParams.setSampleSize((int) n);
-//                double calculatedPower = powerGLMM.getCalculatedPower(tmpParams);
-//                return tmpParams.getPower() - calculatedPower;
-                return 0;
+                params.getDesignEssence().setGroupSampleSize((int) n);
+                calculatedPower = getPowerByType(params);
+                return params.getCurrentPower() - calculatedPower;
             }
             catch (Exception e)
             {   
                 // we can't throw an exception here since the UnivariateRealFunction interface does
-                // not allow it.  So we return a large number to prevent BisectionSolver from using
-                // the n which caused to exception as a root
-                return STARTING_SAMPLE_SIZE;  
+                // not allow it.  So we return a negative number
+                return -1;  
             }
         }
     }
@@ -127,11 +164,14 @@ public class GLMMPowerCalculator implements PowerCalculator
                     for(Integer sampleSize = params.getFirstSampleSize(); sampleSize != null; 
                     sampleSize = params.getNextSampleSize())
                     {
+                        // set the per group sample size
+                        params.getDesignEssence().setGroupSampleSize(sampleSize.intValue());
         			    // calculate the power
         			    double power = getPowerByType(params);
-        				
         				// store the power result
-                        results.add(new GLMMPower(alpha, power, power, sampleSize, betaScale, sigmaScale));
+                        results.add(new GLMMPower(alpha, power, power, 
+                                params.getDesignEssence().getTotalSampleSize(), 
+                                betaScale, sigmaScale));
         			}
         		}
         	}
@@ -167,11 +207,17 @@ public class GLMMPowerCalculator implements PowerCalculator
                     for(Double power = params.getFirstPower(); power != null; 
                         power = params.getNextPower())
                     {
-                        SizePowerPair sampleSize = getSampleSize(params);
-                        params.setSampleSize(sampleSize);
-                        results.add(new GLMMPower(alpha, power, getPowerByType(params), 
-                                sampleSize, betaScale, sigmaScale));
-
+                        try
+                        {
+                            SampleSize sampleSize = getSampleSize(params);
+                            results.add(new GLMMPower(alpha.doubleValue(), power.doubleValue(), 
+                                    sampleSize.actualPower, sampleSize.sampleSize, 
+                                    betaScale.doubleValue(), sigmaScale.doubleValue()));
+                        }
+                        catch (Exception e)
+                        {
+                            // TODO: 
+                        }
                     }
                 }
             }
@@ -448,29 +494,26 @@ public class GLMMPowerCalculator implements PowerCalculator
      * @param params Container for input matrices
      * @return power
      */
-    private int getSampleSize(GLMMPowerParameters params)
-            throws IllegalArgumentException
+    private SampleSize getSampleSize(GLMMPowerParameters params)
+            throws IllegalArgumentException, MathException
     {
         UnivariateRealSolverFactory factory = UnivariateRealSolverFactory.newInstance();
         UnivariateRealSolver solver = factory.newBisectionSolver();
 
         SampleSizeFunction sampleSizeFunc = new SampleSizeFunction(params);
         
-        try
-        {
-            int upperBound = getUpperBound(params);
-            int minSampleSize = params.getDesignEssence().getMinimumSampleSize();
-            int adjSize = (int) Math.ceil(solver.solve(sampleSizeFunc, minSampleSize, upperBound));
-            // increment the calculated sample size to get a value
-            // that is a multiple of the minimum sample size
-            int remainder = adjSize % minSampleSize;
-            if (remainder != 0) adjSize += minSampleSize - remainder;
-            return adjSize;
-        }
-        catch (Exception e)
-        {
-            throw new IllegalArgumentException("Failed to calculate sample size: " + e.getMessage());
-        }
+        // find the per group sample size 
+        EssenceMatrix essence = params.getDesignEssence();
+        int upperBound = getUpperBound(params);
+        int minSampleSize = essence.getMinimumSampleSize();
+        int perGroupSampleSize = (int) Math.ceil(solver.solve(sampleSizeFunc, minSampleSize, upperBound));
+        if (perGroupSampleSize < 0) 
+            throw new MathException("Failed to calculate sample size");
+        
+        // calculate the total N and return the values
+        essence.setGroupSampleSize(perGroupSampleSize);
+        return new SampleSize(essence.getTotalSampleSize(), 
+                                                sampleSizeFunc.getCalculatedPower());
     }
 
     private int getUpperBound(GLMMPowerParameters params)
@@ -480,10 +523,8 @@ public class GLMMPowerCalculator implements PowerCalculator
         
         for(double currentPower = 0.0; currentPower < desiredPower; upperBound *= 2)
         {
-            RealMatrix design = params.getDesignEssence().getFullDesignMatrix(upperBound);
-            tmpParams.setDesign(design);
-            tmpParams.setSampleSize(upperBound);
-            currentPower = calc.getCalculatedPower(tmpParams);
+            params.getDesignEssence().setGroupSampleSize(upperBound);
+            currentPower = getPowerByType(params);
         }
         return upperBound;
     }

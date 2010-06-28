@@ -1,3 +1,23 @@
+/*
+ * Java Statistics.  A java library providing power/sample size estimation for 
+ * the general linear model.
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.matrix;
 
 import jsc.distributions.Normal;
@@ -15,7 +35,7 @@ import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
  * generate the full design matrix:
  * <ul>
  * <li>Column meta data: indicates if a predictor is fixed or random
- * <li>Row meta data: indicates the number of times a row should be repeated
+ * <li>Row meta data: indicates the ratio of group sizes
  * </ul>
  * 
  * @author Sarah Kreidler
@@ -35,6 +55,9 @@ public class EssenceMatrix extends Array2DRowRealMatrix
     
     // random seed for expanding random covariates in the essence matrix
     int randomSeed = 1234;
+    
+    // per group sample size 
+    int groupSampleSize = 1;
     
     /**
      * Constructor.  Creates an essence matrix from a real matrix.
@@ -118,6 +141,36 @@ public class EssenceMatrix extends Array2DRowRealMatrix
     }
     
     /**
+     * Set the per group sample size.  If the group sizes are not equal
+     * then the specified sample size will be multiplied by the group size
+     * ratio specified in the row meta data for the design matrix.
+     * <p/>
+     * For example, for a 3x3 design matrix with group sizes 1:2:1 and
+     * a groupN of 10, the actual group sizes will be 10, 20, and 10.     * 
+     * 
+     * @param groupN
+     */
+    public void setGroupSampleSize(int groupSampleSize)
+    throws IllegalArgumentException
+    {
+        if (groupSampleSize <= 0) 
+            throw new IllegalArgumentException("Per group sample size must be positive");
+        
+        this.groupSampleSize = groupSampleSize;
+    }
+    
+    /**
+     * Get the per group sample size.  For non-equal group sizes, this
+     * function will return the size of the smallest group.
+     * 
+     * @returns per group sample size
+     */
+    public int getGroupSampleSize()
+    {
+        return groupSampleSize;
+    }
+    
+    /**
      * Expands the essence matrix into full design matrix for power 
      * calculations.  
      * 
@@ -132,7 +185,7 @@ public class EssenceMatrix extends Array2DRowRealMatrix
         // allocate the full design matrix
         // #rows = total of repetitions for each unique row
         // #columns = number of columns in design matrix
-        int fullRows = getTotalRows();
+        int fullRows = getTotalSampleSize();
         int fullColumns = getColumnDimension();
         Array2DRowRealMatrix fullDesign = 
             new Array2DRowRealMatrix(fullRows, fullColumns);
@@ -144,7 +197,7 @@ public class EssenceMatrix extends Array2DRowRealMatrix
         // a normal curve with the mean/variance specified in the column meta data
         for(int col = 0; col < fullColumns; col++)
         {
-            fillColumn(col, fullDesign, 1, false);
+            fillColumn(col, fullDesign, groupSampleSize);
         }
         return fullDesign;
     }
@@ -153,7 +206,7 @@ public class EssenceMatrix extends Array2DRowRealMatrix
      * Expands the essence matrix into full design matrix for sample size
      * calculations.  
      * 
-     * Assumes that any row meta data indicates the ratio of unqiue rows
+     * Assumes that any row meta data indicates the ratio of unique rows
      * in the full design (used to allow unequal group sizes in sample size
      * estimation)
      * 
@@ -180,7 +233,7 @@ public class EssenceMatrix extends Array2DRowRealMatrix
         // a normal curve with the mean/variance specified in the column meta data
         for(int col = 0; col < fullColumns; col++)
         {
-            fillColumn(col, fullDesign, repMultiplier, true);
+            fillColumn(col, fullDesign, repMultiplier);
         }
         return fullDesign;
     }
@@ -192,7 +245,7 @@ public class EssenceMatrix extends Array2DRowRealMatrix
      * @param fullDesign
      * @param repMultiplier
      */
-    private void fillColumn(int column, RealMatrix fullDesign, int repMultiplier, boolean byRatio)
+    private void fillColumn(int column, RealMatrix fullDesign, int repMultiplier)
     {
         ColumnMetaData colMD = columnMetaData[column];
         
@@ -208,17 +261,14 @@ public class EssenceMatrix extends Array2DRowRealMatrix
         }
         
         int essenceRow = 0;
-        int reps = 
-            (byRatio ? repMultiplier * rowMetaData[essenceRow].getRatio() : 
-                repMultiplier * rowMetaData[essenceRow].getRepetitions());
+        int reps = repMultiplier * rowMetaData[essenceRow].getRatio();
         for(int row = 0; row < fullDesign.getRowDimension(); row++)
         {
             // check if we need to move on to the next row in the essence matrix
             if (reps <= 0) 
             {
                 essenceRow++;
-                reps = (byRatio ? repMultiplier * rowMetaData[essenceRow].getRatio() : 
-                    repMultiplier * rowMetaData[essenceRow].getRepetitions());
+                reps = repMultiplier * rowMetaData[essenceRow].getRatio();
             }
                 
             // fill in the data
@@ -361,12 +411,12 @@ public class EssenceMatrix extends Array2DRowRealMatrix
      * 
      * @return total rows in full design matrix
      */
-    private int getTotalRows()
+    public int getTotalSampleSize()
     {
         int count = 0;
         for(RowMetaData md : rowMetaData)
         {
-            count += md.getRepetitions();
+            count += groupSampleSize * md.getRatio();
         }
         return count;
     }

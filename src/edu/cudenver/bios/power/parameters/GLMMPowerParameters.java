@@ -211,7 +211,7 @@ public class GLMMPowerParameters extends PowerParameters
 	{
 		if (design == null && designEssence != null)
 		{
-			// if only a design matrix is specified, retrieve the full design matrix
+			// if only an essence matrix is specified, retrieve the full design matrix
 			this.design = designEssence.getFullDesignMatrix();
 			// TODO: what to do if this is too big to cache?
 		}
@@ -341,6 +341,36 @@ public class GLMMPowerParameters extends PowerParameters
     public RealMatrix getScaledSigmaError()
     {
         return (sigmaErrorScaled != null ? sigmaErrorScaled : sigmaError);
+    }
+    
+    @Override
+    public Integer getFirstSampleSize()
+    {
+        Integer sampleSize = sampleSizeList.first();
+        if (sampleSize != null)
+        {
+            designEssence.setGroupSampleSize(sampleSize.intValue());
+            design = null;
+        }
+        return sampleSize;
+    }
+    
+    @Override
+    public Integer getNextSampleSize()
+    {
+        Integer sampleSize = sampleSizeList.next();
+        if (sampleSize != null)
+        {
+            designEssence.setGroupSampleSize(sampleSize.intValue());
+            design = null;
+        }
+        return sampleSize;
+    }
+    
+    @Override
+    public Integer getCurrentSampleSize()
+    {
+        return sampleSizeList.current();
     }
 
 }
