@@ -51,7 +51,11 @@ import edu.cudenver.bios.power.glmm.NonCentralityDistribution;
 
 public class GLMMPowerCalculator implements PowerCalculator
 {
-	
+	private static final double RELATIVE_SYMMETRY_THRESHOLD = 
+	    CholeskyDecompositionImpl.DEFAULT_RELATIVE_SYMMETRY_THRESHOLD;
+	private static final double POSITIVITY_THRESHOLD = 
+	    CholeskyDecompositionImpl.DEFAULT_ABSOLUTE_POSITIVITY_THRESHOLD;
+	    
     private static final int STARTING_SAMPLE_SIZE = 1000;
     private static final int STARTING_DETECTABLE_DIFFERENCE = 100;
     /**
@@ -298,7 +302,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                     sampleSize = params.getNextSampleSize())
                     {
                         // set the per group sample size
-                        params.getDesignEssence().setGroupSampleSize(sampleSize.intValue());
+                        params.setGroupSampleSize(sampleSize.intValue());
                         // calculate the power
                         double power = simulatePower(params, iterations);
                         // store the power result
@@ -696,7 +700,10 @@ public class GLMMPowerCalculator implements PowerCalculator
         // take the square root of the sigma matrix via cholesky decomposition
         try
         {            
-            RealMatrix sqrtMatrix = new CholeskyDecompositionImpl(sigma).getL();
+            RealMatrix sqrtMatrix = 
+                new CholeskyDecompositionImpl(sigma, 
+                        RELATIVE_SYMMETRY_THRESHOLD,
+                        POSITIVITY_THRESHOLD).getL();
             return randomNormals.multiply(sqrtMatrix); 
         }
         catch (Exception e)
@@ -739,13 +746,15 @@ public class GLMMPowerCalculator implements PowerCalculator
         int rejectionCount = 0;
         for(int i = 0; i < iterations; i++)
         {
+            RealMatrix scaledBeta = params.getScaledBeta();
+            RealMatrix scaledSigma = params.getScaledSigmaError();
+            
             RealMatrix error = 
                 simulateError(normalDist, params.getDesign().getRowDimension(),
-                        params.getBeta().getColumnDimension(),
-                        params.getSigmaError());         
+                        scaledBeta.getColumnDimension(), scaledSigma);         
 
             // calculate simulated Y based on Y = X beta + error
-            RealMatrix Ysim = (X.multiply(params.getBeta())).add(error);
+            RealMatrix Ysim = (X.multiply(scaledBeta)).add(error);
             // calculate beta-Hat
             RealMatrix XtX = X.transpose().multiply(X);
             RealMatrix XtXInverse = new LUDecompositionImpl(XtX).getSolver().getInverse();
@@ -756,24 +765,28 @@ public class GLMMPowerCalculator implements PowerCalculator
             RealMatrix Ydiff = Ysim.subtract(YHat);
             RealMatrix sigmaHat = (Ydiff.transpose().multiply(Ydiff)).scalarMultiply(((double) 1/(double)(N - rankX)));    
             
-            // create a copy of the input parameters, resetting the values of betaHat, sigmaHat,
-            // based on the simulated errors
-            GLMMPowerParameters simulatedParams = new GLMMPowerParameters(params);
-            simulatedParams.setBeta(betaHat);
-            simulatedParams.setSigmaError(sigmaHat);
+            // set the scaled sigma / beta to the new values
+            params.setScaledBeta(betaHat);
+            params.setScaledSigmaError(sigmaHat);
             
             // calculate the observed F for the simulation
-            GLMMTest glmmTest = GLMMTestFactory.createGLMMTest(simulatedParams);
+            GLMMTest glmmTest = GLMMTestFactory.createGLMMTest(params);
             double fobs = glmmTest.getObservedF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
 
             // get the p-value from a central F distribution
             double ndf = glmmTest.getNumeratorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
             double ddf = glmmTest.getDenominatorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
-            double pvalue = FishersF.upperTailProb(fobs, ndf, ddf);
+            
+            FishersF fdist = new FishersF(ndf, ddf);
+            double pvalue = 1 - fdist.cdf(fobs);
 
             // check if we reject the null hypothesis
             if (pvalue <= params.getCurrentAlpha())
                 rejectionCount++;
+            
+            // reset the parameter values to the original scaled beta/sigma
+            params.setScaledBeta(scaledBeta);
+            params.setScaledSigmaError(scaledSigma);
         }
 
         return ((double) rejectionCount) / ((double) iterations);
