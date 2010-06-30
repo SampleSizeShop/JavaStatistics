@@ -64,10 +64,12 @@ public class GLMMPowerParameters extends PowerParameters
 		RAO_TWO_MOMENT_OMEGA_MULT
 	};
 
+	// type of statistical test being performed
 	Test test = Test.NONE;
 
+	// beta matrix of regression coefficients
 	RealMatrix beta = null;
-	RealMatrix betaScaled = null;
+	RealMatrix betaScaled = null; // beta matrix with scale factor applied
 	PeekableList<Double> betaScaleList = new PeekableList<Double>();
 	
 	// used if only fixed predictors
@@ -80,16 +82,23 @@ public class GLMMPowerParameters extends PowerParameters
 	RealMatrix sigmaGaussianRandom = null;
 	RealMatrix sigmaOutcome = null;
 
+	// C matrix - contrasts for between subject effects
 	RealMatrix betweenSubjectContrast = null;
 
+	// theta matrix - matrix of null hypothesis values
 	RealMatrix theta = null;
 
+	// U matrix - contrasts for within subject effects
 	RealMatrix withinSubjectContrast = null;
 
+	
 	RealMatrix design = null;
 
 	EssenceMatrix designEssence = null;
 
+	// for design matrices with a baseline covariate, power may be estimated
+	// with either conditional power (same as fixed effects), quantile power,
+	// or unconditional power
 	PowerMethod powerMethod = PowerMethod.CONDITIONAL_POWER;
 	double quantile = 0.50;
 
@@ -105,34 +114,6 @@ public class GLMMPowerParameters extends PowerParameters
 	{
 	    super();
 	}
-
-	/**
-	 * Copy constructor.
-	 * @param params
-	 */
-	public GLMMPowerParameters(GLMMPowerParameters params)
-    {
-        super();
-        this.test = params.getTest();
-        this.beta = params.getBeta();
-        this.betaScaled = params.getScaledBeta();
-        this.betaScaleList = params.getBetaScaleList();
-        this.sigmaError = params.getSigmaError();
-        this.sigmaErrorScaled = params.getScaledSigmaError();
-        this.sigmaScaleList = params.getSigmaScaleList();
-        this.sigmaOutcomeGaussianRandom = params.getSigmaOutcomeGaussianRandom();
-        this.sigmaGaussianRandom = params.getSigmaGaussianRandom();
-        this.sigmaOutcome = params.getSigmaOutcome();
-        this.betweenSubjectContrast = params.getBetweenSubjectContrast();
-        this.theta = params.getTheta();
-        this.withinSubjectContrast = params.getWithinSubjectContrast();
-        this.design = null;
-        this.designEssence = params.getDesignEssence();
-        this.powerMethod = params.getPowerMethod();
-        this.quantile = params.getQuantile();
-        this.univariateCdf = params.getUnivariateCdf();
-        this.momentMethod = params.getMomentMethod();
-    }
 
     public Test getTest()
 	{
@@ -430,6 +411,22 @@ public class GLMMPowerParameters extends PowerParameters
     {
         if (betaScale != Double.NaN)
             betaScaled = beta.scalarMultiply(betaScale);
+    }
+    
+    public void setScaledBeta(RealMatrix scaledBeta)
+    {
+        betaScaled = scaledBeta;
+    }
+    
+    public void scaleSigmaError(double sigmaScale)
+    {
+        if (sigmaScale != Double.NaN)
+            sigmaErrorScaled = sigmaError.scalarMultiply(sigmaScale);
+    }
+    
+    public void setScaledSigmaError(RealMatrix scaledSigma)
+    {
+        sigmaErrorScaled = scaledSigma;
     }
 }
 
