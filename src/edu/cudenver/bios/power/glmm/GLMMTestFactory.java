@@ -7,7 +7,7 @@ public class GLMMTestFactory
     public static GLMMTest createGLMMTest(GLMMPowerParameters params)
     throws IllegalArgumentException
     {
-        switch (params.getTest())
+        switch (params.getCurrentTest())
         {
         case UNIREP:
             return new GLMMTestUnivariateRepeatedMeasures(params);

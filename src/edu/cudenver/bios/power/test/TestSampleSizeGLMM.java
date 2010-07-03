@@ -46,23 +46,16 @@ public class TestSampleSizeGLMM extends TestCase
         // create a power calculator
         GLMMPowerCalculator calc = new GLMMPowerCalculator();
                 
-        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values())
+        List<Power> results = calc.getSampleSize(params);
+        //List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
+        System.out.println("Multi?\tFixed?\tAlpha\tSigmaScale\tBetaScale\tTotal N\tPower");
+        for(Power power: results)
         {
-            if (test == GLMMPowerParameters.Test.NONE) continue;
-            //if (test != Test.WILKS_LAMBDA) continue;
-
-            params.setTest(test);
-            List<Power> results = calc.getSampleSize(params);
-            //List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
-            System.out.println("Multi?\tFixed?\tAlpha\tSigmaScale\tBetaScale\tTotal N\tPower");
-            for(Power power: results)
-            {
-                GLMMPower p = (GLMMPower) power;
-                System.out.println("U\tF\t" + test.toString() + "\t" + Number.format(p.getAlpha()) +
-                        "\t" + Number.format(p.getSigmaScale()) + "\t" + Number.format(p.getBetaScale()) + 
-                        "\t" + p.getTotalSampleSize() + "\t" + Number.format(p.getActualPower()));
-            }
-        }    
+        	GLMMPower p = (GLMMPower) power;
+        	System.out.println("U\tF\t" + p.getTest().toString() + "\t" + Number.format(p.getAlpha()) +
+        			"\t" + Number.format(p.getSigmaScale()) + "\t" + Number.format(p.getBetaScale()) + 
+        			"\t" + p.getTotalSampleSize() + "\t" + Number.format(p.getActualPower()));
+        }
     }
 
     private void testInvalidUnivariateFixed()
@@ -75,17 +68,12 @@ public class TestSampleSizeGLMM extends TestCase
 
         try
         {
-            for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values())
-            {
-                if (test == GLMMPowerParameters.Test.NONE) continue;
-                params.setTest(test);
-                List<Power> results = calc.getSampleSize(params);
-                //List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
-                for(Power p: results)
-                {
-                    System.out.println("Univariate, Fixed, " + test.toString() + ": " + p.toXML());
-                }
-            }   
+        	List<Power> results = calc.getSampleSize(params);
+        	//List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
+        	for(Power p: results)
+        	{
+        		System.out.println("Univariate, Fixed: " + p.toXML());
+        	}
         }
         catch (Exception e)
         {
@@ -100,20 +88,15 @@ public class TestSampleSizeGLMM extends TestCase
         // create a power calculator
         GLMMPowerCalculator calc = new GLMMPowerCalculator();
         
-        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values())
+        List<Power> results = calc.getSampleSize(params);
+        System.out.println("Multi?\tFixed?\tAlpha\tSigmaScale\tBetaScale\tTotal N\tPower");
+        for(Power power: results)
         {
-            if (test == GLMMPowerParameters.Test.NONE) continue;
-            params.setTest(test);
-            List<Power> results = calc.getSampleSize(params);
-            System.out.println("Multi?\tFixed?\tAlpha\tSigmaScale\tBetaScale\tTotal N\tPower");
-            for(Power power: results)
-            {
-                GLMMPower p = (GLMMPower) power;
-                System.out.println("M\tF\t" + test.toString() + "\t" + Number.format(p.getAlpha()) +
-                        "\t" + Number.format(p.getSigmaScale()) + "\t" + Number.format(p.getBetaScale()) + 
-                        "\t" + p.getTotalSampleSize() + "\t" + Number.format(p.getActualPower()));
-            }
-        }    
+        	GLMMPower p = (GLMMPower) power;
+        	System.out.println("M\tF\t" + p.getTest().toString() + "\t" + Number.format(p.getAlpha()) +
+        			"\t" + Number.format(p.getSigmaScale()) + "\t" + Number.format(p.getBetaScale()) + 
+        			"\t" + p.getTotalSampleSize() + "\t" + Number.format(p.getActualPower()));
+        }
 
     }
 
@@ -127,17 +110,12 @@ public class TestSampleSizeGLMM extends TestCase
 
         try
         {
-            for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values())
-            {
-                if (test == GLMMPowerParameters.Test.NONE) continue;
-                params.setTest(test);
                 List<Power> results = calc.getSampleSize(params);
                 //List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
                 for(Power p: results)
                 {
-                    System.out.println("Multivariate, Fixed, " + test.toString() + ": " + p.toXML());
+                    System.out.println("Multivariate, Fixed: " + p.toXML());
                 }
-            }   
         }
         catch (Exception e)
         {
@@ -155,17 +133,12 @@ public class TestSampleSizeGLMM extends TestCase
         // create a power calculator
         GLMMPowerCalculator calc = new GLMMPowerCalculator();
         
-        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values())
+        List<Power> results = calc.getSampleSize(params);
+        //List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
+        for(Power p: results)
         {
-            if (test == GLMMPowerParameters.Test.NONE) continue;
-            params.setTest(test);
-            List<Power> results = calc.getSampleSize(params);
-            //List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
-            for(Power p: results)
-            {
-                System.out.println("Multivariate, Random, " + test.toString() + ": " + p.toXML());
-            }
-        }  
+        	System.out.println("Multivariate, Random: " + p.toXML());
+        }
     }
 
     private void testInvalidMultivariateRandom()
@@ -178,6 +151,12 @@ public class TestSampleSizeGLMM extends TestCase
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
        
+        // add tests
+        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
+        {
+            if (test != GLMMPowerParameters.Test.NONE) params.addTest(test);
+        }
+        
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
@@ -217,6 +196,13 @@ public class TestSampleSizeGLMM extends TestCase
     private GLMMPowerParameters buildValidMultivariateFixedInputs()
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
+        
+        // add tests
+        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
+        {
+            if (test != GLMMPowerParameters.Test.NONE) params.addTest(test);
+        }
+        
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
@@ -276,6 +262,11 @@ public class TestSampleSizeGLMM extends TestCase
     private GLMMPowerParameters buildValidMultivariateRandomInputs()
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
+        
+        // add tests - only HL andUNIREP value for random case
+        params.addTest(GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE);
+        params.addTest(GLMMPowerParameters.Test.UNIREP);
+        
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 

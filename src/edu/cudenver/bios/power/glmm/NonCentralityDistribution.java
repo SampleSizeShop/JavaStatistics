@@ -303,7 +303,7 @@ public class NonCentralityDistribution
         // sigma* = U'*sigmaE*U
         RealMatrix sigmaStar = U.transpose().multiply(params.getScaledSigmaError()).multiply(U);
         
-        if (params.getTest() == GLMMPowerParameters.Test.UNIREP)
+        if (params.getCurrentTest() == GLMMPowerParameters.Test.UNIREP)
         {
             int b = sigmaStar.getColumnDimension();
             // get discrepancy from sphericity for unirep test

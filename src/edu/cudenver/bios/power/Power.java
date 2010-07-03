@@ -8,11 +8,11 @@ public abstract class Power
 	
 	double actualPower; 
 	
-	double totalSampleSize;
+	int totalSampleSize;
 	
 	double alpha;
 	
-	public Power(double nominalPower, double actualPower, double totalSampleSize, double alpha)
+	public Power(double nominalPower, double actualPower, int totalSampleSize, double alpha)
 	{
 		this.nominalPower = nominalPower;
 		this.actualPower = actualPower;
@@ -42,12 +42,12 @@ public abstract class Power
 		this.actualPower = actualPower;
 	}
 
-	public double getTotalSampleSize()
+	public int getTotalSampleSize()
 	{
 		return totalSampleSize;
 	}
 
-	public void setTotalSampleSize(double totalSampleSize)
+	public void setTotalSampleSize(int totalSampleSize)
 	{
 		this.totalSampleSize = totalSampleSize;
 	}

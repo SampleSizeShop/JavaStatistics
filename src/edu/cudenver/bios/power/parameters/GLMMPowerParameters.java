@@ -65,8 +65,8 @@ public class GLMMPowerParameters extends PowerParameters
 	};
 
 	// type of statistical test being performed
-	Test test = Test.NONE;
-
+	PeekableList<Test> testList = new PeekableList<Test>();
+	
 	// beta matrix of regression coefficients
 	RealMatrix beta = null;
 	RealMatrix betaScaled = null; // beta matrix with scale factor applied
@@ -100,7 +100,9 @@ public class GLMMPowerParameters extends PowerParameters
 	// with either conditional power (same as fixed effects), quantile power,
 	// or unconditional power
 	PowerMethod powerMethod = PowerMethod.CONDITIONAL_POWER;
+	PeekableList<PowerMethod> powerMethodList = new PeekableList<PowerMethod>();
 	double quantile = 0.50;
+	PeekableList<Double> quantileList = new PeekableList<Double>();
 
 	UnivariateCdf univariateCdf = UnivariateCdf.MULLER_EDWARDS_TAYLOR_APPROX;
 
@@ -115,31 +117,51 @@ public class GLMMPowerParameters extends PowerParameters
 	    super();
 	}
 
-    public Test getTest()
+	public void addTest(Test test)
 	{
-		return test;
+    	testList.add(test);
 	}
 
-	public void setTest(Test test)
+	private void setTestDefaults(Test test)
 	{
-	    switch (test)
-	    {
-	    case HOTELLING_LAWLEY_TRACE:
-	        momentMethod = MomentApproximationMethod.MCKEON_TWO_MOMENT_OMEGA_MULT;
-	        break;
-	    case PILLAI_BARTLETT_TRACE:
-	        momentMethod = MomentApproximationMethod.MULLER_TWO_MOMENT;
-	        break;
-	    case WILKS_LAMBDA:
-	        momentMethod = MomentApproximationMethod.RAO_TWO_MOMENT_OMEGA_MULT;
-	        break;
-	    default:
-	        momentMethod = MomentApproximationMethod.NONE;
-	    }
-
-		this.test = test;
+		if (test != null)
+		{
+			switch (test)
+			{
+			case HOTELLING_LAWLEY_TRACE:
+				momentMethod = MomentApproximationMethod.MCKEON_TWO_MOMENT_OMEGA_MULT;
+				break;
+			case PILLAI_BARTLETT_TRACE:
+				momentMethod = MomentApproximationMethod.MULLER_TWO_MOMENT;
+				break;
+			case WILKS_LAMBDA:
+				momentMethod = MomentApproximationMethod.RAO_TWO_MOMENT_OMEGA_MULT;
+				break;
+			default:
+				momentMethod = MomentApproximationMethod.NONE;
+			}
+		}
 	}
-
+	
+    public Test getFirstTest()
+    {
+    	Test test = testList.first();
+    	setTestDefaults(test);
+        return test;
+    }
+    
+    public Test getNextTest()
+    {
+    	Test test = testList.next();
+    	setTestDefaults(test);
+        return test;
+    }
+    
+    public Test getCurrentTest()
+    {
+        return testList.current();
+    }
+	
 	public RealMatrix getBeta()
 	{
 		return beta;
@@ -427,6 +449,16 @@ public class GLMMPowerParameters extends PowerParameters
     public void setScaledSigmaError(RealMatrix scaledSigma)
     {
         sigmaErrorScaled = scaledSigma;
+    }
+    
+    public void addPowerMethod(PowerMethod method)
+    {
+    	powerMethodList.add(method);
+    }
+    
+    public void addQuantile(double quantile)
+    {
+    	quantileList.add(new Double(quantile));
     }
 }
 
