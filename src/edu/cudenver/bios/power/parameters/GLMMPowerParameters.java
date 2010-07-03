@@ -23,10 +23,13 @@ import edu.cudenver.bios.power.parameters.PowerParameters.PeekableList;
  */
 public class GLMMPowerParameters extends PowerParameters
 {
+	private static final PowerMethod DEFAULT_POWER_METHOD = 
+		PowerMethod.CONDITIONAL_POWER;
+	private static final double DEFAULT_QUANTILE = 0.5;
+	
 	// the type of statistical test to use
 	public enum Test 
 	{
-	    NONE,
 		UNIREP,
 		UNIREP_BOX,
 		UNIREP_GEISSER_GREENHOUSE,
@@ -99,9 +102,8 @@ public class GLMMPowerParameters extends PowerParameters
 	// for design matrices with a baseline covariate, power may be estimated
 	// with either conditional power (same as fixed effects), quantile power,
 	// or unconditional power
-	PowerMethod powerMethod = PowerMethod.CONDITIONAL_POWER;
 	PeekableList<PowerMethod> powerMethodList = new PeekableList<PowerMethod>();
-	double quantile = 0.50;
+	// list of quantiles to use for quantile power
 	PeekableList<Double> quantileList = new PeekableList<Double>();
 
 	UnivariateCdf univariateCdf = UnivariateCdf.MULLER_EDWARDS_TAYLOR_APPROX;
@@ -266,27 +268,6 @@ public class GLMMPowerParameters extends PowerParameters
 	public void setDesignEssence(EssenceMatrix designEssence)
 	{
 		this.designEssence = designEssence;
-	}
-
-	public PowerMethod getPowerMethod()
-	{
-		return powerMethod;
-	}
-
-	public void setPowerMethod(
-			PowerMethod powerMethod)
-	{
-		this.powerMethod = powerMethod;
-	}
-
-	public double getQuantile()
-	{
-		return quantile;
-	}
-
-	public void setQuantile(double quantile)
-	{
-		this.quantile = quantile;
 	}
 
 	public MomentApproximationMethod getMomentMethod()
@@ -456,9 +437,57 @@ public class GLMMPowerParameters extends PowerParameters
     	powerMethodList.add(method);
     }
     
+    public PowerMethod getFirstPowerMethod()
+    {
+    	PowerMethod method = powerMethodList.first();
+    	// if no methods are specified, just use conditional power
+    	if (method == null)
+    		return DEFAULT_POWER_METHOD;
+    	else
+    		return method;
+    }
+    
+    public PowerMethod getNextPowerMethod()
+    {
+    	PowerMethod method = powerMethodList.next();
+        return method;
+    }
+    
+    public PowerMethod getCurrentPowerMethod()
+    {
+    	PowerMethod method = powerMethodList.current();
+    	// if no methods are specified, just use conditional power
+    	if (method == null)
+    		return DEFAULT_POWER_METHOD;
+    	else
+    		return method;
+    		
+    }
+        
     public void addQuantile(double quantile)
     {
     	quantileList.add(new Double(quantile));
+    }
+    
+    public Double getFirstQuantile()
+    {
+    	Double quantile = quantileList.first();
+    	// if no quantiles specified, return default
+    	if (quantile == null)
+    		return new Double(DEFAULT_QUANTILE); 
+    	else
+    		return quantile;
+    }
+    
+    public Double getNextQuantile()
+    {
+    	Double quantile = quantileList.next();
+        return quantile;
+    }
+    
+    public Double getCurrentQuantile()
+    {
+        return quantileList.current();
     }
 }
 

@@ -28,7 +28,7 @@ public class TestPowerGLMM extends TestCase
     private static final double[] ALPHA_LIST = {0.05};    
     private static final double[] BETA_SCALE_LIST = {0,0.5,1,1.5,2};
     private static final double[] SIGMA_SCALE_LIST = {1,2};
-    private static final int[] SAMPLE_SIZE_LIST = {4,6,8};
+    private static final int[] SAMPLE_SIZE_LIST = {5};
     private Normal normalDist;
     private DecimalFormat Number;
 
@@ -131,8 +131,6 @@ public class TestPowerGLMM extends TestCase
     {
         // build the inputs
         GLMMPowerParameters params = buildValidMultivariateRandomInputs();
-        params.setPowerMethod(PowerMethod.QUANTILE_POWER);
-        params.setQuantile(0.5);
         
         // create a power calculator
         GLMMPowerCalculator calc = new GLMMPowerCalculator();
@@ -143,9 +141,10 @@ public class TestPowerGLMM extends TestCase
         for(Power power: results)
         {
         	GLMMPower p = (GLMMPower) power;
-        	System.out.println("M\tF\t" + p.getTest().toString() + "\t" + Number.format(p.getAlpha()) +
+        	System.out.println("M\tR\t" + p.getTest().toString() + "\t" + Number.format(p.getAlpha()) +
         			"\t" + Number.format(p.getSigmaScale()) + "\t" + Number.format(p.getBetaScale()) + 
-        			"\t" + p.getTotalSampleSize() + "\t" + Number.format(p.getActualPower()));
+        			"\t" + p.getTotalSampleSize() + "\t" + Number.format(p.getActualPower()) + "\t" +
+        			p.getPowerMethod() + "\t" + p.getQuantile());
         }
     }
 
@@ -158,7 +157,7 @@ public class TestPowerGLMM extends TestCase
         // add tests
         for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
         {
-            if (test != GLMMPowerParameters.Test.NONE) params.addTest(test);
+            params.addTest(test);
         }
         
         // add alpha values
@@ -204,7 +203,7 @@ public class TestPowerGLMM extends TestCase
         // add tests
         for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
         {
-            if (test != GLMMPowerParameters.Test.NONE) params.addTest(test);
+            params.addTest(test);
         }
         
         // add alpha values
@@ -266,6 +265,14 @@ public class TestPowerGLMM extends TestCase
     private GLMMPowerParameters buildValidMultivariateRandomInputs()
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
+        
+        // add power methods
+        //for(PowerMethod method: PowerMethod.values()) params.addPowerMethod(method);
+        params.addPowerMethod(PowerMethod.CONDITIONAL_POWER);
+        params.addPowerMethod(PowerMethod.QUANTILE_POWER);
+        params.addQuantile(0.25);
+        params.addQuantile(0.5);
+        params.addQuantile(0.75);
         
         // add tests - only HL andUNIREP value for random case
         params.addTest(GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE);

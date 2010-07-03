@@ -43,6 +43,7 @@ import edu.cudenver.bios.matrix.EssenceMatrix;
 import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.PowerParameters;
+import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.Test;
 import edu.cudenver.bios.power.glmm.GLMMTest;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory;
@@ -58,6 +59,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 	    
     private static final int STARTING_SAMPLE_SIZE = 1000;
     private static final int STARTING_DETECTABLE_DIFFERENCE = 100;
+    
     /**
      * Simple class to contain sample size and actual power
      * from a sample size calculation
@@ -196,35 +198,48 @@ public class GLMMPowerCalculator implements PowerCalculator
         
         // list of power results
         ArrayList<Power> results = new ArrayList<Power>();
-        
+                
         // calculate the power for all variations of the study design
         for(GLMMPowerParameters.Test test = params.getFirstTest(); test != null;
         test = params.getNextTest())
         {            
-        	for(Double alpha = params.getFirstAlpha(); alpha != null;
-        	alpha = params.getNextAlpha())
+        	for(GLMMPowerParameters.PowerMethod method = params.getFirstPowerMethod(); method != null;
+        	method = params.getNextPowerMethod())
         	{
-        		for(Double sigmaScale = params.getFirstSigmaScale(); sigmaScale != null;
-        		sigmaScale = params.getNextSigmaScale())
+        		for(Double alpha = params.getFirstAlpha(); alpha != null;
+        		alpha = params.getNextAlpha())
         		{
-        			for(Double betaScale = params.getFirstBetaScale(); betaScale != null;
-        			betaScale = params.getNextBetaScale())
+        			for(Double sigmaScale = params.getFirstSigmaScale(); sigmaScale != null;
+        			sigmaScale = params.getNextSigmaScale())
         			{
-        				for(Integer sampleSize = params.getFirstSampleSize(); sampleSize != null; 
-        				sampleSize = params.getNextSampleSize())
-        				{                       
-        					// calculate the power
-        					double power = getPowerByType(params);
-        					// store the power result
-        					results.add(new GLMMPower(test, alpha, power, power, 
-        							params.getDesignEssence().getTotalSampleSize(), 
-        							betaScale, sigmaScale));
+        				for(Double betaScale = params.getFirstBetaScale(); betaScale != null;
+        				betaScale = params.getNextBetaScale())
+        				{
+        					for(Integer sampleSize = params.getFirstSampleSize(); sampleSize != null; 
+        					sampleSize = params.getNextSampleSize())
+        					{                
+        						Double quantile = params.getFirstQuantile(); 
+        						do
+        						{
+        							// we only continue through this loop for quantile power
+        							double power = getPowerByType(params);
+        							GLMMPower result = new GLMMPower(test, alpha, 
+        									power, power, 
+        									params.getDesignEssence().getTotalSampleSize(), 
+        									betaScale, sigmaScale, method);
+        							if (method == PowerMethod.QUANTILE_POWER) 
+        								result.setQuantile(quantile);
+        							results.add(result);
+        							quantile = params.getNextQuantile();
+        						}
+        						while (method == PowerMethod.QUANTILE_POWER &&
+        								quantile != null);
+        					}
         				}
         			}
         		}
         	}
         }
-        
         return results;
 	}
 
@@ -246,32 +261,43 @@ public class GLMMPowerCalculator implements PowerCalculator
         for(GLMMPowerParameters.Test test = params.getFirstTest(); test != null;
         test = params.getNextTest())
         {           
-        	for(Double alpha = params.getFirstAlpha(); alpha != null;
-        	alpha = params.getNextAlpha())
+        	for(GLMMPowerParameters.PowerMethod method = params.getFirstPowerMethod(); method != null;
+        	method = params.getNextPowerMethod())
         	{
-        		for(Double sigmaScale = params.getFirstSigmaScale(); sigmaScale != null;
-        		sigmaScale = params.getNextSigmaScale())
+        		for(Double alpha = params.getFirstAlpha(); alpha != null;
+        		alpha = params.getNextAlpha())
         		{
-        			for(Double betaScale = params.getFirstBetaScale(); betaScale != null;
-        			betaScale = params.getNextBetaScale())
+        			for(Double sigmaScale = params.getFirstSigmaScale(); sigmaScale != null;
+        			sigmaScale = params.getNextSigmaScale())
         			{
-        				// we can't calculate a sample size for no difference between groups, so
-        				// we ignore this case for now.
-        				if (betaScale == 0) continue;  
-        				for(Double power = params.getFirstPower(); power != null; 
-        				power = params.getNextPower())
+        				for(Double betaScale = params.getFirstBetaScale(); betaScale != null;
+        				betaScale = params.getNextBetaScale())
         				{
-        					try
-        					{
-        						SampleSize sampleSize = getSampleSize(params);
-        						results.add(new GLMMPower(test, alpha.doubleValue(), 
-        								power.doubleValue(), sampleSize.actualPower, sampleSize.sampleSize, 
-        								betaScale.doubleValue(), sigmaScale.doubleValue()));
-        					}
-        					catch (Exception e)
-        					{
-        						System.err.println("Sample size failed: " + e.getMessage());
-        						// TODO: 
+        					// we can't calculate a sample size for no difference between groups, so
+        					// we ignore this case for now.
+        					if (betaScale == 0) continue;  
+        					for(Double power = params.getFirstPower(); power != null; 
+        					power = params.getNextPower())
+        					{        						
+        						Double quantile = params.getFirstQuantile(); 
+        						do
+        						{
+        							// we only continue through this loop for quantile power
+        							try
+        							{
+        								SampleSize sampleSize = getSampleSize(params);
+        								results.add(new GLMMPower(test, alpha.doubleValue(), 
+        										power.doubleValue(), sampleSize.actualPower, sampleSize.sampleSize, 
+        										betaScale.doubleValue(), sigmaScale.doubleValue(), method));
+        							}
+        							catch (Exception e)
+        							{
+        								System.err.println("Sample size failed: " + e.getMessage());
+        								// TODO: 
+        							}
+        						}
+        						while (method == PowerMethod.QUANTILE_POWER &&
+        								quantile != null);
         					}
         				}
         			}
@@ -296,34 +322,42 @@ public class GLMMPowerCalculator implements PowerCalculator
         // list of power results
         ArrayList<Power> results = new ArrayList<Power>();
         
-        // calculate the power for either one or two tails
-        for(Double alpha = params.getFirstAlpha(); alpha != null;
-        alpha = params.getNextAlpha())
+        // simulate power for all variations of the study design
+        for(GLMMPowerParameters.Test test = params.getFirstTest(); test != null;
+        test = params.getNextTest())
         {
-            for(Double sigmaScale = params.getFirstSigmaScale(); sigmaScale != null;
-            sigmaScale = params.getNextSigmaScale())
-            {
-                for(Double betaScale = params.getFirstBetaScale(); betaScale != null;
-                betaScale = params.getNextBetaScale())
-                {
-                    for(Integer sampleSize = params.getFirstSampleSize(); sampleSize != null; 
-                    sampleSize = params.getNextSampleSize())
-                    {
-                        for(GLMMPowerParameters.Test test = params.getFirstTest(); test != null;
-                        test = params.getNextTest())
-                        {
-                        	// set the per group sample size
-                        	params.setGroupSampleSize(sampleSize.intValue());
-                        	// calculate the power
-                        	double power = simulatePower(params, iterations);
-                        	// store the power result
-                        	results.add(new GLMMPower(test, alpha, power, power, 
-                        			params.getDesignEssence().getTotalSampleSize(), 
-                        			betaScale, sigmaScale));
-                        }
-                    }
-                }
-            }
+        	for(GLMMPowerParameters.PowerMethod method = params.getFirstPowerMethod(); method != null;
+        	method = params.getNextPowerMethod())
+        	{
+        		for(Double alpha = params.getFirstAlpha(); alpha != null;
+        		alpha = params.getNextAlpha())
+        		{
+        			for(Double sigmaScale = params.getFirstSigmaScale(); sigmaScale != null;
+        			sigmaScale = params.getNextSigmaScale())
+        			{
+        				for(Double betaScale = params.getFirstBetaScale(); betaScale != null;
+        				betaScale = params.getNextBetaScale())
+        				{
+        					for(Integer sampleSize = params.getFirstSampleSize(); sampleSize != null; 
+        					sampleSize = params.getNextSampleSize())
+        					{
+           						Double quantile = params.getFirstQuantile(); 
+           						do
+           						{
+           							// simulate the power
+           							double power = simulatePower(params, iterations);
+           							// store the power result
+           							results.add(new GLMMPower(test, alpha, power, power, 
+           									params.getDesignEssence().getTotalSampleSize(), 
+           									betaScale, sigmaScale, method));
+           						}
+           						while (method == PowerMethod.QUANTILE_POWER &&
+           								quantile != null);
+        					}
+        				}
+        			}
+        		}
+        	}
         }
         
         return results;
@@ -347,42 +381,50 @@ public class GLMMPowerCalculator implements PowerCalculator
         for(GLMMPowerParameters.Test test = params.getFirstTest(); test != null;
         test = params.getNextTest())
         {
-        	for(Double alpha = params.getFirstAlpha(); alpha != null;
-        	alpha = params.getNextAlpha())
+        	for(GLMMPowerParameters.PowerMethod method = params.getFirstPowerMethod(); method != null;
+        	method = params.getNextPowerMethod())
         	{
-        		for(Double sigmaScale = params.getFirstSigmaScale(); sigmaScale != null;
-        		sigmaScale = params.getNextSigmaScale())
+        		for(Double alpha = params.getFirstAlpha(); alpha != null;
+        		alpha = params.getNextAlpha())
         		{
-        			for(Integer sampleSize = params.getFirstSampleSize(); sampleSize != null;
-        			sampleSize = params.getNextSampleSize())
+        			for(Double sigmaScale = params.getFirstSigmaScale(); sigmaScale != null;
+        			sigmaScale = params.getNextSigmaScale())
         			{
-        				for(Double power = params.getFirstPower(); power != null; 
-        				power = params.getNextPower())
+        				for(Integer sampleSize = params.getFirstSampleSize(); sampleSize != null;
+        				sampleSize = params.getNextSampleSize())
         				{
-
-        					try
+        					for(Double power = params.getFirstPower(); power != null; 
+        					power = params.getNextPower())
         					{
-        						DetectableDifference betaScale = getDetectableDifference(params);
-        						results.add(new GLMMPower(test, alpha.doubleValue(), 
-        								power.doubleValue(), betaScale.actualPower, sampleSize.intValue(), 
-        								betaScale.betaScale, sigmaScale.doubleValue()));
-        					}
-        					catch (Exception e)
-        					{
-        						System.err.println("Sample size failed: " + e.getMessage());
-        						// TODO: 
+        						Double quantile = params.getFirstQuantile(); 
+        						do
+        						{
+        							try
+        							{
+        								DetectableDifference betaScale = getDetectableDifference(params);
+        								results.add(new GLMMPower(test, alpha.doubleValue(), 
+        										power.doubleValue(), betaScale.actualPower, sampleSize.intValue(), 
+        										betaScale.betaScale, sigmaScale.doubleValue(), method));
+        							}
+        							catch (Exception e)
+        							{
+        								System.err.println("Sample size failed: " + e.getMessage());
+        								// TODO: 
+        							}
+        						}
+        						while (method == PowerMethod.QUANTILE_POWER &&
+        								quantile != null);
         					}
         				}
         			}
         		}
         	}
         }
-
         return results;
 	}
 	
     private void initialize(GLMMPowerParameters params)
-    {        
+    {           	
         // update the sigma error if we have a baseline covariate
         EssenceMatrix XEssence = params.getDesignEssence();
         int numRandom = (XEssence != null ? XEssence.getRandomPredictorCount() : 0);
@@ -471,10 +513,12 @@ public class GLMMPowerCalculator implements PowerCalculator
         {
             // TODO: FIX THIS make sure the test statistic is either HLT or UNIREP if there is a random
             // covariate (results not published for Wilk's Lambda or Pillai-Bartlett 
-            if (params.getCurrentTest() != Test.HOTELLING_LAWLEY_TRACE &&
-                    params.getCurrentTest() != Test.UNIREP)
-                throw new IllegalArgumentException("With a random covariate, only Hotelling-Lawley and Unirep test statistics are supported");
-            
+        	for(Test test = params.getFirstTest(); test != null; test = params.getNextTest())
+        	{
+                if (test != Test.HOTELLING_LAWLEY_TRACE && test != Test.UNIREP)
+                    throw new IllegalArgumentException("With a random covariate, only Hotelling-Lawley and Unirep test statistics are supported");
+        	}
+
             if (sigmaG == null)
                 throw new IllegalArgumentException("No variance/covariance matrix specified for gaussian predictors");
             if (sigmaY == null)
@@ -520,7 +564,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 	{
         // calculate the power
         double power = Double.NaN;
-        switch (params.getPowerMethod())
+        switch (params.getCurrentPowerMethod())
         {
         case QUANTILE_POWER:
             power = getQuantilePower(params);
@@ -604,7 +648,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         // parameter which corresponds to the specified quantile
         NonCentralityDistribution nonCentralityDist = 
             new NonCentralityDistribution(params, false);
-        double nonCentralityParam = nonCentralityDist.inverseCDF(params.getQuantile());
+        double nonCentralityParam = nonCentralityDist.inverseCDF(params.getCurrentQuantile());
         
         // get the degrees of freedom for the non-central F under the alternative hypothesis
         // (these only change for the corrected Unirep test)

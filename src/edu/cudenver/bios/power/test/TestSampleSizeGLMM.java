@@ -127,8 +127,6 @@ public class TestSampleSizeGLMM extends TestCase
     {
         // build the inputs
         GLMMPowerParameters params = buildValidMultivariateRandomInputs();
-        params.setPowerMethod(PowerMethod.QUANTILE_POWER);
-        params.setQuantile(0.25);
         
         // create a power calculator
         GLMMPowerCalculator calc = new GLMMPowerCalculator();
@@ -154,7 +152,7 @@ public class TestSampleSizeGLMM extends TestCase
         // add tests
         for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
         {
-            if (test != GLMMPowerParameters.Test.NONE) params.addTest(test);
+            params.addTest(test);
         }
         
         // add alpha values
@@ -200,7 +198,7 @@ public class TestSampleSizeGLMM extends TestCase
         // add tests
         for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
         {
-            if (test != GLMMPowerParameters.Test.NONE) params.addTest(test);
+            params.addTest(test);
         }
         
         // add alpha values
@@ -262,6 +260,11 @@ public class TestSampleSizeGLMM extends TestCase
     private GLMMPowerParameters buildValidMultivariateRandomInputs()
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
+        // add power methods
+        for(PowerMethod method: PowerMethod.values()) params.addPowerMethod(method);
+        params.addQuantile(0.25);
+        params.addQuantile(0.5);
+        params.addQuantile(0.75);
         
         // add tests - only HL andUNIREP value for random case
         params.addTest(GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE);

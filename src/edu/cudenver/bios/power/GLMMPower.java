@@ -51,15 +51,18 @@ public class GLMMPower extends Power
 	 * @param sampleSize total sample size
 	 * @param betaScale scale factor for beta matrix (roughly interpreted as detectable difference)
 	 * @param sigmaScale scale factor for error covariance matrix
+	 * @param method method used for power calculation
 	 */
 	public GLMMPower(GLMMPowerParameters.Test test, double alpha, 
 			double nominalPower, double actualPower, int sampleSize,
-			double betaScale, double sigmaScale)
+			double betaScale, double sigmaScale, 
+			GLMMPowerParameters.PowerMethod method)
 	{
 		super(nominalPower, actualPower, sampleSize, alpha);
 		this.test = test;
 		this.betaScale = betaScale;
 		this.sigmaScale = sigmaScale;
+		this.powerMethod = method;
 	}
 	
 	/**
