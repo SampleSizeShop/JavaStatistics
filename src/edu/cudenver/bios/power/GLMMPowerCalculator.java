@@ -223,13 +223,16 @@ public class GLMMPowerCalculator implements PowerCalculator
         						{
         							// we only continue through this loop for quantile power
         							double power = getPowerByType(params);
-        							GLMMPower result = new GLMMPower(test, alpha, 
+        							if (method == PowerMethod.QUANTILE_POWER)
+        								results.add(new GLMMPower(test, alpha, 
         									power, power, 
         									params.getDesignEssence().getTotalSampleSize(), 
-        									betaScale, sigmaScale, method);
-        							if (method == PowerMethod.QUANTILE_POWER) 
-        								result.setQuantile(quantile);
-        							results.add(result);
+        									betaScale, sigmaScale, method, quantile));
+        							else
+        								results.add(new GLMMPower(test, alpha, 
+            									power, power, 
+            									params.getDesignEssence().getTotalSampleSize(), 
+            									betaScale, sigmaScale, method));
         							quantile = params.getNextQuantile();
         						}
         						while (method == PowerMethod.QUANTILE_POWER &&
@@ -286,15 +289,21 @@ public class GLMMPowerCalculator implements PowerCalculator
         							try
         							{
         								SampleSize sampleSize = getSampleSize(params);
-        								results.add(new GLMMPower(test, alpha.doubleValue(), 
-        										power.doubleValue(), sampleSize.actualPower, sampleSize.sampleSize, 
-        										betaScale.doubleValue(), sigmaScale.doubleValue(), method));
+            							if (method == PowerMethod.QUANTILE_POWER)
+            								results.add(new GLMMPower(test, alpha.doubleValue(), 
+            										power.doubleValue(), sampleSize.actualPower, sampleSize.sampleSize, 
+            										betaScale.doubleValue(), sigmaScale.doubleValue(), method, quantile));
+            							else
+            								results.add(new GLMMPower(test, alpha.doubleValue(), 
+            										power.doubleValue(), sampleSize.actualPower, sampleSize.sampleSize, 
+            										betaScale.doubleValue(), sigmaScale.doubleValue(), method));	
         							}
         							catch (Exception e)
         							{
         								System.err.println("Sample size failed: " + e.getMessage());
         								// TODO: 
-        							}
+        							}    							
+        							quantile = params.getNextQuantile();      	
         						}
         						while (method == PowerMethod.QUANTILE_POWER &&
         								quantile != null);
@@ -347,9 +356,18 @@ public class GLMMPowerCalculator implements PowerCalculator
            							// simulate the power
            							double power = simulatePower(params, iterations);
            							// store the power result
-           							results.add(new GLMMPower(test, alpha, power, power, 
-           									params.getDesignEssence().getTotalSampleSize(), 
-           									betaScale, sigmaScale, method));
+        							if (method == PowerMethod.QUANTILE_POWER)
+        								results.add(new GLMMPower(test, alpha, 
+        									power, power, 
+        									params.getDesignEssence().getTotalSampleSize(), 
+        									betaScale, sigmaScale, method, quantile));
+        							else
+        								results.add(new GLMMPower(test, alpha, 
+            									power, power, 
+            									params.getDesignEssence().getTotalSampleSize(), 
+            									betaScale, sigmaScale, method));
+        							
+        							quantile = params.getNextQuantile();      	
            						}
            						while (method == PowerMethod.QUANTILE_POWER &&
            								quantile != null);
@@ -405,6 +423,17 @@ public class GLMMPowerCalculator implements PowerCalculator
         								results.add(new GLMMPower(test, alpha.doubleValue(), 
         										power.doubleValue(), betaScale.actualPower, sampleSize.intValue(), 
         										betaScale.betaScale, sigmaScale.doubleValue(), method));
+
+               							if (method == PowerMethod.QUANTILE_POWER)
+            								results.add(new GLMMPower(test, alpha.doubleValue(), 
+            										power.doubleValue(), betaScale.actualPower, sampleSize.intValue(), 
+            										betaScale.betaScale, sigmaScale.doubleValue(), method, quantile));
+            							else
+            								results.add(new GLMMPower(test, alpha.doubleValue(), 
+            										power.doubleValue(), betaScale.actualPower, sampleSize.intValue(), 
+            										betaScale.betaScale, sigmaScale.doubleValue(), method));
+               							
+            							quantile = params.getNextQuantile();      								
         							}
         							catch (Exception e)
         							{

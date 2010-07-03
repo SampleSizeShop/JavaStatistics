@@ -66,6 +66,33 @@ public class GLMMPower extends Power
 	}
 	
 	/**
+	 * Create a new GLMMPower object.
+	 * 
+	 * @param test the statistical test performed
+	 * @param alpha the type I error rate
+	 * @param nominalPower requested power (for sample size, detectable difference requests)
+	 * @param actualPower calculated power
+	 * @param sampleSize total sample size
+	 * @param betaScale scale factor for beta matrix (roughly interpreted as detectable difference)
+	 * @param sigmaScale scale factor for error covariance matrix
+	 * @param method method used for power calculation
+	 * @param quantile optional quantile value (for quantile power only)
+	 */
+	public GLMMPower(GLMMPowerParameters.Test test, double alpha, 
+			double nominalPower, double actualPower, int sampleSize,
+			double betaScale, double sigmaScale, 
+			GLMMPowerParameters.PowerMethod method,
+			double quantile)
+	{
+		super(nominalPower, actualPower, sampleSize, alpha);
+		this.test = test;
+		this.betaScale = betaScale;
+		this.sigmaScale = sigmaScale;
+		this.powerMethod = method;
+		this.quantile = quantile;
+	}
+	
+	/**
 	 * Get the regression coefficient scale factor
 	 * @return beta scale factor
 	 */
