@@ -37,6 +37,8 @@ import org.apache.commons.math.analysis.solvers.UnivariateRealSolverFactory;
  */
 public class NonCentralFDistribution
 {     
+    private static final int STARTING_F = 10;
+    
     // supported approximation methods for the F distribution
     protected enum FMethod
     {
@@ -181,8 +183,15 @@ public class NonCentralFDistribution
      */
     public double inverseCDF(double quantile)
     {
-        if (method == FMethod.CDF)
+        if (quantile <= 0) return Double.NaN;
+        if (quantile >= 1) return Double.POSITIVE_INFINITY;
+        
+        if (method == FMethod.CDF && nonCentrality == 0)
         {
+            // inverseCdf throws an illegal argument exception when the
+            // non-centrality parameter is non-zero.  So we just bisection solve 
+            // unless we're really dealing with a central F.  Ah, the hazards of
+            // pulling code off of the interwebs.
             return nonCentralF.inverseCdf(quantile);
         }
         else
@@ -192,9 +201,10 @@ public class NonCentralFDistribution
 
             NonCentralFQuantileFunction quantFunc = new NonCentralFQuantileFunction(quantile);
 
+            int upperBound = findUpperBound(quantile);
             try
             {
-                return solver.solve(quantFunc, 0, 10);
+                return solver.solve(quantFunc, 0, upperBound);
             }
             catch (Exception e)
             {
@@ -203,5 +213,14 @@ public class NonCentralFDistribution
         }
     }
         
-    
+    private int findUpperBound(double quantile)
+    {
+        int upperBound = STARTING_F;
+
+        for(double currentQuantile = 0.0; currentQuantile < quantile; upperBound *= 2)
+        {
+            currentQuantile = cdf(upperBound);
+        }
+        return upperBound;
+    }
 }
