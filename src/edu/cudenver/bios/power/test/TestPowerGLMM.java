@@ -19,6 +19,11 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import jsc.distributions.Normal;
 import junit.framework.TestCase;
 
+/**
+ * Unit tests for power calculations on the GLMM.  Compares the calculated
+ * values against a 10K iteration simulation using a t-test
+ *
+ */
 public class TestPowerGLMM extends TestCase
 {
     private static final int SIMULATION_SIZE = 10000;
@@ -29,127 +34,76 @@ public class TestPowerGLMM extends TestCase
     private static final double[] BETA_SCALE_LIST = {0,0.5,1,1.5,2};
     private static final double[] SIGMA_SCALE_LIST = {1,2};
     private static final int[] SAMPLE_SIZE_LIST = {5};
-    private Normal normalDist;
-    private DecimalFormat Number;
+    private Normal normalDist = new Normal();
+    private DecimalFormat Number = new DecimalFormat("#0.000");
 
-    public void setUp()
-    {
-        normalDist = new Normal();
-        Number = new DecimalFormat("#0.000");
-
-    }
-    
-    private void testValidUnivariateFixed()
+    /**
+     * Test valid inputs for a univariate linear model with only fixed predictors
+     */
+    public void testValidUnivariateFixed()
     {
         // build the inputs
         GLMMPowerParameters params = buildValidUnivariateInputs();
-        // create a power calculator
-        GLMMPowerCalculator calc = new GLMMPowerCalculator();
-
-        List<Power> results = calc.getPower(params);
-        //List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
-        System.out.println("Multi?\tFixed?\tAlpha\tSigmaScale\tBetaScale\tTotal N\tPower");
-        for(Power power: results)
-        {
-        	GLMMPower p = (GLMMPower) power;
-        	System.out.println("U\tF\t" + p.getTest().toString() + "\t" + Number.format(p.getAlpha()) +
-        			"\t" + Number.format(p.getSigmaScale()) + "\t" + Number.format(p.getBetaScale()) + 
-        			"\t" + p.getTotalSampleSize() + "\t" + Number.format(p.getActualPower()));
-        }
-
+        System.out.println("Testing Univariate, Fixed");
+        checkPower(params, true, true);
     }
 
-    private void testInvalidUnivariateFixed()
+    /**
+     * Tests if the calculator throws an exception on invalid inputs
+     */
+    public void testInvalidInputs()
     {
         // build the inputs
         GLMMPowerParameters params = buildValidUnivariateInputs();
         // create a power calculator
         GLMMPowerCalculator calc = new GLMMPowerCalculator();
         params.setBeta(null);
-
+        
         try
         {
-        	List<Power> results = calc.getPower(params);
-        	//List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
-        	for(Power p: results)
-        	{
-        		System.out.println("Univariate, Fixed: " + p.toXML());
-        	}  
+            List<Power> results = calc.getPower(params);
+            fail();
         }
         catch (Exception e)
         {
-            System.out.println("Exception: " + e.getMessage());
+            assertTrue(true);
         }
     }
 
+    /**
+     * Test case for a multivariate GLM with only fixed predictors
+     */
     public void testValidMultivariateFixed()
     {
         // build the inputs
         GLMMPowerParameters params = buildValidMultivariateFixedInputs();
-        // create a power calculator
-        GLMMPowerCalculator calc = new GLMMPowerCalculator();
 
-        List<Power> results = calc.getPower(params);
-        System.out.println("Multi?\tFixed?\tAlpha\tSigmaScale\tBetaScale\tTotal N\tPower");
-        for(Power power: results)
-        {
-        	GLMMPower p = (GLMMPower) power;
-        	System.out.println("M\tF\t" + p.getTest().toString() + "\t" + Number.format(p.getAlpha()) +
-        			"\t" + Number.format(p.getSigmaScale()) + "\t" + Number.format(p.getBetaScale()) + 
-        			"\t" + p.getTotalSampleSize() + "\t" + Number.format(p.getActualPower()));
-        }
+        System.out.println("Testing Multivariate, Fixed");
+        checkPower(params, false, true);
     }
 
-    private void testInvalidMultivariateFixed()
-    {
-        // build the inputs
-        GLMMPowerParameters params = buildValidMultivariateFixedInputs();
-        // create a power calculator
-        GLMMPowerCalculator calc = new GLMMPowerCalculator();
-        params.setBeta(null);
 
-        try
-        {
-        	List<Power> results = calc.getPower(params);
-        	//List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
-        	System.out.println("Multi?\tFixed?\tAlpha\tSigmaScale\tBetaScale\tTotal N\tPower");
-        	for(Power power: results)
-        	{
-        		GLMMPower p = (GLMMPower) power;
-        		System.out.println("M\tF\t" + p.getTest().toString() + "\t" + Number.format(p.getAlpha()) +
-        				"\t" + Number.format(p.getSigmaScale()) + "\t" + Number.format(p.getBetaScale()) + 
-        				"\t" + p.getTotalSampleSize() + "\t" + Number.format(p.getActualPower()));
-        	}
-        }
-        catch (Exception e)
-        {
-            System.out.println("Exception: " + e.getMessage());
-        }
-    }
-
+    /**
+     * Test case for multivariate GLM with a baseline covariate.  Note that only
+     * the Hotelling-Lawley and Univariate Repeated Measures tests are 
+     * supported (see Glueck, Muller 2003 for details)
+     */
     public void testValidMultivariateRandom()
     {
         // build the inputs
         GLMMPowerParameters params = buildValidMultivariateRandomInputs();
         
-        // create a power calculator
-        GLMMPowerCalculator calc = new GLMMPowerCalculator();
-        
-        List<Power> results = calc.getPower(params);
-        //List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
-        System.out.println("Multi?\tFixed?\tAlpha\tSigmaScale\tBetaScale\tTotal N\tPower");
-        for(Power power: results)
-        {
-        	GLMMPower p = (GLMMPower) power;
-        	System.out.println("M\tR\t" + p.getTest().toString() + "\t" + Number.format(p.getAlpha()) +
-        			"\t" + Number.format(p.getSigmaScale()) + "\t" + Number.format(p.getBetaScale()) + 
-        			"\t" + p.getTotalSampleSize() + "\t" + Number.format(p.getActualPower()) + "\t" +
-        			p.getPowerMethod() + "\t" + p.getQuantile());
-        }
+        System.out.println("Testing Multivariate, Random, Quantile");
+        checkPower(params, false, false);
+
     }
 
 
-
+    /********** helper functions to create the matrices ***********/
+    
+    /**
+     * Builds matrices for a univariate GLM with fixed predictors
+     */
     private GLMMPowerParameters buildValidUnivariateInputs()
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
@@ -195,7 +149,9 @@ public class TestPowerGLMM extends TestCase
         return params;     
     }   
 
-
+    /**
+     * Builds matrices for a multivariate GLM with fixed predictors
+     */
     private GLMMPowerParameters buildValidMultivariateFixedInputs()
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
@@ -224,7 +180,7 @@ public class TestPowerGLMM extends TestCase
         // build sigma matrix
         double rho = 0.4;
         double [][] sigma = {{1,rho,rho},{rho,1,rho},{rho,rho,1}}; // compound symmetry
-        //double [][] sigma = {{1,0.2,0.3},{0.2,1,0.2},{0.3,0.2,1}}; // toeplitz
+        // double [][] sigma = {{1,0.2,0.3},{0.2,1,0.2},{0.3,0.2,1}}; // toeplitz
         params.setSigmaError(new Array2DRowRealMatrix(sigma));
         // add sigma scale values
         for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
@@ -253,15 +209,9 @@ public class TestPowerGLMM extends TestCase
         return params;     
     }   
     
-    private boolean powersAreSame(double calc, double sim)
-    {
-        double z = Math.abs((sim - calc) / Math.sqrt((sim * (1 - sim)) / SIMULATION_SIZE));
-        
-        double p = 2 * normalDist.upperTailProb(z);
-        System.out.println("(p = " + Number.format(p) + ")");
-        return (p > UNIT_TEST_ALPHA);
-    }
-    
+    /**
+     * Builds matrices for a multivariate GLM with a baseline covariate
+     */
     private GLMMPowerParameters buildValidMultivariateRandomInputs()
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
@@ -340,5 +290,70 @@ public class TestPowerGLMM extends TestCase
         return params;     
     }
     
+    /**
+     * Run the power calculations for the specified parameters and tests
+     * and assert whether they match simulation
+     * 
+     * @param params
+     * @param testList
+     */
+    private void checkPower(GLMMPowerParameters params, 
+            boolean univariate, boolean fixed)
+    {
+        // create a power calculator
+        GLMMPowerCalculator calc = new GLMMPowerCalculator();
+
+        // build prefix string
+        String uniStr = (univariate ? "U" : "M");
+        String fixedStr = (fixed ? "F" : "R");
+
+        int matches = 0;
+
+        System.out.println("Calculating power...");
+        List<Power> results = calc.getPower(params);
+
+        System.out.println("Simulating power...");
+        List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
+        System.out.println("Multi?\tFixed?\tAlpha\tSigmaScale\tBetaScale\tTotal N\tPower\tPowerMethod\tQuantile");
+        for(int i = 0; i < results.size() && i < simResults.size(); i++)
+        {
+            GLMMPower p = (GLMMPower) results.get(i);
+            GLMMPower sp = (GLMMPower) simResults.get(i);
+            System.out.println("Calculated: "+uniStr + "\t" + fixedStr + "\t" + 
+                    p.getTest().toString() + "\t" + Number.format(p.getAlpha()) + "\t" + 
+                    Number.format(p.getSigmaScale()) + "\t" + 
+                    Number.format(p.getBetaScale()) + "\t" + 
+                    p.getTotalSampleSize() + "\t" + 
+                    Number.format(p.getActualPower()) + "\t" +
+                    p.getPowerMethod() + "\t" + p.getQuantile());
+            System.out.println("Simulated: "+uniStr + "\t" + fixedStr + "\t" + 
+                    sp.getTest().toString() + "\t" + Number.format(sp.getAlpha()) + "\t" + 
+                    Number.format(sp.getSigmaScale()) + "\t" + 
+                    Number.format(sp.getBetaScale()) + "\t" + 
+                    sp.getTotalSampleSize() + "\t" + 
+                    Number.format(sp.getActualPower()) + "\t" +
+                    p.getPowerMethod() + "\t" + p.getQuantile());
+            if (powersAreSame(p.getActualPower(), sp.getActualPower())) matches++;
+        }
+
+
+        assertEquals(results.size(), matches);
+    }
     
+    /**
+     * compares a calculated and simulated power by t-test and 
+     * returns true if there is NO significant difference
+     * 
+     * @param calc calculated power value
+     * @param sim simulated power value
+     * @return true if the power do not differ significantly
+     */
+    private boolean powersAreSame(double calc, double sim)
+    {
+        double z = Math.abs((sim - calc) / Math.sqrt((sim * (1 - sim)) / SIMULATION_SIZE));
+        
+        double p = 2 * normalDist.upperTailProb(z);
+        System.out.println("(p = " + Number.format(p) + ")");
+        return (p > UNIT_TEST_ALPHA);
+    }
 }
