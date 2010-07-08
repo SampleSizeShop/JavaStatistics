@@ -140,10 +140,12 @@ public class NonCentralFDistribution
      */
     public double cdf(double Fcritical)
     {
+        if (Fcritical <= 0) return 0;
         switch (method)
         {
         case TIKU_APPROXIMATION:
             double TikuFcrit = (Fcritical - TikuB) / TikuC;
+            if (TikuFcrit <= 0) return 0;
             return nonCentralF.cdf(TikuFcrit);
         case NORMAL_APPROXIMATION:
             double p1 = 1 / 3;
