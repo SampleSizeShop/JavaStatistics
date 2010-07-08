@@ -210,7 +210,7 @@ public class NonCentralFDistribution
             }
             catch (Exception e)
             {
-                throw new IllegalArgumentException("Failed to determine non-centrality quantile: " + e.getMessage());
+                throw new IllegalArgumentException("Failed to determine F quantile: " + e.getMessage());
             }
         }
     }
