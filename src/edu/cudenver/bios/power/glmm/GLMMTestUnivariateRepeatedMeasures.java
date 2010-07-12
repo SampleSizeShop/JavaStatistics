@@ -122,7 +122,8 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         association = (REP / (1 + REP));
         
         double ddf = getDenominatorDF(type);
-        return ((association) / (a*b)) / ((1 - association) / ddf);
+        double ndf = getNumeratorDF(type);
+        return ((association) / ndf) / ((1 - association) / ddf);
     }
     
     /**

@@ -32,18 +32,25 @@ public class GLMMTestWilksLambda extends GLMMTest
         double r = new SingularValueDecompositionImpl(X).getRank();
         
         double df = Double.NaN;
-        if (a*a*b*b <= 4)
-        {
-            df = N - r - b + 1;
-        }
-        else
-        {
-            double gDenominator = (a*a + b*b - 5);
-            if (gDenominator == 0)
-                throw new IllegalArgumentException("Within and between subject contrasts yielded divide by zero: row of C=" + a + ", cols of U=" + b);
-            double g = Math.sqrt((a*a*b*b - 4) / gDenominator);
-            df = (g*((N - r) - (b - a +1)/2)) - (a*b - 2)/2;
-        }
+        
+        double gDenominator = (a*a + b*b - 5);
+        if (gDenominator == 0)
+            throw new IllegalArgumentException("Within and between subject contrasts yielded divide by zero: row of C=" + a + ", cols of U=" + b);
+        double g = Math.sqrt((a*a*b*b - 4) / gDenominator);
+        df = (g*((N - r) - (b - a +1)/2)) - (a*b - 2)/2;
+        
+//        if (a*a*b*b <= 4)
+//        {
+//            df = N - r - b + 1;
+//        }
+//        else
+//        {
+//            double gDenominator = (a*a + b*b - 5);
+//            if (gDenominator == 0)
+//                throw new IllegalArgumentException("Within and between subject contrasts yielded divide by zero: row of C=" + a + ", cols of U=" + b);
+//            double g = Math.sqrt((a*a*b*b - 4) / gDenominator);
+//            df = (g*((N - r) - (b - a +1)/2)) - (a*b - 2)/2;
+//        }
         
         return df;
     }
@@ -67,7 +74,7 @@ public class GLMMTestWilksLambda extends GLMMTest
         
         double adjustedW = Double.NaN;
         double g = Double.NaN;
-        double W = getWilksLambda(hypothesisSumOfSquares, errorSumOfSquares);
+        double W = getWilksLambda(hypothesisSumOfSquares, errorSumOfSquares, type);
         if (a*a*b*b <= 4) 
         {
         	g = 1;
@@ -119,7 +126,7 @@ public class GLMMTestWilksLambda extends GLMMTest
         
         double association = 0.0;
         
-        double W = getWilksLambda(hypothesisSumOfSquares, errorSumOfSquares);
+        double W = getWilksLambda(hypothesisSumOfSquares, errorSumOfSquares, type);
         if (a*a*b*b <= 4) 
         {
             association = 1 - W;
@@ -131,7 +138,8 @@ public class GLMMTestWilksLambda extends GLMMTest
         }
         
         double ddf = getDenominatorDF(type);
-        return ((association) / (a*b)) / ((1 - association) / ddf);
+        double ndf = getNumeratorDF(type);
+        return ((association) / ndf) / ((1 - association) / ddf);
     }
     
     /**
@@ -141,7 +149,7 @@ public class GLMMTestWilksLambda extends GLMMTest
      * @param E error sum of squares matrix
      * @returns F statistic
      */
-    private double getWilksLambda(RealMatrix H, RealMatrix E)
+    private double getWilksLambda(RealMatrix H, RealMatrix E, DistributionType type)
     throws InvalidMatrixException
     {
         if (!H.isSquare() || !E.isSquare() || H.getColumnDimension() != E.getRowDimension())
@@ -153,8 +161,8 @@ public class GLMMTestWilksLambda extends GLMMTest
         double p = params.getBeta().getColumnDimension();
         
         RealMatrix adjustedH = H;
-        if ((s == 1 && p > 1) ||
-                params.getMomentMethod() == MomentApproximationMethod.RAO_TWO_MOMENT_OMEGA_MULT)
+        if (type != DistributionType.DATA_ANALYSIS_NULL && ((s == 1 && p > 1) ||
+                params.getMomentMethod() == MomentApproximationMethod.RAO_TWO_MOMENT_OMEGA_MULT))
         {
             RealMatrix X = params.getDesign();
             double r = new SingularValueDecompositionImpl(X).getRank();

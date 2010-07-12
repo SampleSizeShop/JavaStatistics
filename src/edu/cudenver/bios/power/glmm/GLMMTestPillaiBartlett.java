@@ -146,9 +146,10 @@ public class GLMMTestPillaiBartlett extends GLMMTest
         
         double PB = getPillaiBartlettTrace(hypothesisSumOfSquares, errorSumOfSquares);
         association = PB / s;
-        
         double ddf = getDenominatorDF(type);
-        return ((association) / (a*b)) / ((1 - association) / ddf);
+        double ndf = getNumeratorDF(type);
+
+        return ((association) / ndf) / ((1 - association) / ddf);
     }
     
     /**

@@ -125,13 +125,8 @@ public class GLMMTestHotellingLawley extends GLMMTest
 
     @Override
     public double getObservedF(DistributionType type)
-    {                
-        // a = #rows in between subject contrast matrix, C
-        double a = params.getBetweenSubjectContrast().getRowDimension();
-        // b = #columns in within subject contrast matrix, U
-        double b = params.getWithinSubjectContrast().getColumnDimension();
-                
-        return getNonCentrality(type) / (a*b);
+    {                   
+        return getNonCentrality(type) / getNumeratorDF(type);
     }
 
     /**
