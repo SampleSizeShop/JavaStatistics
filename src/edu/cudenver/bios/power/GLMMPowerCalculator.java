@@ -711,9 +711,6 @@ public class GLMMPowerCalculator implements PowerCalculator
     private SampleSize getSampleSize(GLMMPowerParameters params)
             throws IllegalArgumentException, MathException
     {
-    	// create a test
-        GLMMTest glmmTest = GLMMTestFactory.createGLMMTest(params);
-        
         UnivariateRealSolverFactory factory = UnivariateRealSolverFactory.newInstance();
         UnivariateRealSolver solver = factory.newBisectionSolver();
 
