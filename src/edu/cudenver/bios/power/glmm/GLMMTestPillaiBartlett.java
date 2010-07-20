@@ -34,8 +34,7 @@ public class GLMMTestPillaiBartlett extends GLMMTest
         double s = (a < b) ? a : b;  
         
         double df = Double.NaN;
-        if (type == DistributionType.DATA_ANALYSIS_NULL ||
-        		params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT ||
+        if (params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT ||
                 params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT)
         {
             df = s * ((N - r) - b + s);
@@ -100,7 +99,7 @@ public class GLMMTestPillaiBartlett extends GLMMTest
         double s = (a < b) ? a : b;  
         
         double df = Double.NaN;
-        if (type == DistributionType.DATA_ANALYSIS_NULL ||
+        if (
         		params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT ||
                 params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT)
         {

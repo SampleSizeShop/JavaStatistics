@@ -47,8 +47,7 @@ public class GLMMTestHotellingLawley extends GLMMTest
         double s = (a < b) ? a : b;  
         
         double df = Double.NaN;
-        if (type == DistributionType.DATA_ANALYSIS_NULL ||
-                params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT ||
+        if (params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT ||
                 params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT)
         {
             df = s * ((N - r) - b -1) + 2;
@@ -125,8 +124,24 @@ public class GLMMTestHotellingLawley extends GLMMTest
 
     @Override
     public double getObservedF(DistributionType type)
-    {                   
-        return getNonCentrality(type) / getNumeratorDF(type);
+    {       
+        if (type == DistributionType.DATA_ANALYSIS_NULL)
+        {
+            RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
+            RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
+            double HLT = getHotellingLawleyTrace(hypothesisSumOfSquares, errorSumOfSquares);
+            double ddf = getDenominatorDF(type);
+            double ndf = getNumeratorDF(type);
+            double b = params.getWithinSubjectContrast().getColumnDimension();
+            RealMatrix X = params.getDesign();
+            int r = new SingularValueDecompositionImpl(X).getRank();
+            int N = X.getRowDimension();
+            return HLT * (((N-r)-b-1)*ddf) / (ndf*(ddf-2));
+        }
+        else
+        {
+            return getNonCentrality(type) / getNumeratorDF(type);
+        }
     }
 
     /**
