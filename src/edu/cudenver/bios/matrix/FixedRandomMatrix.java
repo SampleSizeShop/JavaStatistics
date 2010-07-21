@@ -93,4 +93,14 @@ public class FixedRandomMatrix
     {
         return combinedMatrix;
     }
+    
+    public boolean hasFixed()
+    {
+        return (fixedMatrix != null);
+    }
+    
+    public boolean hasRandom()
+    {
+        return (randomMatrix != null);
+    }
 }
