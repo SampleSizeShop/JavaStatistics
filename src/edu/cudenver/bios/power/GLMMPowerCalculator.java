@@ -798,7 +798,7 @@ public class GLMMPowerCalculator implements PowerCalculator
             RealMatrix sqrtMatrix = 
                 new CholeskyDecompositionImpl(sigma, 
                         RELATIVE_SYMMETRY_THRESHOLD,
-                        POSITIVITY_THRESHOLD).getL();
+                        POSITIVITY_THRESHOLD).getLT();
             return randomNormals.multiply(sqrtMatrix); 
         }
         catch (Exception e)
@@ -831,8 +831,8 @@ public class GLMMPowerCalculator implements PowerCalculator
     {        
         // get total observations, N, and rank of design matrix
         RealMatrix X = params.getDesign();
-        int N = X.getRowDimension();
-        int rankX = new SingularValueDecompositionImpl(X).getRank();
+        double N = X.getRowDimension();
+        double rankX = new SingularValueDecompositionImpl(X).getRank();
                 
         // create a normal distribution for generating random errors
         Normal normalDist = new Normal();       
@@ -858,7 +858,7 @@ public class GLMMPowerCalculator implements PowerCalculator
             RealMatrix YHat = (X.multiply(betaHat));
             // calculate sigma-Hat
             RealMatrix Ydiff = Ysim.subtract(YHat);
-            RealMatrix sigmaHat = (Ydiff.transpose().multiply(Ydiff)).scalarMultiply(((double) 1/(double)(N - rankX)));    
+            RealMatrix sigmaHat = (Ydiff.transpose().multiply(Ydiff)).scalarMultiply(((double) 1/(N - rankX)));    
             
             // set the scaled sigma / beta to the new values
             params.setScaledBeta(betaHat);
