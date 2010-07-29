@@ -3,7 +3,6 @@ package edu.cudenver.bios.power.glmm;
 import org.apache.commons.math.linear.InvalidMatrixException;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.MomentApproximationMethod;
@@ -31,18 +30,13 @@ public class GLMMTestHotellingLawley extends GLMMTest
     @Override
     public double getDenominatorDF(DistributionType type)
     {
-        RealMatrix X = params.getDesign();
-        RealMatrix C = params.getBetweenSubjectContrast();
+        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
         RealMatrix U = params.getWithinSubjectContrast();
         
         // a = #rows in between subject contrast matrix, C
         double a = (double) C.getRowDimension();
         // b = #columns in within subject contrast matrix
         double b = (double) U.getColumnDimension();
-        // N = total number of subjects (rows in design matrix, X)
-        double N = (double) X.getRowDimension();
-        // r = rank of design matrix, X
-        double r = (double) new SingularValueDecompositionImpl(X).getRank();
         // minimum of a and b dimensions
         double s = (a < b) ? a : b;  
         
@@ -69,7 +63,7 @@ public class GLMMTestHotellingLawley extends GLMMTest
         RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
         RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
         
-        RealMatrix C = params.getBetweenSubjectContrast();
+        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
         RealMatrix U = params.getWithinSubjectContrast();
         RealMatrix B = params.getScaledBeta();
         
@@ -88,9 +82,6 @@ public class GLMMTestHotellingLawley extends GLMMTest
                 params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT ||
                 params.getMomentMethod() == MomentApproximationMethod.MCKEON_TWO_MOMENT_OMEGA_MULT)
         {
-            RealMatrix X = params.getDesign();
-            int r = new SingularValueDecompositionImpl(X).getRank();
-            int N = X.getRowDimension();
             HLT *= ((double)(N - r)/(double)N);
             return N * s * HLT / s;
         }
@@ -116,7 +107,7 @@ public class GLMMTestHotellingLawley extends GLMMTest
     @Override
     public double getNumeratorDF(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getRowDimension();
+        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
         double b = params.getWithinSubjectContrast().getColumnDimension();
         
         return a * b;
@@ -133,9 +124,6 @@ public class GLMMTestHotellingLawley extends GLMMTest
             double ddf = getDenominatorDF(type);
             double ndf = getNumeratorDF(type);
             double b = params.getWithinSubjectContrast().getColumnDimension();
-            RealMatrix X = params.getDesign();
-            int r = new SingularValueDecompositionImpl(X).getRank();
-            int N = X.getRowDimension();
             return HLT * (((N-r)-b-1)*ddf) / (ndf*(ddf-2));
         }
         else

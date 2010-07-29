@@ -3,7 +3,6 @@ package edu.cudenver.bios.power.glmm;
 import org.apache.commons.math.linear.InvalidMatrixException;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.MomentApproximationMethod;
@@ -18,18 +17,13 @@ public class GLMMTestPillaiBartlett extends GLMMTest
     @Override
     public double getDenominatorDF(DistributionType type)
     {
-        RealMatrix X = params.getDesign();
-        RealMatrix C = params.getBetweenSubjectContrast();
+        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
         RealMatrix U = params.getWithinSubjectContrast();
         
         // a = #rows in between subject contrast matrix, C
         double a = C.getRowDimension();
         // b = #columns in within subject contrast matrix
         double b = U.getColumnDimension();
-        // N = total number of subjects (rows in design matrix, X)
-        double N = X.getRowDimension();
-        // r = rank of design matrix, X
-        double r = new SingularValueDecompositionImpl(X).getRank();
         // minimum of a and b dimensions
         double s = (a < b) ? a : b;  
         
@@ -62,7 +56,7 @@ public class GLMMTestPillaiBartlett extends GLMMTest
         RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
         RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
         
-        RealMatrix C = params.getBetweenSubjectContrast();
+        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
         RealMatrix U = params.getWithinSubjectContrast();
         RealMatrix B = params.getScaledBeta();
         
@@ -94,7 +88,7 @@ public class GLMMTestPillaiBartlett extends GLMMTest
     @Override
     public double getNumeratorDF(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getRowDimension();
+        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
         double b = params.getWithinSubjectContrast().getColumnDimension();
         double s = (a < b) ? a : b;  
         
@@ -107,11 +101,6 @@ public class GLMMTestPillaiBartlett extends GLMMTest
         }
         else
         {
-            RealMatrix X = params.getDesign();
-            // N = total number of subjects (rows in design matrix, X)
-            double N = X.getRowDimension();
-            // r = rank of design matrix, X
-            double r = new SingularValueDecompositionImpl(X).getRank();
             double mu1= a * b / (N - r + a);
             double factor1 = (N - r + a - b) / (N - r + a - 1);
             double factor2 = (N - r) / (N - r + a + 2);
@@ -133,7 +122,7 @@ public class GLMMTestPillaiBartlett extends GLMMTest
         RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
         RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
         
-        RealMatrix C = params.getBetweenSubjectContrast();
+        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
         RealMatrix U = params.getWithinSubjectContrast();
         
         // a = #rows in between subject contrast matrix, C
@@ -165,19 +154,16 @@ public class GLMMTestPillaiBartlett extends GLMMTest
         if (!H.isSquare() || !E.isSquare() || H.getColumnDimension() != E.getRowDimension())
             throw new InvalidMatrixException("Failed to compute Pillai-Bartlett Trace: hypothesis and error matrices must be square and same dimensions");
         
-        double a = params.getBetweenSubjectContrast().getRowDimension();
+        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
         double b = params.getWithinSubjectContrast().getColumnDimension();
         double s = (a < b) ? a : b;  
-        double p = params.getBeta().getColumnDimension();
+        double p = params.getScaledBeta().getColumnDimension();
         
         RealMatrix adjustedH = H;
         if ((s == 1 && p > 1) ||
                 params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT ||
                 params.getMomentMethod() == MomentApproximationMethod.MULLER_TWO_MOMENT_OMEGA_MULT)
         {
-            RealMatrix X = params.getDesign();
-            int r = new SingularValueDecompositionImpl(X).getRank();
-            int N = X.getRowDimension();
             adjustedH = H.scalarMultiply(((double)(N - r)/(double)N));
         }
             

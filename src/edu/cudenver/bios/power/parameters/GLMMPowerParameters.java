@@ -1,11 +1,9 @@
 package edu.cudenver.bios.power.parameters;
 
-import java.util.ArrayList;
-import java.util.ListIterator;
-
 import org.apache.commons.math.linear.RealMatrix;
-import edu.cudenver.bios.matrix.EssenceMatrix;
-import edu.cudenver.bios.power.parameters.PowerParameters.PeekableList;
+
+import edu.cudenver.bios.matrix.DesignEssenceMatrix;
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
 
 /**
  * Container class for matrix inputs for general linear model power calculations.
@@ -71,7 +69,7 @@ public class GLMMPowerParameters extends PowerParameters
 	PeekableList<Test> testList = new PeekableList<Test>();
 	
 	// beta matrix of regression coefficients
-	RealMatrix beta = null;
+	FixedRandomMatrix beta = null;
 	RealMatrix betaScaled = null; // beta matrix with scale factor applied
 	PeekableList<Double> betaScaleList = new PeekableList<Double>();
 	
@@ -86,7 +84,7 @@ public class GLMMPowerParameters extends PowerParameters
 	RealMatrix sigmaOutcome = null;
 
 	// C matrix - contrasts for between subject effects
-	RealMatrix betweenSubjectContrast = null;
+	FixedRandomMatrix betweenSubjectContrast = null;
 
 	// theta matrix - matrix of null hypothesis values
 	RealMatrix theta = null;
@@ -94,10 +92,9 @@ public class GLMMPowerParameters extends PowerParameters
 	// U matrix - contrasts for within subject effects
 	RealMatrix withinSubjectContrast = null;
 
-	
 	RealMatrix design = null;
 
-	EssenceMatrix designEssence = null;
+	DesignEssenceMatrix designEssence = null;
 
 	// for design matrices with a baseline covariate, power may be estimated
 	// with either conditional power (same as fixed effects), quantile power,
@@ -164,12 +161,12 @@ public class GLMMPowerParameters extends PowerParameters
         return testList.current();
     }
 	
-	public RealMatrix getBeta()
+	public FixedRandomMatrix getBeta()
 	{
 		return beta;
 	}
 
-	public void setBeta(RealMatrix beta)
+	public void setBeta(FixedRandomMatrix beta)
 	{
 		this.beta = beta;
 	}
@@ -214,12 +211,12 @@ public class GLMMPowerParameters extends PowerParameters
 		this.sigmaOutcome = sigmaOutcome;
 	}
 
-	public RealMatrix getBetweenSubjectContrast()
+	public FixedRandomMatrix getBetweenSubjectContrast()
 	{
 		return betweenSubjectContrast;
 	}
 
-	public void setBetweenSubjectContrast(RealMatrix betweenSubjectContrast)
+	public void setBetweenSubjectContrast(FixedRandomMatrix betweenSubjectContrast)
 	{
 		this.betweenSubjectContrast = betweenSubjectContrast;
 	}
@@ -260,12 +257,12 @@ public class GLMMPowerParameters extends PowerParameters
 		this.design = design;
 	}
 
-	public EssenceMatrix getDesignEssence()
+	public DesignEssenceMatrix getDesignEssence()
 	{
 		return designEssence;
 	}
 
-	public void setDesignEssence(EssenceMatrix designEssence)
+	public void setDesignEssence(DesignEssenceMatrix designEssence)
 	{
 		this.designEssence = designEssence;
 	}
@@ -310,7 +307,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
         Double betaScale = betaScaleList.first();
         if (betaScale != null)
-            betaScaled = beta.scalarMultiply(betaScale.doubleValue());
+            betaScaled = beta.scalarMultiply(betaScale.doubleValue(), true);
         return betaScale;
     }
     
@@ -318,7 +315,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
         Double betaScale = betaScaleList.next();
         if (betaScale != null)
-            betaScaled = beta.scalarMultiply(betaScale.doubleValue());
+            betaScaled = beta.scalarMultiply(betaScale.doubleValue(), true);
         return betaScale;
     }
     
@@ -329,7 +326,7 @@ public class GLMMPowerParameters extends PowerParameters
 	
 	public RealMatrix getScaledBeta()
 	{
-	    return (betaScaled != null ? betaScaled : beta);
+	    return (betaScaled != null ? betaScaled : beta.getCombinedMatrix());
 	}
 	
 	
@@ -413,7 +410,7 @@ public class GLMMPowerParameters extends PowerParameters
     public void scaleBeta(double betaScale)
     {
         if (betaScale != Double.NaN)
-            betaScaled = beta.scalarMultiply(betaScale);
+            betaScaled = beta.scalarMultiply(betaScale, true);
     }
     
     public void setScaledBeta(RealMatrix scaledBeta)

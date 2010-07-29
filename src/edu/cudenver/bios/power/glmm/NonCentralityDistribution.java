@@ -11,9 +11,6 @@ import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 
-import edu.cudenver.bios.matrix.ColumnMetaData;
-import edu.cudenver.bios.matrix.EssenceMatrix;
-import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 
 /**
@@ -71,13 +68,13 @@ public class NonCentralityDistribution
         {                    
             // TODO: need to calculate H0, need to adjust H1 for Unirep
             // get design matrix for fixed parameters only
-            RealMatrix F = params.getDesignEssence().getFullDesignFixed();
+            RealMatrix F = params.getDesignEssence().getFullDesignMatrixFixed();
             qF = F.getColumnDimension();
-            a = params.getBetweenSubjectContrast().getRowDimension();
+            a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
             N = F.getRowDimension();
             // get fixed contrasts
-            RealMatrix Cfixed = getFixedContrast(params);
-            RealMatrix CGaussian = getGaussianContrast(params);
+            RealMatrix Cfixed = params.getBetweenSubjectContrast().getFixedMatrix();
+            RealMatrix CGaussian = params.getBetweenSubjectContrast().getRandomMatrix();
             // build intermediate terms h1, S
             RealMatrix FtFinverse = 
                 new LUDecompositionImpl(F.transpose().multiply(F)).getSolver().getInverse();
@@ -87,7 +84,7 @@ public class NonCentralityDistribution
             FT1 = new CholeskyDecompositionImpl(T1).getL();
             // calculate theta difference
             RealMatrix theta0 = params.getTheta();
-            RealMatrix C = params.getBetweenSubjectContrast();
+            RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
             RealMatrix B = params.getScaledBeta();
             RealMatrix U = params.getWithinSubjectContrast();
             // thetaHat = C * Beta * U
@@ -113,7 +110,7 @@ public class NonCentralityDistribution
                 if (value > 0) sStar++;
             }
             
-            double stddevG = getStdDevG(params.getDesignEssence());
+            double stddevG = Math.sqrt(params.getDesignEssence().getColumnMetaData(0).getVariance());
             mzSq = sEigenDecomp.getD().transpose().multiply(FT1.transpose()).multiply(CGaussian).scalarMultiply(1/stddevG);
             for(int i = 0; i < mzSq.getRowDimension(); i++)
             {
@@ -247,55 +244,55 @@ public class NonCentralityDistribution
         }
     }
         
-    /**
-     * Returns the column representing the single random predictor if specified
-     * (note, this function will require modification if we support multiple random predictors)
-     * @param params
-     * @return
-     */
-    private RealMatrix getGaussianContrast(GLMMPowerParameters params)
-    {
-        EssenceMatrix essenceX = params.getDesignEssence();
-        RealMatrix C = params.getBetweenSubjectContrast();
-        int randCol = -1;
-        for(int c = 0; c < C.getColumnDimension(); c++)
-        {
-            ColumnMetaData colMD = essenceX.getColumnMetaData(c);
-            if (colMD.getPredictorType() == PredictorType.RANDOM)
-            {
-                randCol = c;
-                break; 
-            }
-        }
-        if (randCol >= 0)
-            return C.getColumnMatrix(randCol);
-        else
-            return null;      
-    }
-    
-    private RealMatrix getFixedContrast(GLMMPowerParameters params)
-    {
-        EssenceMatrix essenceX = params.getDesignEssence();
-        RealMatrix C = params.getBetweenSubjectContrast();
-        // include all columns representing fixed predictors
-        // TODO: will need to modify this code for support of multiple random predictors
-        int[] cols = new int[C.getColumnDimension() - essenceX.getRandomPredictorCount()];
-        int colIdx = 0;
-        for(int c = 0; c < C.getColumnDimension(); c++)
-        {
-            ColumnMetaData colMD = essenceX.getColumnMetaData(c);
-            if (colMD.getPredictorType() == PredictorType.FIXED)
-            {
-                cols[colIdx] = c;
-                colIdx++;
-            }
-        }
-        // include all rows
-        int[] rows = new int[C.getRowDimension()];
-        for(int r = 0; r < C.getRowDimension(); r++) rows[r] = r;
-
-        return C.getSubMatrix(rows, cols); 
-    }
+//    /**
+//     * Returns the column representing the single random predictor if specified
+//     * (note, this function will require modification if we support multiple random predictors)
+//     * @param params
+//     * @return
+//     */
+//    private RealMatrix getGaussianContrast(GLMMPowerParameters params)
+//    {
+//        EssenceMatrix essenceX = params.getDesignEssence();
+//        RealMatrix C = params.getBetweenSubjectContrast();
+//        int randCol = -1;
+//        for(int c = 0; c < C.getColumnDimension(); c++)
+//        {
+//            ColumnMetaData colMD = essenceX.getColumnMetaData(c);
+//            if (colMD.getPredictorType() == PredictorType.RANDOM)
+//            {
+//                randCol = c;
+//                break; 
+//            }
+//        }
+//        if (randCol >= 0)
+//            return C.getColumnMatrix(randCol);
+//        else
+//            return null;      
+//    }
+//    
+//    private RealMatrix getFixedContrast(GLMMPowerParameters params)
+//    {
+//        EssenceMatrix essenceX = params.getDesignEssence();
+//        RealMatrix C = params.getBetweenSubjectContrast();
+//        // include all columns representing fixed predictors
+//        // TODO: will need to modify this code for support of multiple random predictors
+//        int[] cols = new int[C.getColumnDimension() - essenceX.getRandomPredictorCount()];
+//        int colIdx = 0;
+//        for(int c = 0; c < C.getColumnDimension(); c++)
+//        {
+//            ColumnMetaData colMD = essenceX.getColumnMetaData(c);
+//            if (colMD.getPredictorType() == PredictorType.FIXED)
+//            {
+//                cols[colIdx] = c;
+//                colIdx++;
+//            }
+//        }
+//        // include all rows
+//        int[] rows = new int[C.getRowDimension()];
+//        for(int r = 0; r < C.getRowDimension(); r++) rows[r] = r;
+//
+//        return C.getSubMatrix(rows, cols); 
+//    }
     
     private RealMatrix getSigmaStarInverse(GLMMPowerParameters params)
     {
@@ -318,20 +315,6 @@ public class NonCentralityDistribution
             // stat should only be HLT at this point  (exception is thrown by valdiateParams otherwise)
             return new LUDecompositionImpl(sigmaStar).getSolver().getInverse();
         }
-    }
-    
-    private double getStdDevG(EssenceMatrix essence)
-    throws IllegalArgumentException
-    {
-        for(int c = 0; c < essence.getColumnDimension(); c++)
-        {
-            ColumnMetaData colMD = essence.getColumnMetaData(c);
-            if (colMD.getPredictorType() == PredictorType.RANDOM)
-            {
-                return Math.sqrt(colMD.getVariance());
-            }
-        }
-        throw new IllegalArgumentException("Failed to calculate sigmaG - No random predictor");
     }
 
     public double getH1()

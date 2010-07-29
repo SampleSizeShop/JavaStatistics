@@ -43,9 +43,6 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
 {
     static final long serialVersionUID = 12357911L;
     
-    RealMatrix fixedMatrix = null;
-    RealMatrix randomMatrix = null;
-    
     // indicates how many times the row should be repeated in the full design matrix
     RowMetaData[] rowMetaData = null;
     
@@ -133,17 +130,58 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
         // case 2: if the predictor is random, the values are set to a random value from 
         // a normal curve with the mean/variance specified in the column meta data
         int fullDesignColumn = 0;
-        for(int col = 0; col < fixedMatrix.getColumnDimension(); col++, fullDesignColumn++)
+        if (fixedMatrix != null)
         {
-            fillFixedColumn(col, fullDesignColumn, fullDesignMatrix);
+        	for(int col = 0; col < fixedMatrix.getColumnDimension(); col++, fullDesignColumn++)
+        	{
+        		fillFixedColumn(col, fullDesignColumn, fullDesignMatrix);
+        	}
         }
-        for(int col = 0; col < randomMatrix.getColumnDimension(); col++, fullDesignColumn++)
+        if (randomMatrix != null)
         {
-        	fillRandomColumn(col, fullDesignColumn, fullDesignMatrix);
+        	for(int col = 0; col < randomMatrix.getColumnDimension(); col++, fullDesignColumn++)
+        	{
+        		fillRandomColumn(col, fullDesignColumn, fullDesignMatrix);
+        	}
         }
         return fullDesignMatrix;
     }
 
+    /**
+     * Expands the essence matrix into full design matrix for power 
+     * calculations using the fixed component only
+     * 
+     * Assumes that row meta data indicates the actual number
+     * of repetitions of that row in the full design
+     * 
+     * @return design matrix
+     * @throws IllegalArgumentException
+     */
+    public RealMatrix getFullDesignMatrixFixed()
+    {
+    	if (fixedMatrix == null) return null;
+        // allocate the full design matrix
+        // #rows = total of repetitions for each unique row
+        // #columns = number of columns in design matrix
+        int fullRows = getTotalSampleSize();
+        int fullColumns = fixedMatrix.getColumnDimension();
+        Array2DRowRealMatrix fullDesignMatrix = 
+            new Array2DRowRealMatrix(fullRows, fullColumns);
+
+        // copy in the columns
+        // case 1: if predictor in a given column is fixed, the values are copied from 
+        // the design matrix
+        // case 2: if the predictor is random, the values are set to a random value from 
+        // a normal curve with the mean/variance specified in the column meta data
+        int fullDesignColumn = 0;
+        for(int col = 0; col < fixedMatrix.getColumnDimension(); col++, fullDesignColumn++)
+        {
+            fillFixedColumn(col, fullDesignColumn, fullDesignMatrix);
+        }
+        return fullDesignMatrix;
+    }
+    
+    
     /**
      * Fill a fixed column in the design matrix
      * 
@@ -291,6 +329,21 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
         this.randomSeed = randomSeed;
     }
     
-
+    /**
+     * Return the column meta data for the specified column in the random
+     * matrix.
+     * @param randomColumn column in the random matrix
+     */
+    public RandomColumnMetaData getColumnMetaData(int randomColumn)
+    {
+    	if (randomMatrix != null)
+    	{
+    		if (randomColumn >= 0 && randomColumn < randomMatrix.getColumnDimension())
+    		{
+    			return randomColMetaData[randomColumn];
+    		}
+    	}
+    	return null;
+    }
 
 }

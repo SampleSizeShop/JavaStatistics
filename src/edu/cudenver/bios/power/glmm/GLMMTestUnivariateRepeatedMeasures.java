@@ -45,15 +45,10 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     @Override
     public double getDenominatorDF(DistributionType type)
     {
-        RealMatrix X = params.getDesign();
         RealMatrix U = params.getWithinSubjectContrast();
         
         // b = #columns in within subject contrast matrix
         int b = U.getColumnDimension();
-        // N = total number of subjects (rows in design matrix, X)
-        int N = X.getRowDimension();
-        // r = rank of design matrix, X
-        int r = new SingularValueDecompositionImpl(X).getRank();
         
         double df = Double.NaN;
         // for the unirep test, the degrees of freedom change for power under the null vs alternative, and
@@ -73,7 +68,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     @Override
     public double getNonCentrality(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getRowDimension();
+        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
         double b = params.getWithinSubjectContrast().getColumnDimension();
         
         // calculate non-centrality and adjust for sphericity 
@@ -83,7 +78,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     @Override
     public double getNumeratorDF(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getRowDimension();
+        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
         double b = params.getWithinSubjectContrast().getColumnDimension();
         
         double df = Double.NaN;
@@ -107,14 +102,6 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         // calculate the hypothesis and error sum of squares matrices
         RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
         RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
-        
-        RealMatrix C = params.getBetweenSubjectContrast();
-        RealMatrix U = params.getWithinSubjectContrast();
-        
-        // a = #rows in between subject contrast matrix, C
-        double a = C.getRowDimension();
-        // b = #columns in within subject contrast matrix, U
-        double b = U.getColumnDimension();
         
         double association = 0.0;
         
@@ -144,10 +131,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     private void calculateUnirepCorrection()
     {          
         RealMatrix U = params.getWithinSubjectContrast();
-        RealMatrix X = params.getDesign();
         int b = new SingularValueDecompositionImpl(U).getRank();
-        int r = new SingularValueDecompositionImpl(X).getRank();
-        int N = X.getRowDimension();
         // get the sigmaStar matrix: U' *sigmaError * U
         RealMatrix sigmaStar = U.transpose().multiply(params.getScaledSigmaError().multiply(U));
         // ensure symmetry

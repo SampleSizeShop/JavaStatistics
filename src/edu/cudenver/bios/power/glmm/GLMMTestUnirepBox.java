@@ -18,15 +18,10 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
     @Override
     public double getDenominatorDF(DistributionType type)
     {
-        RealMatrix X = params.getDesign();
         RealMatrix U = params.getWithinSubjectContrast();
         
         // b = #columns in within subject contrast matrix
         int b = U.getColumnDimension();
-        // N = total number of subjects (rows in design matrix, X)
-        int N = X.getRowDimension();
-        // r = rank of design matrix, X
-        int r = new SingularValueDecompositionImpl(X).getRank();
         
         double df = Double.NaN;
 
@@ -44,7 +39,7 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
     @Override
     public double getNonCentrality(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getRowDimension();
+        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
         double b = params.getWithinSubjectContrast().getColumnDimension();
         
         // calculate non-centrality and adjust for sphericity 
@@ -54,7 +49,7 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
     @Override
     public double getNumeratorDF(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getRowDimension();
+        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
         double b = params.getWithinSubjectContrast().getColumnDimension();
 
         double df = Double.NaN;

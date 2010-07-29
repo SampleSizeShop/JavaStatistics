@@ -8,7 +8,9 @@ import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
+import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.EssenceMatrix;
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.glmm.GLMMTest;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory;
@@ -161,16 +163,25 @@ public class TestDataAnalysis extends TestCase
 
 	}
 	
-	private GLMMPowerParameters buildUnivariateInputs()
-	{
+    /**
+     * Builds matrices for a univariate GLM with fixed predictors
+     */
+    private GLMMPowerParameters buildUnivariateInputs()
+    {
         GLMMPowerParameters params = new GLMMPowerParameters();
+       
+        // add tests
+        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
+        {
+            params.addTest(test);
+        }
         
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
         // build beta matrix
         double [][] beta = {{0},{1}};
-        params.setBeta(new Array2DRowRealMatrix(beta));
+        params.setBeta(new FixedRandomMatrix(beta, null, false));
         // add beta scale values
         for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
         
@@ -186,47 +197,56 @@ public class TestDataAnalysis extends TestCase
         
         // build design matrix
         double[][] essenceData = {{1,0},{0,1}};
-        EssenceMatrix essenceMatrix = new EssenceMatrix(essenceData);
-        essenceMatrix.setRowMetaData(0, new RowMetaData(10,1));
-        essenceMatrix.setRowMetaData(1, new RowMetaData(10,1));
+        RowMetaData[] rowMd = {new RowMetaData(10,1), new RowMetaData(10,1)};
+        DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
         params.setDesignEssence(essenceMatrix);
         // add sample size multipliers
-        params.addSampleSize(10);
+        for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         
         // build between subject contrast
         double [][] between = {{1,-1}};
-        params.setBetweenSubjectContrast(new Array2DRowRealMatrix(between));
+        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
 
-        double [][] within = {{1}};
-        params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
         return params;     
-	}
-	
-	private GLMMPowerParameters buildMultivariateInputs()
-	{
+    }   
+
+    /**
+     * Builds matrices for a multivariate GLM with fixed predictors
+     */
+    private GLMMPowerParameters buildMultivariateInputs()
+    {
         GLMMPowerParameters params = new GLMMPowerParameters();
-        
+     
         // add tests
-        
+//        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
+//        {
+//            params.addTest(test);
+//        }
+        params.addTest(Test.WILKS_LAMBDA);
+        params.addTest(Test.PILLAI_BARTLETT_TRACE);
+        params.addTest(Test.HOTELLING_LAWLEY_TRACE);
+
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
         int Q = 4;
         // create design matrix
         RealMatrix essenceData = MatrixUtils.createRealIdentityMatrix(Q);
-        EssenceMatrix essence = new EssenceMatrix(essenceData);
-        essence.setRowMetaData(0, new RowMetaData(5,1));
-        essence.setRowMetaData(1, new RowMetaData(5,1));
-        essence.setRowMetaData(2, new RowMetaData(5,1));
-        essence.setRowMetaData(3, new RowMetaData(5,1));
+        RowMetaData[] rowMd = {
+        		new RowMetaData(5,1), 
+        		new RowMetaData(5,1), 
+        		new RowMetaData(5,1), 
+        		new RowMetaData(5,1)
+        		};
+        DesignEssenceMatrix essence = 
+        	new DesignEssenceMatrix(essenceData.getData(), rowMd, null, null);
         params.setDesignEssence(essence);
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         
         // build sigma matrix
         double rho = 0.4;
-        //double [][] sigma = {{1,rho,rho},{rho,1,rho},{rho,rho,1}}; // compound symmetry
-        double [][] sigma = {{1,0,0},{0,1,0},{0,0,1}};
+        double [][] sigma = {{1,rho,rho},{rho,1,rho},{rho,rho,1}}; // compound symmetry
         // double [][] sigma = {{1,0.2,0.3},{0.2,1,0.2},{0.3,0.2,1}}; // toeplitz
         params.setSigmaError(new Array2DRowRealMatrix(sigma));
         // add sigma scale values
@@ -234,28 +254,27 @@ public class TestDataAnalysis extends TestCase
         
         // build beta matrix
         double [][] beta = {{1,0,0},{0,0,0},{0,0,0},{0,0,0}};
-        params.setBeta(new Array2DRowRealMatrix(beta));
+        params.setBeta(new FixedRandomMatrix(beta, null,  false));
         // add beta scale values
         for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
         
         // build theta null matrix
-        double [][] theta0 = {{0,0,0},{0,0,0},{0,0,0}};
+        double [][] theta0 = {{0,0},{0,0},{0,0}};
         params.setTheta(new Array2DRowRealMatrix(theta0));
 
         // build between subject contrast
         double [][] between = {{1,-1,0,0},{1,0,-1,0},{1,0,0,-1}};
-        params.setBetweenSubjectContrast(new Array2DRowRealMatrix(between));
+        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
 
         // build within subject contrast
-        //double [][] within = {{1,1},{-1,0},{0,-1}};
-        double [][] within = {{1,0,0},{0,1,0},{0,0,1}};
+        double [][] within = {{1,1},{-1,0},{0,-1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
 
         //RealMatrix U = params.getWithinSubjectContrast();
         //RealMatrix upu = U.multiply(U.transpose());
         
-        return params;     		
-	}
+        return params;     
+    }   
 	
     private FitResult fitModel(GLMMPowerParameters params, RealMatrix error)
     {

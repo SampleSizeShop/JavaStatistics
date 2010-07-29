@@ -7,7 +7,10 @@ import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.ColumnMetaData;
+import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.EssenceMatrix;
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.matrix.RandomColumnMetaData;
 import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
 import edu.cudenver.bios.power.glmm.NonCentralityDistribution;
@@ -75,24 +78,20 @@ public class TestNonCentralityDistribution extends TestCase
         int P = 3;
         int Q = 3;
         // create design matrix
-        double[][] essData = {{1,0,0},{0,1,0}};
-        RealMatrix essenceData = new Array2DRowRealMatrix(essData);
-        EssenceMatrix essence = new EssenceMatrix(essenceData);
-        essence.setRowMetaData(0, new RowMetaData(5,1));
-        essence.setRowMetaData(1, new RowMetaData(5,1));
-        //essence.setRowMetaData(2, new RowMetaData(5,1));
-        //essence.setRowMetaData(3, new RowMetaData(5,1));
+        double[][] essFixedData = {{1,0,0},{0,1,0},{0,0,1}};
+        RowMetaData[] rowMd = {
+        		new RowMetaData(5,1), 
+        		new RowMetaData(5,1), 
+        		new RowMetaData(5,1)
+        		};
+        double[][] essRandomData = {{1},{1},{1}};
+        RandomColumnMetaData[] randColMd = {new RandomColumnMetaData(MEAN, VARIANCE)};
+        DesignEssenceMatrix essence = new DesignEssenceMatrix(essFixedData, rowMd, 
+        		essRandomData, randColMd);
         params.setDesignEssence(essence);
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         
-        // add a random column with specified mean/variance
-        ColumnMetaData randColMD = new ColumnMetaData();
-        randColMD.setPredictorType(PredictorType.RANDOM);
-        randColMD.setMean(MEAN);
-        randColMD.setVariance(VARIANCE);
-        essence.setColumnMetaData(2, randColMD);
-
         // build sigma G matrix
         double[][] sigmaG = {{1}};
         params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
@@ -109,10 +108,11 @@ public class TestNonCentralityDistribution extends TestCase
 
         // add sigma scale values
         for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
-
+        
         // build beta matrix
         double [][] beta = {{1,0},{0,0},{0,0}};
-        params.setBeta(new Array2DRowRealMatrix(beta));
+        double [][] betaRandom = {{1},{1}};
+        params.setBeta(new FixedRandomMatrix(beta, betaRandom, false));
         // add beta scale values
         for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
         
@@ -122,37 +122,13 @@ public class TestNonCentralityDistribution extends TestCase
 
         // build between subject contrast
         double [][] between = {{1,0,0}};
-        params.setBetweenSubjectContrast(new Array2DRowRealMatrix(between));
+        double[][] betweenRandom = {{1}};
+        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, betweenRandom, true));
         
         // build within subject contrast
         double [][] within = {{1,0},{0,1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
 
-        // set the sigma error matrix to [sigmaY - sigmaYG * sigmaG-1 * sigmaGY] 
-        RealMatrix sigmaGY = params.getSigmaOutcomeGaussianRandom().transpose();
-        RealMatrix sigmaGInverse = new LUDecompositionImpl(params.getSigmaGaussianRandom()).getSolver().getInverse();
-        params.setSigmaError(params.getSigmaOutcome().subtract(params.getSigmaOutcomeGaussianRandom().multiply(sigmaGInverse.multiply(sigmaGY))));
-        
-        // calculate the betaG matrix and fill in the placeholder row for the random predictor
-        RealMatrix betaMatrix = params.getBeta();
-        // first, find the random predictor column index
-        // TODO: maybe a more convenient function on EssenceMatrix class?
-        int randomCol = -1;
-        for (int col = 0; col < params.getDesignEssence().getColumnDimension(); col++)
-        {
-            ColumnMetaData colMD = params.getDesignEssence().getColumnMetaData(col);
-            if (colMD.getPredictorType() == PredictorType.RANDOM)
-            {
-                randomCol = col;
-                break;
-            }
-        }
-        RealMatrix betaG = sigmaGInverse.multiply(sigmaGY);
-        for (int col = 0; col < betaG.getColumnDimension(); col++)
-        {
-            betaMatrix.setEntry(randomCol, col, betaG.getEntry(0, col));
-        }
-        
         return params;     
     }
     

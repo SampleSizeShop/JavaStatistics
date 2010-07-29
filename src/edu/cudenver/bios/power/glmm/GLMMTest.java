@@ -24,9 +24,16 @@ public abstract class GLMMTest
     // store incoming parameters
     protected GLMMPowerParameters params;
 
+    // cache some common operations like rank, sample size, etc.
+    protected double N; // total sample size (row dimension of design matrix)
+    protected double r; // rank of the design matrix
+    
     public GLMMTest(GLMMPowerParameters params)
     {
         this.params = params;
+        RealMatrix X = params.getDesign();
+        N = X.getRowDimension();
+        r = new SingularValueDecompositionImpl(X).getRank();
     }
 
     /**
@@ -64,7 +71,7 @@ public abstract class GLMMTest
     protected RealMatrix getHypothesisSumOfSquares(GLMMPowerParameters params)
     {
         // convenience variables
-        RealMatrix C = params.getBetweenSubjectContrast();
+        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
         RealMatrix B = params.getScaledBeta();
         RealMatrix U = params.getWithinSubjectContrast();
         RealMatrix theta0 = params.getTheta();
@@ -95,15 +102,9 @@ public abstract class GLMMTest
      * @return sum o
      */
     protected RealMatrix getErrorSumOfSquares(GLMMPowerParameters params)
-    {
-        // get the rank of the design matrix, X
-        int r = new SingularValueDecompositionImpl(params.getDesign()).getRank();
-        // get the #rows in the design matrix
-        int N = params.getDesign().getRowDimension();
-        
+    {        
         RealMatrix U = params.getWithinSubjectContrast();
-        return U.transpose().multiply(params.getScaledSigmaError().multiply(U)).scalarMultiply(N - r
-                );
+        return U.transpose().multiply(params.getScaledSigmaError().multiply(U)).scalarMultiply(N-r);
     }    
     
 }

@@ -7,14 +7,16 @@ import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 import edu.cudenver.bios.matrix.ColumnMetaData;
-import edu.cudenver.bios.matrix.EssenceMatrix;
+import edu.cudenver.bios.matrix.DesignEssenceMatrix;
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.matrix.RandomColumnMetaData;
 import edu.cudenver.bios.matrix.RowMetaData;
-import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
 import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
+import edu.cudenver.bios.power.parameters.GLMMPowerParameters.Test;
 
 import jsc.distributions.Normal;
 import junit.framework.TestCase;
@@ -31,8 +33,8 @@ public class TestPowerGLMM extends TestCase
     private static final double MEAN = 9.75;
     private static final double VARIANCE = 2.0;
     private static final double[] ALPHA_LIST = {0.05};    
-    private static final double[] BETA_SCALE_LIST = {0,0.5,1,1.5,2};
-    private static final double[] SIGMA_SCALE_LIST = {1,2};
+    private static final double[] BETA_SCALE_LIST = {2};
+    private static final double[] SIGMA_SCALE_LIST = {2};
     private static final int[] SAMPLE_SIZE_LIST = {5};
     private Normal normalDist = new Normal();
     private DecimalFormat Number = new DecimalFormat("#0.000");
@@ -40,7 +42,7 @@ public class TestPowerGLMM extends TestCase
     /**
      * Test valid inputs for a univariate linear model with only fixed predictors
      */
-    public void testValidUnivariateFixed()
+    private void testValidUnivariateFixed()
     {
         // build the inputs
         GLMMPowerParameters params = buildValidUnivariateInputs();
@@ -73,7 +75,7 @@ public class TestPowerGLMM extends TestCase
     /**
      * Test case for a multivariate GLM with only fixed predictors
      */
-    public void testValidMultivariateFixed()
+    private void testValidMultivariateFixed()
     {
         // build the inputs
         GLMMPowerParameters params = buildValidMultivariateFixedInputs();
@@ -119,7 +121,7 @@ public class TestPowerGLMM extends TestCase
 
         // build beta matrix
         double [][] beta = {{0},{1}};
-        params.setBeta(new Array2DRowRealMatrix(beta));
+        params.setBeta(new FixedRandomMatrix(beta, null, false));
         // add beta scale values
         for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
         
@@ -135,16 +137,15 @@ public class TestPowerGLMM extends TestCase
         
         // build design matrix
         double[][] essenceData = {{1,0},{0,1}};
-        EssenceMatrix essenceMatrix = new EssenceMatrix(essenceData);
-        essenceMatrix.setRowMetaData(0, new RowMetaData(10,1));
-        essenceMatrix.setRowMetaData(1, new RowMetaData(10,1));
+        RowMetaData[] rowMd = {new RowMetaData(10,1), new RowMetaData(10,1)};
+        DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
         params.setDesignEssence(essenceMatrix);
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         
         // build between subject contrast
         double [][] between = {{1,-1}};
-        params.setBetweenSubjectContrast(new Array2DRowRealMatrix(between));
+        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
 
         return params;     
     }   
@@ -157,22 +158,28 @@ public class TestPowerGLMM extends TestCase
         GLMMPowerParameters params = new GLMMPowerParameters();
      
         // add tests
-        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
-        {
-            params.addTest(test);
-        }
-        
+//        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
+//        {
+//            params.addTest(test);
+//        }
+        params.addTest(Test.WILKS_LAMBDA);
+        params.addTest(Test.PILLAI_BARTLETT_TRACE);
+        params.addTest(Test.HOTELLING_LAWLEY_TRACE);
+
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
         int Q = 4;
         // create design matrix
         RealMatrix essenceData = MatrixUtils.createRealIdentityMatrix(Q);
-        EssenceMatrix essence = new EssenceMatrix(essenceData);
-        essence.setRowMetaData(0, new RowMetaData(5,1));
-        essence.setRowMetaData(1, new RowMetaData(5,1));
-        essence.setRowMetaData(2, new RowMetaData(5,1));
-        essence.setRowMetaData(3, new RowMetaData(5,1));
+        RowMetaData[] rowMd = {
+        		new RowMetaData(5,1), 
+        		new RowMetaData(5,1), 
+        		new RowMetaData(5,1), 
+        		new RowMetaData(5,1)
+        		};
+        DesignEssenceMatrix essence = 
+        	new DesignEssenceMatrix(essenceData.getData(), rowMd, null, null);
         params.setDesignEssence(essence);
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
@@ -187,7 +194,7 @@ public class TestPowerGLMM extends TestCase
         
         // build beta matrix
         double [][] beta = {{1,0,0},{0,0,0},{0,0,0},{0,0,0}};
-        params.setBeta(new Array2DRowRealMatrix(beta));
+        params.setBeta(new FixedRandomMatrix(beta, null,  false));
         // add beta scale values
         for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
         
@@ -197,7 +204,7 @@ public class TestPowerGLMM extends TestCase
 
         // build between subject contrast
         double [][] between = {{1,-1,0,0},{1,0,-1,0},{1,0,0,-1}};
-        params.setBetweenSubjectContrast(new Array2DRowRealMatrix(between));
+        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
 
         // build within subject contrast
         double [][] within = {{1,1},{-1,0},{0,-1}};
@@ -234,24 +241,20 @@ public class TestPowerGLMM extends TestCase
         int P = 3;
         int Q = 3;
         // create design matrix
-        double[][] essData = {{1,0,0},{0,1,0}};
-        RealMatrix essenceData = new Array2DRowRealMatrix(essData);
-        EssenceMatrix essence = new EssenceMatrix(essenceData);
-        essence.setRowMetaData(0, new RowMetaData(5,1));
-        essence.setRowMetaData(1, new RowMetaData(5,1));
-        //essence.setRowMetaData(2, new RowMetaData(5,1));
-        //essence.setRowMetaData(3, new RowMetaData(5,1));
+        double[][] essFixedData = {{1,0,0},{0,1,0},{0,0,1}};
+        RowMetaData[] rowMd = {
+        		new RowMetaData(5,1), 
+        		new RowMetaData(5,1), 
+        		new RowMetaData(5,1)
+        		};
+        double[][] essRandomData = {{1},{1},{1}};
+        RandomColumnMetaData[] randColMd = {new RandomColumnMetaData(MEAN, VARIANCE)};
+        DesignEssenceMatrix essence = new DesignEssenceMatrix(essFixedData, rowMd, 
+        		essRandomData, randColMd);
         params.setDesignEssence(essence);
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         
-        // add a random column with specified mean/variance
-        ColumnMetaData randColMD = new ColumnMetaData();
-        randColMD.setPredictorType(PredictorType.RANDOM);
-        randColMD.setMean(MEAN);
-        randColMD.setVariance(VARIANCE);
-        essence.setColumnMetaData(2, randColMD);
-
         // build sigma G matrix
         double[][] sigmaG = {{1}};
         params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
@@ -271,7 +274,8 @@ public class TestPowerGLMM extends TestCase
         
         // build beta matrix
         double [][] beta = {{1,0},{0,0},{0,0}};
-        params.setBeta(new Array2DRowRealMatrix(beta));
+        double [][] betaRandom = {{1,1}};
+        params.setBeta(new FixedRandomMatrix(beta, betaRandom, false));
         // add beta scale values
         for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
         
@@ -281,7 +285,8 @@ public class TestPowerGLMM extends TestCase
 
         // build between subject contrast
         double [][] between = {{1,0,0}};
-        params.setBetweenSubjectContrast(new Array2DRowRealMatrix(between));
+        double[][] betweenRandom = {{1}};
+        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, betweenRandom, true));
         
         // build within subject contrast
         double [][] within = {{1,0},{0,1}};

@@ -3,7 +3,6 @@ package edu.cudenver.bios.power.glmm;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.EigenDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
@@ -48,15 +47,10 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     @Override
     public double getDenominatorDF(DistributionType type)
     {
-        RealMatrix X = params.getDesign();
         RealMatrix U = params.getWithinSubjectContrast();
         
         // b = #columns in within subject contrast matrix
         int b = U.getColumnDimension();
-        // N = total number of subjects (rows in design matrix, X)
-        int N = X.getRowDimension();
-        // r = rank of design matrix, X
-        int r = new SingularValueDecompositionImpl(X).getRank();
 
         double df = Double.NaN;
         
@@ -74,7 +68,7 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     @Override
     public double getNonCentrality(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getRowDimension();
+        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
         double b = params.getWithinSubjectContrast().getColumnDimension();
         
         // calculate non-centrality and adjust for sphericity 
@@ -84,7 +78,7 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     @Override
     public double getNumeratorDF(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getRowDimension();
+        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
         double b = params.getWithinSubjectContrast().getColumnDimension();
         
         double df = Double.NaN;
@@ -103,10 +97,7 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     private void calculateUnirepCorrection()
     {          
         RealMatrix U = params.getWithinSubjectContrast();
-        RealMatrix X = params.getDesign();
         int b = new SingularValueDecompositionImpl(U).getRank();
-        int r = new SingularValueDecompositionImpl(X).getRank();
-        int N = X.getRowDimension();
         // get the sigmaStar matrix: U' *sigmaError * U
         RealMatrix sigmaStar = U.transpose().multiply(params.getScaledSigmaError().multiply(U));
         // ensure symmetry

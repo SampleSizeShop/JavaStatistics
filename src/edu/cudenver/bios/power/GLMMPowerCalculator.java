@@ -39,7 +39,7 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
 import edu.cudenver.bios.matrix.ColumnMetaData;
-import edu.cudenver.bios.matrix.EssenceMatrix;
+import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.PowerParameters;
@@ -455,8 +455,9 @@ public class GLMMPowerCalculator implements PowerCalculator
     private void initialize(GLMMPowerParameters params)
     {           	
         // update the sigma error if we have a baseline covariate
-        EssenceMatrix XEssence = params.getDesignEssence();
-        int numRandom = (XEssence != null ? XEssence.getRandomPredictorCount() : 0);
+        DesignEssenceMatrix XEssence = params.getDesignEssence();
+        int numRandom = 
+        	(XEssence.getRandomMatrix() != null ? XEssence.getRandomMatrix().getColumnDimension() : 0);
         if (numRandom == 1)
         {
             RealMatrix sigmaG = params.getSigmaGaussianRandom();
@@ -469,36 +470,24 @@ public class GLMMPowerCalculator implements PowerCalculator
             params.setSigmaError(sigmaY.subtract(sigmaYG.multiply(sigmaGInverse.multiply(sigmaGY))));
             
             // calculate the betaG matrix and fill in the placeholder row for the random predictor
-            RealMatrix beta = params.getBeta();
-            // first, find the random predictor column index
-            // TODO: maybe a more convenient function on EssenceMatrix class?
-            int randomCol = -1;
-            for (int col = 0; col < XEssence.getColumnDimension(); col++)
-            {
-                ColumnMetaData colMD = XEssence.getColumnMetaData(col);
-                if (colMD.getPredictorType() == PredictorType.RANDOM)
-                {
-                    randomCol = col;
-                    break;
-                }
-            }
+            RealMatrix betaRandom = params.getBeta().getRandomMatrix();
+            // TODO: handle case where BetaG is specified
             RealMatrix betaG = sigmaGInverse.multiply(sigmaGY);
-            for (int col = 0; col < betaG.getColumnDimension(); col++)
-            {
-                beta.setEntry(randomCol, col, betaG.getEntry(0, col));
-            }
+            betaRandom.setSubMatrix(betaG.getData(), 0, 0);
+
         }
     }
 	
 	protected void validateMatrices(GLMMPowerParameters params) throws IllegalArgumentException
 	{
 	       // convenience variables
-        RealMatrix beta = params.getBeta();
+        RealMatrix beta = params.getBeta().getCombinedMatrix();
         RealMatrix theta0 = params.getTheta();
         RealMatrix X = params.getDesign();
-        EssenceMatrix XEssence = params.getDesignEssence();
-        int numRandom = (XEssence != null ? XEssence.getRandomPredictorCount() : 0);
-        RealMatrix C = params.getBetweenSubjectContrast();
+        DesignEssenceMatrix XEssence = params.getDesignEssence();
+        int numRandom = 
+        	(XEssence.getRandomMatrix() != null ? XEssence.getRandomMatrix().getColumnDimension() : 0);
+        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
         RealMatrix U = params.getWithinSubjectContrast();
         RealMatrix sigmaE = params.getSigmaError();
         RealMatrix sigmaG = params.getSigmaGaussianRandom();
@@ -581,8 +570,9 @@ public class GLMMPowerCalculator implements PowerCalculator
             throw new IllegalArgumentException("Number of rows in theta null must equal number of rows in between subject contrast");
 
         // check rank of the design matrix
-        int rankX = new SingularValueDecompositionImpl(X).getRank();
-        if (rankX != Math.min(X.getColumnDimension(), X.getRowDimension()))
+        RealMatrix XFixed = XEssence.getFixedMatrix();
+        int rankX = new SingularValueDecompositionImpl(XFixed).getRank();
+        if (rankX != Math.min(XFixed.getColumnDimension(), XFixed.getRowDimension()))
             throw new IllegalArgumentException("Design matrix is not full rank");            
 
         // make sure design matrix is symmetric and positive definite
@@ -717,7 +707,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         SampleSizeFunction sampleSizeFunc = new SampleSizeFunction(params);
         
         // find the per group sample size 
-        EssenceMatrix essence = params.getDesignEssence();
+        DesignEssenceMatrix essence = params.getDesignEssence();
         int upperBound = getSampleSizeUpperBound(params);
         int minSampleSize = essence.getMinimumSampleSize();
         int perGroupSampleSize = (int) Math.ceil(solver.solve(sampleSizeFunc, minSampleSize, upperBound));
