@@ -25,8 +25,6 @@ import jsc.distributions.Normal;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
 
-import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
-
 /**
  * Class describing an essence design matrix, which is an abbreviated representation
  * of the full design matrix for a general linear multivariate model.
@@ -51,6 +49,9 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
     // indicates how many times the row should be repeated in the full design matrix
     RowMetaData[] rowMetaData = null;
     
+    // contains means/variance for each random predictor
+    RandomColumnMetaData[] randomColMetaData = null;
+    
     // random seed for expanding random covariates in the essence matrix
     int randomSeed = 1234;
     
@@ -63,8 +64,8 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
      * 
      * @param matrix RealMatrix containing essence matrix data
      */
-    public DesignEssenceMatrix(double[][] fixedData, double[][] randomData,
-            RowMetaData[] rowMetaData)
+    public DesignEssenceMatrix(double[][] fixedData, RowMetaData[] rowMetaData, 
+    		double[][] randomData, RandomColumnMetaData[] randomColMetaData)
     throws IllegalArgumentException
     {
         super(fixedData, randomData, true);
@@ -73,6 +74,7 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
         if (combinedMatrix.getRowDimension() != rowMetaData.length)
             throw new IllegalArgumentException("Row meta data array does not match the number of rows in the data");
         this.rowMetaData = rowMetaData;
+        this.randomColMetaData = randomColMetaData;
     }
 
     /**
@@ -122,7 +124,7 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
         // #columns = number of columns in design matrix
         int fullRows = getTotalSampleSize();
         int fullColumns = combinedMatrix.getColumnDimension();
-        Array2DRowRealMatrix fullDesign = 
+        Array2DRowRealMatrix fullDesignMatrix = 
             new Array2DRowRealMatrix(fullRows, fullColumns);
 
         // copy in the columns
@@ -130,13 +132,44 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
         // the design matrix
         // case 2: if the predictor is random, the values are set to a random value from 
         // a normal curve with the mean/variance specified in the column meta data
-        for(int col = 0; col < fullColumns; col++)
+        int fullDesignColumn = 0;
+        for(int col = 0; col < fixedMatrix.getColumnDimension(); col++, fullDesignColumn++)
         {
-            fillColumn(col, fullDesign);
+            fillFixedColumn(col, fullDesignColumn, fullDesignMatrix);
         }
-        return fullDesign;
+        for(int col = 0; col < randomMatrix.getColumnDimension(); col++, fullDesignColumn++)
+        {
+        	fillRandomColumn(col, fullDesignColumn, fullDesignMatrix);
+        }
+        return fullDesignMatrix;
     }
 
+    /**
+     * Fill a fixed column in the design matrix
+     * 
+     * @param column
+     * @param fullDesign
+     */
+    private void fillFixedColumn(int fixedColumn, int fullColumn, RealMatrix fullDesign)
+    {       
+    	int essenceRow = 0;
+    	int reps = groupSampleSize * rowMetaData[essenceRow].getRatio();
+    	for(int row = 0; row < fullDesign.getRowDimension(); row++)
+    	{
+    		// check if we need to move on to the next row in the essence matrix
+    		if (reps <= 0) 
+    		{
+    			essenceRow++;
+    			reps = groupSampleSize * rowMetaData[essenceRow].getRatio();
+    		}
+
+    		// fill in the data
+    		fullDesign.setEntry(row, fullColumn, fixedMatrix.getEntry(essenceRow, fixedColumn));
+    		// decrement the number of reps remain for this row
+    		reps--;    
+    	}
+    }
+    
     /**
      * Fills in a single column in the full design matrix
      * 
@@ -144,47 +177,22 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
      * @param fullDesign
      * @param repMultiplier
      */
-    private void fillColumn(int column, RealMatrix fullDesign)
+    private void fillRandomColumn(int randomColumn, int fullColumn, RealMatrix fullDesign)
     {
-//
-//        
-//        // if the column represents a random predictor, build a normal distribution
-//        // from which to pull random values
-//        Normal dist = null;
-//        if (colMD.getPredictorType() == PredictorType.RANDOM)
-//        {
-//            // note, the jsc library takes a standard deviation, not a variance so
-//            // we take the square root
-//            dist = new Normal(colMD.getMean(), Math.sqrt(colMD.getVariance()));
-//            dist.setSeed(randomSeed);
-//        }
-//        
-//        int essenceRow = 0;
-//        int reps = repMultiplier * rowMetaData[essenceRow].getRatio();
-//        for(int row = 0; row < fullDesign.getRowDimension(); row++)
-//        {
-//            // check if we need to move on to the next row in the essence matrix
-//            if (reps <= 0) 
-//            {
-//                essenceRow++;
-//                reps = repMultiplier * rowMetaData[essenceRow].getRatio();
-//            }
-//                
-//            // fill in the data
-//            if (dist == null)
-//            {
-//                // fixed predictor
-//                fullDesign.setEntry(row, column, this.getEntry(essenceRow, column));
-//            }
-//            else
-//            {
-//                // random predictor
-//                fullDesign.setEntry(row, column, dist.random());
-//            }
-//            
-//            // decrement the number of reps remain for this row
-//            reps--;    
-//        }
+        // if the column represents a random predictor, build a normal distribution
+        // from which to pull random values
+        Normal dist = null;
+        // note, the jsc library takes a standard deviation, not a variance so
+        // we take the square root
+        dist = new Normal(randomColMetaData[randomColumn].getMean(), 
+        		Math.sqrt(randomColMetaData[randomColumn].getVariance()));
+        dist.setSeed(randomSeed);
+
+        for(int row = 0; row < fullDesign.getRowDimension(); row++)
+        {                
+            // fill in the data
+                fullDesign.setEntry(row, fullColumn, dist.random());
+        }
     }
     
 
@@ -264,35 +272,20 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
         }
         return ratioCount;
     }
-//    
-//    /**
-//     * Determine the multiplier for the row repetitions when the essence
-//     * matrix specifies an unequal ratio of group sizes.
-//     *  
-//     * @param totalN total rows in full design matrix
-//     * @return repetition multiplier for each unique row in essence matrix
-//     */
-//    private int getRepetitionMultiplier(int totalN)
-//    {
-//        int minSampleSize = getMinimumSampleSize();
-//        if (totalN < minSampleSize)
-//        {
-//            return 1;
-//        }
-//        else
-//        {
-//            int remainder = totalN % minSampleSize;          
-//            if (remainder != 0) totalN += minSampleSize - remainder;
-//            return (int) Math.round((double) totalN / (double) minSampleSize);
-//
-//        }
-//    }
     
+    /**
+     * Get the seed for random generation of the Gaussian predictor values
+     * @return seed
+     */
     public int getRandomSeed()
     {
         return randomSeed;
     }
 
+    /**
+     * Set the seed for random generation of the Gaussian predictor values
+     * @param randomSeed
+     */
     public void setRandomSeed(int randomSeed)
     {
         this.randomSeed = randomSeed;

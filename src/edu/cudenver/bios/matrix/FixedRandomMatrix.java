@@ -1,3 +1,23 @@
+/*
+ * Java Statistics.  A java library providing power/sample size estimation for 
+ * the general linear model.
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.matrix;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
@@ -16,67 +36,66 @@ public class FixedRandomMatrix
         if (fixedData == null && randomData == null)
             throw new IllegalArgumentException("No data specified");
         
-        if (fixedData != null) this.fixedMatrix = new Array2DRowRealMatrix(fixedData);
-        if (randomData != null) this.randomMatrix = new Array2DRowRealMatrix(randomData);
         this.combineHorizontal = combineHorizontal;
-        
-        double[][] combinedData = null;
-        if (fixedData != null && randomData != null)
+   
+        // determine the number of rows/columns in the combination of the two matrixes
+        int totalRows = 0;
+        int totalColumns = 0;
+        if (fixedData != null) 
         {
-            if (combineHorizontal)
-            {
-                if (this.fixedMatrix.getRowDimension() != this.randomMatrix.getRowDimension())
-                    throw new IllegalArgumentException("fixed and random data must have the same number of rows");
-                int rows = fixedMatrix.getRowDimension();
-                int columns = fixedMatrix.getColumnDimension()+randomMatrix.getColumnDimension();
-                combinedData = 
-                    new double[rows][columns];
-                for(int r = 0; r < rows; r++)
-                {
-                    int c = 0;
-                    for(; c < fixedMatrix.getColumnDimension(); c++)
-                    {
-                        combinedData[r][c] = fixedData[r][c];
-                    }
-                    for(int randC = 0; randC < randomMatrix.getColumnDimension(); randC++, c++)
-                    {
-                        combinedData[r][c] = randomData[r][randC];
-                    }
-                }
-                
-            }
-            else
-            {
-                if (this.fixedMatrix.getColumnDimension() != this.randomMatrix.getColumnDimension())
-                    throw new IllegalArgumentException("fixed and random data must have the same number of columns");
-                int rows = fixedMatrix.getRowDimension()+randomMatrix.getRowDimension();
-                int columns = fixedMatrix.getColumnDimension();
-                combinedData = 
-                    new double[rows][columns];
-                for(int c = 0; c < columns; c++)
-                {
-                    int r = 0;
-                    for(; r < fixedMatrix.getRowDimension(); r++)
-                    {
-                        combinedData[r][c] = fixedData[r][c];
-                    }
-                    for(int randR = 0; randR < randomMatrix.getRowDimension(); randR++, r++)
-                    {
-                        combinedData[r][c] = randomData[r][randR];
-                    }
-                }
-            }
+        	this.fixedMatrix = new Array2DRowRealMatrix(fixedData);
+        	totalRows += fixedMatrix.getRowDimension();
+        	totalColumns = fixedMatrix.getColumnDimension();
         }
-        else if (fixedData != null)
+        if (randomData != null)
         {
-            combinedData = fixedData;
+        	this.randomMatrix = new Array2DRowRealMatrix(randomData);
+        	if (combineHorizontal)
+        	{
+        		totalColumns += randomMatrix.getColumnDimension();
+        		if (fixedData == null) totalRows += randomMatrix.getRowDimension();
+        	}
+        	else
+        	{
+        		totalRows += randomMatrix.getRowDimension();
+        		if (fixedData == null) totalColumns += randomMatrix.getColumnDimension();
+        	}
         }
-        else
+
+        // before we continue, make sure the matrices can be combined as specified
+        if (fixedMatrix != null && randomMatrix != null)
         {
-            combinedData = randomData;
+        	if (combineHorizontal && fixedMatrix.getRowDimension() != randomMatrix.getRowDimension())
+        	{
+                throw new IllegalArgumentException("Fixed and random matrices must have same number of rows for horizontal combination");
+        	}
+        	else if (!combineHorizontal && fixedMatrix.getColumnDimension() != randomMatrix.getColumnDimension())
+        	{
+                throw new IllegalArgumentException("Fixed and random matrices must have same number of columns for vertical combination");
+        	}
         }
         
-        combinedMatrix = new Array2DRowRealMatrix(combinedData);
+        // allocate the combined matrix
+        combinedMatrix = new Array2DRowRealMatrix(totalRows, totalColumns);
+        // fill in the data
+        if (fixedMatrix != null)
+        {
+        	combinedMatrix.setSubMatrix(fixedData, 0, 0);
+        }
+        if (randomMatrix != null)
+        {
+        	if (fixedMatrix == null)
+        	{
+        		combinedMatrix.setSubMatrix(randomData, 0, 0);
+        	}
+        	else
+        	{
+        		if (combineHorizontal)
+        			combinedMatrix.setSubMatrix(randomData, 0, fixedMatrix.getColumnDimension());
+        		else
+        			combinedMatrix.setSubMatrix(randomData, fixedMatrix.getRowDimension(), 0);        			
+        	}
+        }
     }
     
     public RealMatrix getFixedMatrix()
@@ -102,5 +121,20 @@ public class FixedRandomMatrix
     public boolean hasRandom()
     {
         return (randomMatrix != null);
+    }
+    
+    public RealMatrix scalarMultiply(double scale, boolean fixedOnly)
+    {
+    	if (fixedOnly)
+    	{
+    		RealMatrix fixedScaled = fixedMatrix.scalarMultiply(scale);
+    		// update the combined matrix and return it
+    		combinedMatrix.setSubMatrix(fixedScaled.getData(), 0, 0);
+    		return combinedMatrix;
+    	}
+    	else
+    	{
+    		return combinedMatrix.scalarMultiply(scale);
+    	}
     }
 }
