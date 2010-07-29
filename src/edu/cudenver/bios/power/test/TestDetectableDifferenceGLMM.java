@@ -180,7 +180,7 @@ public class TestDetectableDifferenceGLMM extends TestCase
         
         // build design matrix
         double[][] essenceData = {{1,0},{0,1}};
-        RowMetaData[] rowMd = {new RowMetaData(10,1), new RowMetaData(10,1)};
+        RowMetaData[] rowMd = {new RowMetaData(1), new RowMetaData(1)};
         DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
         params.setDesignEssence(essenceMatrix);
         // add sample size multipliers
@@ -216,10 +216,10 @@ public class TestDetectableDifferenceGLMM extends TestCase
         // create design matrix
         RealMatrix essenceData = MatrixUtils.createRealIdentityMatrix(Q);
         RowMetaData[] rowMd = {
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1)
+        		new RowMetaData(1), 
+        		new RowMetaData(1), 
+        		new RowMetaData(1), 
+        		new RowMetaData(1)
         		};
         DesignEssenceMatrix essence = 
         	new DesignEssenceMatrix(essenceData.getData(), rowMd, null, null);
@@ -286,9 +286,9 @@ public class TestDetectableDifferenceGLMM extends TestCase
         // create design matrix
         double[][] essFixedData = {{1,0,0},{0,1,0},{0,0,1}};
         RowMetaData[] rowMd = {
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1)
+        		new RowMetaData(1), 
+        		new RowMetaData(1), 
+        		new RowMetaData(1)
         		};
         double[][] essRandomData = {{1},{1},{1}};
         RandomColumnMetaData[] randColMd = {new RandomColumnMetaData(MEAN, VARIANCE)};

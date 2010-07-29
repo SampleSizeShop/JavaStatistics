@@ -9,7 +9,6 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
-import edu.cudenver.bios.matrix.EssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.glmm.GLMMTest;
@@ -197,7 +196,7 @@ public class TestDataAnalysis extends TestCase
         
         // build design matrix
         double[][] essenceData = {{1,0},{0,1}};
-        RowMetaData[] rowMd = {new RowMetaData(10,1), new RowMetaData(10,1)};
+        RowMetaData[] rowMd = {new RowMetaData(1), new RowMetaData(1)};
         DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
         params.setDesignEssence(essenceMatrix);
         // add sample size multipliers
@@ -233,10 +232,10 @@ public class TestDataAnalysis extends TestCase
         // create design matrix
         RealMatrix essenceData = MatrixUtils.createRealIdentityMatrix(Q);
         RowMetaData[] rowMd = {
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1)
+        		new RowMetaData(1), 
+        		new RowMetaData(1), 
+        		new RowMetaData(1), 
+        		new RowMetaData(1)
         		};
         DesignEssenceMatrix essence = 
         	new DesignEssenceMatrix(essenceData.getData(), rowMd, null, null);

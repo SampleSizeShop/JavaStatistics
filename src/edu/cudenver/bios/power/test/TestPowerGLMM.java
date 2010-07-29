@@ -6,7 +6,6 @@ import java.util.List;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
-import edu.cudenver.bios.matrix.ColumnMetaData;
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.RandomColumnMetaData;
@@ -137,7 +136,7 @@ public class TestPowerGLMM extends TestCase
         
         // build design matrix
         double[][] essenceData = {{1,0},{0,1}};
-        RowMetaData[] rowMd = {new RowMetaData(10,1), new RowMetaData(10,1)};
+        RowMetaData[] rowMd = {new RowMetaData(1), new RowMetaData(1)};
         DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
         params.setDesignEssence(essenceMatrix);
         // add sample size multipliers
@@ -173,10 +172,10 @@ public class TestPowerGLMM extends TestCase
         // create design matrix
         RealMatrix essenceData = MatrixUtils.createRealIdentityMatrix(Q);
         RowMetaData[] rowMd = {
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1)
+        		new RowMetaData(1), 
+        		new RowMetaData(1), 
+        		new RowMetaData(1), 
+        		new RowMetaData(1)
         		};
         DesignEssenceMatrix essence = 
         	new DesignEssenceMatrix(essenceData.getData(), rowMd, null, null);
@@ -243,9 +242,9 @@ public class TestPowerGLMM extends TestCase
         // create design matrix
         double[][] essFixedData = {{1,0,0},{0,1,0},{0,0,1}};
         RowMetaData[] rowMd = {
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1)
+        		new RowMetaData(1), 
+        		new RowMetaData(1), 
+        		new RowMetaData(1)
         		};
         double[][] essRandomData = {{1},{1},{1}};
         RandomColumnMetaData[] randColMd = {new RandomColumnMetaData(MEAN, VARIANCE)};

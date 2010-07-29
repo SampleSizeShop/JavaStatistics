@@ -3,16 +3,11 @@ package edu.cudenver.bios.power.test;
 import java.text.DecimalFormat;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.LUDecompositionImpl;
-import org.apache.commons.math.linear.RealMatrix;
 
-import edu.cudenver.bios.matrix.ColumnMetaData;
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
-import edu.cudenver.bios.matrix.EssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.RandomColumnMetaData;
 import edu.cudenver.bios.matrix.RowMetaData;
-import edu.cudenver.bios.matrix.ColumnMetaData.PredictorType;
 import edu.cudenver.bios.power.glmm.NonCentralityDistribution;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
@@ -80,9 +75,9 @@ public class TestNonCentralityDistribution extends TestCase
         // create design matrix
         double[][] essFixedData = {{1,0,0},{0,1,0},{0,0,1}};
         RowMetaData[] rowMd = {
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1), 
-        		new RowMetaData(5,1)
+        		new RowMetaData(1), 
+        		new RowMetaData(1), 
+        		new RowMetaData(1)
         		};
         double[][] essRandomData = {{1},{1},{1}};
         RandomColumnMetaData[] randColMd = {new RandomColumnMetaData(MEAN, VARIANCE)};
