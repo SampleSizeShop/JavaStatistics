@@ -137,4 +137,31 @@ public class FixedRandomMatrix
     		return combinedMatrix.scalarMultiply(scale);
     	}
     }
+    
+    public void updateRandomMatrix(RealMatrix updatedMatrix)
+    {
+    	if (randomMatrix != null && 
+    			updatedMatrix.getColumnDimension() == randomMatrix.getColumnDimension() &&
+    			updatedMatrix.getRowDimension() == randomMatrix.getRowDimension())
+    	{
+    		double[][] data = updatedMatrix.getData();
+    		randomMatrix.setSubMatrix(data, 0, 0);
+    		int startRow = 0;
+    		int startCol = 0;
+    		if (fixedMatrix != null)
+    		{
+    			if (combineHorizontal)
+    			{
+    				startRow = 0;
+    				startCol = fixedMatrix.getColumnDimension();
+    			}
+    			else
+    			{
+    				startRow = fixedMatrix.getRowDimension();
+    				startCol = 0;
+    			}
+    		}
+    		combinedMatrix.setSubMatrix(data, startRow, startCol);
+    	}
+    }
 }
