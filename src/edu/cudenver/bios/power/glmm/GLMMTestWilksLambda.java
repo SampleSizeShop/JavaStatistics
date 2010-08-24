@@ -27,24 +27,24 @@ public class GLMMTestWilksLambda extends GLMMTest
         
         double df = Double.NaN;
         
-        double gDenominator = (a*a + b*b - 5);
-        if (gDenominator == 0)
-            throw new IllegalArgumentException("Within and between subject contrasts yielded divide by zero: row of C=" + a + ", cols of U=" + b);
-        double g = Math.sqrt((a*a*b*b - 4) / gDenominator);
-        df = (g*((N - r) - (b - a +1)/2)) - (a*b - 2)/2;
+//        double gDenominator = (a*a + b*b - 5);
+//        if (gDenominator == 0)
+//            throw new IllegalArgumentException("Within and between subject contrasts yielded divide by zero: row of C=" + a + ", cols of U=" + b);
+//        double g = Math.sqrt((a*a*b*b - 4) / gDenominator);
+//        df = (g*((N - r) - (b - a +1)/2)) - (a*b - 2)/2;
         
-//        if (a*a*b*b <= 4)
-//        {
-//            df = N - r - b + 1;
-//        }
-//        else
-//        {
-//            double gDenominator = (a*a + b*b - 5);
-//            if (gDenominator == 0)
-//                throw new IllegalArgumentException("Within and between subject contrasts yielded divide by zero: row of C=" + a + ", cols of U=" + b);
-//            double g = Math.sqrt((a*a*b*b - 4) / gDenominator);
-//            df = (g*((N - r) - (b - a +1)/2)) - (a*b - 2)/2;
-//        }
+        if (a*a*b*b <= 4)
+        {
+            df = N - r - b + 1;
+        }
+        else
+        {
+            double gDenominator = (a*a + b*b - 5);
+            if (gDenominator == 0)
+                throw new IllegalArgumentException("Within and between subject contrasts yielded divide by zero: row of C=" + a + ", cols of U=" + b);
+            double g = Math.sqrt((a*a*b*b - 4) / gDenominator);
+            df = (g*((N - r) - (b - a +1)/2)) - (a*b - 2)/2;
+        }
         
         return df;
     }
