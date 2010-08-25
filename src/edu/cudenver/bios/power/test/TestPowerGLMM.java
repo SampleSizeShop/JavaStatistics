@@ -224,7 +224,7 @@ public class TestPowerGLMM extends TestCase
         
         // add power methods
         //for(PowerMethod method: PowerMethod.values()) params.addPowerMethod(method);
-        params.addPowerMethod(PowerMethod.CONDITIONAL_POWER);
+        //params.addPowerMethod(PowerMethod.CONDITIONAL_POWER);
         params.addPowerMethod(PowerMethod.QUANTILE_POWER);
         params.addQuantile(0.25);
         params.addQuantile(0.5);
@@ -279,12 +279,12 @@ public class TestPowerGLMM extends TestCase
         for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
         
         // build theta null matrix
-        double [][] theta0 = {{0,0}};
+        double [][] theta0 = {{0,0},{0,0}};
         params.setTheta(new Array2DRowRealMatrix(theta0));
 
         // build between subject contrast
-        double [][] between = {{1,0,0}};
-        double[][] betweenRandom = {{1}};
+        double [][] between = {{1,-1,0}, {1,0,-1}};
+        double[][] betweenRandom = {{1}, {1}};
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, betweenRandom, true));
         
         // build within subject contrast
