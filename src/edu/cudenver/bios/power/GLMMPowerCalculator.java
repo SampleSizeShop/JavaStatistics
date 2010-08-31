@@ -39,6 +39,7 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.PowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
@@ -468,11 +469,8 @@ public class GLMMPowerCalculator implements PowerCalculator
             params.setSigmaError(sigmaY.subtract(sigmaYG.multiply(sigmaGInverse.multiply(sigmaGY))));
             
             // calculate the betaG matrix and fill in the placeholder row for the random predictor
-            RealMatrix betaRandom = params.getBeta().getRandomMatrix();
-            // TODO: handle case where BetaG is specified
-            RealMatrix betaG = sigmaGInverse.multiply(sigmaGY);
-            betaRandom.setSubMatrix(betaG.getData(), 0, 0);
-
+            FixedRandomMatrix beta = params.getBeta();
+            beta.updateRandomMatrix(sigmaGInverse.multiply(sigmaGY));
         }
     }
 	
