@@ -32,9 +32,17 @@ public class TestPowerGLMM extends TestCase
     private static final double MEAN = 9.75;
     private static final double VARIANCE = 2.0;
     private static final double[] ALPHA_LIST = {0.05};    
-    private static final double[] BETA_SCALE_LIST = {2};
-    private static final double[] SIGMA_SCALE_LIST = {2};
-    private static final int[] SAMPLE_SIZE_LIST = {5};
+    private static final double[] BETA_SCALE_LIST = {0.4997025,
+    	0.8075886,
+    	1.097641,
+    	0.1651525,
+    	0.2623301, 
+    	0.3508015, 
+    	0.1141548,
+    	0.1812892,
+    	0.2423835};
+    private static final double[] SIGMA_SCALE_LIST = {1};
+    private static final int[] SAMPLE_SIZE_LIST = {25};
     private Normal normalDist = new Normal();
     private DecimalFormat Number = new DecimalFormat("#0.000");
 
@@ -217,6 +225,7 @@ public class TestPowerGLMM extends TestCase
     
     /**
      * Builds matrices for a multivariate GLM with a baseline covariate
+     * Note, this matrix set matches the values produced in Table II from Glueck&Muller
      */
     private GLMMPowerParameters buildValidMultivariateRandomInputs()
     {
@@ -226,13 +235,11 @@ public class TestPowerGLMM extends TestCase
         //for(PowerMethod method: PowerMethod.values()) params.addPowerMethod(method);
         //params.addPowerMethod(PowerMethod.CONDITIONAL_POWER);
         params.addPowerMethod(PowerMethod.QUANTILE_POWER);
-        params.addQuantile(0.25);
         params.addQuantile(0.5);
-        params.addQuantile(0.75);
         
         // add tests - only HL andUNIREP value for random case
         params.addTest(GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE);
-        params.addTest(GLMMPowerParameters.Test.UNIREP);
+       // params.addTest(GLMMPowerParameters.Test.UNIREP);
         
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
@@ -260,26 +267,25 @@ public class TestPowerGLMM extends TestCase
 
         // build sigma Y matrix
         double rho = 0.4;
-        double [][] sigmaY = {{1,0},{0,1}};
+        double [][] sigmaY = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         params.setSigmaOutcome(new Array2DRowRealMatrix(sigmaY));
 
         // build sigma YG
-        double rhoYG = 0.8;
-        double [][] sigmaYG = {{0.9},{0}};
+        double [][] sigmaYG = {{0.5},{0.5}, {0.5}, {0}};
         params.setSigmaOutcomeGaussianRandom(new Array2DRowRealMatrix(sigmaYG));
 
         // add sigma scale values
         for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
         
         // build beta matrix
-        double [][] beta = {{1,0},{0,0},{0,0}};
-        double [][] betaRandom = {{1,1}};
+        double [][] beta = {{1,0,0,0},{0,2,0,0},{0,0,0,0}};
+        double [][] betaRandom = {{1,1,1,1}};
         params.setBeta(new FixedRandomMatrix(beta, betaRandom, false));
         // add beta scale values
         for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
         
         // build theta null matrix
-        double [][] theta0 = {{0,0},{0,0}};
+        double [][] theta0 = {{0,0,0,0},{0,0,0,0}};
         params.setTheta(new Array2DRowRealMatrix(theta0));
 
         // build between subject contrast
@@ -288,7 +294,7 @@ public class TestPowerGLMM extends TestCase
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, betweenRandom, true));
         
         // build within subject contrast
-        double [][] within = {{1,0},{0,1}};
+        double [][] within = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
 
         return params;     
