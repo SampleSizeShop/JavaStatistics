@@ -632,6 +632,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         double ndf = glmmTest.getNumeratorDF(GLMMTest.DistributionType.POWER_NULL);
         double ddf = glmmTest.getDenominatorDF(GLMMTest.DistributionType.POWER_NULL);
         double h1 = nonCentralityDist.getH1();
+        double h0 = nonCentralityDist.getH0();
         // integrate over all value of non-centrality parameter from h0 to h1
         UnconditionalPowerIntegrand integrand = 
             new UnconditionalPowerIntegrand(nonCentralityDist, Fcrit, ndf, ddf);
@@ -641,7 +642,7 @@ public class GLMMPowerCalculator implements PowerCalculator
             // create a noncentral F dist with non-centrality of H1
             NonCentralFDistribution fdist = new NonCentralFDistribution(ndf, ddf, h1);
             double integralResult = 0;
-            if (h1 != 0) integralResult = integrator.integrate(integrand, 0, h1);
+            if (h1 != 0) integralResult = integrator.integrate(integrand, h0, h1);
             
             return (1 - fdist.cdf(Fcrit) - 0.5*integralResult);
         }
