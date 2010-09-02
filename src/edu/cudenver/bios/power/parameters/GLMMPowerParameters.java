@@ -108,6 +108,10 @@ public class GLMMPowerParameters extends PowerParameters
 	MomentApproximationMethod momentMethod =
 		MomentApproximationMethod.NONE;
 
+	// if true, use the exact calculation of the CDF of the non-centrality parameter
+	// (applies to quantile and conditional power only)
+	boolean nonCentralityCDFExact = false;
+	
 	/**
 	 * Constructor.  Creates an empty set of linear model power parameters
 	 */
@@ -486,6 +490,16 @@ public class GLMMPowerParameters extends PowerParameters
     {
         return quantileList.current();
     }
+
+	public boolean isNonCentralityCDFExact() 
+	{
+		return nonCentralityCDFExact;
+	}
+
+	public void setNonCentralityCDFExact(boolean nonCentralityCDFExact) 
+	{
+		this.nonCentralityCDFExact = nonCentralityCDFExact;
+	}
 }
 
 

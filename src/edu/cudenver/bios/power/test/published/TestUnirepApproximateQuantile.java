@@ -32,13 +32,13 @@ import edu.cudenver.bios.power.test.PowerChecker;
 import junit.framework.TestCase;
 
 /**
- * Test case for exact quantile power for the HLT.  Values should match
- * exact median power values from Table II in Glueck & Muller 2003.
+ * Test case for approximate quantile power for the UNIREP.  Values should match
+ * approximate median power values from Table II in Glueck & Muller 2003.
  * 
  * @author Sarah Kreidler
  *
  */
-public class TestHotellingLawleyExactQuantile extends TestCase 
+public class TestUnirepApproximateQuantile extends TestCase 
 {
 	private static final double MEAN = 9.75;
 	private static final double VARIANCE = 2.0;
@@ -46,7 +46,7 @@ public class TestHotellingLawleyExactQuantile extends TestCase
 	private static final double[] SIGMA_SCALE_LIST = {1};	
 
 	/**
-	 * Compare the calculated HLT exact quantile powers against simulation
+	 * Compare the calculated UNIREP approximate quantile powers against simulation
 	 */
 	public void testPower()
 	{
@@ -84,13 +84,16 @@ public class TestHotellingLawleyExactQuantile extends TestCase
 	private GLMMPowerParameters buildValidMultivariateRandomInputs(double[] betaScaleList, int repn)
 	{
 		GLMMPowerParameters params = new GLMMPowerParameters();
-		params.setNonCentralityCDFExact(true);
-		// add quantile power methods and median quantile
+
+		// add quantile power method
 		params.addPowerMethod(PowerMethod.QUANTILE_POWER);
 		params.addQuantile(0.5);
-
-		// add HLT as the statistical test
-		params.addTest(GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE);
+		
+		// add UNIREP as the statistical test
+		params.addTest(GLMMPowerParameters.Test.UNIREP);
+		params.addTest(GLMMPowerParameters.Test.UNIREP_BOX);
+		params.addTest(GLMMPowerParameters.Test.UNIREP_GEISSER_GREENHOUSE);
+		params.addTest(GLMMPowerParameters.Test.UNIREP_HUYNH_FELDT);
 
 		// add alpha values
 		for(double alpha: ALPHA_LIST) params.addAlpha(alpha);

@@ -32,13 +32,13 @@ import edu.cudenver.bios.power.test.PowerChecker;
 import junit.framework.TestCase;
 
 /**
- * Test case for exact unconditional power for the HLT.  Values should match
- * exact unconditional power values from Table II in Glueck & Muller 2003.
+ * Test case for approximate unconditional power for the UNIREP.  Values should match
+ * approximate unconditional power values from Table II in Glueck & Muller 2003.
  * 
  * @author Sarah Kreidler
  *
  */
-public class TestHotellingLawleyExactUnconditional extends TestCase 
+public class TestUnirepApproximateUnconditional extends TestCase 
 {
     private static final double MEAN = 9.75;
     private static final double VARIANCE = 2.0;
@@ -46,7 +46,7 @@ public class TestHotellingLawleyExactUnconditional extends TestCase
     private static final double[] SIGMA_SCALE_LIST = {1};	
 	    
     /**
-     * Compare the calculated HLT exact unconditional powers against simulation
+     * Compare the calculated UNIREP approximate unconditional powers against simulation
      */
     public void testPower()
     {
@@ -79,22 +79,26 @@ public class TestHotellingLawleyExactUnconditional extends TestCase
     
     /**
      * Builds matrices for a multivariate GLM with a baseline covariate
-     * Note, this matrix set matches the values produced in Table II from Glueck&Muller
+     * This matrix set matches the values produced in Table II from Glueck&Muller
      */
     private GLMMPowerParameters buildValidMultivariateRandomInputs(double[] betaScaleList, int repn)
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
-		params.setNonCentralityCDFExact(true);
-
-        // add unconditional power methods and median unconditional
+        
+        // add unconditional power method
         params.addPowerMethod(PowerMethod.UNCONDITIONAL_POWER);
         
-        // add HLT as the statistical test
-        params.addTest(GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE);
-        
+		// add UNIREP as the statistical test
+		params.addTest(GLMMPowerParameters.Test.UNIREP);
+		params.addTest(GLMMPowerParameters.Test.UNIREP_BOX);
+		params.addTest(GLMMPowerParameters.Test.UNIREP_GEISSER_GREENHOUSE);
+		params.addTest(GLMMPowerParameters.Test.UNIREP_HUYNH_FELDT);
+		
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
+        int P = 3;
+        int Q = 3;
         // create design matrix
         double[][] essFixedData = {{1,0,0},{0,1,0},{0,0,1}};
         RowMetaData[] rowMd = {
@@ -115,6 +119,7 @@ public class TestHotellingLawleyExactUnconditional extends TestCase
         params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
 
         // build sigma Y matrix
+        double rho = 0.4;
         double [][] sigmaY = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         params.setSigmaOutcome(new Array2DRowRealMatrix(sigmaY));
 
