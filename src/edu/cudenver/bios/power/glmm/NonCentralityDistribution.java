@@ -238,16 +238,23 @@ public class NonCentralityDistribution
             	}
             }
             
-            // handle general case
-            double nuStarPositive = 2 * (m1Positive * m1Positive) / m2Positive;
-            double nuStarNegative = 2 * (m1Negative * m1Negative) / m2Negative;
-            double lambdaStarPositive = m2Positive / (2 * m1Positive);
-            double lambdaStarNegative =  m2Negative / (2 * m1Negative);
+            if (exact)
+            {
+            	return 0; // TODO
+            }
+            else
+            {
+            	// handle general case - Satterthwaite approximation
+            	double nuStarPositive = 2 * (m1Positive * m1Positive) / m2Positive;
+            	double nuStarNegative = 2 * (m1Negative * m1Negative) / m2Negative;
+            	double lambdaStarPositive = m2Positive / (2 * m1Positive);
+            	double lambdaStarNegative =  m2Negative / (2 * m1Negative);
 
-            // create a central F to approximate the distribution of the non-centrality parameter
-            FishersF centralFDist = new FishersF(nuStarPositive, nuStarNegative);
-            // return power based on the non-central F
-            return centralFDist.cdf((nuStarNegative*lambdaStarNegative)/(nuStarPositive*lambdaStarPositive));
+            	// create a central F to approximate the distribution of the non-centrality parameter
+            	FishersF centralFDist = new FishersF(nuStarPositive, nuStarNegative);
+            	// return power based on the non-central F
+            	return centralFDist.cdf((nuStarNegative*lambdaStarNegative)/(nuStarPositive*lambdaStarPositive));
+            }
         }
         catch (Exception e)
         {
@@ -273,56 +280,6 @@ public class NonCentralityDistribution
             throw new IllegalArgumentException("Failed to determine non-centrality quantile: " + e.getMessage());
         }
     }
-        
-//    /**
-//     * Returns the column representing the single random predictor if specified
-//     * (note, this function will require modification if we support multiple random predictors)
-//     * @param params
-//     * @return
-//     */
-//    private RealMatrix getGaussianContrast(GLMMPowerParameters params)
-//    {
-//        EssenceMatrix essenceX = params.getDesignEssence();
-//        RealMatrix C = params.getBetweenSubjectContrast();
-//        int randCol = -1;
-//        for(int c = 0; c < C.getColumnDimension(); c++)
-//        {
-//            ColumnMetaData colMD = essenceX.getColumnMetaData(c);
-//            if (colMD.getPredictorType() == PredictorType.RANDOM)
-//            {
-//                randCol = c;
-//                break; 
-//            }
-//        }
-//        if (randCol >= 0)
-//            return C.getColumnMatrix(randCol);
-//        else
-//            return null;      
-//    }
-//    
-//    private RealMatrix getFixedContrast(GLMMPowerParameters params)
-//    {
-//        EssenceMatrix essenceX = params.getDesignEssence();
-//        RealMatrix C = params.getBetweenSubjectContrast();
-//        // include all columns representing fixed predictors
-//        // TODO: will need to modify this code for support of multiple random predictors
-//        int[] cols = new int[C.getColumnDimension() - essenceX.getRandomPredictorCount()];
-//        int colIdx = 0;
-//        for(int c = 0; c < C.getColumnDimension(); c++)
-//        {
-//            ColumnMetaData colMD = essenceX.getColumnMetaData(c);
-//            if (colMD.getPredictorType() == PredictorType.FIXED)
-//            {
-//                cols[colIdx] = c;
-//                colIdx++;
-//            }
-//        }
-//        // include all rows
-//        int[] rows = new int[C.getRowDimension()];
-//        for(int r = 0; r < C.getRowDimension(); r++) rows[r] = r;
-//
-//        return C.getSubMatrix(rows, cols); 
-//    }
     
     private RealMatrix getSigmaStarInverse(GLMMPowerParameters params)
     {
@@ -330,8 +287,14 @@ public class NonCentralityDistribution
         // sigma* = U'*sigmaE*U
         RealMatrix sigmaStar = U.transpose().multiply(params.getScaledSigmaError()).multiply(U);
         
-        if (params.getCurrentTest() == GLMMPowerParameters.Test.UNIREP)
+        if (params.getCurrentTest() == GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE)
         {
+            return new LUDecompositionImpl(sigmaStar).getSolver().getInverse();
+        }
+        else
+        {
+            // stat should only be UNIREP (uncorrected, box, GG, or HF) at this point  
+        	// (exception is thrown by valdiateParams otherwise)
             int b = sigmaStar.getColumnDimension();
             // get discrepancy from sphericity for unirep test
             double sigmaStarTrace = sigmaStar.getTrace();
@@ -340,11 +303,6 @@ public class NonCentralityDistribution
             RealMatrix identity = MatrixUtils.createRealIdentityMatrix(b);
             return identity.scalarMultiply((double) b * epsilon / sigmaStarTrace);
         }
-        else 
-        {
-            // stat should only be HLT at this point  (exception is thrown by valdiateParams otherwise)
-            return new LUDecompositionImpl(sigmaStar).getSolver().getInverse();
-        }
     }
 
     public double getH1()
@@ -352,4 +310,8 @@ public class NonCentralityDistribution
         return H1;
     }   
     
+    public double getH0()
+    {
+        return H0;
+    }   
 }
