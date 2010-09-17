@@ -1,5 +1,7 @@
 package edu.cudenver.bios.power.glmm;
 
+import java.util.ArrayList;
+
 import jsc.distributions.FishersF;
 
 import org.apache.commons.math.analysis.UnivariateRealFunction;
@@ -24,6 +26,7 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 public class NonCentralityDistribution
 {
     private static final double TOLERANCE = 0.000000000001;
+    private static final double ACCURACY = 0.001;
     // intermediate forms 
     protected RealMatrix T1 = null;
     protected RealMatrix FT1 = null;
@@ -136,6 +139,8 @@ public class NonCentralityDistribution
     {
         if (H1 <= 0 || w <= H0) return 0;
         if (H1 - w <= 0) return 1;
+        ArrayList<ChiSquareTerm> chiSquareTerms = new ArrayList<ChiSquareTerm>();
+        
         try
         {
             double b0 = 1 - w / H1;
@@ -158,6 +163,7 @@ public class NonCentralityDistribution
             nu = N - qF;
             lambda = b0;
             delta = 0;
+            chiSquareTerms.add(new ChiSquareTerm(lambda, nu, delta));
             // accumulate terms
             if (lambda > 0)
             {
@@ -186,6 +192,7 @@ public class NonCentralityDistribution
                     nu = 1;
                     lambda = b0 - sEigenValues[k];
                     delta = mzSq.getEntry(k, 0);
+                    chiSquareTerms.add(new ChiSquareTerm(lambda, nu, delta));
                 }
                 else
                 {
@@ -194,6 +201,7 @@ public class NonCentralityDistribution
                     nu = 1;
                     lambda = b0;
                     delta = mzSq.getEntry(k, 0);
+                    chiSquareTerms.add(new ChiSquareTerm(lambda, nu, delta));
                 }
                 // accumulate terms
                 if (lambda > 0)
@@ -240,7 +248,9 @@ public class NonCentralityDistribution
             
             if (exact)
             {
-            	return 0; // TODO
+            	WeightedSumOfNoncentralChiSquaresDistribution dist	= 
+            		new WeightedSumOfNoncentralChiSquaresDistribution(chiSquareTerms, ACCURACY);
+            	return dist.cdf(w);
             }
             else
             {
