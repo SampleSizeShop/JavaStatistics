@@ -58,7 +58,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 	    
     private static final int STARTING_SAMPLE_SIZE = 1000;
     private static final int STARTING_DETECTABLE_DIFFERENCE = 100;
-    
+    private static final int SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL = 1000;
     /**
      * Simple class to contain sample size and actual power
      * from a sample size calculation
@@ -529,7 +529,8 @@ public class GLMMPowerCalculator implements PowerCalculator
             // covariate (results not published for Wilk's Lambda or Pillai-Bartlett 
         	for(Test test = params.getFirstTest(); test != null; test = params.getNextTest())
         	{
-                if (test != Test.HOTELLING_LAWLEY_TRACE && test != Test.UNIREP)
+                if (test != Test.HOTELLING_LAWLEY_TRACE && test != Test.UNIREP && test != Test.UNIREP_BOX &&
+                		test != Test.UNIREP_GEISSER_GREENHOUSE && test != Test.UNIREP_HUYNH_FELDT)
                     throw new IllegalArgumentException("With a random covariate, only Hotelling-Lawley and Unirep test statistics are supported");
         	}
 
@@ -664,7 +665,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         // For quantile power, we get the value from the distribution of the non-centrality
         // parameter which corresponds to the specified quantile
         NonCentralityDistribution nonCentralityDist = 
-            new NonCentralityDistribution(params, false);
+            new NonCentralityDistribution(params, params.isNonCentralityCDFExact());
         double nonCentralityParam = nonCentralityDist.inverseCDF(params.getCurrentQuantile());
         
         // get the degrees of freedom for the non-central F under the alternative hypothesis
@@ -816,62 +817,96 @@ public class GLMMPowerCalculator implements PowerCalculator
     public double simulatePower(GLMMPowerParameters params, int iterations)
             throws IllegalArgumentException
     {        
-        // get total observations, N, and rank of design matrix
-        RealMatrix X = params.getDesign();
-        double N = X.getRowDimension();
-        double rankX = new SingularValueDecompositionImpl(X).getRank();
-                
-        // create a normal distribution for generating random errors
-        Normal normalDist = new Normal();       
-        
-        // run the simulations
-        int rejectionCount = 0;
-        for(int i = 0; i < iterations; i++)
-        {
-            RealMatrix scaledBeta = params.getScaledBeta();
-            RealMatrix scaledSigma = params.getScaledSigmaError();
-            
-            RealMatrix error = 
-                simulateError(normalDist, params.getDesign().getRowDimension(),
-                        scaledBeta.getColumnDimension(), scaledSigma);         
+    	// get total observations, N, and rank of design matrix
+    	RealMatrix X = params.getDesign();
+    	double N = X.getRowDimension();
+    	double rankX = new SingularValueDecompositionImpl(X).getRank();
 
-            // calculate simulated Y based on Y = X beta + error
-            RealMatrix Ysim = (X.multiply(scaledBeta)).add(error);
-            // calculate beta-Hat
-            RealMatrix XtX = X.transpose().multiply(X);
-            RealMatrix XtXInverse = new LUDecompositionImpl(XtX).getSolver().getInverse();
-            RealMatrix betaHat = XtXInverse.multiply(X.transpose()).multiply(Ysim);
-            // calculate Y-hat
-            RealMatrix YHat = (X.multiply(betaHat));
-            // calculate sigma-Hat
-            RealMatrix Ydiff = Ysim.subtract(YHat);
-            RealMatrix sigmaHat = (Ydiff.transpose().multiply(Ydiff)).scalarMultiply(((double) 1/(N - rankX)));    
-            
-            // set the scaled sigma / beta to the new values
-            params.setScaledBeta(betaHat);
-            params.setScaledSigmaError(sigmaHat);
-            
-            // calculate the observed F for the simulation
-            GLMMTest glmmTest = GLMMTestFactory.createGLMMTest(params);
-            double fobs = glmmTest.getObservedF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
+    	// create a normal distribution for generating random errors
+    	Normal normalDist = new Normal();       
+    	normalDist.setSeed(1234);
+		int rejectionCount = 0;
 
-            // get the p-value from a central F distribution
-            double ndf = glmmTest.getNumeratorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
-            double ddf = glmmTest.getDenominatorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
-            
-            FishersF fdist = new FishersF(ndf, ddf);
-            double pvalue = 1 - fdist.cdf(fobs);
+		// TODO: separate simulation function for quantile/unconditional vs conditional
+    	if (params.getDesignEssence().hasRandom() && 
+    			params.getCurrentPowerMethod() != PowerMethod.CONDITIONAL_POWER)
+    	{
+    		for(int gInstance = 0; gInstance < SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL; gInstance++)
+    		{
+    			X = params.getDesign(true); // force a new realization of the design matrix (i.e. a new covariate column)
+    			for(int i = 0; i < SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL; i++)
+    			{
+    				if (simulateAndFitModel(params, normalDist, N, rankX)) rejectionCount++;
+    			}
+    		}
+            return ((double) rejectionCount) / (((double) SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL) *
+            		((double) SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL));
 
-            // check if we reject the null hypothesis
-            if (pvalue <= params.getCurrentAlpha())
-                rejectionCount++;
-            
-            // reset the parameter values to the original scaled beta/sigma
-            params.setScaledBeta(scaledBeta);
-            params.setScaledSigmaError(scaledSigma);
-        }
+    	}
+    	else 
+    	{
+    		// run the simulations
+    		for(int i = 0; i < iterations; i++)
+    		{
+        		if (simulateAndFitModel(params, normalDist, N, rankX)) rejectionCount++;
+    		}
+            return ((double) rejectionCount) / ((double) iterations);
+    	}
+    }
+    
+    /**
+     * Simulate the error matrix to generate a single realization of the data, then
+     * fit the model and determine if the null hypothesis is rejected
+     * 
+     * @param params GLMM parameter set
+     * @param normalDist normal distribution object for generating random errors
+     * @param N total number of observations
+     * @param rankX rank of the design matrix
+     * @return
+     */
+    private boolean simulateAndFitModel(GLMMPowerParameters params, Normal normalDist, double N, double rankX)
+    {
+    	RealMatrix X = params.getDesign();
+		RealMatrix scaledBeta = params.getScaledBeta();
+		RealMatrix scaledSigma = params.getScaledSigmaError();
 
-        return ((double) rejectionCount) / ((double) iterations);
+		RealMatrix error = 
+			simulateError(normalDist, X.getRowDimension(),
+					scaledBeta.getColumnDimension(), scaledSigma);         
+
+		// calculate simulated Y based on Y = X beta + error
+		RealMatrix Ysim = (X.multiply(scaledBeta)).add(error);
+		// calculate beta-Hat
+		RealMatrix XtX = X.transpose().multiply(X);
+		RealMatrix XtXInverse = new LUDecompositionImpl(XtX).getSolver().getInverse();
+		RealMatrix betaHat = XtXInverse.multiply(X.transpose()).multiply(Ysim);
+		// calculate Y-hat
+		RealMatrix YHat = (X.multiply(betaHat));
+		// calculate sigma-Hat
+		RealMatrix Ydiff = Ysim.subtract(YHat);
+		RealMatrix sigmaHat = (Ydiff.transpose().multiply(Ydiff)).scalarMultiply(((double) 1/(N - rankX)));    
+
+		// set the scaled sigma / beta to the new values
+		params.setScaledBeta(betaHat);
+		params.setScaledSigmaError(sigmaHat);
+
+		// calculate the observed F for the simulation
+		GLMMTest glmmTest = GLMMTestFactory.createGLMMTest(params);
+		double fobs = glmmTest.getObservedF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
+
+		// get the p-value from a central F distribution
+		double ndf = glmmTest.getNumeratorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
+		double ddf = glmmTest.getDenominatorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
+
+		FishersF fdist = new FishersF(ndf, ddf);
+		double pvalue = 1 - fdist.cdf(fobs);
+
+		// reset the parameter values to the original scaled beta/sigma
+		params.setScaledBeta(scaledBeta);
+		params.setScaledSigmaError(scaledSigma);
+		
+		// check if we reject the null hypothesis
+		return (pvalue <= params.getCurrentAlpha());
     }
     
 }
