@@ -181,6 +181,29 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
         return fullDesignMatrix;
     }
     
+    /**
+     * Update the random columns in the specified design matrix with a new realization
+     * of random values
+     * 
+     * @param fullDesign an instance of the full design matrix
+     */
+    public void updateRandomColumns(RealMatrix fullDesignMatrix)
+    throws IllegalArgumentException
+    {
+    	if (fullDesignMatrix.getColumnDimension() != combinedMatrix.getColumnDimension())
+    		throw new IllegalArgumentException("Design matrix instance has invalid #columns");
+    	int fullDesignColumn = 0;
+    	if (fixedMatrix != null) fullDesignColumn = fixedMatrix.getColumnDimension();
+    	
+        if (randomMatrix != null)
+        {
+        	for(int col = 0; col < randomMatrix.getColumnDimension(); col++, fullDesignColumn++)
+        	{
+        		fillRandomColumn(col, fullDesignColumn, fullDesignMatrix);
+        	}
+        }
+    	
+    }
     
     /**
      * Fill a fixed column in the design matrix
