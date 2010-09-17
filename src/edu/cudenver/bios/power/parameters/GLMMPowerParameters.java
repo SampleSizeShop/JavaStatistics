@@ -256,6 +256,26 @@ public class GLMMPowerParameters extends PowerParameters
 		return design;
 	}
 
+	/**
+	 * Regenerates the design matrix and fills any random columns with a new
+	 * realization of random values based on a normal distribution.
+	 * 
+	 * @return full design matrix
+	 */
+	public RealMatrix getDesign(boolean force)
+	{
+		if (design == null && designEssence != null)
+		{
+			// if only an essence matrix is specified, retrieve the full design matrix
+			design = designEssence.getFullDesignMatrix();
+		}
+		else
+		{
+			designEssence.updateRandomColumns(design);
+		}
+		return design;
+	}
+	
 	public void setDesign(RealMatrix design)
 	{
 		this.design = design;
