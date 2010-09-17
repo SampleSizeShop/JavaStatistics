@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.TreeMap;
 
 /**
@@ -55,9 +56,9 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		public void increment() 
 		{ 
 			count++; 
-			if (count > MAX_STEPS)
+			if (count > maxSteps)
 				throw new RuntimeException("Exceeded max iterations");
-			}
+		}
 		public int getCount() { return count; }
 	};
 	
@@ -93,6 +94,18 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		}
 	}
 	
+	private class TailProbabilityBound 
+	{
+		public double bound;
+		public double cutoff;
+		
+		public TailProbabilityBound(double bound, double cutoff)
+		{
+			this.bound = bound;
+			this.cutoff = cutoff;
+		}
+	}
+	
 	/**
 	 * Create a distribution for the specified weighted sum of non-central chi squares
 	 * 
@@ -123,7 +136,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		// find the min/max lambda  (truncate min at 0)
 		maxLambda = (Collections.max(chiSquareTerms, new MinMaxComparator())).getLambda();
 		minLambda = (Collections.min(chiSquareTerms, new MinMaxComparator())).getLambda();
-		if (minLambda > 0) minLambda = 0;
+		//if (minLambda > 0) minLambda = 0;
 		if (maxLambda < -minLambda) maxLambda = -minLambda;
 		
 		if (maxLambda == 0 && minLambda == 0 && normalCoefficient == 0)
@@ -182,8 +195,12 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		double numChiSquareTerms = chiSquareTerms.size(); 
 		// expected value of ???
 		double mean = 0;
+		// initialize sigma
+		double sigmaSquared = normalCoefficient * normalCoefficient;
 		// initialize the standard deviation of the normal term
-		double sd = normalCoefficient * normalCoefficient;
+		double sd = sigmaSquared;
+		// convergence factor
+		double tauSquared;
 		
 		// 
 		// sum over something TODO: what?
@@ -220,22 +237,28 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 
 		double halfAccuracy = 0.5 * accuracy;
 
-		double U = findTruncationPoint(16 / sd, halfAccuracy, counter);
-		
+		double U = findTruncationPoint(16 / sd, sigmaSquared, halfAccuracy, counter);
 		if (quantile != 0 || maxLambda > 0.07 * sd)
 		{
 			// check if a covergence factor is helpful
 			double convergenceFactor = calculateConvergenceFactor(quantile, counter);
-			double TauSquared = 0.25*halfAccuracy/convergenceFactor; 
+			tauSquared = 0.25*accuracy/convergenceFactor; 
+			if (calculateIntegrationError(U, sigmaSquared, tauSquared, counter) < 0.2 * accuracy)
+			{
+				sigmaSquared += tauSquared;
+				U = findTruncationPoint(16 / sd, sigmaSquared, halfAccuracy, counter);
+			}
 		}
 		
+		// TODO: big flippin' while loop?
+
 		// find the range of the distribution, determine if the quantile falls outside 
 		// of the range
-		double cutoff = findCutoffPoint(4.5 / sd, halfAccuracy, mean, counter);
+		double cutoff = findCutoffPoint(4.5 / sd, mean, sigmaSquared, halfAccuracy, counter);
 		double cutoffDiffUpper = cutoff - quantile;
 		if (cutoffDiffUpper < 0) return 1; // requested quantile past range
 		// get the lower cutoff
-		cutoff = findCutoffPoint(-4.5 / sd, halfAccuracy, mean, counter);
+		cutoff = findCutoffPoint(-4.5 / sd, mean, sigmaSquared, halfAccuracy, counter);
 		double cutoffDiffLower = quantile - cutoff;
 		if (cutoffDiffLower < 0) return 0;
 		
@@ -244,27 +267,45 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		integrationInterval = 2 * Math.PI / integrationInterval;
 		
 		// calculate the #terms required for main and auxilliary integrations
-		double numTermsAux = U/integrationInterval;
-		double numTermsMain = 3.0/Math.sqrt(halfAccuracy);
-
-		if (numTermsAux > 1.5 * numTermsMain)
+		double numTermsMain = U/integrationInterval;
+		double numTermsAux = 3.0/Math.sqrt(halfAccuracy);
+		double integralSum = 0;
+		if (numTermsMain > 1.5 * numTermsAux)
 		{
-			if (numTermsMain > MAX_STEPS)
-				throw new RuntimeException("Number of integration terms exceeds max number of iteration steps allowed");  
+			// perform the auxilliary integration, provided we have enough iterations left
+			if (numTermsAux > MAX_STEPS-counter.getCount())
+				throw new RuntimeException("Number of auxiliary integration terms exceeds max number of iteration steps allowed");  
 			
-			integrationInterval = U / numTermsMain;
-			numTermsMain = Math.round(numTermsMain);
-			//X = 2 * Math.PI / integrationInterval;
+			double integrationIntervalAux = U / numTermsAux;
+			double integrationLimit = 2*Math.PI/integrationIntervalAux;
+			if (integrationLimit <= Math.abs(quantile))
+			{
+				double lowerConvergenceFactor = calculateConvergenceFactor(quantile-integrationLimit, counter);
+				double upperConvergenceFactor = calculateConvergenceFactor(quantile+integrationLimit, counter);
+
+				tauSquared = lowerConvergenceFactor + upperConvergenceFactor;
+				tauSquared = (accuracy / 3) / (1.1 * tauSquared);
+				
+				accuracy *= 0.67;
+				integralSum += integrate((int) Math.round(numTermsAux), integrationIntervalAux, quantile, tauSquared);
+				sigmaSquared += tauSquared;
+				
+				U = findTruncationPoint(U, sigmaSquared, 0.25*accuracy, counter);
+				accuracy *= 0.75;
+			}
 		}
 		
 		// perform main integration
-		
+		if (numTermsMain > MAX_STEPS-counter.getCount())
+			throw new RuntimeException("Number of main integration terms exceeds max number of iteration steps allowed");  
+		integralSum += integrate((int) Math.round(numTermsMain), integrationInterval, quantile, Double.NaN);
+
+		prob = 0.5 - integralSum;
 		return prob;
 	}
 	
 	
-	private double integrate(int numTerms, double integrationInterval, double truncationPoint, 
-			double quantile, double TauSquared)
+	private double integrate(int numTerms, double integrationInterval, double quantile, double TauSquared)
 	{
 		double value = 0;
 		for(int k = numTerms; k >=0; k--)
@@ -291,14 +332,14 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 			}
 			
 			double partialValue = (integrationInterval/Math.PI)*Math.exp(sum3) / U;
-			if (Double.isNaN(TauSquared))
+			if (!Double.isNaN(TauSquared))
 				partialValue *= (1 - Math.exp(-0.5*TauSquared*U*U));
 			
 			sum1 = Math.sin(0.5*sum1)*partialValue;
 			sum2 = 0.5*sum2*partialValue;
 			// TODO: return sum1 from auxilliary integration
 			
-			value += sum2;
+			value += sum1;
 		}
 		
 		return value;
@@ -313,11 +354,77 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 	 * @param counter
 	 * @return
 	 */
-	private double findCutoffPoint(double startCutoff, double acc, double mean, Counter counter)
+	private double findCutoffPoint(double startCutoff, double mean, double sigmaSquared, double acc, Counter counter)
+	throws RuntimeException
 	{
+		double u2 = startCutoff;
+		double u1 = 0;
+		double c1 = mean;
+		double c2;
+		double rb = minLambda;
 		
+		if (u2 > 0) rb = maxLambda;
 		
-		return 0.0;
+		rb *= 2;
+		
+		double u = u2 / (1 + u2*rb);
+		TailProbabilityBound bound = findTailProbabilityBound(u, sigmaSquared, counter);
+		c2 = bound.cutoff;
+		while (bound.bound > acc)
+		{
+			u1 = u2;
+			c2 = bound.cutoff;
+			c1 = c2;
+			u2 *=2;
+			u = u2 / (1 + u2*rb);
+			bound = findTailProbabilityBound(u, sigmaSquared, counter);
+		}
+		u = (c1 - mean)/(bound.cutoff - mean);
+
+		while (u < 0.9)
+		{
+			u = (u1 + u2)/2;
+			bound = findTailProbabilityBound(u/(1+ u*rb), sigmaSquared, counter);
+			if (bound.bound > acc)
+			{
+				u1 = u;
+				c1 = bound.cutoff;
+			}
+			else
+			{
+				u2 = u;
+				c2 = bound.cutoff;
+			}
+			u = (c1 - mean)/(c2 - mean);
+			int foo = 0;
+		}
+		return c2;
+	}
+	
+	private TailProbabilityBound findTailProbabilityBound(double startU, double sigmaSquared, Counter counter)
+	throws RuntimeException
+	{
+		counter.increment();
+		double U = startU;
+		double cutoff = U*sigmaSquared;
+		double sum = U*cutoff;
+		U *= 2;
+		
+		for(ChiSquareTerm chiSquare: chiSquareTerms)
+		{
+			double lambda = chiSquare.getLambda();
+			double df = chiSquare.getDegreesOfFreedom();
+			double nonCentrality = chiSquare.getNoncentrality();
+			
+			double X = U * lambda;
+			double Y = 1 - X;
+			cutoff += lambda*(nonCentrality/Y+df) / Y;
+			sum += nonCentrality * ((X/Y)*(X/Y)) + df *( (X*X)/Y + computeLog(-X, false));
+		}
+		
+		TailProbabilityBound bound = new TailProbabilityBound(Math.exp(-0.5 * sum), cutoff);
+		
+		return bound;
 	}
 	
 	/**
@@ -327,20 +434,20 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 	 * 
 	 * @param startU starting value for the truncation point
 	 */
-	private double findTruncationPoint(double startU, double acc, Counter counter)
+	private double findTruncationPoint(double startU, double sigmaSquared, double acc, Counter counter)
 	throws RuntimeException
 	{
 		double U = startU / 4;
 		double[]  divisors = {2.0, 1.4, 1.2, 1.1}; 
 		// find the minimum U such that integration error will be below
 		// the specified accuracy
-		if (calculateIntegrationError(U, DEFAULT_TAU_SQUARED, counter) <= acc)
+		if (calculateIntegrationError(U, sigmaSquared, DEFAULT_TAU_SQUARED, counter) <= acc)
 		{
 			// our first guess was too high, so decrease U until we hit 
 			// the minimum value with appropriate accuracy
 			double Utemp = U;
 			U /= 4;
-			while(calculateIntegrationError(U, DEFAULT_TAU_SQUARED, counter) <= acc) 
+			while(calculateIntegrationError(U, sigmaSquared, DEFAULT_TAU_SQUARED, counter) <= acc) 
 			{
 				Utemp = U;
 				U /= 4;
@@ -355,7 +462,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 			{
 				U *= 4;
 			} 
-			while(calculateIntegrationError(U, DEFAULT_TAU_SQUARED, counter) > acc);
+			while(calculateIntegrationError(U, sigmaSquared, DEFAULT_TAU_SQUARED, counter) > acc);
 		}
 		
 		// now ensure that the truncating error of U/1.2 > accuracy
@@ -363,7 +470,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		for(double divisor: divisors)
 		{
 			Utemp /= divisor;
-			if (calculateIntegrationError(Utemp, DEFAULT_TAU_SQUARED, counter) > acc)
+			if (calculateIntegrationError(Utemp, sigmaSquared, DEFAULT_TAU_SQUARED, counter) > acc)
 				break;
 			U = Utemp;
 		}
@@ -443,13 +550,13 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 	 * 
 	 * @return integration error
 	 */
-	private double calculateIntegrationError(double U, double tauSquared, Counter counter)
+	private double calculateIntegrationError(double U, double sigmaSquared, double tauSquared, Counter counter)
 	throws RuntimeException
 	{
 		counter.increment();
 		
 		double sum1 = 0;
-		double sum2 = (normalCoefficient * normalCoefficient + tauSquared) * U * U;
+		double sum2 = (sigmaSquared + tauSquared) * U * U;
 		double prod1 = 2 * sum2;
 		double prod2 = 0;
 		double prod3 = 0;
