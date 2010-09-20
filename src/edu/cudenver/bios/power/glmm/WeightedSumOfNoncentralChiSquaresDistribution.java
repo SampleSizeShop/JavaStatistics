@@ -250,50 +250,58 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 			}
 		}
 		
-		// TODO: big flippin' while loop?
-
-		// find the range of the distribution, determine if the quantile falls outside 
-		// of the range
-		double cutoff = findCutoffPoint(4.5 / sd, mean, sigmaSquared, halfAccuracy, counter);
-		double cutoffDiffUpper = cutoff - quantile;
-		if (cutoffDiffUpper < 0) return 1; // requested quantile past range
-		// get the lower cutoff
-		cutoff = findCutoffPoint(-4.5 / sd, mean, sigmaSquared, halfAccuracy, counter);
-		double cutoffDiffLower = quantile - cutoff;
-		if (cutoffDiffLower < 0) return 0;
-		
-		// pick the larger potential integration interval
-		double integrationInterval = ((cutoffDiffUpper > cutoffDiffLower) ? cutoffDiffUpper : cutoffDiffLower);
-		integrationInterval = 2 * Math.PI / integrationInterval;
-		
-		// calculate the #terms required for main and auxilliary integrations
-		double numTermsMain = U/integrationInterval;
-		double numTermsAux = 3.0/Math.sqrt(halfAccuracy);
+		// Auxiliary integration loop
+		double numTermsMain = 0;
+		double numTermsAux = 0;
 		double integralSum = 0;
-		if (numTermsMain > 1.5 * numTermsAux)
+		double integrationLimit = 0;
+		double integrationInterval = 0;
+		do
 		{
-			// perform the auxilliary integration, provided we have enough iterations left
-			if (numTermsAux > MAX_STEPS-counter.getCount())
-				throw new RuntimeException("Number of auxiliary integration terms exceeds max number of iteration steps allowed");  
-			
-			double integrationIntervalAux = U / numTermsAux;
-			double integrationLimit = 2*Math.PI/integrationIntervalAux;
-			if (integrationLimit <= Math.abs(quantile))
-			{
-				double lowerConvergenceFactor = calculateConvergenceFactor(quantile-integrationLimit, counter);
-				double upperConvergenceFactor = calculateConvergenceFactor(quantile+integrationLimit, counter);
+			// find the range of the distribution, determine if the quantile falls outside 
+			// of the range
+			double cutoff = findCutoffPoint(4.5 / sd, mean, sigmaSquared, halfAccuracy, counter);
+			double cutoffDiffUpper = cutoff - quantile;
+			if (cutoffDiffUpper < 0) return 1; // requested quantile past range
+			// get the lower cutoff
+			cutoff = findCutoffPoint(-4.5 / sd, mean, sigmaSquared, halfAccuracy, counter);
+			double cutoffDiffLower = quantile - cutoff;
+			if (cutoffDiffLower < 0) return 0;
 
-				tauSquared = lowerConvergenceFactor + upperConvergenceFactor;
-				tauSquared = (accuracy / 3) / (1.1 * tauSquared);
-				
-				accuracy *= 0.67;
-				integralSum += integrate((int) Math.round(numTermsAux), integrationIntervalAux, quantile, tauSquared);
-				sigmaSquared += tauSquared;
-				
-				U = findTruncationPoint(U, sigmaSquared, 0.25*accuracy, counter);
-				accuracy *= 0.75;
+			// pick the larger potential integration interval
+			integrationInterval = ((cutoffDiffUpper > cutoffDiffLower) ? cutoffDiffUpper : cutoffDiffLower);
+			integrationInterval = 2 * Math.PI / integrationInterval;
+
+			// calculate the #terms required for main and auxilliary integrations
+			numTermsMain = U/integrationInterval;
+			numTermsAux = 3.0/Math.sqrt(halfAccuracy);
+			integralSum = 0;
+			if (numTermsMain > 1.5 * numTermsAux)
+			{
+				// perform the auxilliary integration, provided we have enough iterations left
+				if (numTermsAux > MAX_STEPS-counter.getCount())
+					throw new RuntimeException("Number of auxiliary integration terms exceeds max number of iteration steps allowed");  
+
+				double integrationIntervalAux = U / numTermsAux;
+				integrationLimit = 2*Math.PI/integrationIntervalAux;
+				if (integrationLimit <= Math.abs(quantile))
+				{
+					double lowerConvergenceFactor = calculateConvergenceFactor(quantile-integrationLimit, counter);
+					double upperConvergenceFactor = calculateConvergenceFactor(quantile+integrationLimit, counter);
+
+					tauSquared = lowerConvergenceFactor + upperConvergenceFactor;
+					tauSquared = (accuracy / 3) / (1.1 * tauSquared);
+
+					accuracy *= 0.67;
+					integralSum += integrate((int) Math.round(numTermsAux), integrationIntervalAux, quantile, tauSquared);
+					sigmaSquared += tauSquared;
+
+					U = findTruncationPoint(U, sigmaSquared, 0.25*accuracy, counter);
+					accuracy *= 0.75;
+				}
 			}
 		}
+		while (numTermsMain > 1.5 * numTermsAux && integrationLimit <= Math.abs(quantile));
 		
 		// perform main integration
 		if (numTermsMain > MAX_STEPS-counter.getCount())
