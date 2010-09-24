@@ -52,13 +52,17 @@ public class PowerChecker
     	int matches = 0;
 
     	System.out.println("Calculating power...");
+    	long startTime = System.currentTimeMillis();
     	List<Power> results = calc.getPower(params);
-    	System.out.println("Done.");
+    	long endTime = System.currentTimeMillis();
+    	System.out.println("Done.  Elapsed time: " +  ((double) (endTime - startTime) / (double) 1000) + " seconds");
     	if (simulate)
     	{
     		System.out.println("Simulating power...");
+        	startTime = System.currentTimeMillis();
     		List<Power> simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
-    		System.out.println("Done.");
+        	endTime = System.currentTimeMillis();
+        	System.out.println("Done.  Elapsed time: " +  ((double) (endTime - startTime) / (double) 1000) + " seconds");
 
     		System.out.println("P-value\tM/U\tF/R\tCalc Power\tSim Power\tTest\tSigmaScale\tBetaScale\tTotal N\tAlpha\tPowerMethod\tQuantile");
 
