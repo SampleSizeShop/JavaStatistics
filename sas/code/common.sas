@@ -25,6 +25,9 @@
 */
 /* Directory in which to write output from SAS test cases - DO NOT EDIT */
 %LET DATA_DIRECTORY = ..\data;
+/* Sas Test Code directory - DO NOT EDIT */
+%LET CODE_DIRECTORY = ..\code;
+
 /* 
 * The software modules listed below were last available from 
 * http://www.ehpr.ufl.edu/muller/software_agreement
