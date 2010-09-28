@@ -24,6 +24,7 @@
 * Tests a multivariate GLH(F) for a design with
 * 3 groups and a single baseline covariate
 */
+TITLE "HLT approximate unconditional power";
 %INCLUDE "common.sas";
 
 LIBNAME DATA_DIR "&DATA_DIRECTORY";
@@ -110,6 +111,26 @@ END;
 
 NAMES = {'Beta-Scale' 'Total N' 'HLT Power'};
 PRINT POWER[COLNAME=NAMES];
+
+/* write to XML file */
+filename out "&DATA_DIRECTORY\TestHotellingLawleyApproximateUnconditional.xml"; 
+file out;
+	put "<powerList>";
+	do i=1 to NROW(POWER);
+		put "<glmmPower test='hlt' alpha='" @;
+		put ALPHA @;
+		put "' nominalPower='" @;
+		put (POWER[i,3]) @;
+		put "' actualPower='" @;
+		put (POWER[i,3]) @;
+		put "' betaScale='" @;
+		put (POWER[i,1]) @;
+		put "' sigmaScale='1' sampleSize='" @;
+		put (POWER[i,2]) @;
+		put "' powerMethod='unconditional' />";
+	end;
+	put "</powerList>";
+closefile out;
 
 QUIT;
 

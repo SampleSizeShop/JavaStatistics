@@ -113,5 +113,25 @@ END;
 NAMES = {'Beta-Scale' 'Total N' 'Non-centrality' 'HLT Power'};
 PRINT POWER[COLNAME=NAMES];
 
+/* write to XML file */
+filename out "&DATA_DIRECTORY\TestHotellingLawleyExactQuantile.xml"; 
+file out;
+	put "<powerList>";
+	do i=1 to NROW(POWER);
+		put "<glmmPower test='hlt' alpha='" @;
+		put ALPHA @;
+		put "' nominalPower='" @;
+		put (POWER[i,4]) @;
+		put "' actualPower='" @;
+		put (POWER[i,4]) @;
+		put "' betaScale='" @;
+		put (POWER[i,1]) @;
+		put "' sigmaScale='1' sampleSize='" @;
+		put (POWER[i,2]) @;
+		put "' powerMethod='quantile' quantile='0.5' />";
+	end;
+	put "</powerList>";
+closefile out;
+
 QUIT;
 
