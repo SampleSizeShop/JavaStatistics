@@ -20,6 +20,8 @@
  */
 package edu.cudenver.bios.power.test.published;
 
+import java.io.File;
+
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
@@ -40,11 +42,27 @@ import junit.framework.TestCase;
  */
 public class TestHotellingLawleyExactQuantile extends TestCase 
 {
+	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestHotellingLawleyExactQuantile.xml";
 	private static final double MEAN = 9.75;
 	private static final double VARIANCE = 2.0;
 	private static final double[] ALPHA_LIST = {0.05};    
 	private static final double[] SIGMA_SCALE_LIST = {1};	
 
+	private PowerChecker checker;
+	
+	public void setUp()
+	{
+		try
+		{
+			checker = new PowerChecker(DATA_FILE, true);
+		}
+		catch (Exception e)
+		{
+			System.err.println("Setup failed: " + e.getMessage());
+			fail();
+		}
+	}
+	
 	/**
 	 * Compare the calculated HLT exact quantile powers against simulation
 	 */
@@ -70,9 +88,9 @@ public class TestHotellingLawleyExactQuantile extends TestCase
 		GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
 
 		System.out.println("Testing Multivariate, Random, Quantile");
-		int mismatches = PowerChecker.checkPower(params5, false, false);
-		mismatches += PowerChecker.checkPower(params25, false, false);
-		mismatches += PowerChecker.checkPower(params50, false, false);
+		int mismatches = checker.checkPower(params5);
+		mismatches += checker.checkPower(params25);
+		mismatches += checker.checkPower(params50);
 
 		assertEquals(0, mismatches);
 	}
