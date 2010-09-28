@@ -250,7 +250,7 @@ public class NonCentralityDistribution
             {
             	WeightedSumOfNoncentralChiSquaresDistribution dist	= 
             		new WeightedSumOfNoncentralChiSquaresDistribution(chiSquareTerms, ACCURACY);
-            	return dist.cdf(w);
+            	return dist.cdf(0);
             }
             else
             {
