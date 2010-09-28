@@ -36,6 +36,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 	
 	// min and max lambda values
 	protected double maxLambda;
+	protected double maxLambdaAbsValue;
 	protected double minLambda;
 	
 	// maximum error allowed for the computed probability
@@ -136,8 +137,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		// find the min/max lambda  (truncate min at 0)
 		maxLambda = (Collections.max(chiSquareTerms, new MinMaxComparator())).getLambda();
 		minLambda = (Collections.min(chiSquareTerms, new MinMaxComparator())).getLambda();
-		//if (minLambda > 0) minLambda = 0;
-		if (maxLambda < -minLambda) maxLambda = -minLambda;
+		maxLambdaAbsValue = (maxLambda < -minLambda ? -minLambda : maxLambda);
 		
 		if (maxLambda == 0 && minLambda == 0 && normalCoefficient == 0)
 			throw new IllegalArgumentException("At least one of min/max lambda values or coefficient of the normal term must be non-zero");
@@ -184,15 +184,8 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 	 */
 	public double cdf(double quantile)
 	throws RuntimeException
-	{				
-		// make sure at least one of min, max lambda and normal coefficient 
-		// are non-zero
-		if (minLambda == 0 && maxLambda == 0 && normalCoefficient == 0)
-			throw new RuntimeException("Max/min lambda and coefficient of normal term cannot all be 0");
-		
+	{						
 		double prob = 0;
-		// number of chi-square terms in the sum
-		double numChiSquareTerms = chiSquareTerms.size(); 
 		// expected value of ???
 		double mean = 0;
 		// initialize sigma
@@ -238,7 +231,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		double halfAccuracy = 0.5 * accuracy;
 
 		double U = findTruncationPoint(16 / sd, sigmaSquared, halfAccuracy, counter);
-		if (quantile != 0 || maxLambda > 0.07 * sd)
+		if (quantile != 0 || maxLambdaAbsValue > 0.07 * sd)
 		{
 			// check if a covergence factor is helpful
 			double convergenceFactor = calculateConvergenceFactor(quantile, counter);
