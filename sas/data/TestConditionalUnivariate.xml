@@ -1,0 +1,72 @@
+<powerList>
+<glmmPower test='hlt      ' alpha='     0.05' nominalPower='     0.05' actualPower='     0.05' betaScale='        0' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='wl       ' alpha='     0.05' nominalPower='     0.05' actualPower='     0.05' betaScale='        0' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='pbt      ' alpha='     0.05' nominalPower='     0.05' actualPower='     0.05' betaScale='        0' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.05' nominalPower='     0.05' actualPower='     0.05' betaScale='        0' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.05' nominalPower='     0.05' actualPower='     0.05' betaScale='        0' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.05' nominalPower='     0.05' actualPower='     0.05' betaScale='        0' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.05' nominalPower='     0.05' actualPower='     0.05' betaScale='        0' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='hlt      ' alpha='     0.05' nominalPower='    0.185' actualPower='    0.185' betaScale='      0.5' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='wl       ' alpha='     0.05' nominalPower='    0.185' actualPower='    0.185' betaScale='      0.5' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='pbt      ' alpha='     0.05' nominalPower='    0.185' actualPower='    0.185' betaScale='      0.5' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.05' nominalPower='    0.185' actualPower='    0.185' betaScale='      0.5' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.05' nominalPower='    0.185' actualPower='    0.185' betaScale='      0.5' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.05' nominalPower='    0.185' actualPower='    0.185' betaScale='      0.5' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.05' nominalPower='    0.185' actualPower='    0.185' betaScale='      0.5' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='hlt      ' alpha='     0.05' nominalPower='    0.562' actualPower='    0.562' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='wl       ' alpha='     0.05' nominalPower='    0.562' actualPower='    0.562' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='pbt      ' alpha='     0.05' nominalPower='    0.562' actualPower='    0.562' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.05' nominalPower='    0.562' actualPower='    0.562' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.05' nominalPower='    0.562' actualPower='    0.562' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.05' nominalPower='    0.562' actualPower='    0.562' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.05' nominalPower='    0.562' actualPower='    0.562' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='hlt      ' alpha='     0.05' nominalPower='    0.887' actualPower='    0.887' betaScale='      1.5' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='wl       ' alpha='     0.05' nominalPower='    0.887' actualPower='    0.887' betaScale='      1.5' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='pbt      ' alpha='     0.05' nominalPower='    0.887' actualPower='    0.887' betaScale='      1.5' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.05' nominalPower='    0.887' actualPower='    0.887' betaScale='      1.5' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.05' nominalPower='    0.887' actualPower='    0.887' betaScale='      1.5' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.05' nominalPower='    0.887' actualPower='    0.887' betaScale='      1.5' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.05' nominalPower='    0.887' actualPower='    0.887' betaScale='      1.5' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='hlt      ' alpha='     0.05' nominalPower='    0.988' actualPower='    0.988' betaScale='        2' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='wl       ' alpha='     0.05' nominalPower='    0.988' actualPower='    0.988' betaScale='        2' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='pbt      ' alpha='     0.05' nominalPower='    0.988' actualPower='    0.988' betaScale='        2' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.05' nominalPower='    0.988' actualPower='    0.988' betaScale='        2' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.05' nominalPower='    0.988' actualPower='    0.988' betaScale='        2' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.05' nominalPower='    0.988' actualPower='    0.988' betaScale='        2' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.05' nominalPower='    0.988' actualPower='    0.988' betaScale='        2' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='hlt      ' alpha='     0.05' nominalPower='     0.05' actualPower='     0.05' betaScale='        0' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='wl       ' alpha='     0.05' nominalPower='     0.05' actualPower='     0.05' betaScale='        0' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='pbt      ' alpha='     0.05' nominalPower='     0.05' actualPower='     0.05' betaScale='        0' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.05' nominalPower='     0.05' actualPower='     0.05' betaScale='        0' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.05' nominalPower='     0.05' actualPower='     0.05' betaScale='        0' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.05' nominalPower='     0.05' actualPower='     0.05' betaScale='        0' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.05' nominalPower='     0.05' actualPower='     0.05' betaScale='        0' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='hlt      ' alpha='     0.05' nominalPower='    0.116' actualPower='    0.116' betaScale='      0.5' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='wl       ' alpha='     0.05' nominalPower='    0.116' actualPower='    0.116' betaScale='      0.5' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='pbt      ' alpha='     0.05' nominalPower='    0.116' actualPower='    0.116' betaScale='      0.5' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.05' nominalPower='    0.116' actualPower='    0.116' betaScale='      0.5' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.05' nominalPower='    0.116' actualPower='    0.116' betaScale='      0.5' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.05' nominalPower='    0.116' actualPower='    0.116' betaScale='      0.5' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.05' nominalPower='    0.116' actualPower='    0.116' betaScale='      0.5' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='hlt      ' alpha='     0.05' nominalPower='    0.322' actualPower='    0.322' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='wl       ' alpha='     0.05' nominalPower='    0.322' actualPower='    0.322' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='pbt      ' alpha='     0.05' nominalPower='    0.322' actualPower='    0.322' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.05' nominalPower='    0.322' actualPower='    0.322' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.05' nominalPower='    0.322' actualPower='    0.322' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.05' nominalPower='    0.322' actualPower='    0.322' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.05' nominalPower='    0.322' actualPower='    0.322' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='hlt      ' alpha='     0.05' nominalPower='    0.612' actualPower='    0.612' betaScale='      1.5' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='wl       ' alpha='     0.05' nominalPower='    0.612' actualPower='    0.612' betaScale='      1.5' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='pbt      ' alpha='     0.05' nominalPower='    0.612' actualPower='    0.612' betaScale='      1.5' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.05' nominalPower='    0.612' actualPower='    0.612' betaScale='      1.5' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.05' nominalPower='    0.612' actualPower='    0.612' betaScale='      1.5' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.05' nominalPower='    0.612' actualPower='    0.612' betaScale='      1.5' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.05' nominalPower='    0.612' actualPower='    0.612' betaScale='      1.5' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='hlt      ' alpha='     0.05' nominalPower='    0.848' actualPower='    0.848' betaScale='        2' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='wl       ' alpha='     0.05' nominalPower='    0.848' actualPower='    0.848' betaScale='        2' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='pbt      ' alpha='     0.05' nominalPower='    0.848' actualPower='    0.848' betaScale='        2' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.05' nominalPower='    0.848' actualPower='    0.848' betaScale='        2' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.05' nominalPower='    0.848' actualPower='    0.848' betaScale='        2' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.05' nominalPower='    0.848' actualPower='    0.848' betaScale='        2' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.05' nominalPower='    0.848' actualPower='    0.848' betaScale='        2' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+</powerList>
