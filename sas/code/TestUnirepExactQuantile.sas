@@ -24,6 +24,7 @@
 * Tests a multivariate GLH(F) for a design with
 * 3 groups and a single baseline covariate
 */
+TITLE "UNIREP exact quantile power";
 %INCLUDE "common.sas";
 
 LIBNAME DATA_DIR "&DATA_DIRECTORY";
@@ -117,6 +118,34 @@ END;
 
 NAMES = {'Beta-Scale' 'Total N' 'Non-centrality'}|| TEST_LIST;
 PRINT POWER[COLNAME=NAMES];
+
+/* write to XML file */
+filename out "&DATA_DIRECTORY\TestUnirepExactQuantile.xml"; 
+file out;
+	put "<powerList>";
+	do i=1 to NROW(POWER);
+		do t=1 to NCOL(TEST_LIST);
+			POWERCOL = t + 3;
+			put "<glmmPower test='" @;
+			if (TEST_LIST[t] = "U") then put "unirep" @;
+			if (TEST_LIST[t] = "B") then put "unirepBox" @;
+			if (TEST_LIST[t] = "G") then put "unirepGG" @;
+			if (TEST_LIST[t] = "H") then put "unirepHF" @;
+			put "' alpha='" @;
+			put ALPHA @;
+			put "' nominalPower='" @;
+			put (POWER[i,POWERCOL]) @;
+			put "' actualPower='" @;
+			put (POWER[i,POWERCOL]) @;
+			put "' betaScale='" @;
+			put (POWER[i,1]) @;
+			put "' sigmaScale='1' sampleSize='" @;
+			put (POWER[i,2]) @;
+			put "' powerMethod='quantile' quantile='0.50' />";
+		end;
+	end;
+	put "</powerList>";
+closefile out;
 
 QUIT;
 

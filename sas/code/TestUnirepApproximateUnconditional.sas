@@ -19,12 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 /* 
-* Test case for UNIREP (uncorrected, box, GG, HF), approximate, median quantile power
+* Test case for UNIREP (uncorrected, box, GG, HF), approximate, unconditional power
 * Similar to output in Table II, Glueck&Muller 2003
 * Tests a multivariate GLH(F) for a design with
 * 3 groups and a single baseline covariate
 */
-TITLE "UNIREP approximate quantile power";
+TITLE "UNIREP approximate unconditional power";
 %INCLUDE "common.sas";
 
 LIBNAME DATA_DIR "&DATA_DIRECTORY";
@@ -50,8 +50,7 @@ CLOSE INOUT01.P0501;
 DEBUG = 0;
 IF DEBUG THEN PRINT HOLDIN;
 
-H_OR_U="U";
-TEST_LIST={"U" "B" "G" "H"};
+TEST_LIST={"UU" "UB" "UG" "UH"};
 P=4;
 QF=3;
 RHO=.50;
@@ -102,35 +101,33 @@ DO ROW = 1 to NROW(HOLDIN);
     IF DEBUG THEN PRINT THETA, THETA0;
   REPN=N/NCOL(ESSENCEF);
   DO IPROB=1 TO NCOL(PROBLIST);
-    /* Inverse cdf of non-centrality distribution */
-    RUN BASEQ1("A",H_OR_U,ESSENCEF,REPN,CF,CG,VARG,THETAD,SIGSTAR,
-                 PROBLIST[IPROB],MAXITER,MAXPDIFF, ITERE,QA,FQA);
-	/* Quantile power */
-	POWER_ROW = (DELTA||N||QA);
+	/* unconditional power */
+	POWER_ROW = (DELTA||N);
 	DO TESTI=1 to NCOL(TEST_LIST);
-		APOWERAQ=APOWU1(TEST_LIST[TESTI],A,B,N,RANKX,ALPHA,SIGSTAR,QA);
-		POWER_ROW = POWER_ROW || APOWERAQ;
+		APOW=BASEU4("A",TEST_LIST[TESTI],ESSENCEF,REPN,CF,CG,VARG,THETAD,SIGSTAR,
+             ALPHA,MAXPDIFF);
+		POWER_ROW = POWER_ROW || APOW[1,1];
 	END;
     POWER=POWER//POWER_ROW;
   END;
 END;
 
 
-NAMES = {'Beta-Scale' 'Total N' 'Non-centrality'}|| TEST_LIST;
+NAMES = {'Beta-Scale' 'Total N'}|| TEST_LIST;
 PRINT POWER[COLNAME=NAMES];
 
 /* write to XML file */
-filename out "&DATA_DIRECTORY\TestUnirepApproximateQuantile.xml"; 
+filename out "&DATA_DIRECTORY\TestUnirepApproximateUnconditional.xml"; 
 file out;
 	put "<powerList>";
 	do i=1 to NROW(POWER);
 		do t=1 to NCOL(TEST_LIST);
-			POWERCOL = t + 3;
+			POWERCOL = t + 2;
 			put "<glmmPower test='" @;
-			if (TEST_LIST[t] = "U") then put "unirep" @;
-			if (TEST_LIST[t] = "B") then put "unirepBox" @;
-			if (TEST_LIST[t] = "G") then put "unirepGG" @;
-			if (TEST_LIST[t] = "H") then put "unirepHF" @;
+			if (TEST_LIST[t] = "UU") then put "unirep" @;
+			if (TEST_LIST[t] = "UB") then put "unirepBox" @;
+			if (TEST_LIST[t] = "UG") then put "unirepGG" @;
+			if (TEST_LIST[t] = "UH") then put "unirepHF" @;
 			put "' alpha='" @;
 			put ALPHA @;
 			put "' nominalPower='" @;
@@ -141,11 +138,12 @@ file out;
 			put (POWER[i,1]) @;
 			put "' sigmaScale='1' sampleSize='" @;
 			put (POWER[i,2]) @;
-			put "' powerMethod='quantile' quantile='0.50' />";
+			put "' powerMethod='unconditional' />";
 		end;
 	end;
 	put "</powerList>";
 closefile out;
+
 
 QUIT;
 
