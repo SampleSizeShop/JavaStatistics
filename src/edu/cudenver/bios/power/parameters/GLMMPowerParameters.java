@@ -1,6 +1,8 @@
 package edu.cudenver.bios.power.parameters;
 
+import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
@@ -93,7 +95,8 @@ public class GLMMPowerParameters extends PowerParameters
 	RealMatrix withinSubjectContrast = null;
 
 	RealMatrix design = null;
-
+	RealMatrix XtXInverse = null;
+	int designRank = -1;
 	DesignEssenceMatrix designEssence = null;
 
 	// for design matrices with a baseline covariate, power may be estimated
@@ -255,7 +258,38 @@ public class GLMMPowerParameters extends PowerParameters
 		}
 		return design;
 	}
-
+	
+	/**
+	 * Added caching of rank of design matrix
+	 * 
+	 * @param force - if true, force recomputation of (X'X)-1
+	 * @return
+	 */
+	public int getDesignRank(boolean force)
+	{
+		if (designRank < 0 || force)
+		{
+			designRank = new SingularValueDecompositionImpl(getDesign()).getRank();
+		}
+		return designRank;
+	}
+	
+	/**
+	 * Added caching of (X'X)-1 since this is order n^3
+	 * 
+	 * @param force - if true, force recomputation of (X'X)-1
+	 * @return
+	 */
+	public RealMatrix getXtXInverse(boolean force)
+	{
+		if (XtXInverse == null || force)
+		{
+			RealMatrix X = getDesign();
+	        XtXInverse = new LUDecompositionImpl(X.transpose().multiply(X)).getSolver().getInverse();
+		}
+		return XtXInverse;
+	}
+	
 	/**
 	 * Regenerates the design matrix and fills any random columns with a new
 	 * realization of random values based on a normal distribution.
