@@ -20,6 +20,8 @@
  */
 package edu.cudenver.bios.power.test.published;
 
+import java.io.File;
+
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
@@ -45,6 +47,24 @@ public class TestUnirepApproximateUnconditional extends TestCase
     private static final double[] ALPHA_LIST = {0.05};    
     private static final double[] SIGMA_SCALE_LIST = {1};	
 	    
+
+	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestUnirepApproximateUnconditional.xml";
+
+	private PowerChecker checker;
+	
+	public void setUp()
+	{
+		try
+		{
+			checker = new PowerChecker(DATA_FILE, true);
+		}
+		catch (Exception e)
+		{
+			System.err.println("Setup failed: " + e.getMessage());
+			fail();
+		}
+	}
+	
     /**
      * Compare the calculated UNIREP approximate unconditional powers against simulation
      */
@@ -70,9 +90,9 @@ public class TestUnirepApproximateUnconditional extends TestCase
         GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
 
         System.out.println("Testing Multivariate, Random, Quantile");
-        int mismatches = PowerChecker.checkPower(params5, false, false);
-        mismatches += PowerChecker.checkPower(params25, false, false);
-        mismatches += PowerChecker.checkPower(params50, false, false);
+        int mismatches = checker.checkPower(params5);
+        mismatches += checker.checkPower(params25);
+        mismatches += checker.checkPower(params50);
 
         assertEquals(0, mismatches);
     }
