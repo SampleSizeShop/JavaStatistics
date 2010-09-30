@@ -4,7 +4,6 @@ import jsc.distributions.FishersF;
 
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 
@@ -33,7 +32,7 @@ public abstract class GLMMTest
         this.params = params;
         RealMatrix X = params.getDesign();
         N = X.getRowDimension();
-        r = new SingularValueDecompositionImpl(X).getRank();
+        r = params.getDesignRank();
     }
 
     /**
@@ -75,15 +74,13 @@ public abstract class GLMMTest
         RealMatrix B = params.getScaledBeta();
         RealMatrix U = params.getWithinSubjectContrast();
         RealMatrix theta0 = params.getTheta();
-        RealMatrix X = params.getDesign();
         
         // thetaHat = C * Beta * U
         RealMatrix thetaHat = C.multiply(B.multiply(U));
         // thetaHat - thetaNull.  Multiple by negative one to do subtraction
         RealMatrix thetaDiff = thetaHat.subtract(theta0);
         // get X'X invserse
-        RealMatrix XtX = X.transpose().multiply(X);
-        RealMatrix XtXInverse = new LUDecompositionImpl(XtX).getSolver().getInverse();
+        RealMatrix XtXInverse = params.getXtXInverse();
         
         // the middle term [C(X'X)-1C']-1
         RealMatrix cxxc = C.multiply(XtXInverse.multiply(C.transpose()));

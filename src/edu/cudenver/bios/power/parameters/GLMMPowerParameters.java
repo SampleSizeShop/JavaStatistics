@@ -250,13 +250,7 @@ public class GLMMPowerParameters extends PowerParameters
 
 	public RealMatrix getDesign()
 	{
-		if (design == null && designEssence != null)
-		{
-			// if only an essence matrix is specified, retrieve the full design matrix
-			this.design = designEssence.getFullDesignMatrix();
-			// TODO: what to do if this is too big to cache?
-		}
-		return design;
+		return getDesign(false);
 	}
 	
 	/**
@@ -265,9 +259,9 @@ public class GLMMPowerParameters extends PowerParameters
 	 * @param force - if true, force recomputation of (X'X)-1
 	 * @return
 	 */
-	public int getDesignRank(boolean force)
+	public int getDesignRank()
 	{
-		if (designRank < 0 || force)
+		if (designRank < 0)
 		{
 			designRank = new SingularValueDecompositionImpl(getDesign()).getRank();
 		}
@@ -280,9 +274,9 @@ public class GLMMPowerParameters extends PowerParameters
 	 * @param force - if true, force recomputation of (X'X)-1
 	 * @return
 	 */
-	public RealMatrix getXtXInverse(boolean force)
+	public RealMatrix getXtXInverse()
 	{
-		if (XtXInverse == null || force)
+		if (XtXInverse == null)
 		{
 			RealMatrix X = getDesign();
 	        XtXInverse = new LUDecompositionImpl(X.transpose().multiply(X)).getSolver().getInverse();
@@ -302,10 +296,13 @@ public class GLMMPowerParameters extends PowerParameters
 		{
 			// if only an essence matrix is specified, retrieve the full design matrix
 			design = designEssence.getFullDesignMatrix();
+			XtXInverse = null;
+			designRank = -1;
 		}
-		else
+		else if (force);
 		{
 			designEssence.updateRandomColumns(design);
+			XtXInverse = null;
 		}
 		return design;
 	}
