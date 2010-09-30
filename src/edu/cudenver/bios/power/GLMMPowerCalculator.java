@@ -820,7 +820,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     	// get total observations, N, and rank of design matrix
     	RealMatrix X = params.getDesign();
     	double N = X.getRowDimension();
-    	double rankX = new SingularValueDecompositionImpl(X).getRank();
+    	double rankX = params.getDesignRank();
 
     	// create a normal distribution for generating random errors
     	Normal normalDist = new Normal();       
@@ -877,8 +877,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 		// calculate simulated Y based on Y = X beta + error
 		RealMatrix Ysim = (X.multiply(scaledBeta)).add(error);
 		// calculate beta-Hat
-		RealMatrix XtX = X.transpose().multiply(X);
-		RealMatrix XtXInverse = new LUDecompositionImpl(XtX).getSolver().getInverse();
+		RealMatrix XtXInverse = params.getXtXInverse();
 		RealMatrix betaHat = XtXInverse.multiply(X.transpose()).multiply(Ysim);
 		// calculate Y-hat
 		RealMatrix YHat = (X.multiply(betaHat));
