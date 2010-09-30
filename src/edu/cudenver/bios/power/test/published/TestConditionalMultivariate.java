@@ -23,7 +23,9 @@ public class TestConditionalMultivariate extends TestCase
     private static final int[] SAMPLE_SIZE_LIST = {10};
 
 	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestConditionalMultivariate.xml";
-
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "FixedMultivariateOutput.html";
+	private static final String TITLE = "Power results for fixed multivariate";
+	
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -46,9 +48,11 @@ public class TestConditionalMultivariate extends TestCase
         // build the inputs
         GLMMPowerParameters params = buildValidMultivariateFixedInputs();
 
-        System.out.println("Testing Multivariate, Fixed");
+        System.out.println(TITLE);
         int mismatches = checker.checkPower(params);
-        
+		checker.outputResults();
+		checker.outputResults(TITLE, OUTPUT_FILE);
+		checker.reset();
         assertEquals(0, mismatches);
     }
     

@@ -43,6 +43,8 @@ import junit.framework.TestCase;
 public class TestHotellingLawleyApproximateQuantile extends TestCase 
 {
 	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestHotellingLawleyApproximateQuantile.xml";
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "HotellingLawleyApproximateQuantileOutput.html";
+	private static final String TITLE = "Power results for HLT, appoximate quantile";
 	private static final double MEAN = 9.75;
 	private static final double VARIANCE = 2.0;
 	private static final double[] ALPHA_LIST = {0.05};    
@@ -87,11 +89,13 @@ public class TestHotellingLawleyApproximateQuantile extends TestCase
 		};
 		GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
 
-		System.out.println("Testing Multivariate, Random, Quantile");
+		System.out.println(TITLE);
 		int mismatches = checker.checkPower(params5);
 		mismatches += checker.checkPower(params25);
 		mismatches += checker.checkPower(params50);
-
+		checker.outputResults();
+		checker.outputResults(TITLE, OUTPUT_FILE);
+		checker.reset();
 		assertEquals(0, mismatches);
 	}
 

@@ -44,7 +44,8 @@ public class TestConditionalUnivariate extends TestCase
     private static final int[] SAMPLE_SIZE_LIST = {10};
 
 	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestConditionalUnivariate.xml";
-
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "FixedUnivariateOutput.html";
+	private static final String TITLE = "Power results for fixed univariate";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -67,9 +68,11 @@ public class TestConditionalUnivariate extends TestCase
     {
         // build the inputs
         GLMMPowerParameters params = buildValidUnivariateInputs();
-        System.out.println("Testing Univariate, Fixed");
+        System.out.println(TITLE);
         int mismatches = checker.checkPower(params);
-        
+		checker.outputResults();
+		checker.outputResults(TITLE, OUTPUT_FILE);
+		checker.reset();
         assertEquals(0, mismatches);
     }
 

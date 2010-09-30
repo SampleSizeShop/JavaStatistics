@@ -49,7 +49,8 @@ public class TestUnirepExactQuantile extends TestCase
 
 
 	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestUnirepExactQuantile.xml";
-
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "UnirepExactQuantileOutput.html";
+	private static final String TITLE = "Power results for UNIREP, exact quantile";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -93,7 +94,9 @@ public class TestUnirepExactQuantile extends TestCase
 		int mismatches = checker.checkPower(params5);
 		mismatches += checker.checkPower(params25);
 		mismatches += checker.checkPower(params50);
-
+		checker.outputResults();
+		checker.outputResults(TITLE, OUTPUT_FILE);
+		checker.reset();
 		assertEquals(0, mismatches);
 	}
 

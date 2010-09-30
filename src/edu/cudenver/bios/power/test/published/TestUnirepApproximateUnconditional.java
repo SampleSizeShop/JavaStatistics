@@ -49,7 +49,8 @@ public class TestUnirepApproximateUnconditional extends TestCase
 	    
 
 	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestUnirepApproximateUnconditional.xml";
-
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "UnirepApproximateUnconditionalOutput.html";
+	private static final String TITLE = "Power results for UNIREP, approximate unconditional";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -89,11 +90,13 @@ public class TestUnirepApproximateUnconditional extends TestCase
         };
         GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
 
-        System.out.println("Testing Multivariate, Random, Quantile");
+        System.out.println(TITLE);
         int mismatches = checker.checkPower(params5);
         mismatches += checker.checkPower(params25);
         mismatches += checker.checkPower(params50);
-
+		checker.outputResults();
+		checker.outputResults(TITLE, OUTPUT_FILE);
+		checker.reset();
         assertEquals(0, mismatches);
     }
     
