@@ -765,18 +765,17 @@ public class GLMMPowerCalculator implements PowerCalculator
     /**
      * Simulate the error matrix in the Y = X * beta + e
      */
-    private RealMatrix simulateError(Normal normalDist, int rows, int columns, RealMatrix sigma)
+    private RealMatrix simulateError(Normal normalDist, RealMatrix error, int rows, int columns, RealMatrix sigma)
     throws IllegalArgumentException
     {        
         // build a matrix of random values from a standard normal
         // the number of rows = #subjects (rows) in the full design matrix
         // the number of columns = #outcome variables (i.e. columns in beta)
-        Array2DRowRealMatrix randomNormals = new Array2DRowRealMatrix(rows, columns);
         for(int rowIndex = 0; rowIndex < rows; rowIndex++)
         {
             for(int columnIndex = 0; columnIndex < columns; columnIndex++)
             {
-                randomNormals.setEntry(rowIndex, columnIndex, normalDist.random()); 
+            	error.setEntry(rowIndex, columnIndex, normalDist.random()); 
             }
         }
         
@@ -787,7 +786,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                 new CholeskyDecompositionImpl(sigma, 
                         RELATIVE_SYMMETRY_THRESHOLD,
                         POSITIVITY_THRESHOLD).getLT();
-            return randomNormals.multiply(sqrtMatrix); 
+            return error.multiply(sqrtMatrix); 
         }
         catch (Exception e)
         {
@@ -826,7 +825,10 @@ public class GLMMPowerCalculator implements PowerCalculator
     	Normal normalDist = new Normal();       
     	normalDist.setSeed(1234);
 		int rejectionCount = 0;
-
+		// create an error matrix here, so we don't have to reallocate every time
+        Array2DRowRealMatrix randomNormals = 
+        	new Array2DRowRealMatrix((int) N, params.getScaledBeta().getColumnDimension());
+        
 		// TODO: separate simulation function for quantile/unconditional vs conditional
     	if (params.getDesignEssence().hasRandom() && 
     			params.getCurrentPowerMethod() != PowerMethod.CONDITIONAL_POWER)
@@ -836,7 +838,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     			X = params.getDesign(true); // force a new realization of the design matrix (i.e. a new covariate column)
     			for(int i = 0; i < SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL; i++)
     			{
-    				if (simulateAndFitModel(params, normalDist, N, rankX)) rejectionCount++;
+    				if (simulateAndFitModel(params, normalDist, randomNormals, N, rankX)) rejectionCount++;
     			}
     		}
             return ((double) rejectionCount) / (((double) SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL) *
@@ -848,7 +850,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     		// run the simulations
     		for(int i = 0; i < iterations; i++)
     		{
-        		if (simulateAndFitModel(params, normalDist, N, rankX)) rejectionCount++;
+        		if (simulateAndFitModel(params, normalDist, randomNormals, N, rankX)) rejectionCount++;
     		}
             return ((double) rejectionCount) / ((double) iterations);
     	}
@@ -864,14 +866,14 @@ public class GLMMPowerCalculator implements PowerCalculator
      * @param rankX rank of the design matrix
      * @return
      */
-    private boolean simulateAndFitModel(GLMMPowerParameters params, Normal normalDist, double N, double rankX)
+    private boolean simulateAndFitModel(GLMMPowerParameters params, Normal normalDist, 
+    		RealMatrix randomNormals, double N, double rankX)
     {
     	RealMatrix X = params.getDesign();
 		RealMatrix scaledBeta = params.getScaledBeta();
 		RealMatrix scaledSigma = params.getScaledSigmaError();
 
-		RealMatrix error = 
-			simulateError(normalDist, X.getRowDimension(),
+		RealMatrix error = simulateError(normalDist, randomNormals, X.getRowDimension(),
 					scaledBeta.getColumnDimension(), scaledSigma);         
 
 		// calculate simulated Y based on Y = X beta + error
