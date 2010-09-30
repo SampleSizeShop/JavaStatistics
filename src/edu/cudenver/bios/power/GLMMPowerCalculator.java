@@ -630,8 +630,8 @@ public class GLMMPowerCalculator implements PowerCalculator
         
         // get the distribution of the noncentrality parameter
         NonCentralityDistribution nonCentralityDist = new NonCentralityDistribution(params, false);
-        double ndf = glmmTest.getNumeratorDF(GLMMTest.DistributionType.POWER_NULL);
-        double ddf = glmmTest.getDenominatorDF(GLMMTest.DistributionType.POWER_NULL);
+        double ndf = glmmTest.getNumeratorDF(GLMMTest.DistributionType.POWER_ALTERNATIVE);
+        double ddf = glmmTest.getDenominatorDF(GLMMTest.DistributionType.POWER_ALTERNATIVE);
         double h1 = nonCentralityDist.getH1();
         double h0 = nonCentralityDist.getH0();
         // integrate over all value of non-centrality parameter from h0 to h1
