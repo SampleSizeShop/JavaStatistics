@@ -23,6 +23,14 @@ package edu.cudenver.bios.matrix;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
 
+/**
+ * Matrix which contains fixed and random components.  The combined
+ * matrix may be produced by concatenating the fixed and random
+ * submatrices either vertically or horizontally.
+ * 
+ * @author Sarah Kreidler
+ *
+ */
 public class FixedRandomMatrix
 {
     protected RealMatrix fixedMatrix;
@@ -30,6 +38,15 @@ public class FixedRandomMatrix
     protected RealMatrix combinedMatrix;
     protected boolean combineHorizontal = true;
     
+    /**
+     * Constructor, create a fixed/random matrix from the specified data arrays
+     * 
+     * @param fixedData submatrix of fixed predictor information
+     * @param randomData submatrix of random predictor information
+     * @param combineHorizontal indicates if the combined matrix should be
+     * formed by horizontal or vertical concatenation
+     * @throws IllegalArgumentException
+     */
     public FixedRandomMatrix(double[][] fixedData, double[][] randomData,
             boolean combineHorizontal) throws IllegalArgumentException
     {
@@ -98,31 +115,61 @@ public class FixedRandomMatrix
         }
     }
     
+    /**
+     * Get the fixed submatrix
+     * @return fixed submatrix
+     */
     public RealMatrix getFixedMatrix()
     {
         return fixedMatrix;
     }
     
+    /**
+     * Get the random submatrix
+     * @return random submatrix
+     */
     public RealMatrix getRandomMatrix()
     {
         return randomMatrix;
     }
 
+    /**
+     * Get the matrix resulting from the concatenation
+     * of the fixed and random submatrices
+     * @return combined matrix
+     */
     public RealMatrix getCombinedMatrix()
     {
         return combinedMatrix;
     }
     
+    /**
+     * Determine if this fixed/random matrix includes a fixed component
+     * @return true if fixed component is present
+     */
     public boolean hasFixed()
     {
         return (fixedMatrix != null);
     }
     
+    /**
+     * Determine if this fixed/random matrix includes a random component
+     * @return true if random component is present
+     */
     public boolean hasRandom()
     {
         return (randomMatrix != null);
     }
     
+    /**
+     * Perform scalar multiplication on a fixed / random matrix and
+     * return the resulting scaled matrix.  The scale factor can be applied 
+     * to the entire matrix, or just the fixed submatrix.
+     * 
+     * @param scale scale factor
+     * @param fixedOnly if true, only the fixed submatrix will be scaled
+     * @return scaled combined matrix
+     */
     public RealMatrix scalarMultiply(double scale, boolean fixedOnly)
     {
     	if (fixedOnly)
@@ -138,6 +185,12 @@ public class FixedRandomMatrix
     	}
     }
     
+    /**
+     * Update the values in the random submatrix.  The matrix of new values
+     * must match the dimensions of the random submatrix.
+     * 
+     * @param updatedMatrix new values for the random submatrix
+     */
     public void updateRandomMatrix(RealMatrix updatedMatrix)
     {
     	if (randomMatrix != null && 

@@ -32,8 +32,9 @@ import org.apache.commons.math.linear.RealMatrix;
  * The EssenceMatrix class includes the following meta information used to
  * generate the full design matrix:
  * <ul>
- * <li>Column meta data: indicates if a predictor is fixed or random
- * <li>Row meta data: indicates the ratio of group sizes
+ * <li>Random column meta data: for columns representing predictors with normally distributed
+ * values, this meta data indicates the mean and variance of the distribution
+ * <li>Row meta data: indicates the ratio of group sizes for each unique row in the design matrix
  * </ul>
  * 
  * @author Sarah Kreidler
@@ -56,10 +57,15 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
     int groupSampleSize = 1;
     
     /**
-     * Constructor.  Creates an essence matrix from a real matrix.
-     * Column and row meta data are set to default values
+     * Constructor.  Creates an essence matrix from data sets for
+     * submatrices representing fixed predictors and random predictors.
+     * If random predictors are present, then distribution information should
+     * be specified in the randomColMetaData array.
      * 
-     * @param matrix RealMatrix containing essence matrix data
+     * @param fixedData portion of design matrix representing fixed predictors
+     * @param rowMetaData relative group sizes for each unique row in the design matrix
+     * @param randomData portion of design matrix representing random covariates
+     * @param randomColMetaData distribution (mean, variance) information for the random covariates
      */
     public DesignEssenceMatrix(double[][] fixedData, RowMetaData[] rowMetaData, 
     		double[][] randomData, RandomColumnMetaData[] randomColMetaData)
@@ -82,7 +88,7 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
      * For example, for a 3x3 design matrix with group sizes 1:2:1 and
      * a groupN of 10, the actual group sizes will be 10, 20, and 10.     * 
      * 
-     * @param groupN
+     * @param groupSampleSize new per group sample size
      */
     public void setGroupSampleSize(int groupSampleSize)
     throws IllegalArgumentException
@@ -97,7 +103,7 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
      * Get the per group sample size.  For non-equal group sizes, this
      * function will return the size of the smallest group.
      * 
-     * @returns per group sample size
+     * @return per group sample size
      */
     public int getGroupSampleSize()
     {
@@ -185,7 +191,7 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
      * Update the random columns in the specified design matrix with a new realization
      * of random values
      * 
-     * @param fullDesign an instance of the full design matrix
+     * @param fullDesignMatrix an instance of the full design matrix
      */
     public void updateRandomColumns(RealMatrix fullDesignMatrix)
     throws IllegalArgumentException
@@ -208,8 +214,9 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
     /**
      * Fill a fixed column in the design matrix
      * 
-     * @param column
-     * @param fullDesign
+     * @param fixedColumn column index in fixed submatrix
+     * @param fullColumn column index in full design matrix
+     * @param fullDesign full design matrix
      */
     private void fillFixedColumn(int fixedColumn, int fullColumn, RealMatrix fullDesign)
     {       
@@ -232,11 +239,11 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
     }
     
     /**
-     * Fills in a single column in the full design matrix
+     * Fills in a random column in the full design matrix
      * 
-     * @param column
-     * @param fullDesign
-     * @param repMultiplier
+     * @param randomColumn column index in random submatrix
+     * @param fullColumn column index in full design matrix
+     * @param fullDesign full design matrix
      */
     private void fillRandomColumn(int randomColumn, int fullColumn, RealMatrix fullDesign)
     {
@@ -255,8 +262,6 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
                 fullDesign.setEntry(row, fullColumn, dist.random());
         }
     }
-    
-
     
     /**
      * Set the meta data for a specific row.  Throws an illegal argument
@@ -278,7 +283,6 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
     /**
      * Set the meta data for all of the rows.  
      * 
-     * @param row row index (0 = first row)
      * @param metaData row meta data object
      * @throws IllegalArgumentException
      */
@@ -295,7 +299,6 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
      * exception if the row index is out of bounds.
      * 
      * @param row row index (0 = first row)
-     * @return meta data object for the row
      * @throws IllegalArgumentException
      */
     public RowMetaData getRowMetaData(int row)
@@ -324,6 +327,10 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
         return count;
     }
     
+    /**
+     * Returns the minimum number of subjects
+     * @return minimum sample size
+     */
     public int getMinimumSampleSize()
     {
         int ratioCount = 0;

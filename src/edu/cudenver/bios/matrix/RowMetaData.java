@@ -25,7 +25,7 @@ package edu.cudenver.bios.matrix;
  * Primarily used with a design "essence" matrix to specify the relative
  * size of the group represented by a row in the full design matrix.
  * 
- * @see EssenceMatrix
+ * @see DesignEssenceMatrix
  * @author Sarah Kreidler
  *
  */
@@ -41,8 +41,7 @@ public class RowMetaData
      * Constructor.  Create a RowMetaData object with the specified
      * relative group size (i.e. group size ratio)
      * 
-     * @param repetitions either actual value or ratio of repetitions of row in 
-     * full design matrix.
+     * @param ratio relative group size.
      * @throws IllegalArgumentException
      */
     public RowMetaData (int ratio) 
@@ -66,7 +65,7 @@ public class RowMetaData
 	/**
 	 * Set the relative group size for the current row
 	 * 
-	 * @return relative group size
+     * @param ratio relative group size.
 	 */
 	public void setRatio(int ratio)
 	{
