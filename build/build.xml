@@ -10,12 +10,7 @@
 	<fileset id="thirdpartylibs" dir="${thirdpartydir}">
 		<include name="ApacheCommonsMath/2.0/commons-math-2.0.jar" />
 		<include name="jsc/1.0/jsc.jar" />
-		<include name="restlet/1.1.6/lib/org.restlet.jar" />
-		<include name="restlet/1.1.6/lib/com.noelios.restlet.jar" />
-	    <include name="restlet/1.1.6/lib/com.noelios.restlet.ext.servlet_2.5.jar" />
 		<include name="junit/4.7/lib/junit-4.7.jar" />
-		<include name="jfreechart/1.0/lib/jfreechart-1.0.13.jar" /> 
-		<include name="jfreechart/1.0/lib/jcommon-1.0.16.jar" /> 
 	</fileset>
 	
 	<path id="librariespath">
@@ -40,7 +35,7 @@
          >
         <fileset dir="${sourcedir}" defaultexcludes="yes">
             <include name="**/*.java"/>
-            <exclude name="**/test/**/*.java" />
+           <!-- <exclude name="**/test/**/*.java" /> -->
         </fileset>
       </javadoc>
 	</target>
