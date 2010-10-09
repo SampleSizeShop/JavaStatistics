@@ -24,6 +24,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.util.ArrayList;
 import java.util.List;
 
+import jsc.distributions.NoncentralStudentsT;
 import jsc.distributions.StudentsT;
 
 import org.apache.commons.math.MathException;
@@ -35,6 +36,11 @@ import edu.cudenver.bios.power.parameters.OneSampleStudentsTPowerParameters;
 import edu.cudenver.bios.power.parameters.PowerParameters;
 import edu.cudenver.bios.power.parameters.OneSampleStudentsTPowerParameters.MeanPair;
 
+/**
+ * Power Calculator implementation for the one sample Student's T test
+ * @author Sarah Kreidler
+ *
+ */
 public class OneSampleStudentsTPowerCalculator implements PowerCalculator
 {
     private static final int MAX_SAMPLE_SIZE = 100000;
@@ -96,6 +102,14 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
         }
     }
     
+    /**
+     * Calculate detectable difference for the one sample Student's T test
+     * 
+     * @see OneSampleStudentsTPowerParameters
+     * @see OneSampleStudentsTPower
+     * @param one sample student's t input parameters
+     * @return list of power objects containing detectable difference results
+     */
 	@Override
 	public List<Power> getDetectableDifference(PowerParameters params)
 	{
@@ -103,6 +117,14 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
 		return null;
 	}
 
+    /**
+     * Calculate power for the one sample Student's T test
+     * 
+     * @see OneSampleStudentsTPowerParameters
+     * @see OneSampleStudentsTPower
+     * @param one sample student's t input parameters
+     * @return list of power objects containing detectable difference results
+     */
 	@Override
 	public List<Power> getPower(PowerParameters params)
 	{
@@ -140,6 +162,14 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
         return results;
 	}
 
+    /**
+     * Calculate sample size for the one sample Student's T test
+     * 
+     * @see OneSampleStudentsTPowerParameters
+     * @see OneSampleStudentsTPower
+     * @param one sample student's t input parameters
+     * @return list of power objects containing detectable difference results
+     */
 	@Override
 	public List<Power> getSampleSize(PowerParameters params)
 	{
@@ -170,6 +200,15 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
 	    return results;
 	}
 
+    /**
+     * Run a power simulation for the one sample student's t test
+     * 
+     * @see OneSampleStudentsTPowerParameters
+     * @see OneSampleStudentsTPower
+     * @param params one sample student's t input parameters
+     * @param iterations number of iterations to use for the simulation
+     * @return list of power objects containing detectable difference results
+     */
 	@Override
 	public List<Power> getSimulatedPower(PowerParameters params, int iterations)
 	{
@@ -207,6 +246,19 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
         return results;
 	}
 
+	/**
+	 * Calculate power for the one sample student's t test
+	 * 
+	 * @see OneSampleStudentsTPower
+	 * @param alpha type I error
+	 * @param mu0 mean under the null hypothesis
+	 * @param muA mean under the alternative hypothesis
+	 * @param sigma standard deviation
+	 * @param sampleSize total sample size
+	 * @param isTwoTail if true, power will be calculated for a a two tailed test
+	 * @return power object
+	 * @throws MathException
+	 */
 	protected OneSampleStudentsTPower calculatePower(double alpha, double mu0, double muA, 
 			double sigma, int sampleSize, boolean isTwoTail) throws MathException
 	{
@@ -223,13 +275,16 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
         {
             double tAlphaLower = tdist.inverseCdf(alpha/2);
             double tAlphaUpper = tdist.inverseCdf(1-alpha/2);
-            power = (tdist.cdf(tAlphaLower + meanDiff*Math.sqrt(sampleSize)/sigma)
-                    + 1 - tdist.cdf(tAlphaUpper + meanDiff*Math.sqrt(sampleSize)/sigma));
+            double nonCentrality = -meanDiff*Math.sqrt(sampleSize)/sigma;
+            NoncentralStudentsT nctdist = new NoncentralStudentsT(df, nonCentrality);
+            power = nctdist.cdf(tAlphaLower) + 1 - nctdist.cdf(tAlphaUpper);
         }
         else
         {        	
             double tAlpha = tdist.inverseCdf(alpha);
-            power = (tdist.cdf(tAlpha + meanDiff*Math.sqrt(sampleSize)/sigma));
+            double nonCentrality = -meanDiff*Math.sqrt(sampleSize)/sigma;
+            NoncentralStudentsT nctdist = new NoncentralStudentsT(df, nonCentrality);
+            power = nctdist.cdf(tAlpha);
         }
         	
         return new OneSampleStudentsTPower(alpha, power, power, sampleSize, meanDiff, sigma);
@@ -240,12 +295,14 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
      * Calculate sample size for the one sample t test.  This function uses a bisection search algorithm 
      * to determine sample size.  The actual power is also calculated.
      * 
-     * @param mu0 mean under the null hypothesis
-     * @param muA mean under the alternative hypothesis
-     * @param sigma standard deviation (assumed equal)
-     * @param alpha type I error level
-     * @param power desired power
-     * @return sample size
+	 * @see OneSampleStudentsTPower
+	 * @param alpha type I error
+	 * @param mu0 mean under the null hypothesis
+	 * @param muA mean under the alternative hypothesis
+	 * @param sigma standard deviation
+	 * @param sampleSize total sample size
+	 * @param isTwoTail if true, power will be calculated for a a two tailed test
+     * @return power object containing sample size results
      * @throws InvalidAlgorithmParameterException
      */
 	protected OneSampleStudentsTPower calculateSampleSize(double alpha, double mu0, double muA, 
@@ -277,6 +334,21 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
         }
 	}
 	
+	 /**
+     * Calculate sample size for the one sample t test.  This function uses a bisection search algorithm 
+     * to determine sample size.  The actual power is also calculated.
+     * 
+	 * @see OneSampleStudentsTPower
+	 * @param alpha type I error
+	 * @param mu0 mean under the null hypothesis
+	 * @param muA mean under the alternative hypothesis
+	 * @param sigma standard deviation
+	 * @param sampleSize total sample size
+	 * @param isTwoTail if true, power will be calculated for a a two tailed test
+	 * @param simulationIterations number of iterations to run for the simulation
+     * @return power object containing sample size results
+     * @throws InvalidAlgorithmParameterException
+     */
 	protected OneSampleStudentsTPower simulatePower(double alpha, double mu0, double muA, 
     		double sigma, int sampleSize, boolean isTwoTailed, int simulationIterations) throws MathException
 	{
