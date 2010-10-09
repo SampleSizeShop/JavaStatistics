@@ -345,6 +345,9 @@ public class GLMMPowerCalculator implements PowerCalculator
 	 * Runs a simulation to determine power values for the given
 	 * parameters.  
 	 * 
+	 * Note: quantile / unconditional power currently hard-coded to 1000
+	 * random instances of the baseline covariate x1000 error simulations.
+	 * 
 	 * @see GLMMPowerParameters
 	 * @see GLMMPower
 	 * @param powerParams inputs to the simulation
@@ -497,7 +500,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 	
 	/**
 	 * Perform any preliminary calculations / updates on the input matrices
-	 * @param params
+	 * @param params input parameters
 	 */
     private void initialize(GLMMPowerParameters params)
     {           	
@@ -524,7 +527,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 	
     /**
      * Ensure that all required matrices are specified, and that conformance is correct
-     * @param params
+     * @param params GLMM input parameters
      * @throws IllegalArgumentException
      */
 	protected void validateMatrices(GLMMPowerParameters params) throws IllegalArgumentException
@@ -578,7 +581,6 @@ public class GLMMPowerCalculator implements PowerCalculator
         }
         else if (numRandom == 1)
         {
-            // TODO: FIX THIS make sure the test statistic is either HLT or UNIREP if there is a random
             // covariate (results not published for Wilk's Lambda or Pillai-Bartlett 
         	for(Test test = params.getFirstTest(); test != null; test = params.getNextTest())
         	{
@@ -632,8 +634,8 @@ public class GLMMPowerCalculator implements PowerCalculator
 	/**
 	 * Convenience function to determine which power method to use 
 	 *
-	 * @param params
-	 * @return
+	 * @param params GLMM input parameters
+	 * @return conditional/quantile/unconditional power
 	 */
 	private double getPowerByType(GLMMPowerParameters params)
 	{
@@ -660,8 +662,8 @@ public class GLMMPowerCalculator implements PowerCalculator
 	 * Compute conditional power.  Conditional power is conditional on
 	 * a single instance of the design matrix, and is most appropriate for
 	 * designs with only categorical  predictors
-	 * @param params
-	 * @return
+	 * @param params GLMN input parameters
+	 * @return conditional power
 	 */
     private double getConditionalPower(GLMMPowerParameters params)
     {
@@ -690,8 +692,8 @@ public class GLMMPowerCalculator implements PowerCalculator
      * non-centrality parameter.  Best used for designs with a 
      * baseline covariate
      * 
-     * @param params
-     * @return
+     * @param params GLMM input parameters
+     * @return unconditional power
      * @throws IllegalArgumentException
      */
     private double getUnconditionalPower(GLMMPowerParameters params)
@@ -732,8 +734,8 @@ public class GLMMPowerCalculator implements PowerCalculator
      * Calculate quantile power by determining a specified quantile
      * of the non-centrality distribution.
      * 
-     * @param params
-     * @return
+     * @param params GLMM input parameters
+     * @return quantile power
      */
     private double getQuantilePower(GLMMPowerParameters params)
     {
@@ -761,22 +763,11 @@ public class GLMMPowerCalculator implements PowerCalculator
     }
 
     /**
-     * Calculate power for the general linear multivariate model based on
-     * the input matrices.
+     *  Find the sample size which achieves the desired power(s) 
+     *  specified in the input parameters.  Uses a bisection search.
      * 
-     * For the mutivariate case, the following matrices must be specified
-     * <ul>
-     * <li>Essence design matrix - essence matrix for the model design
-     * <li>Beta matrix - estimated regression coefficients matrix
-     * <li>Sigma matrix - estimated errors matrix
-     * <li>Theta0 matrix - estimated null hypothesis matrix 
-     * <li>Between subject contrast matrix - defines comparisons between subjects
-     * <li>Within subject contrast matrix - defines comparisons within subjects
-     * (may be left null for univariate special case)
-     * </ul>
-     * 
-     * @param params Container for input matrices
-     * @return power
+     * @param params GLMM input parameters
+     * @return sample size
      */
     private SampleSize getSampleSize(GLMMPowerParameters params)
             throws IllegalArgumentException, MathException
@@ -803,8 +794,8 @@ public class GLMMPowerCalculator implements PowerCalculator
      * Determine the upper bound for the bisection search used in 
      * calculation of sample size
      * 
-     * @param params
-     * @return
+     * @param params GLMM input parameters
+     * @return upper bound on sample size to achieve desired power
      */
     private int getSampleSizeUpperBound(GLMMPowerParameters params)
     {
@@ -821,8 +812,8 @@ public class GLMMPowerCalculator implements PowerCalculator
 
     /**
      * Perform a bisection search to determine effect size
-     * @param params
-     * @return
+     * @param params GLMM input parameters
+     * @return detectable difference object
      * @throws IllegalArgumentException
      * @throws MathException
      */
@@ -847,8 +838,8 @@ public class GLMMPowerCalculator implements PowerCalculator
 
     /**
      * Get the upper bound for the bisection search used to determine effect size
-     * @param params
-     * @return
+     * @param params GLMM input parameters
+     * @return upper bound on beta scale
      */
     private double getDetectableDifferenceUpperBound(GLMMPowerParameters params)
     {
@@ -865,6 +856,13 @@ public class GLMMPowerCalculator implements PowerCalculator
     
     /**
      * Simulate the error matrix in the Y = X * beta + e
+     * 
+     * @param normalDist normal distribution object for generating random samples
+     * @param error matrix to hold random normal samples
+     * @param rows number of rows in the random normal samples matrix
+     * @param columns number of columns in the random normal samples matrix
+     * @param sigma the covariance matrix for the error term
+     * @return a random instance of the 'e' matrix in the model
      */
     private RealMatrix simulateError(Normal normalDist, RealMatrix error, int rows, int columns, RealMatrix sigma)
     throws IllegalArgumentException
@@ -898,17 +896,6 @@ public class GLMMPowerCalculator implements PowerCalculator
     /**
      * Simulate power for the general linear multivariate model based on
      * the input matrices.
-     * 
-     * For the mutivariate case, the following matrices must be specified
-     * <ul>
-     * <li>Design matrix - essence matrix for the model design
-     * <li>Beta matrix - estimated regression coefficients matrix
-     * <li>Sigma matrix - estimated errors matrix
-     * <li>Theta0 matrix - estimated null hypothesis matrix 
-     * <li>Between subject contrast matrix - defines comparisons between subjects
-     * <li>Within subject contrast matrix - defines comparisons within subjects
-     * (may be left null for univariate special case)
-     * </ul>
      * 
      * @param params Container for input matrices
      * @param iterations number of simulation samples/iterations
@@ -965,7 +952,7 @@ public class GLMMPowerCalculator implements PowerCalculator
      * @param normalDist normal distribution object for generating random errors
      * @param N total number of observations
      * @param rankX rank of the design matrix
-     * @return
+     * @return true if null is rejected, false otherwise
      */
     private boolean simulateAndFitModel(GLMMPowerParameters params, Normal normalDist, 
     		RealMatrix randomNormals, double N, double rankX)
