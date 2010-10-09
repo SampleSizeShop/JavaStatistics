@@ -23,7 +23,9 @@ package edu.cudenver.bios.power;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 
 /**
- * Pojo containing a description of the power result
+ * Pojo containing a description of the general linear model power result
+ * 
+ * @author Sarah Kreidler
  */
 public class GLMMPower extends Power
 {
@@ -141,7 +143,7 @@ public class GLMMPower extends Power
 	/**
 	 * Set the statistical test
 	 * @param test the statistical test
-	 * @see GLMMPowerParameters.Test
+	 * @see edu.cudenver.bios.power.parameters.GLMMPowerParameters.Test
 	 */
 	public void setTest(GLMMPowerParameters.Test test)
 	{
@@ -151,7 +153,7 @@ public class GLMMPower extends Power
 	/**
 	 * Get the power calculation method
 	 * @return power method
-	 * @see GLMMPowerParameters.PowerMethod 
+	 * @see edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod 
 	 */
 	public GLMMPowerParameters.PowerMethod getPowerMethod()
 	{
@@ -161,7 +163,7 @@ public class GLMMPower extends Power
 	/**
 	 * Set the power calculation method
 	 * @param powerMethod
-	 * 	@see GLMMPowerParameters.PowerMethod 
+	 * 	@see edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod 
 	 */
 	public void setPowerMethod(GLMMPowerParameters.PowerMethod powerMethod)
 	{

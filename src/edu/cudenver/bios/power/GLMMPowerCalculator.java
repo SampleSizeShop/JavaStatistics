@@ -49,6 +49,13 @@ import edu.cudenver.bios.power.glmm.GLMMTestFactory;
 import edu.cudenver.bios.power.glmm.NonCentralFDistribution;
 import edu.cudenver.bios.power.glmm.NonCentralityDistribution;
 
+/**
+ * Power calculator implementation for the general linear multivariate model
+ * 
+ * @see PowerCalculator
+ * @author Sarah Kreidler
+ *
+ */
 public class GLMMPowerCalculator implements PowerCalculator
 {
 	private static final double RELATIVE_SYMMETRY_THRESHOLD = 
@@ -182,7 +189,16 @@ public class GLMMPowerCalculator implements PowerCalculator
 	/********* public methods for the power API ************/
 	
 	/**
+	 * Calculate a list of power values using the methodology described in
+	 * Glueck & Muller 2003.
+	 * If the parameters contain lists of possible scale factors, statistical
+	 * tests, etc., then a power will be returned for each combination
+	 * of these factors.
 	 * 
+	 * @see GLMMPowerParameters
+	 * @see GLMMPower
+	 * @param powerParams inputs to the power calculation
+	 * @return list of calculated power values.
 	 */
 	@Override
 	public List<Power> getPower(PowerParameters powerParams)
@@ -245,6 +261,15 @@ public class GLMMPowerCalculator implements PowerCalculator
         return results;
 	}
 
+	/**
+	 * Find the best possible sample size to achieve a specified power or
+	 * list of powers.  Sample size is determined with a bisection search
+	 * 
+	 * @see GLMMPowerParameters
+	 * @see GLMMPower
+	 * @param sampleSizeParams inputs to the sample size calculation
+	 * @return list of calculated power values.
+	 */
 	@Override
 	public List<Power> getSampleSize(PowerParameters sampleSizeParams)
 	{
@@ -316,6 +341,16 @@ public class GLMMPowerCalculator implements PowerCalculator
 		return results;
 	}
 
+	/**
+	 * Runs a simulation to determine power values for the given
+	 * parameters.  
+	 * 
+	 * @see GLMMPowerParameters
+	 * @see GLMMPower
+	 * @param powerParams inputs to the simulation
+	 * @param iterations number of iterations to perform in the simulation
+	 * @return list of calculated power values.
+	 */
 	@Override
 	public List<Power> getSimulatedPower(PowerParameters powerParams, int iterations)
 	{
@@ -380,6 +415,15 @@ public class GLMMPowerCalculator implements PowerCalculator
         return results;
 	}
 
+	/**
+	 * Find the best possible effect size (i.e. scale factor for the beta matrix)  to achieve 
+	 * a specified power or list of powers.  Effect size is determined with a bisection search
+	 * 
+	 * @see GLMMPowerParameters
+	 * @see GLMMPower
+	 * @param powerParams inputs to the effect size calculation
+	 * @return list of calculated power values.
+	 */
 	@Override
 	public List<Power> getDetectableDifference(PowerParameters powerParams)
 	{
@@ -451,6 +495,10 @@ public class GLMMPowerCalculator implements PowerCalculator
         return results;
 	}
 	
+	/**
+	 * Perform any preliminary calculations / updates on the input matrices
+	 * @param params
+	 */
     private void initialize(GLMMPowerParameters params)
     {           	
         // update the sigma error if we have a baseline covariate
@@ -474,6 +522,11 @@ public class GLMMPowerCalculator implements PowerCalculator
         }
     }
 	
+    /**
+     * Ensure that all required matrices are specified, and that conformance is correct
+     * @param params
+     * @throws IllegalArgumentException
+     */
 	protected void validateMatrices(GLMMPowerParameters params) throws IllegalArgumentException
 	{
 	       // convenience variables
@@ -576,6 +629,12 @@ public class GLMMPowerCalculator implements PowerCalculator
         // TODO: how to check this?		
 	}
 	
+	/**
+	 * Convenience function to determine which power method to use 
+	 *
+	 * @param params
+	 * @return
+	 */
 	private double getPowerByType(GLMMPowerParameters params)
 	{
         // calculate the power
@@ -597,6 +656,13 @@ public class GLMMPowerCalculator implements PowerCalculator
         return power;
 	}
 	
+	/**
+	 * Compute conditional power.  Conditional power is conditional on
+	 * a single instance of the design matrix, and is most appropriate for
+	 * designs with only categorical  predictors
+	 * @param params
+	 * @return
+	 */
     private double getConditionalPower(GLMMPowerParameters params)
     {
     	// create a test
@@ -619,6 +685,15 @@ public class GLMMPowerCalculator implements PowerCalculator
         return (1 - nonCentralFDist.cdf(Fcrit));
     }
     
+    /**
+     * Calculate power by integrating over all possible values of the
+     * non-centrality parameter.  Best used for designs with a 
+     * baseline covariate
+     * 
+     * @param params
+     * @return
+     * @throws IllegalArgumentException
+     */
     private double getUnconditionalPower(GLMMPowerParameters params)
     throws IllegalArgumentException
     {  		
@@ -653,6 +728,13 @@ public class GLMMPowerCalculator implements PowerCalculator
         }        
     }
     
+    /**
+     * Calculate quantile power by determining a specified quantile
+     * of the non-centrality distribution.
+     * 
+     * @param params
+     * @return
+     */
     private double getQuantilePower(GLMMPowerParameters params)
     {
     	// create a test
@@ -717,6 +799,13 @@ public class GLMMPowerCalculator implements PowerCalculator
         return new SampleSize(essence.getTotalSampleSize(), getPowerByType(params));
     }
 
+    /**
+     * Determine the upper bound for the bisection search used in 
+     * calculation of sample size
+     * 
+     * @param params
+     * @return
+     */
     private int getSampleSizeUpperBound(GLMMPowerParameters params)
     {
         double desiredPower = params.getCurrentPower();
@@ -730,6 +819,13 @@ public class GLMMPowerCalculator implements PowerCalculator
         return upperBound;
     }
 
+    /**
+     * Perform a bisection search to determine effect size
+     * @param params
+     * @return
+     * @throws IllegalArgumentException
+     * @throws MathException
+     */
     private DetectableDifference getDetectableDifference(GLMMPowerParameters params)
     throws IllegalArgumentException, MathException
     {
@@ -749,6 +845,11 @@ public class GLMMPowerCalculator implements PowerCalculator
         return new DetectableDifference(betaScale, getPowerByType(params));
     }
 
+    /**
+     * Get the upper bound for the bisection search used to determine effect size
+     * @param params
+     * @return
+     */
     private double getDetectableDifferenceUpperBound(GLMMPowerParameters params)
     {
         double desiredPower = params.getCurrentPower();
@@ -810,7 +911,7 @@ public class GLMMPowerCalculator implements PowerCalculator
      * </ul>
      * 
      * @param params Container for input matrices
-     * @param interations number of simulation samples/iterations
+     * @param iterations number of simulation samples/iterations
      * @return simulated power value
      */
     public double simulatePower(GLMMPowerParameters params, int iterations)
