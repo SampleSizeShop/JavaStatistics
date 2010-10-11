@@ -1,3 +1,23 @@
+/*
+ * Java Statistics.  A java library providing power/sample size estimation for 
+ * the general linear model.
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.power.glmm;
 
 import java.util.ArrayList;
@@ -13,11 +33,20 @@ import org.apache.commons.math.util.MathUtils;
 import edu.cudenver.bios.matrix.GramSchmidtOrthonormalization;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 
+/**
+ * Implementation of the uncorreected univariate approach to repeated measures test 
+ * (UNIREP) for the general linear multivariate model.  This is also the base class
+ * for the corrected tests (Box, Geisser-Greenhouse, Huynh-Feldt)
+ *
+ * @author Sarah Kreidler
+ *
+ */
 public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
 {    
     protected static final double TOLERANCE = 0.000000000001;
     protected double unirepEpsilon = Double.NaN;
     
+    // class for tracking eigen value information during epsilon calculation
     protected class EigenValueMultiplicityPair
     {
         public double eigenValue;
@@ -30,6 +59,10 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         }
     };
     
+	/**
+	 * Create a UNIREP test object for the specified parameters
+	 * @param params GLMM input parameters
+	 */
     public GLMMTestUnivariateRepeatedMeasures(GLMMPowerParameters params)
     {
         super(params);
@@ -42,6 +75,14 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         calculateUnirepCorrection();
     }
     
+    /**
+     * Calculate the denominator degrees of freedom for the UNIREP, based on
+     * whether the null or alternative hypothesis is assumed true.  
+     * 
+     * @param type distribution type
+     * @return denominator degrees of freedom
+     * @throws IllegalArgumentException
+     */
     @Override
     public double getDenominatorDF(DistributionType type)
     {
@@ -65,6 +106,14 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         return df;
     }
 
+    /**
+     * Calculate the non-centrality parameter for the UNIREP, based on
+     * whether the null or alternative hypothesis is assumed true.  
+     * 
+     * @param type distribution type
+     * @return non-centrality parameter
+     * @throws IllegalArgumentException
+     */
     @Override
     public double getNonCentrality(DistributionType type)
     {
@@ -75,6 +124,14 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         return a*b*getObservedF(type)*unirepEpsilon;
     }
 
+    /**
+     * Calculate the numerator degrees of freedom for the UNIREP, based on
+     * whether the null or alternative hypothesis is assumed true.  
+     * 
+     * @param type distribution type
+     * @return numerator degrees of freedom
+     * @throws IllegalArgumentException
+     */
     @Override
     public double getNumeratorDF(DistributionType type)
     {
@@ -96,6 +153,14 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         return df;
     }
 
+    /**
+     * Calculate the observed F for the UNIREP, based on
+     * whether the null or alternative hypothesis is assumed true.  
+     * 
+     * @param type distribution type
+     * @return observed F
+     * @throws IllegalArgumentException
+     */
     @Override
     public double getObservedF(DistributionType type)
     {
@@ -128,6 +193,9 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         return H.getTrace() / E.getTrace();
     }
     
+    /**
+     * Calculate the epsilon to correct for violations of sphericity
+     */
     private void calculateUnirepCorrection()
     {          
         RealMatrix U = params.getWithinSubjectContrast();
@@ -181,6 +249,10 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         unirepEpsilon = (sumLambda*sumLambda) / (b * (sumLambdaSquared));        
     }
     
+    /**
+     * Ensure that the within subject contrast is orthonormal for all
+     * UNIREP tests
+     */
     protected void createOrthonormalU()
     {
         RealMatrix U = params.getWithinSubjectContrast();

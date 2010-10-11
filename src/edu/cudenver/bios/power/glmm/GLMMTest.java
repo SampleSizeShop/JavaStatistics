@@ -65,11 +65,11 @@ public abstract class GLMMTest
     }
 
     /**
-     * Calculate the critical F value for the specified test. 
+     * Calculate the critical F value under the specified distribution
      * 
-     * @param ndf numerator degrees of freedom for central F
-     * @param ddf denominator degrees of freedom for central F
-     * @param params linear model inputs
+     * @param type distribution type
+     * @param alpha type I error level
+     * @return critical F
      * 
      */
     public double getCriticalF(DistributionType type, double alpha)
