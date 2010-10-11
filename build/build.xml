@@ -1,4 +1,25 @@
-<project name="JavaStatistics" default="test">
+<!--  
+ * Java Statistics.  A java library providing power/sample size estimation for 
+ * the general linear model.
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ -->
+<project name="JavaStatistics" default="compress">
 	
 	<property name="project" value="JavaStatistics" />
 	<property name="sourcedir" value="${basedir}/../src" />
@@ -8,8 +29,8 @@
 	<property name="thirdpartydir" value="${basedir}/../../thirdparty" />
 
 	<fileset id="thirdpartylibs" dir="${thirdpartydir}">
-		<include name="ApacheCommonsMath/2.0/commons-math-2.0.jar" />
-		<include name="jsc/1.0/jsc.jar" />
+		<include name="ApacheCommonsMath/2.1/lib/commons-math-2.1.jar" />
+		<include name="jsc/1.0/lib/jsc.jar" />
 		<include name="junit/4.7/lib/junit-4.7.jar" />
 	</fileset>
 	
@@ -35,7 +56,6 @@
          >
         <fileset dir="${sourcedir}" defaultexcludes="yes">
             <include name="**/*.java"/>
-           <!-- <exclude name="**/test/**/*.java" /> -->
         </fileset>
       </javadoc>
 	</target>
@@ -51,10 +71,11 @@
       />
     </target>
 
+	<!-- compile the library file -->
 	<target name="compress" depends="compile,javadoc">
 		<jar destfile="${librarydir}/${project}.jar" basedir="${targetdir}" includes="**/*.class">
 			<manifest>
-				<attribute name="Author" value="${user.name}"/>
+				<attribute name="Author" value="Sarah Kreidler"/>
 				<section name="Shared">
 					<attribute name="Title" value="${project}"/>
 					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
@@ -66,23 +87,40 @@
 		</jar>
 		<copy file="${librarydir}/${project}.jar" todir="${targetdir}"/>
 	</target>	
-		
-	<target name="test" depends="compress">
-		<echoproperties/>
-		<echo message="java.class.path = ${java.class.path}"/>
-		<junit printsummary="yes" haltonfailure="yes">
-		  <classpath>
-			<fileset refid="thirdpartylibs" />
-		  	<pathelement location="${basedir}/../bin"/>
-		  </classpath>
-		  <formatter type="plain"/><!--
-		  <test name="edu.cudenver.bios.power.test.TestPowerStudentT" haltonfailure="no" outfile="result">
-		    <formatter type="xml"/>
-		  </test>
-		  <test name="edu.cudenver.bios.power.test.TestSampleSizeStudentT" haltonfailure="no" outfile="result">
-			 <formatter type="xml"/>
-		  </test>-->
-		</junit>
+	
+	<!-- Create the javadoc distribution  -->
+	<target name="javadoc-distribution" depends="javadoc">
+		<jar destfile="${librarydir}/${project}-javadoc.jar" basedir="${javadocdir}" >
+			<manifest>
+				<attribute name="Author" value="Sarah Kreidler"/>
+				<section name="Shared">
+					<attribute name="Title" value="${project} Javadoc"/>
+					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
+				</section>
+				<section name="Copyright">
+					<attribute name="Copy" value="(C) CU Denver Biostatistics Department"/>
+				</section>
+			</manifest>
+		</jar>
+		<copy file="${librarydir}/${project}-javadoc.jar" todir="${targetdir}"/>
 	</target>
 	
+	<!-- Create the source distribution -->
+	<target name="source-distribution">
+		<jar destfile="${librarydir}/${project}-source.jar" basedir="${basedir}/.." 
+			includes="src/**,build/**,sas/**,text/**,.classpath,.project,LICENSE-gpl2.0.txt,README.txt">
+			<manifest>
+				<attribute name="Author" value="Sarah Kreidler"/>
+				<section name="Shared">
+					<attribute name="Title" value="${project} Source Code"/>
+					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
+				</section>
+				<section name="Copyright">
+					<attribute name="Copy" value="(C) CU Denver Biostatistics Department"/>
+				</section>
+			</manifest>
+		</jar>
+		<copy file="${librarydir}/${project}-source.jar" todir="${targetdir}"/>
+	</target>
+		
 </project>
