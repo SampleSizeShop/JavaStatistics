@@ -136,7 +136,7 @@ public class NonCentralFDistribution
      * For this non-central F distribution, F, this method returns P(F < f). 
      * 
      * @param Fcritical critical point for which to calculate cumulative probability
-     * @return
+     * @return P(F < f)
      */
     public double cdf(double Fcritical)
     {
@@ -180,13 +180,13 @@ public class NonCentralFDistribution
      * For this non-central F distribution, F, this function returns the critical value, f,
      * such that P(F < f). 
      * 
-     * @param quantile quantile
-     * @return
+     * @param probability desired value of P(F < f)
+     * @return critical f such that P(F < f)
      */
-    public double inverseCDF(double quantile)
+    public double inverseCDF(double probability)
     {
-        if (quantile <= 0) return Double.NaN;
-        if (quantile >= 1) return Double.POSITIVE_INFINITY;
+        if (probability <= 0) return Double.NaN;
+        if (probability >= 1) return Double.POSITIVE_INFINITY;
         
         if (method == FMethod.CDF && nonCentrality == 0)
         {
@@ -194,16 +194,16 @@ public class NonCentralFDistribution
             // non-centrality parameter is non-zero.  So we just bisection solve 
             // unless we're really dealing with a central F.  Ah, the hazards of
             // pulling code off of the interwebs.
-            return nonCentralF.inverseCdf(quantile);
+            return nonCentralF.inverseCdf(probability);
         }
         else
         {
             UnivariateRealSolverFactory factory = UnivariateRealSolverFactory.newInstance();
             UnivariateRealSolver solver = factory.newBisectionSolver();
 
-            NonCentralFQuantileFunction quantFunc = new NonCentralFQuantileFunction(quantile);
+            NonCentralFQuantileFunction quantFunc = new NonCentralFQuantileFunction(probability);
 
-            int upperBound = findUpperBound(quantile);
+            int upperBound = findUpperBound(probability);
             try
             {
                 return solver.solve(quantFunc, 0, upperBound);
@@ -215,6 +215,9 @@ public class NonCentralFDistribution
         }
     }
         
+    /*
+     * Finds an upper bound for the bisection search 
+     */
     private int findUpperBound(double quantile)
     {
         int upperBound = STARTING_F;
