@@ -59,7 +59,7 @@ public interface PowerCalculator
 	 * Determine power by simulation
 	 * @param params
 	 * @param iterations
-	 * @return
+	 * @return list of power results
 	 */
 	List<Power> getSimulatedPower(PowerParameters params, int iterations);
 }

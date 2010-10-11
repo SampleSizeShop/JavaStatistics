@@ -107,7 +107,7 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
      * 
      * @see OneSampleStudentsTPowerParameters
      * @see OneSampleStudentsTPower
-     * @param one sample student's t input parameters
+     * @param params one sample student's t input parameters
      * @return list of power objects containing detectable difference results
      */
 	@Override
@@ -122,7 +122,7 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
      * 
      * @see OneSampleStudentsTPowerParameters
      * @see OneSampleStudentsTPower
-     * @param one sample student's t input parameters
+     * @param params one sample student's t input parameters
      * @return list of power objects containing detectable difference results
      */
 	@Override
@@ -167,7 +167,7 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
      * 
      * @see OneSampleStudentsTPowerParameters
      * @see OneSampleStudentsTPower
-     * @param one sample student's t input parameters
+     * @param params one sample student's t input parameters
      * @return list of power objects containing detectable difference results
      */
 	@Override
