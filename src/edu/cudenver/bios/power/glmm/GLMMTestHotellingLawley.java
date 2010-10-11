@@ -1,3 +1,23 @@
+/*
+ * Java Statistics.  A java library providing power/sample size estimation for 
+ * the general linear model.
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.power.glmm;
 
 import org.apache.commons.math.linear.InvalidMatrixException;
@@ -7,24 +27,30 @@ import org.apache.commons.math.linear.RealMatrix;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.MomentApproximationMethod;
 
+/**
+ * Implementation of the Hotelling Lawley Trace (HLT) test for the
+ * general linear multivariate model
+ * 
+ * @author Sarah Kreidler
+ *
+ */
 public class GLMMTestHotellingLawley extends GLMMTest
 {    
+	/**
+	 * Create a Hotelling-Lawley Trace test object for the specified parameters
+	 * @param params GLMM input parameters
+	 */
     public GLMMTestHotellingLawley(GLMMPowerParameters params)
     {
         super(params);
     }
     
     /**
-     * Calculate the denominator degrees of freedom for the specified test, based on
-     * whether the null or alternative hypothesis is assumed true.  Note, the null/alternative
-     * degrees of freedom vary only for the corrected forms of the univariate approach to
-     * repeated measures test.
+     * Calculate the denominator degrees of freedom for the HLT, based on
+     * whether the null or alternative hypothesis is assumed true.  
      * 
-     * @param powerParams input matrices
-     * @param underNullHypothesis if true, returns degrees of freedom for central F distribution 
-     * under the null hypothesis.  If false, returns degrees of freedom for non-central F under 
-     * the alternative hypothesis.
-     * @return numerator degrees of freedom
+     * @param type distribution type
+     * @return denominator degrees of freedom
      * @throws IllegalArgumentException
      */
     @Override
@@ -56,6 +82,14 @@ public class GLMMTestHotellingLawley extends GLMMTest
         return df;
     }
 
+    /**
+     * Calculate the non-centrality parameter for the HLT, based on
+     * whether the null or alternative hypothesis is assumed true.  
+     * 
+     * @param type distribution type
+     * @return non-centrality parameter
+     * @throws IllegalArgumentException
+     */
     @Override
     public double getNonCentrality(DistributionType type)
     {
@@ -92,15 +126,10 @@ public class GLMMTestHotellingLawley extends GLMMTest
     }
 
     /**
-     * Calculate the numerator degrees of freedom for the specified test, based on
-     * whether the null or alternative hypothesis is assumed true.  Note, the null/alternative
-     * degrees of freedom vary only for the corrected forms of the univariate approach to
-     * repeated measures test.
+     * Calculate the numerator degrees of freedom for the HLT, based on
+     * whether the null or alternative hypothesis is assumed true.  
      * 
-     * @param powerParams input matrices
-     * @param underNullHypothesis if true, returns degrees of freedom for central F distribution 
-     * under the null hypothesis.  If false, returns degrees of freedom for non-central F under 
-     * the alternative hypothesis.
+     * @param type distribution type
      * @return numerator degrees of freedom
      * @throws IllegalArgumentException
      */
@@ -113,6 +142,14 @@ public class GLMMTestHotellingLawley extends GLMMTest
         return a * b;
     }
 
+    /**
+     * Calculate the observed F for the HLT, based on
+     * whether the null or alternative hypothesis is assumed true.  
+     * 
+     * @param type distribution type
+     * @return observed F
+     * @throws IllegalArgumentException
+     */
     @Override
     public double getObservedF(DistributionType type)
     {       
