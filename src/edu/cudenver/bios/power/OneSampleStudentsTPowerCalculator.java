@@ -335,8 +335,7 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
 	}
 	
 	 /**
-     * Calculate sample size for the one sample t test.  This function uses a bisection search algorithm 
-     * to determine sample size.  The actual power is also calculated.
+     * Run a power simulation for the one sample t-test.  
      * 
 	 * @see OneSampleStudentsTPower
 	 * @param alpha type I error
