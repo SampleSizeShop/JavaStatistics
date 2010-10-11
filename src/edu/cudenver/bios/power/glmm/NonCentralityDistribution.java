@@ -40,7 +40,7 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
  * the general linear multivariate model.  Used by the GLMMPowerCalculator class 
  * for computing unconditional and quantile power.
  * 
- * @see GLMMPowerCalculator
+ * @see edu.cudenver.bios.power.GLMMPowerCalculator
  * @author Sarah Kreidler
  */
 public class NonCentralityDistribution

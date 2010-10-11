@@ -133,9 +133,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 	/**
 	 * Create a distribution for the specified weighted sum of non-central chi squares
 	 * 
-	 * @param lambda Nx1 vector of coefficients
-	 * @param nu Nx1 vector of degrees of freedom
-	 * @param omega Nx1 vector of noncentralities
+	 * @param chiSquareTerms list of weighted chi-square terms
 	 * @param normalCoefficient coefficient on the normal term
 	 * @param accuracy maximum error allowed in probability
 	 * @throws IllegalArgumentException
@@ -181,9 +179,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 	 * Create a distribution for the specified weighted sum of non-central chi squares
 	 * assuming a 0 as the coefficient on the normal term
 	 * 
-	 * @param lambda Nx1 vector of coefficients
-	 * @param nu Nx1 vector of degrees of freedom
-	 * @param omega Nx1 vector of noncentralities
+	 * @param chiSquareTerms list of weighted chi-square terms
 	 * @param accuracy maximum error allowed in probability
 	 * @throws IllegalArgumentException
 	 */
@@ -198,11 +194,6 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 	 * at the given quantile.
 	 * 
 	 * @param quantile point at which the cdf is evaluated: Pr(Q &lt;= quantile)
-	 * @param lambda Nx1 vector of coefficients
-	 * @param nu Nx1 vector of degrees of freedom
-	 * @param omega Nx1 vector of noncentralities
-	 * @param accuracy maximum error allowed in probability
-	 * @throws RuntimeException thrown when the probability cannot be computed within the specified accuracy
 	 * @return probability Pr(Q &lt;= quantile)
 	 */
 	public double cdf(double quantile)
