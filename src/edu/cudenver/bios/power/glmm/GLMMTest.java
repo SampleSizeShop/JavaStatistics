@@ -1,3 +1,23 @@
+/*
+ * Java Statistics.  A java library providing power/sample size estimation for 
+ * the general linear model.
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.power.glmm;
 
 import jsc.distributions.FishersF;
@@ -7,6 +27,11 @@ import org.apache.commons.math.linear.RealMatrix;
 
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 
+/**
+ * Abstract base class for statistical tests for the GLMM
+ * @author Sarah Kreidler
+ *
+ */
 public abstract class GLMMTest
 {    
     // for the unirep test, the degrees of freedom change depending on two 
@@ -27,6 +52,10 @@ public abstract class GLMMTest
     protected double N; // total sample size (row dimension of design matrix)
     protected double r; // rank of the design matrix
     
+    /**
+     * Create a statistical test for the given set of GLMM parameters
+     * @param params GLMM input parameters
+     */
     public GLMMTest(GLMMPowerParameters params)
     {
         this.params = params;
@@ -54,12 +83,40 @@ public abstract class GLMMTest
         return centralFDist.inverseCdf(1 - alpha);
     }
     
+    /**
+     * Prototype for getting numerator degrees of freedom for the
+     * statistical test under the specified distribution type.
+     * 
+     * @param type distribution type
+     * @return numerator degrees of freedom
+     */
     abstract public double getNumeratorDF(DistributionType type);
     
+    /**
+     * Prototype for getting denominator degrees of freedom for the
+     * statistical test under the specified distribution type.
+     * 
+     * @param type distribution type
+     * @return denominator degrees of freedom
+     */
     abstract public double getDenominatorDF(DistributionType type);
     
+    /**
+     * Prototype for getting observed F value for the
+     * statistical test under the specified distribution type.
+     * 
+     * @param type distribution type
+     * @return observed F
+     */
     abstract public double getObservedF(DistributionType type);
     
+    /**
+     * Prototype for getting the non-centrality parameter for the
+     * statistical test under the specified distribution type.
+     * 
+     * @param type distribution type
+     * @return non-centrality parameter
+     */
     abstract public double getNonCentrality(DistributionType type);
     
     /**
@@ -96,7 +153,7 @@ public abstract class GLMMTest
      * Calculate the sum of squares error matrix (the E matrix)
      * 
      * @param params matrices input by the user
-     * @return sum o
+     * @return error sum of squares
      */
     protected RealMatrix getErrorSumOfSquares(GLMMPowerParameters params)
     {        
