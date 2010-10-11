@@ -1,3 +1,23 @@
+/*
+ * Java Statistics.  A java library providing power/sample size estimation for 
+ * the general linear model.
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.power.glmm;
 
 import java.util.ArrayList;
@@ -17,10 +37,10 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 
 /**
  * Class representing the distribution of the non-centrality parameter in
- * the general linear multivariate model.  Used by the PowerGLMM class 
+ * the general linear multivariate model.  Used by the GLMMPowerCalculator class 
  * for computing unconditional and quantile power.
  * 
- * @see PowerGLMM
+ * @see GLMMPowerCalculator
  * @author Sarah Kreidler
  */
 public class NonCentralityDistribution
@@ -63,7 +83,13 @@ public class NonCentralityDistribution
         }
     }
     
-    
+    /**
+     * Create a non-centrality distribution for the specified inputs.
+     * @param params GLMM input parameters
+     * @param exact if true, Davie's algorithm will be used to compute the cdf, 
+     * otherwise a Satterthwaite style approximation is used.
+     * @throws IllegalArgumentException
+     */
     public NonCentralityDistribution(GLMMPowerParameters params, boolean exact)
     throws IllegalArgumentException
     {
@@ -135,6 +161,13 @@ public class NonCentralityDistribution
         }
     }
     
+    /**
+     * Calculate the probability P(W < w), where W follows the distribution of
+     * the non-centrality parameter 
+     * 
+     * @param w critical point for which to calculate cumulative probability
+     * @return P(W < w)
+     */
     public double cdf(double w)
     {
         if (H1 <= 0 || w <= H0) return 0;
@@ -272,14 +305,21 @@ public class NonCentralityDistribution
         }
     }
     
-    public double inverseCDF(double quantile)
+    /**
+     * For this non-centrality distribution, W, this function returns the critical value, w,
+     * such that P(W < w). 
+     * 
+     * @param probability desired value of P(W < w)
+     * @return critical w such that P(W < w)
+     */
+    public double inverseCDF(double probability)
     {
         if (H1 <= 0) return 0;
 
         UnivariateRealSolverFactory factory = UnivariateRealSolverFactory.newInstance();
         UnivariateRealSolver solver = factory.newBisectionSolver();
 
-        NonCentralityQuantileFunction quantFunc = new NonCentralityQuantileFunction(quantile);
+        NonCentralityQuantileFunction quantFunc = new NonCentralityQuantileFunction(probability);
         
         try
         {
@@ -291,6 +331,11 @@ public class NonCentralityDistribution
         }
     }
     
+    /**
+     * Calculate the inverse of the sigma star matrix
+     * @param params GLMM input parameters
+     * @return sigma star inverse
+     */
     private RealMatrix getSigmaStarInverse(GLMMPowerParameters params)
     {
         RealMatrix U = params.getWithinSubjectContrast();
@@ -315,11 +360,19 @@ public class NonCentralityDistribution
         }
     }
 
+    /**
+     * Get the upper intergral bound
+     * @return H1
+     */
     public double getH1()
     {
         return H1;
     }   
     
+    /**
+     * Get the lower intergral bound
+     * @return H0
+     */
     public double getH0()
     {
         return H0;

@@ -1,3 +1,23 @@
+/*
+ * Java Statistics.  A java library providing power/sample size estimation for 
+ * the general linear model.
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.power.glmm;
 
 import java.util.ArrayList;
@@ -63,6 +83,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		public int getCount() { return count; }
 	};
 	
+	// sorting function for the lambdas
 	private class MinMaxComparator implements Comparator<ChiSquareTerm>
 	{
 		public MinMaxComparator() {};
@@ -78,6 +99,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		}
 	}
 	
+	// rank sort for the lambdas
 	private class RankOrderComparator implements Comparator<Double>
 	{
 		@Override
@@ -95,6 +117,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		}
 	}
 	
+	// container class for probability information
 	private class TailProbabilityBound 
 	{
 		public double bound;
@@ -305,7 +328,9 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		return prob;
 	}
 	
-	
+	/*
+	 * Integrate
+	 */
 	private double integrate(int numTerms, double integrationInterval, double quantile, double TauSquared)
 	{
 		double value = 0;
@@ -402,6 +427,9 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		return c2;
 	}
 	
+	/*
+	 * Bound on the tail probability for a specified cutoff
+	 */
 	private TailProbabilityBound findTailProbabilityBound(double startU, double sigmaSquared, Counter counter)
 	throws RuntimeException
 	{
@@ -480,8 +508,8 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 	}
 	
 	/**
-	 * 
-	 * @return
+	 * Calculate the tau convergence factor
+	 * @return convergence factor
 	 */
 	private double calculateConvergenceFactor(double quantile, Counter counter)
 	throws RuntimeException
@@ -630,7 +658,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 	
 	
 	/**
-	 * 
+	 * convenience function for log
 	 */
 	private double computeLog(double x, boolean first)
 	{
