@@ -25,8 +25,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.TreeMap;
 
 /**
  * Distribution of a weighted sum of noncentral chi square variables
@@ -413,7 +411,6 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 				c2 = bound.cutoff;
 			}
 			u = (c1 - mean)/(c2 - mean);
-			int foo = 0;
 		}
 		return c2;
 	}
@@ -614,7 +611,6 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		// the truncation error
 		double error1;
 		double error2;
-		double error3;
 		
 		if (ns != 0)
 		{
