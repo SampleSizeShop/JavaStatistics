@@ -1,3 +1,23 @@
+/*
+ * Java Statistics.  A java library providing power/sample size estimation for 
+ * the general linear model.
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.power.parameters;
 
 import java.util.ArrayList;
@@ -11,6 +31,8 @@ import java.util.ArrayList;
 */
 public abstract class PowerParameters
 {
+	// wrapper class to allow easy iteration / peek into 
+	// a list
     protected class PeekableList<T>
     {
         ArrayList<T> list = new ArrayList<T>();
@@ -101,46 +123,85 @@ public abstract class PowerParameters
     	alphaList.add(new Double(alpha));
     }
     
+    /**
+     * Iterate to the first type I error in the list
+     * @return first alpha
+     */
 	public Double getFirstAlpha()
 	{
 	    return alphaList.first();
 	}
 	
+	/**
+	 * Iterate to the next type I error in the list
+	 * @return next alpha
+	 */
     public Double getNextAlpha()
     {
         return alphaList.next();
     }
     
+    /**
+     * Peek at the currently active alpha value
+     * @return current alpha
+     */
     public Double getCurrentAlpha()
     {
         return alphaList.current();
     }
     
+    /**
+     * Iterate to the first (per group) sample size in the list
+     * @return first sample size
+     */
     public Integer getFirstSampleSize()
     {
         return sampleSizeList.first();
     }
     
+    /**
+     * Iterate to the next (per group) sample size in the list
+     * or null if at the end of the list
+     * @return next sample size
+     */
     public Integer getNextSampleSize()
     {
         return sampleSizeList.next();
     }
     
+    /**
+     * Peek at the currently active sample size value
+     * @return current sample size
+     */
     public Integer getCurrentSampleSize()
     {
         return sampleSizeList.current();
     }
     
+    /**
+     * Iterate to the first power in the list (specified for sample
+     * size or detectable difference calculations)
+     * @return first power
+     */
     public Double getFirstPower()
     {
         return powerList.first();
     }
     
+    /**
+     * Iterate to the next power in the list (specified for sample
+     * size or detectable difference calculations)
+     * @return next power
+     */
     public Double getNextPower()
     {
         return powerList.next();
     }
     
+    /**
+     * Peek at the currently active power value
+     * @return current power
+     */
     public Double getCurrentPower()
     {
         return powerList.current();
