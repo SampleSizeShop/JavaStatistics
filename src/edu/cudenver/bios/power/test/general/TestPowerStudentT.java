@@ -119,8 +119,7 @@ public class TestPowerStudentT extends TestCase
      * and assert whether they match simulation
      * 
      * @param params
-     * @param testList
-     * @returns the number of powers that failed to match simulation
+     * @return the number of powers that failed to match simulation
      */
     public int checkPower(OneSampleStudentsTPowerParameters params)
     {
