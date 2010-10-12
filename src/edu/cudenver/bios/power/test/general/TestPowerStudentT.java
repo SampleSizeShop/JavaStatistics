@@ -32,7 +32,7 @@ import junit.framework.TestCase;
 
 /**
  * Unit test for one sample students t-test
- * 
+ * @author Sarah Kreidler
  */
 public class TestPowerStudentT extends TestCase
 {
