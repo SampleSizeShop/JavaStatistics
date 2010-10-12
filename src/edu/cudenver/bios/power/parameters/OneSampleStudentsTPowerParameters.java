@@ -60,7 +60,7 @@ public class OneSampleStudentsTPowerParameters extends PowerParameters
     /**
      * Add a standard deviation to the list of power calculations
      * 
-     * @param standard deviation
+     * @param sigma standard deviation
      */
     public void addVariance(double sigma)
     {
@@ -91,7 +91,7 @@ public class OneSampleStudentsTPowerParameters extends PowerParameters
 
 	/**
 	 * Set whether a two tailed power should be calculated
-	 * @param oneTailed
+	 * @param twoTailed if true, uses a two-tailed calculation, otherwise one-tailed
 	 */
 	public void setTwoTailed(boolean twoTailed)
 	{
