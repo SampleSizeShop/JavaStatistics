@@ -32,8 +32,9 @@ import edu.cudenver.bios.power.test.PowerChecker;
 import junit.framework.TestCase;
 
 /**
- * Unit tests for power calculations on the GLMM.  Compares the calculated
- * values against a 10K iteration simulation using a t-test
+ * Unit test for fixed univariate design with comparison against
+ * simulation and SAS output.
+ * @author Sarah Kreidler
  *
  */
 public class TestConditionalUnivariate extends TestCase
