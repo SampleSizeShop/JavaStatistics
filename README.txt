@@ -77,6 +77,11 @@ The resulting jar file is called
 
 ${JAVASTATISTICS_HOME}/lib/JavaStatistics.jar
 
+The build script assumes that the a directory called thirdparty is
+installed at the same directory level as ${JAVASTATISTICS_HOME}.
+A thirdparty distribution in the appropriate format is available from 
+http://www.glimmpse.com/
+
 ------------------------------
 7. TEST / DEMO PROGRAMS
 ------------------------------
