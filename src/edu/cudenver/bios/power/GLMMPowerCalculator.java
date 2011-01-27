@@ -37,6 +37,8 @@ import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
+import org.apache.commons.math.stat.descriptive.moment.Mean;
+import org.apache.commons.math.stat.descriptive.rank.Percentile;
 
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
@@ -917,21 +919,34 @@ public class GLMMPowerCalculator implements PowerCalculator
         Array2DRowRealMatrix randomNormals = 
         	new Array2DRowRealMatrix((int) N, params.getScaledBeta().getColumnDimension());
         
-		// TODO: separate simulation function for quantile/unconditional vs conditional
     	if (params.getDesignEssence().hasRandom() && 
     			params.getCurrentPowerMethod() != PowerMethod.CONDITIONAL_POWER)
     	{
+    		double[] powerValues = new double[SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL];
+    		
     		for(int gInstance = 0; gInstance < SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL; gInstance++)
     		{
     			X = params.getDesign(true); // force a new realization of the design matrix (i.e. a new covariate column)
+    			rejectionCount = 0;
     			for(int i = 0; i < SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL; i++)
     			{
     				if (simulateAndFitModel(params, normalDist, randomNormals, N, rankX)) rejectionCount++;
     			}
+    			powerValues[gInstance] = (((double) rejectionCount) / 
+    					((double) SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL));
     		}
-            return ((double) rejectionCount) / (((double) SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL) *
-            		((double) SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL));
-
+    		
+    		if (params.getCurrentPowerMethod() != PowerMethod.UNCONDITIONAL_POWER)
+    		{
+    			Mean unconditionalPower = new Mean();
+    			return unconditionalPower.evaluate(powerValues);
+    		}
+    		else 
+    		{
+    			// quantile power
+    			Percentile quantilePower = new Percentile(params.getCurrentQuantile());
+    			return quantilePower.evaluate(powerValues);
+    		}
     	}
     	else 
     	{
