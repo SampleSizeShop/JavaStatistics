@@ -121,6 +121,20 @@ public class GLMMPowerParameters extends PowerParameters
 		RAO_TWO_MOMENT_OMEGA_MULT
 	};
 
+	public enum ConfidenceIntervalType
+	{
+		NONE,
+		BETA_KNOWN_SIGMA_ESTIMATED,
+		BETA_SIGMA_ESTIMATED
+	}
+	
+	// parameters related to confidence intervals
+	ConfidenceIntervalType confidenceIntervalType = ConfidenceIntervalType.NONE;
+	double alphaLowerConfidenceLimit = 0.025;
+	double alphaUpperConfidenceLimit = 0.025;
+	double sampleSizeForEstimates = 0;
+	double designMatrixRankForEstimates = 0;
+	
 	// type of statistical test being performed
 	PeekableList<Test> testList = new PeekableList<Test>();
 	
@@ -855,6 +869,58 @@ public class GLMMPowerParameters extends PowerParameters
 	{
 		this.nonCentralityCDFExact = nonCentralityCDFExact;
 	}
+	
+	public double getAlphaLowerConfidenceLimit()
+	{
+		return alphaLowerConfidenceLimit;
+	}
+
+	public void setAlphaLowerConfidenceLimit(double alphaLowerConfidenceLimit)
+	{
+		this.alphaLowerConfidenceLimit = alphaLowerConfidenceLimit;
+	}
+
+	public double getAlphaUpperConfidenceLimit()
+	{
+		return alphaUpperConfidenceLimit;
+	}
+
+	public void setAlphaUpperConfidenceLimit(double alphaUpperConfidenceLimit)
+	{
+		this.alphaUpperConfidenceLimit = alphaUpperConfidenceLimit;
+	}
+
+	public double getSampleSizeForEstimates()
+	{
+		return sampleSizeForEstimates;
+	}
+
+	public void setSampleSizeForEstimates(double sampleSizeForEstimates)
+	{
+		this.sampleSizeForEstimates = sampleSizeForEstimates;
+	}
+
+	public double getDesignMatrixRankForEstimates()
+	{
+		return designMatrixRankForEstimates;
+	}
+
+	public void setDesignMatrixRankForEstimates(double designMatrixRankForEstimates)
+	{
+		this.designMatrixRankForEstimates = designMatrixRankForEstimates;
+	}
+
+	public ConfidenceIntervalType getConfidenceIntervalType()
+	{
+		return confidenceIntervalType;
+	}
+
+	public void setConfidenceIntervalType(ConfidenceIntervalType ConfidenceIntervalType)
+	{
+		this.confidenceIntervalType = ConfidenceIntervalType;
+	}
+	
+	
 }
 
 

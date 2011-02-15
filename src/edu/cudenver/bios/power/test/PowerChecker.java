@@ -48,13 +48,19 @@ public class PowerChecker
 {
     private static final int SIMULATION_SIZE = 10000;
     private static final double POWER_SIMULATION_COMPARISON_ALPHA = 0.01;
-    private static Normal normalDist = new Normal();
-    private static DecimalFormat Number = new DecimalFormat("#0.0000");
+    private static DecimalFormat Number = new DecimalFormat("#0.000");
+    private static DecimalFormat LongNumber = new DecimalFormat("#0.000000");
 
+	private double sasTolerance = 0.0000001;
+	private double simTolerance = 0.01;
+	
     private boolean simulate = true;
     private List<GLMMPower> sasPowers = null;
     
+    // results
     private ArrayList<Result> checkerResults = new ArrayList<Result>();
+    private double maxSasDeviation = 0;
+    private double maxSimDeviation = 0;
     private Timer timer = new Timer();
     
     private class Timer
@@ -86,44 +92,23 @@ public class PowerChecker
     
     private class Result
     {
-    	public double calculatedPower;
-    	public double simulatedPower;
-    	public double calcSimPvalue;
-    	public double sasPower;
-    	public double calcSasPvalue;
-    	public GLMMPowerParameters.Test test;
-    	public double sigmaScale;
-    	public double betaScale;
-    	public int totalSampleSize;
-    	public double alpha;
-    	public GLMMPowerParameters.PowerMethod powerMethod;
-    	public double quantile;   	
+    	GLMMPower calculatedPower;
+    	double sasPower;
+    	double simulatedPower;
+    	double sasDeviation;
+    	double simulationDeviation;
     	
-    	public Result(double calculatedPower,
-    			double simulatedPower,
-    			double calcSimPvalue,
+    	public Result(GLMMPower calculatedPower,
     			double sasPower,
-    			double calcSasPvalue,
-    			GLMMPowerParameters.Test test,
-    			double sigmaScale,
-    			double betaScale,
-    			int totalSampleSize,
-    			double alpha,
-    			GLMMPowerParameters.PowerMethod powerMethod,
-    			double quantile)
+    			double sasDeviation,
+    			double simulatedPower,
+    			double simulationDeviation)
     	{
     		this.calculatedPower = calculatedPower;
     		this.simulatedPower = simulatedPower;
-    		this.calcSimPvalue = calcSimPvalue;
     		this.sasPower = sasPower;
-    		this.calcSasPvalue = calcSasPvalue;
-    		this.test = test;
-    		this.sigmaScale = sigmaScale;
-    		this.betaScale = betaScale;
-    		this.totalSampleSize = totalSampleSize;
-    		this.alpha = alpha;
-    		this.powerMethod = powerMethod;
-    		this.quantile = quantile;
+        	this.sasDeviation = sasDeviation;
+        	this.simulationDeviation = simulationDeviation;
     	}
     };
     
@@ -166,17 +151,23 @@ public class PowerChecker
      * @param params
      * @return the number of powers that failed to match simulation
      */
-    public int checkPower(GLMMPowerParameters params)
+    public void checkPower(GLMMPowerParameters params)
     {
     	// create a power calculator
     	GLMMPowerCalculator calc = new GLMMPowerCalculator();
-    	int simulationMatches = 0;
-    	int sasMatches = 0;
 
     	// perform the calculations
     	System.out.println("Calculating power...");
     	long startTime = System.currentTimeMillis();
-    	List<Power> results = calc.getPower(params);
+    	List<Power> results = null;
+    	try
+    	{
+    		results = calc.getPower(params);
+    	}
+    	catch (Exception e)
+    	{
+    		System.err.println("Error in calculating power: " + e.getMessage());
+    	}
     	long calcTime = System.currentTimeMillis() - startTime;
     	System.out.println("Done.  Elapsed time: " +  ((double) calcTime / (double) 1000) + " seconds");
     	timer.addCalculationTime(calcTime);
@@ -193,56 +184,40 @@ public class PowerChecker
         	timer.addSimulationTime(simTime);
     	}
     	
-    	// accumulate results
+    	// accumulate results and calculate maximum absolute deviation
     	for(int i = 0; i < results.size(); i++)
     	{
     		GLMMPower power = (GLMMPower) results.get(i);
     		GLMMPower simPower = (simResults != null ? (GLMMPower) simResults.get(i) : null);
-    		GLMMPower sasPower = findMatchingSASPower(power);
-    		double simPvalue = Double.NaN;	
-    		double sasPvalue = Double.NaN;	
+    		GLMMPower sasPower = (sasPowers != null ? (GLMMPower) sasPowers.get(i) : null);
+    		double simDeviation = Double.NaN;	
+    		double sasDeviation = Double.NaN;	
 
     		if (simPower != null)
     		{
-    			simPvalue = zTest(power.getActualPower(), simPower.getActualPower());
-    			if (simPvalue > POWER_SIMULATION_COMPARISON_ALPHA) simulationMatches++;
+    			simDeviation = Math.abs(power.getActualPower() - simPower.getActualPower());
+    			if (simDeviation > maxSimDeviation) maxSimDeviation = simDeviation;
     		}
     		if (sasPower != null)
     		{
-    			sasPvalue = zTest(power.getActualPower(), sasPower.getActualPower());
-    			if (sasPvalue > POWER_SIMULATION_COMPARISON_ALPHA) sasMatches++;
+    			sasDeviation = Math.abs(power.getActualPower() - sasPower.getActualPower());
+    			if (sasDeviation > maxSasDeviation) maxSasDeviation = sasDeviation;
     		}
 
-    		checkerResults.add(new Result(power.getActualPower(),
+    		checkerResults.add(new Result(power,
     			(simPower != null ? simPower.getActualPower() : Double.NaN),
-    			simPvalue,
+    			simDeviation,
     			(sasPower != null ? sasPower.getActualPower(): Double.NaN),
-    			sasPvalue,
-    			power.getTest(),
-    			power.getSigmaScale(),
-    			power.getBetaScale(),
-    			power.getTotalSampleSize(),
-    			power.getAlpha(),
-    			power.getPowerMethod(),
-    			power.getQuantile()));
+    			sasDeviation));
     	}
-
-    	int totalMismatches = 0;
-    	if (simulate)
-    	{
-    		totalMismatches += results.size() - simulationMatches;
-    	}
-    	if (sasPowers != null)
-    	{
-    		totalMismatches += results.size() - sasMatches;
-    	}    	
-    	return totalMismatches;
     }
     
     public void reset()
     {
     	checkerResults.clear();
     	timer.reset();
+    	maxSasDeviation = 0;
+    	maxSimDeviation = 0;
     }
     
     /**
@@ -267,24 +242,24 @@ public class PowerChecker
 
     	for(Result result: checkerResults)
     	{
-    		buffer.append("<tr><td>" + Number.format(result.calculatedPower) + "</td><td>" +  
+    		buffer.append("<tr><td>" + Number.format(result.calculatedPower.getActualPower()) + "</td><td>" +  
     				Number.format(result.simulatedPower));
-    		if (result.calcSimPvalue < POWER_SIMULATION_COMPARISON_ALPHA)
-    			buffer.append(" <font color='red'>(" + Number.format(result.calcSimPvalue) + ")</font></td><td>");
+    		if (result.simulationDeviation < POWER_SIMULATION_COMPARISON_ALPHA)
+    			buffer.append(" <font color='red'>(" + Number.format(result.simulationDeviation) + ")</font></td><td>");
     		else
-    			buffer.append(" (" + Number.format(result.calcSimPvalue) + ")</td><td>");
+    			buffer.append(" (" + Number.format(result.simulationDeviation) + ")</td><td>");
     		buffer.append(Number.format(result.sasPower));
-    		if (result.calcSasPvalue < POWER_SIMULATION_COMPARISON_ALPHA)
-    			buffer.append(" <font color='red'>(" + Number.format(result.calcSasPvalue) + ")</font></td><td>");
+    		if (result.sasDeviation < POWER_SIMULATION_COMPARISON_ALPHA)
+    			buffer.append(" <font color='red'>(" + Number.format(result.sasDeviation) + ")</font></td><td>");
     		else
-    			buffer.append(" (" + Number.format(result.calcSasPvalue) + ")</td><td>");
-    		buffer.append(result.test + "</td><td>" + 
-    				Number.format(result.sigmaScale) + "</td><td>" + 
-    				Number.format(result.betaScale) + "</td><td>" + 
-    				result.totalSampleSize + "</td><td>" + 
-    				Number.format(result.alpha) + "</td><td>" + 
-    				result.powerMethod + "</td><td>" + 
-    				result.quantile + "</td><td></tr>");
+    			buffer.append(" (" + Number.format(result.sasDeviation) + ")</td><td>");
+    		buffer.append(result.calculatedPower.getTest() + "</td><td>" + 
+    				Number.format(result.calculatedPower.getSigmaScale()) + "</td><td>" + 
+    				Number.format(result.calculatedPower.getBetaScale()) + "</td><td>" + 
+    				result.calculatedPower.getTotalSampleSize() + "</td><td>" + 
+    				Number.format(result.calculatedPower.getAlpha()) + "</td><td>" + 
+    				result.calculatedPower.getPowerMethod() + "</td><td>" + 
+    				result.calculatedPower.getQuantile() + "</td><td></tr>");
     	}
     	
     	buffer.append("</table></body></html>");
@@ -314,62 +289,50 @@ public class PowerChecker
     	// output the results
     	System.out.println("Calculation time: " + ((double) timer.calculationMilliseconds / 1000));
     	System.out.println("Simulation time: " + ((double) timer.simulationMilliseconds / 1000));
-    	System.out.println("Calc Power\tSim Power (p-value)\tSAS Power (p-value)\tTest\tSigmaScale\tBetaScale\tTotal N\tAlpha\tPowerMethod\tQuantile");
+    	System.out.println("Calc Power (lower, upper)\tSim Power (p-value)\tSAS Power (p-value)\tTest\tSigmaScale\tBetaScale\tTotal N\tAlpha\tPowerMethod\tQuantile");
     	
     	for(Result result: checkerResults)
     	{
-    		System.out.println(Number.format(result.calculatedPower) + "\t" +  
-    				Number.format(result.simulatedPower) + " (" + Number.format(result.calcSimPvalue) + ")\t" +
-    				Number.format(result.sasPower) + " (" +  Number.format(result.calcSasPvalue) + ")\t" +
-    				result.test + "\t" + 
-    				Number.format(result.sigmaScale) + "\t" + 
-    				Number.format(result.betaScale) + "\t" + 
-    				result.totalSampleSize + "\t" + 
-    				Number.format(result.alpha) + "\t" + 
-    				result.powerMethod + "\t" + 
-    				result.quantile + "\t");
+    		System.out.println(Number.format(result.calculatedPower.getActualPower()) + "(" + 
+    				(result.calculatedPower.getConfidenceInterval() != null ? 
+    						Number.format(result.calculatedPower.getConfidenceInterval().getLowerLimit()) : "n/a") + ", " + 
+    				(result.calculatedPower.getConfidenceInterval() != null ? 
+    						Number.format(result.calculatedPower.getConfidenceInterval().getUpperLimit()) : "n/a") + ")\t" +  
+    				Number.format(result.simulatedPower) + " (" + Number.format(result.simulationDeviation) + ")\t" +
+    				Number.format(result.sasPower) + " (" +  Number.format(result.sasDeviation) + ")\t" +
+    				result.calculatedPower.getTest() + "\t" + 
+    				Number.format(result.calculatedPower.getSigmaScale()) + "\t" + 
+    				Number.format(result.calculatedPower.getBetaScale()) + "\t" + 
+    				result.calculatedPower.getTotalSampleSize() + "\t" + 
+    				Number.format(result.calculatedPower.getAlpha()) + "\t" + 
+    				result.calculatedPower.getPowerMethod() + "\t" + 
+    				result.calculatedPower.getQuantile() + "\t");
     	}
+    	
+    	System.out.println("Max Deviation from SAS: " + LongNumber.format(maxSasDeviation));
+    	System.out.println("Max Deviation from Simulation: " + LongNumber.format(maxSimDeviation));
+
     }
     
-    /**
-     * compute p-value for comparing a calculated and simulated power by z-test 
-     * 
-     * @param calc calculated power value
-     * @param sim simulated power value
-     * @return p-value
-     */
-    private static double zTest(double calc, double sim)
+    public boolean isSASDeviationBelowTolerance()
     {
-        double z = Math.abs((sim - calc) / Math.sqrt((sim * (1 - sim)) / SIMULATION_SIZE));
-        
-        double p = 2 * normalDist.upperTailProb(z);
-        return p;
+    	return (maxSasDeviation < sasTolerance);
     }
     
-    private GLMMPower findMatchingSASPower(GLMMPower power)
+    public boolean isSimulationDeviationBelowTolerance()
     {
-    	if (sasPowers != null)
-    	{
-    		GLMMPower match = null;
-    		for(GLMMPower sasPower: sasPowers)
-    		{
-    			if (power.getTest() == sasPower.getTest()  &&
-    					power.getAlpha() == sasPower.getAlpha() &&
-    					power.getTotalSampleSize() == sasPower.getTotalSampleSize() &&
-    					power.getBetaScale() == sasPower.getBetaScale() &&
-    					power.getSigmaScale() == sasPower.getSigmaScale() &&
-    					power.getPowerMethod() == sasPower.getPowerMethod() &&
-    					(Double.isNaN(sasPower.getQuantile()) || power.getQuantile() == sasPower.getQuantile()))
-    			{
-    				match = sasPower;
-    				break;
-    			}
-    		}
-    		return match;
-    	}
-    	else
-    	{
-    		return null;
-    	}
+    	return (maxSimDeviation < simTolerance);
     }
+    
+    public void setSASTolerance(double tolerance)
+    {
+    	sasTolerance = tolerance;
+    }
+    
+    public void setSimulationTolerance(double tolerance)
+    {
+    	simTolerance = tolerance;
+    }
+    
+    
 }

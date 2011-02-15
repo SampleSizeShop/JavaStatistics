@@ -40,15 +40,17 @@ import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 import org.apache.commons.math.stat.descriptive.moment.Mean;
 import org.apache.commons.math.stat.descriptive.rank.Percentile;
 
+import edu.cudenver.bios.distribution.NonCentralFDistribution;
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
+import edu.cudenver.bios.power.parameters.GLMMPowerParameters.ConfidenceIntervalType;
 import edu.cudenver.bios.power.parameters.PowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.Test;
+import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval;
 import edu.cudenver.bios.power.glmm.GLMMTest;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory;
-import edu.cudenver.bios.power.glmm.NonCentralFDistribution;
 import edu.cudenver.bios.power.glmm.NonCentralityDistribution;
 
 /**
@@ -240,16 +242,16 @@ public class GLMMPowerCalculator implements PowerCalculator
         						{
         							// we only continue through this loop for quantile power
         							double power = getPowerByType(params);
-        							if (method == PowerMethod.QUANTILE_POWER)
-        								results.add(new GLMMPower(test, alpha, 
+        							GLMMPowerConfidenceInterval ci = null;
+        							if (params.getConfidenceIntervalType() != 
+        								ConfidenceIntervalType.NONE)
+        							{
+        								ci = new GLMMPowerConfidenceInterval(params);
+        							}
+    								results.add(new GLMMPower(test, alpha, 
         									power, power, 
         									params.getDesignEssence().getTotalSampleSize(), 
-        									betaScale, sigmaScale, method, quantile));
-        							else
-        								results.add(new GLMMPower(test, alpha, 
-            									power, power, 
-            									params.getDesignEssence().getTotalSampleSize(), 
-            									betaScale, sigmaScale, method));
+        									betaScale, sigmaScale, method, quantile, ci));
         							quantile = params.getNextQuantile();
         						}
         						while (method == PowerMethod.QUANTILE_POWER &&

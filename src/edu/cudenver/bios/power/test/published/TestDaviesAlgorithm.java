@@ -35,8 +35,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.xml.sax.InputSource;
 
-import edu.cudenver.bios.power.glmm.WeightedSumOfNoncentralChiSquaresDistribution;
-import edu.cudenver.bios.power.glmm.ChiSquareTerm;
+import edu.cudenver.bios.distribution.ChiSquareTerm;
+import edu.cudenver.bios.distribution.WeightedSumOfNoncentralChiSquaresDistribution;
 import junit.framework.TestCase;
 
 /**

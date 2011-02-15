@@ -88,14 +88,15 @@ public class TestHotellingLawleyExactUnconditional extends TestCase
         };
         GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
 
-        System.out.println(TITLE);
-        int mismatches = checker.checkPower(params5);
-        mismatches += checker.checkPower(params25);
-        mismatches += checker.checkPower(params50);
+		System.out.println(TITLE);
+		checker.checkPower(params5);
+		checker.checkPower(params25);
+		checker.checkPower(params50);
 		checker.outputResults();
 		checker.outputResults(TITLE, OUTPUT_FILE);
-		checker.reset();
-        assertEquals(0, mismatches);
+		assertTrue(checker.isSASDeviationBelowTolerance());
+		assertTrue(checker.isSimulationDeviationBelowTolerance());
+		checker.reset();	
     }
     
     /**

@@ -20,7 +20,7 @@
  */
 package edu.cudenver.bios.power.test.general;
 
-import edu.cudenver.bios.power.glmm.NonCentralFDistribution;
+import edu.cudenver.bios.distribution.NonCentralFDistribution;
 import junit.framework.TestCase;
 
 /**

@@ -20,7 +20,9 @@
  */
 package edu.cudenver.bios.power;
 
+import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
+import edu.cudenver.bios.utils.ConfidenceInterval;
 
 /**
  * Pojo containing a description of the general linear model power result
@@ -43,6 +45,10 @@ public class GLMMPower extends Power
 	// method is used
 	double quantile = Double.NaN;
 	
+	// confidence limits for power if requested
+	// only available if solving for power in a fixed design
+	GLMMPowerConfidenceInterval confidenceInterval = null;
+	
 	/**
 	 * Create a new GLMMPower object.
 	 * 
@@ -60,11 +66,31 @@ public class GLMMPower extends Power
 			double betaScale, double sigmaScale, 
 			GLMMPowerParameters.PowerMethod method)
 	{
-		super(nominalPower, actualPower, sampleSize, alpha);
-		this.test = test;
-		this.betaScale = betaScale;
-		this.sigmaScale = sigmaScale;
-		this.powerMethod = method;
+		this(test, alpha, nominalPower,actualPower,sampleSize,
+				betaScale, sigmaScale, method, Double.NaN, null);
+	}
+	
+	/**
+	 * Create a new GLMMPower object.
+	 * 
+	 * @param test the statistical test performed
+	 * @param alpha the type I error rate
+	 * @param nominalPower requested power (for sample size, detectable difference requests)
+	 * @param actualPower calculated power
+	 * @param sampleSize total sample size
+	 * @param betaScale scale factor for beta matrix (roughly interpreted as detectable difference)
+	 * @param sigmaScale scale factor for error covariance matrix
+	 * @param method method used for power calculation
+	 * @param confidenceInterval confidence interval if requested
+	 */
+	public GLMMPower(GLMMPowerParameters.Test test, double alpha, 
+			double nominalPower, double actualPower, int sampleSize,
+			double betaScale, double sigmaScale, 
+			GLMMPowerParameters.PowerMethod method,
+			GLMMPowerConfidenceInterval confidenceInterval)
+	{
+		this(test, alpha, nominalPower,actualPower,sampleSize,
+				betaScale, sigmaScale, method, Double.NaN, confidenceInterval);
 	}
 	
 	/**
@@ -86,12 +112,37 @@ public class GLMMPower extends Power
 			GLMMPowerParameters.PowerMethod method,
 			double quantile)
 	{
+		this(test, alpha, nominalPower,actualPower,sampleSize,
+				betaScale, sigmaScale, method, quantile, null);
+	}
+	
+	/**
+	 * Create a new GLMMPower object.
+	 * 
+	 * @param test the statistical test performed
+	 * @param alpha the type I error rate
+	 * @param nominalPower requested power (for sample size, detectable difference requests)
+	 * @param actualPower calculated power
+	 * @param sampleSize total sample size
+	 * @param betaScale scale factor for beta matrix (roughly interpreted as detectable difference)
+	 * @param sigmaScale scale factor for error covariance matrix
+	 * @param method method used for power calculation
+	 * @param quantile optional quantile value (for quantile power only)
+	 * @param confidenceInterval confidence interval if requested
+	 */
+	public GLMMPower(GLMMPowerParameters.Test test, double alpha, 
+			double nominalPower, double actualPower, int sampleSize,
+			double betaScale, double sigmaScale, 
+			GLMMPowerParameters.PowerMethod method,
+			double quantile, GLMMPowerConfidenceInterval confidenceInterval)
+	{
 		super(nominalPower, actualPower, sampleSize, alpha);
 		this.test = test;
 		this.betaScale = betaScale;
 		this.sigmaScale = sigmaScale;
 		this.powerMethod = method;
 		this.quantile = quantile;
+		this.confidenceInterval = confidenceInterval;
 	}
 	
 	/**
@@ -188,6 +239,24 @@ public class GLMMPower extends Power
 	public void setQuantile(double quantile)
 	{
 		this.quantile = quantile;
+	}
+
+	/**
+	 * Get the confidence interval associated with power	
+	 * @return confidence interval
+	 */
+	public GLMMPowerConfidenceInterval getConfidenceInterval()
+	{
+		return confidenceInterval;
+	}
+
+	/**
+	 * Set the confidence interval associated with power	
+	 * @param confidenceInterval the power confidence interval
+	 */
+	public void setConfidenceInterval(GLMMPowerConfidenceInterval confidenceInterval)
+	{
+		this.confidenceInterval = confidenceInterval;
 	}
 
 	/**

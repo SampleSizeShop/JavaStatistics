@@ -23,35 +23,30 @@ package edu.cudenver.bios.power.test.published;
 import java.io.File;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.MatrixUtils;
-import org.apache.commons.math.linear.RealMatrix;
-
-import junit.framework.TestCase;
-
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.RowMetaData;
+import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters.Test;
 import edu.cudenver.bios.power.test.PowerChecker;
+import junit.framework.TestCase;
 
 /**
- * Unit test for fixed multivariate design with comparison against
+ * Unit test for fixed univariate design with comparison against
  * simulation and SAS output.
  * @author Sarah Kreidler
  *
  */
-public class TestConditionalMultivariate extends TestCase
+public class TestConditionalMultivariateInteraction extends TestCase
 {
     private static final double[] ALPHA_LIST = {0.05};    
     private static final double[] BETA_SCALE_LIST = {0,0.5,1,1.5,2};
     private static final double[] SIGMA_SCALE_LIST = {1,2};
-    private static final int[] SAMPLE_SIZE_LIST = {5,10};
+    private static final int[] SAMPLE_SIZE_LIST = {10};
 
-	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestConditionalMultivariate.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "FixedMultivariateOutput.html";
-	private static final String TITLE = "Power results for fixed multivariate";
-	
+	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestConditionalUnivariate.xml";
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "FixedUnivariateOutput.html";
+	private static final String TITLE = "Power results for fixed univariate";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -66,14 +61,14 @@ public class TestConditionalMultivariate extends TestCase
 			fail();
 		}
 	}
+	
     /**
-     * Test case for a multivariate GLM with only fixed predictors
+     * Test valid inputs for a univariate linear model with only fixed predictors
      */
-    public void testValidMultivariateFixed()
+    public void testValidUnivariateFixed()
     {
         // build the inputs
-        GLMMPowerParameters params = buildValidMultivariateFixedInputs();
-
+        GLMMPowerParameters params = buildValidUnivariateInputs();
         System.out.println(TITLE);
         checker.checkPower(params);
 		checker.outputResults();
@@ -82,68 +77,78 @@ public class TestConditionalMultivariate extends TestCase
 		assertTrue(checker.isSimulationDeviationBelowTolerance());
 		checker.reset();
     }
+
+    /**
+     * Tests if the calculator throws an exception on invalid inputs
+     */
+    public void testInvalidInputs()
+    {
+        // build the inputs
+        GLMMPowerParameters params = buildValidUnivariateInputs();
+        // create a power calculator
+        GLMMPowerCalculator calc = new GLMMPowerCalculator();
+        params.setBeta(null);
+        
+        try
+        {
+        	calc.getPower(params);
+            fail();
+        }
+        catch (Exception e)
+        {
+            assertTrue(true);
+        }
+    }
+
+    
+
+
+    /********** helper functions to create the matrices ***********/
     
     /**
-     * Builds matrices for a multivariate GLM with fixed predictors
+     * Builds matrices for a univariate GLM with fixed predictors
      */
-    private GLMMPowerParameters buildValidMultivariateFixedInputs()
+    private GLMMPowerParameters buildValidUnivariateInputs()
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
-     
+       
         // add tests
         for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
         {
             params.addTest(test);
         }
-
+        
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
-        int Q = 4;
-        // create design matrix
-        RealMatrix essenceData = MatrixUtils.createRealIdentityMatrix(Q);
-        RowMetaData[] rowMd = {
-        		new RowMetaData(1), 
-        		new RowMetaData(1), 
-        		new RowMetaData(1), 
-        		new RowMetaData(1)
-        		};
-        DesignEssenceMatrix essence = 
-        	new DesignEssenceMatrix(essenceData.getData(), rowMd, null, null);
-        params.setDesignEssence(essence);
-        // add sample size multipliers
-        for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
-        
-        // build sigma matrix
-        double rho = 0.4;
-        double [][] sigma = {{1,rho,rho},{rho,1,rho},{rho,rho,1}}; // compound symmetry
-        // double [][] sigma = {{1,0.2,0.3},{0.2,1,0.2},{0.3,0.2,1}}; // toeplitz
-        params.setSigmaError(new Array2DRowRealMatrix(sigma));
-        // add sigma scale values
-        for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
-        
         // build beta matrix
-        double [][] beta = {{1,0,0},{0,0,0},{0,0,0},{0,0,0}};
-        params.setBeta(new FixedRandomMatrix(beta, null,  false));
+        double [][] beta = {{0},{1}};
+        params.setBeta(new FixedRandomMatrix(beta, null, false));
         // add beta scale values
         for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
         
         // build theta null matrix
-        double [][] theta0 = {{0,0},{0,0},{0,0}};
+        double [][] theta0 = {{0}};
         params.setTheta(new Array2DRowRealMatrix(theta0));
-
+        
+        // build sigma matrix
+        double [][] sigma = {{1}};
+        params.setSigmaError(new Array2DRowRealMatrix(sigma));
+        // add sigma scale values
+        for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
+        
+        // build design matrix
+        double[][] essenceData = {{1,0},{0,1}};
+        RowMetaData[] rowMd = {new RowMetaData(1), new RowMetaData(1)};
+        DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
+        params.setDesignEssence(essenceMatrix);
+        // add sample size multipliers
+        for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
+        
         // build between subject contrast
-        double [][] between = {{1,-1,0,0},{1,0,-1,0},{1,0,0,-1}};
+        double [][] between = {{1,-1}};
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
 
-        // build within subject contrast
-        double [][] within = {{1,1},{-1,0},{0,-1}};
-        params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
-
-        //RealMatrix U = params.getWithinSubjectContrast();
-        //RealMatrix upu = U.multiply(U.transpose());
-        
         return params;     
     }   
-
 }
