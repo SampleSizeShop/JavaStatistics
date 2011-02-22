@@ -33,7 +33,7 @@
 * http://www.ehpr.ufl.edu/muller/software_agreement
 * The required software includes POWERLIB and LINMOD 
 */
-%LET POWERLIB_IML_FILE = C:\KeithMullerSoftware\power\Iml\POWERLIB203.IML;
+%LET POWERLIB_IML_FILE = C:\KeithMullerSoftware\power\Iml\POWERLIB21.IML;
 %LET LINMOD_IML_DIRECTORY = C:\KeithMullerSoftware\linmod33\SOURCE;
 /* The code listed below is not publicly available.  Please contact TBD to request a copy */
 %LET GLUECK_MULLER_IML_DIRECTORY = C:\KeithMullerSoftware\BASE01\kem\research\randomx\baseline\iml;
