@@ -37,6 +37,7 @@ LIBNAME DATA_DIR "&DATA_DIRECTORY";
 
 PROC IML SYMSIZE=1000 WORKSIZE=2000;
 %INCLUDE "&POWERLIB_IML_FILE"/NOSOURCE2;
+%INCLUDE "XMLUTILITIES.IML"/NOSOURCE2;
 
 * Define inputs to power program;
 ALPHA = 0.05;
@@ -51,35 +52,14 @@ BETASCAL = DO(0,2.5,0.05);
 C = {1 -1};
 
 OPT_OFF= {C U};
+ROUND = 15;
 RUN POWER;
 
-TEST_LIST = {"unirep"};
-
 /* write to XML file */
+/* write the data to an XML file */
+TEST_LIST = {"unirep"};
+TEST_COL = {5};
 filename out "&DATA_DIRECTORY\TestConditionalTwoSampleTTest.xml"; 
-file out;
-	put "<powerList>";
-	do i=1 to NROW(_HOLDPOWER);
-		do t=1 to NCOL(TEST_LIST);
-			put "<glmmPower test='" @;
-			put (TEST_LIST[t]) @;
-			put "' alpha='" @;
-			put ALPHA @;
-			put "' nominalPower='" @;
-			put (_HOLDPOWER[i,5]) @;
-			put "' actualPower='" @;
-			put (_HOLDPOWER[i,5]) @;
-			put "' betaScale='" @;
-			put (_HOLDPOWER[i,3]) @;
-			put "' sigmaScale='" @;
-			put (_HOLDPOWER[i,2]) @;
-			put "' sampleSize='" @;
-			put (_HOLDPOWER[i,4]) @;
-			put "' powerMethod='conditional' />";
-		end;
-	end;
-	put "</powerList>";
-closefile out;
-
+RUN powerResultsToXML(out, _HOLDPOWER, TEST_LIST, TEST_COL, ALPHA);
 
 QUIT;

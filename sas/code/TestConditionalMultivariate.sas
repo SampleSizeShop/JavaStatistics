@@ -27,8 +27,8 @@ TITLE "Conditional Power, Fixed Design, Multivariate";
 LIBNAME DATA_DIR "&DATA_DIRECTORY";
 
 PROC IML SYMSIZE=1000 WORKSIZE=2000;
-%INCLUDE "C:\Documents and Settings\kreidles\My Documents\Glimmpse\KeithMullerCode\powerlib\Iml\POWERLIB203.IML"/NOSOURCE2;
-
+%INCLUDE "&POWERLIB_IML_FILE"/NOSOURCE2;
+%INCLUDE "XMLUTILITIES.IML"/NOSOURCE2;
 
 OPT_OFF={ALPHA};
 OPT_ON = {ORTHU UN HF GG BOX  HLT PBT WLK MMETHOD  UMETHOD MMETHOD};
@@ -59,37 +59,16 @@ BETASCAL=DO(0, 2.0 , 0.50);
                    * switch to approximation 2, MET 2003;
                    * HF and GG: (2) Muller, Edwards, and Taylor (2004) approx;
 
-RUN _POWER(HOLDPOWER, LABELS, WARNINGS, WARNINGLABELS);
+* Output full precision ;
+ROUND = 15;
 
+RUN POWER;
+
+/* write the data to an XML file */
 /* These need to be in the same order */
-TEST_LIST = {'hlt' 'pbt' 'wl' 'unirep' 'unirepHF' 'unirepGG' 'unirepBox'};
-TEST_COL = {4 5 6 8 11 14 15};
-
-/* write to XML file - assumes all tests are requested from POWER */
-filename out "&DATA_DIRECTORY\TestConditionalMultivariate.xml"; 
-file out;
-	put "<powerList>";
-	do i=1 to NROW(HOLDPOWER);
-		do t=1 to NCOL(TEST_LIST);
-			POWERCOL = TEST_COL[t];
-			put "<glmmPower test='" @;
-			put (TEST_LIST[t]) @;
-			put "' alpha='" @;
-			put ALPHA @;
-			put "' nominalPower='" @;
-			put (HOLDPOWER[i,POWERCOL]) @;
-			put "' actualPower='" @;
-			put (HOLDPOWER[i,POWERCOL]) @;
-			put "' betaScale='" @;
-			put (HOLDPOWER[i,2]) @;
-			put "' sigmaScale='" @;
-			put (HOLDPOWER[i,1]) @;
-			put "' sampleSize='" @;
-			put (HOLDPOWER[i,3]) @;
-			put "' powerMethod='conditional' />";
-		end;
-	end;
-	put "</powerList>";
-closefile out;
+TEST_LIST = {'unirep' 'unirepBox' 'unirepGG' 'unirepHF' 'wl' 'pbt' 'hlt'};
+TEST_COL = {9 17 15 12 6 5 4};
+filename out "&DATA_DIRECTORY\TestConditionalMultivariate.xml";
+RUN powerResultsToXML(out, _HOLDPOWER, TEST_LIST, TEST_COL, ALPHA);
 
 QUIT;
