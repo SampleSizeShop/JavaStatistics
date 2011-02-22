@@ -30,7 +30,6 @@ PROC IML SYMSIZE=1000 WORKSIZE=2000;
 %INCLUDE "&POWERLIB_IML_FILE"/NOSOURCE2;
 %INCLUDE "XMLUTILITIES.IML"/NOSOURCE2;
 
-OPT_OFF={ALPHA};
 OPT_ON = {ORTHU UN HF GG BOX  HLT PBT WLK MMETHOD  UMETHOD MMETHOD};
 * Specifying the option ORTHU in OPT_ON allows the program to provide;
 * an orthonormal U matrix if one is not given by the user;
@@ -40,7 +39,7 @@ P=3;
 Q=4;
 C=J(Q-1,1,1)||(-I(Q-1));
 U=( J(P-1,1,1)||(-I(P-1)) )`;
-ALPHA=.05;
+ALPHA=0.05;
 
 VARIANCE=1;  RHO=0.4;
 SIGMA=VARIANCE#(I(P)#(1-RHO) + J(P,P,RHO)); *Compound symmetry;
@@ -65,10 +64,8 @@ ROUND = 15;
 RUN POWER;
 
 /* write the data to an XML file */
-/* These need to be in the same order */
 TEST_LIST = {'unirep' 'unirepBox' 'unirepGG' 'unirepHF' 'wl' 'pbt' 'hlt'};
-TEST_COL = {9 17 15 12 6 5 4};
 filename out "&DATA_DIRECTORY\TestConditionalMultivariate.xml";
-RUN powerResultsToXML(out, _HOLDPOWER, TEST_LIST, TEST_COL, ALPHA);
+RUN powerResultsToXML(out, _HOLDPOWER, TEST_LIST, 0);
 
 QUIT;

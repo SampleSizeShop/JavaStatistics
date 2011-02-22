@@ -1,8 +1,8 @@
 <powerList>
-<glmmPower test='unirep' alpha='     0.05' nominalPower='             0.05' actualPower='             0.05' betaScale='        1' sigmaScale='     0.05' sampleSize='        0' powerMethod='conditional' />
-<glmmPower test='unirep' alpha='     0.05' nominalPower=' 0.17057863301225' actualPower=' 0.17057863301225' betaScale='        1' sigmaScale='     0.05' sampleSize='      0.5' powerMethod='conditional' />
-<glmmPower test='unirep' alpha='     0.05' nominalPower=' 0.51435106987045' actualPower=' 0.51435106987045' betaScale='        1' sigmaScale='     0.05' sampleSize='        1' powerMethod='conditional' />
-<glmmPower test='unirep' alpha='     0.05' nominalPower=' 0.84642204211933' actualPower=' 0.84642204211933' betaScale='        1' sigmaScale='     0.05' sampleSize='      1.5' powerMethod='conditional' />
-<glmmPower test='unirep' alpha='     0.05' nominalPower=' 0.97717196529656' actualPower=' 0.97717196529656' betaScale='        1' sigmaScale='     0.05' sampleSize='        2' powerMethod='conditional' />
-<glmmPower test='unirep' alpha='     0.05' nominalPower=' 0.99850357114983' actualPower=' 0.99850357114983' betaScale='        1' sigmaScale='     0.05' sampleSize='      2.5' powerMethod='conditional' />
+<glmmPower test='unirep' alpha='     0.05' nominalPower='             0.05' actualPower='             0.05' betaScale='        0' sigmaScale='        1' sampleSize='       10' powerMethod='conditional' />
+<glmmPower test='unirep' alpha='     0.05' nominalPower=' 0.17057863301225' actualPower=' 0.17057863301225' betaScale='      0.5' sigmaScale='        1' sampleSize='       10' powerMethod='conditional' />
+<glmmPower test='unirep' alpha='     0.05' nominalPower=' 0.51435106987045' actualPower=' 0.51435106987045' betaScale='        1' sigmaScale='        1' sampleSize='       10' powerMethod='conditional' />
+<glmmPower test='unirep' alpha='     0.05' nominalPower=' 0.84642204211933' actualPower=' 0.84642204211933' betaScale='      1.5' sigmaScale='        1' sampleSize='       10' powerMethod='conditional' />
+<glmmPower test='unirep' alpha='     0.05' nominalPower=' 0.97717196529656' actualPower=' 0.97717196529656' betaScale='        2' sigmaScale='        1' sampleSize='       10' powerMethod='conditional' />
+<glmmPower test='unirep' alpha='     0.05' nominalPower=' 0.99850357114983' actualPower=' 0.99850357114983' betaScale='      2.5' sigmaScale='        1' sampleSize='       10' powerMethod='conditional' />
 </powerList>

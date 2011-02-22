@@ -55,11 +55,9 @@ OPT_OFF= {C U};
 ROUND = 15;
 RUN POWER;
 
-/* write to XML file */
 /* write the data to an XML file */
 TEST_LIST = {"unirep"};
-TEST_COL = {5};
 filename out "&DATA_DIRECTORY\TestConditionalTwoSampleTTest.xml"; 
-RUN powerResultsToXML(out, _HOLDPOWER, TEST_LIST, TEST_COL, ALPHA);
+RUN powerResultsToXML(out, _HOLDPOWER, TEST_LIST, 1);
 
 QUIT;
