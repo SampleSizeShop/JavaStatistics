@@ -37,6 +37,7 @@ LIBNAME DATA_DIR "&DATA_DIRECTORY";
 
 PROC IML SYMSIZE=1000 WORKSIZE=2000;
 %INCLUDE "&POWERLIB_IML_FILE"/NOSOURCE2;
+%INCLUDE "XMLUTILITIES.IML"/NOSOURCE2;
 
 * Define inputs to power program;
 ALPHA = 0.05;
@@ -52,35 +53,13 @@ C = {1 -1};
 
 OPT_OFF= {C U};
 OPTMATPRINT={1,1,1,1,1,1,1,1,1,1,1};
-RUN _POWER(HOLDPOWER, LABELS, WARNINGS, WARNINGLABELS);
 
-TEST_LIST = {"hlt" "wl" "pbt" "unirep" "unirepGG" "unirepHF" "unirepBox"};
+ROUND = 15;
+RUN POWER;
 
 /* write to XML file */
+TEST_LIST = {"hlt" "wl" "pbt" "unirep" "unirepGG" "unirepHF" "unirepBox"};
 filename out "&DATA_DIRECTORY\TestConditionalUnivariate.xml"; 
-file out;
-	put "<powerList>";
-	do i=1 to NROW(HOLDPOWER);
-		do t=1 to NCOL(TEST_LIST);
-			put "<glmmPower test='" @;
-			put (TEST_LIST[t]) @;
-			put "' alpha='" @;
-			put ALPHA @;
-			put "' nominalPower='" @;
-			put (HOLDPOWER[i,5]) @;
-			put "' actualPower='" @;
-			put (HOLDPOWER[i,5]) @;
-			put "' betaScale='" @;
-			put (HOLDPOWER[i,3]) @;
-			put "' sigmaScale='" @;
-			put (HOLDPOWER[i,2]) @;
-			put "' sampleSize='" @;
-			put (HOLDPOWER[i,4]) @;
-			put "' powerMethod='conditional' />";
-		end;
-	end;
-	put "</powerList>";
-closefile out;
-
+RUN powerResultsToXML(out, _HOLDPOWER, TEST_LIST, 1);
 
 QUIT;
