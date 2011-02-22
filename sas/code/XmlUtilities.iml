@@ -24,6 +24,35 @@
 *
 */
 
+
+/*
+* Private function to map the test name to the
+* corresponding power column in the holdpower
+* results matrix
+*/
+START _getPowerColumns(testlist, univariate);	
+	if univariate=1 then do;
+	  TESTCOLUMNS = J(1,NCOL(testlist),5);
+	end;
+	else do;
+	print testlist;
+	  *testcolumns = {};
+	  print "hi";
+	  do i=1 to NCOL(testlist);
+	    if testlist[i] = "unirep" then TESTCOLUMNS = TESTCOLUMNS || {10};
+	    else if testlist[i] = "unirep" then TESTCOLUMNS = TESTCOLUMNS || {10};
+	    else if testlist[i] = "unirepBox" then TESTCOLUMNS = TESTCOLUMNS || {18};
+	    else if testlist[i] = "unirepGG" then TESTCOLUMNS = TESTCOLUMNS || {16};
+	    else if testlist[i] = "unirepHF" then TESTCOLUMNS = TESTCOLUMNS || {13};
+	    else if testlist[i] = "wl" then TESTCOLUMNS = TESTCOLUMNS || {7};
+	    else if testlist[i] = "pbt" then TESTCOLUMNS = TESTCOLUMNS || {6};
+	    else if testlist[i] = "hlt" then TESTCOLUMNS = TESTCOLUMNS || {5};
+	  end;
+	end;
+	return(TESTCOLUMNS);
+
+FINISH _getPowerColumns;
+
 /*
 * Function to write results from powerlib to
 * and XML file.  Works with POWERLIB 2.1
@@ -33,13 +62,13 @@
 *		 (user must call "filename ..." command externally)
 *  holdpower - matrix of power results
 *  testlist - list of tests to include in the power results
-*  testcolumns - corresponding columns in the holdpower matrix
-*  alpha - alpha value (at present, only supports 1 alpha)
+*         (for univariate results, the same power will be repeated)
+*  univariate - 1 = univariate results, 0 = multivariate
 *
 * RETURNS: none
 */
-START powerResultsToXML(out, holdpower, testlist, testcolumns, alpha);
-
+START powerResultsToXML(out, holdpower, testlist, univariate);
+  TESTCOLUMNS = _getPowerColumns(testlist, univariate);
   file out;
 	put "<powerList>";
 	do t=1 to NCOL(TESTLIST);
@@ -48,17 +77,17 @@ START powerResultsToXML(out, holdpower, testlist, testcolumns, alpha);
 			put "<glmmPower test='" @;
 			put (TESTLIST[t]) @;
 			put "' alpha='" @;
-			put ALPHA @;
+			put (HOLDPOWER[i,1]) @;
 			put "' nominalPower='" @;
 			put (HOLDPOWER[i,POWERCOL]) best17. @;
 			put "' actualPower='" @;
 			put (HOLDPOWER[i,POWERCOL]) best17. @;
 			put "' betaScale='" @;
-			put (HOLDPOWER[i,2]) @;
-			put "' sigmaScale='" @;
-			put (HOLDPOWER[i,1]) @;
-			put "' sampleSize='" @;
 			put (HOLDPOWER[i,3]) @;
+			put "' sigmaScale='" @;
+			put (HOLDPOWER[i,2]) @;
+			put "' sampleSize='" @;
+			put (HOLDPOWER[i,4]) @;
 			put "' powerMethod='conditional' />";
         end;
 	end;
