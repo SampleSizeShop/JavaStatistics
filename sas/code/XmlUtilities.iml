@@ -1,0 +1,68 @@
+/*
+ * Java Statistics.  A java library providing power/sample size estimation for 
+ * the general linear model.
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
+/*
+* IML module containing XML utility functions
+*
+*/
+
+/*
+* Function to write results from powerlib to
+* and XML file.  Works with POWERLIB 2.1
+*
+* ARGUMENTS:
+*  out - filename reference for output file 
+*		 (user must call "filename ..." command externally)
+*  holdpower - matrix of power results
+*  testlist - list of tests to include in the power results
+*  testcolumns - corresponding columns in the holdpower matrix
+*  alpha - alpha value (at present, only supports 1 alpha)
+*
+* RETURNS: none
+*/
+START powerResultsToXML(out, holdpower, testlist, testcolumns, alpha);
+
+  file out;
+	put "<powerList>";
+	do t=1 to NCOL(TESTLIST);
+		do i=1 to NROW(HOLDPOWER);
+			POWERCOL = TESTCOLUMNS[t];
+			put "<glmmPower test='" @;
+			put (TESTLIST[t]) @;
+			put "' alpha='" @;
+			put ALPHA @;
+			put "' nominalPower='" @;
+			put (HOLDPOWER[i,POWERCOL]) best17. @;
+			put "' actualPower='" @;
+			put (HOLDPOWER[i,POWERCOL]) best17. @;
+			put "' betaScale='" @;
+			put (HOLDPOWER[i,2]) @;
+			put "' sigmaScale='" @;
+			put (HOLDPOWER[i,1]) @;
+			put "' sampleSize='" @;
+			put (HOLDPOWER[i,3]) @;
+			put "' powerMethod='conditional' />";
+        end;
+	end;
+	put "</powerList>";
+	closefile out;
+
+FINISH powerResultsToXML;
