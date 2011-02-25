@@ -37,6 +37,7 @@ import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
+import org.apache.commons.math.stat.StatUtils;
 import org.apache.commons.math.stat.descriptive.moment.Mean;
 import org.apache.commons.math.stat.descriptive.rank.Percentile;
 
@@ -938,16 +939,14 @@ public class GLMMPowerCalculator implements PowerCalculator
     					((double) SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL));
     		}
     		
-    		if (params.getCurrentPowerMethod() != PowerMethod.UNCONDITIONAL_POWER)
+    		switch (params.getCurrentPowerMethod())
     		{
-    			Mean unconditionalPower = new Mean();
-    			return unconditionalPower.evaluate(powerValues);
-    		}
-    		else 
-    		{
-    			// quantile power
-    			Percentile quantilePower = new Percentile(params.getCurrentQuantile());
-    			return quantilePower.evaluate(powerValues);
+    		case UNCONDITIONAL_POWER:
+    			return StatUtils.mean(powerValues);
+    		case QUANTILE_POWER:
+    			return StatUtils.percentile(powerValues, params.getCurrentQuantile());
+    		default:
+    			throw new IllegalArgumentException("Unknown power method");
     		}
     	}
     	else 
@@ -1013,6 +1012,109 @@ public class GLMMPowerCalculator implements PowerCalculator
 		
 		// check if we reject the null hypothesis
 		return (pvalue <= params.getCurrentAlpha());
+    }
+    
+    /**
+     * Returns a power sample for each combination of parameters for a 
+     * design with a random covariate (GLMM(F,g)).  Currently produces 
+     * a sample of size 1000
+     * 
+     * @param params power parameters
+     * @param size size of the sample
+     * @return list of power samples
+     * @throws IllegalArgumentException
+     */
+    public List<double[]> getSimulatedPowerSample(GLMMPowerParameters params, int size)
+    throws IllegalArgumentException
+    {		    
+        // make sure all of the matrix inputs are appropriate
+        validateMatrices(params);
+        
+        // precalculate any computationally expensive matrices/constants, 
+        // update the parameters as needed - used for random covariates
+        initialize(params);
+
+    	if (params == null || !params.getDesignEssence().hasRandom() || 
+    			params.getCurrentPowerMethod() != PowerMethod.CONDITIONAL_POWER)
+    		throw new IllegalArgumentException("Power samples can only be generated for designs with random predictors");
+    	if (size <= 0) throw new IllegalArgumentException("Iterations must be positive");
+    	
+        // list of power results
+        ArrayList<double[]> results = new ArrayList<double[]>();
+        
+        // simulate power for all variations of the study design
+        for(GLMMPowerParameters.Test test = params.getFirstTest(); test != null;
+        test = params.getNextTest())
+        {            
+        	for(GLMMPowerParameters.PowerMethod method = params.getFirstPowerMethod(); method != null;
+        	method = params.getNextPowerMethod())
+        	{
+        		for(Double alpha = params.getFirstAlpha(); alpha != null;
+        		alpha = params.getNextAlpha())
+        		{
+        			for(Double sigmaScale = params.getFirstSigmaScale(); sigmaScale != null;
+        			sigmaScale = params.getNextSigmaScale())
+        			{
+        				for(Double betaScale = params.getFirstBetaScale(); betaScale != null;
+        				betaScale = params.getNextBetaScale())
+        				{
+        					for(Integer sampleSize = params.getFirstSampleSize(); sampleSize != null; 
+        					sampleSize = params.getNextSampleSize())
+        					{                
+        						Double quantile = params.getFirstQuantile(); 
+           						do
+           						{
+           							results.add(simulatePowerSample(params, size));
+        							quantile = params.getNextQuantile();
+           						}
+           						while (method == PowerMethod.QUANTILE_POWER &&
+           								quantile != null);
+        					}
+        				}
+        			}
+        		}
+        	}
+        }
+        
+        return results;
+    }
+    
+    /**
+     * Generate a sample of powers for a design with a random covariate
+     * @param params power parameters
+     * @param iterations size of the sample
+     * @return
+     */
+    private double[] simulatePowerSample(GLMMPowerParameters params, int iterations)
+    {
+    	// get total observations, N, and rank of design matrix
+    	RealMatrix X = params.getDesign();
+    	double N = X.getRowDimension();
+    	double rankX = params.getDesignRank();
+
+    	// create a normal distribution for generating random errors
+    	Normal normalDist = new Normal();       
+    	normalDist.setSeed(1234);
+    	int rejectionCount = 0;
+    	// create an error matrix here, so we don't have to reallocate every time
+    	Array2DRowRealMatrix randomNormals = 
+    		new Array2DRowRealMatrix((int) N, params.getScaledBeta().getColumnDimension());
+
+    	double[] powerValues = new double[iterations];
+
+    	for(int gInstance = 0; gInstance < iterations; gInstance++)
+    	{
+    		X = params.getDesign(true); // force a new realization of the design matrix (i.e. a new covariate column)
+    		rejectionCount = 0;
+    		for(int i = 0; i < SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL; i++)
+    		{
+    			if (simulateAndFitModel(params, normalDist, randomNormals, N, rankX)) rejectionCount++;
+    		}
+    		powerValues[gInstance] = (((double) rejectionCount) / 
+    				((double) SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL));
+    	}
+    	
+    	return powerValues;
     }
     
 }
