@@ -30,7 +30,9 @@ import org.w3c.dom.NodeList;
 
 import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.Power;
+import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
+import edu.cudenver.bios.utils.ConfidenceInterval;
 
 /**
  * Helper class to parse XML output from the SAS test cases 
@@ -79,12 +81,26 @@ public class SASOutputParser
 			Node nominalPowerNode = attrs.getNamedItem("nominalPower"); 
 			Node powerMethodNode = attrs.getNamedItem("powerMethod");
 			Node quantileNode = attrs.getNamedItem("quantile");
+			Node alphaLowerNode = attrs.getNamedItem("alphaLower");
+			Node alphaUpperNode = attrs.getNamedItem("alphaUpper");
+			Node ciLowerNode = attrs.getNamedItem("ciLower");
+			Node ciUpperNode = attrs.getNamedItem("ciUpper");
 
 			if (testNode != null && actualPowerNode != null && 
 					sampleSizeNode != null && betaScaleNode != null && 
 					sigmaScaleNode != null && alphaNode != null &&
 					nominalPowerNode != null && powerMethodNode != null)
 			{
+				ConfidenceInterval ci = null;
+				if (alphaLowerNode != null && alphaUpperNode != null &&
+						ciLowerNode != null && ciUpperNode != null)
+				{					
+					ci = new ConfidenceInterval(Double.parseDouble(ciLowerNode.getNodeValue()),
+							Double.parseDouble(ciUpperNode.getNodeValue()),
+							Double.parseDouble(alphaLowerNode.getNodeValue()),
+							Double.parseDouble(alphaUpperNode.getNodeValue()));
+				}
+				
 				if (quantileNode != null)
 				{
 					powerList.add(new GLMMPower(stringToTest(testNode.getNodeValue().trim()), 
@@ -95,10 +111,10 @@ public class SASOutputParser
 							Double.parseDouble(betaScaleNode.getNodeValue().trim()), 
 							Double.parseDouble(sigmaScaleNode.getNodeValue().trim()), 
 							stringToPowerMethod(powerMethodNode.getNodeValue().trim()),
-							Double.parseDouble(quantileNode.getNodeValue().trim())));
+							Double.parseDouble(quantileNode.getNodeValue().trim()), ci));
 				}
 				else
-				{
+				{						
 					powerList.add(new GLMMPower(stringToTest(testNode.getNodeValue().trim()), 
 							Double.parseDouble(alphaNode.getNodeValue().trim()), 
 							Double.parseDouble(nominalPowerNode.getNodeValue().trim()), 
@@ -106,7 +122,7 @@ public class SASOutputParser
 							Integer.parseInt(sampleSizeNode.getNodeValue().trim()),
 							Double.parseDouble(betaScaleNode.getNodeValue().trim()), 
 							Double.parseDouble(sigmaScaleNode.getNodeValue().trim()), 
-							stringToPowerMethod(powerMethodNode.getNodeValue().trim())));
+							stringToPowerMethod(powerMethodNode.getNodeValue().trim()), ci));
 				}
 			}
 			else

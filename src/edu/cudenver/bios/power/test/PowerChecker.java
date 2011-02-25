@@ -37,22 +37,20 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
-import jsc.distributions.Normal;
-
 import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
+import edu.cudenver.bios.utils.ConfidenceInterval;
 
 public class PowerChecker 
 {
     private static final int SIMULATION_SIZE = 10000;
-    private static final double POWER_SIMULATION_COMPARISON_ALPHA = 0.01;
     private static DecimalFormat Number = new DecimalFormat("#0.000");
-    private static DecimalFormat LongNumber = new DecimalFormat("#0.000000");
+    private static DecimalFormat LongNumber = new DecimalFormat("#0.00000000");
 
-	private double sasTolerance = 0.0000001;
-	private double simTolerance = 0.01;
+	private double sasTolerance = 0.00001;
+	private double simTolerance = 0.05;
 	
     private boolean simulate = true;
     private List<GLMMPower> sasPowers = null;
@@ -61,6 +59,9 @@ public class PowerChecker
     private ArrayList<Result> checkerResults = new ArrayList<Result>();
     private double maxSasDeviation = 0;
     private double maxSimDeviation = 0;
+    private double maxSaslowerCIDeviation = -1;
+    private double maxSasUpperCIDeviation = -1;
+    
     private Timer timer = new Timer();
     
     private class Timer
@@ -94,9 +95,28 @@ public class PowerChecker
     {
     	GLMMPower calculatedPower;
     	double sasPower;
+    	double sasCILower;
+    	double sasCIUpper;
     	double simulatedPower;
     	double sasDeviation;
     	double simulationDeviation;
+    	
+    	public Result(GLMMPower calculatedPower,
+    			double sasPower,
+    			double sasCILower,
+    			double sasCIUpper,
+    			double sasDeviation,
+    			double simulatedPower,
+    			double simulationDeviation)
+    	{
+    		this.calculatedPower = calculatedPower;
+    		this.sasPower = sasPower;
+        	this.sasCILower = sasCILower;
+        	this.sasCIUpper = sasCIUpper;
+        	this.sasDeviation = sasDeviation;
+    		this.simulatedPower = simulatedPower;
+        	this.simulationDeviation = simulationDeviation;
+    	}
     	
     	public Result(GLMMPower calculatedPower,
     			double sasPower,
@@ -104,11 +124,9 @@ public class PowerChecker
     			double simulatedPower,
     			double simulationDeviation)
     	{
-    		this.calculatedPower = calculatedPower;
-    		this.simulatedPower = simulatedPower;
-    		this.sasPower = sasPower;
-        	this.sasDeviation = sasDeviation;
-        	this.simulationDeviation = simulationDeviation;
+    		this(calculatedPower, 
+    				sasPower, Double.NaN, Double.NaN, sasDeviation, 
+    				simulatedPower, simulationDeviation);
     	}
     };
     
@@ -202,13 +220,22 @@ public class PowerChecker
     		{
     			sasDeviation = Math.abs(power.getActualPower() - sasPower.getActualPower());
     			if (sasDeviation > maxSasDeviation) maxSasDeviation = sasDeviation;
+    			ConfidenceInterval sasCI = sasPower.getConfidenceInterval();
+    			ConfidenceInterval calcCI = power.getConfidenceInterval();
+    			if (sasCI != null && calcCI != null)
+    			{
+    				double lowerCIDeviation = Math.abs(calcCI.getLowerLimit() - sasCI.getLowerLimit());
+    				double upperCIDeviation = Math.abs(calcCI.getUpperLimit() - sasCI.getUpperLimit());
+    				if (lowerCIDeviation > maxSaslowerCIDeviation) maxSaslowerCIDeviation = lowerCIDeviation;
+    				if (upperCIDeviation > maxSasUpperCIDeviation) maxSasUpperCIDeviation = upperCIDeviation;
+    			}
     		}
 
     		checkerResults.add(new Result(power,
-    			(simPower != null ? simPower.getActualPower() : Double.NaN),
-    			simDeviation,
     			(sasPower != null ? sasPower.getActualPower(): Double.NaN),
-    			sasDeviation));
+    			sasDeviation,
+    			(simPower != null ? simPower.getActualPower() : Double.NaN),
+    			simDeviation));
     	}
     }
     
@@ -222,47 +249,98 @@ public class PowerChecker
     
     /**
      * Write the results to an HTML file
-     * @param filename
      */
     public void outputResults(String title, String filename)
+    {
+    	outputResults(title, filename, null);
+    }
+    
+    /**
+     * Write the results to an HTML file, optionally including a plot image
+     * @param filename
+     */
+    public void outputResults(String title, String filename, String imageFilename)
     {
     	// output the results
     	StringBuffer buffer = new StringBuffer();
     	
     	buffer.append("<html><head></head><body><h1>" + title + "</h1>");
-    	
+    	buffer.append("<h3>Timing Results</h3>");
     	buffer.append("<table border='1' cellpadding='5'>");
     	buffer.append("<tr><td>Calculation time</td><td>" + ((double) timer.calculationMilliseconds / 1000)
     			+ "</td></tr>");
     	buffer.append("<tr><td>Simulation time</td><td>" + ((double) timer.simulationMilliseconds / 1000)
     			+ "</td></tr></table><p></p>");
     	
+    	buffer.append("<h3>Max Absolute Deviation Summary</h3>");
     	buffer.append("<table border='1' cellpadding='5'>");
-    	buffer.append("<tr><th>Calc Power</th><th>Sim Power (p-value)</th><th>SAS Power (p-value)</th><th>Test</th><th>SigmaScale</th><th>BetaScale</th><th>Total N</th><th>Alpha</th><th>PowerMethod</th><th>Quantile</th></tr>");
+    	buffer.append("<tr><td>Max deviation from SAS</td><td>"+LongNumber.format(maxSasDeviation)+"</td></tr>");
+    	if (maxSaslowerCIDeviation >= 0 && maxSasUpperCIDeviation >= 0)
+    	{
+    		buffer.append("<tr><td>Max deviation from lower CI limit</td><td>"+
+    				LongNumber.format(maxSaslowerCIDeviation)+"</td></tr>");
+    		buffer.append("<tr><td>Max deviation from upper CI limit</td><td>"+
+    				LongNumber.format(maxSasUpperCIDeviation)+"</td></tr>");
+    	}
+    	buffer.append("<tr><td>Max deviation from simulation</td><td>"+
+    			LongNumber.format(maxSimDeviation)+"</td></tr>");
+    	buffer.append("</table><p></p>");
+    	
+    	buffer.append("<h3>Full Results</h3>");
+    	buffer.append("<table border='1' cellpadding='5'><tr><th>Calc Power</th>");
+    	if (checkerResults.size() > 0 && checkerResults.get(0).calculatedPower.getConfidenceInterval() != null)
+    	{
+    		ConfidenceInterval ci = checkerResults.get(0).calculatedPower.getConfidenceInterval();
+    		buffer.append("<th>Confidence Interval (&alpha;-lower="); 
+    		buffer.append(ci.getAlphaLower());
+    		buffer.append(", &alpha;-upper="); 
+    		buffer.append(ci.getAlphaUpper());
+    		buffer.append(")</th>");
+    	}
+    	buffer.append("<th>SAS Power (deviation)</th><th>Sim Power (deviation)</th>");
+    	buffer.append("<th>Test</th><th>SigmaScale</th><th>BetaScale</th><th>Total N</th>");
+    	buffer.append("<th>Alpha</th><th>PowerMethod</th><th>Quantile</th></tr>");
 
     	for(Result result: checkerResults)
     	{
-    		buffer.append("<tr><td>" + Number.format(result.calculatedPower.getActualPower()) + "</td><td>" +  
-    				Number.format(result.simulatedPower));
-    		if (result.simulationDeviation < POWER_SIMULATION_COMPARISON_ALPHA)
-    			buffer.append(" <font color='red'>(" + Number.format(result.simulationDeviation) + ")</font></td><td>");
-    		else
-    			buffer.append(" (" + Number.format(result.simulationDeviation) + ")</td><td>");
+    		buffer.append("<tr><td>");
+    		buffer.append(Number.format(result.calculatedPower.getActualPower()));
+    		buffer.append("</td><td>");
+    		ConfidenceInterval ci = result.calculatedPower.getConfidenceInterval();
+    		if (ci != null)
+    		{
+    			buffer.append("(" + Number.format(ci.getLowerLimit()) + ", " + Number.format(ci.getUpperLimit()) + ")");
+        		buffer.append("</td><td>");
+    		}
     		buffer.append(Number.format(result.sasPower));
-    		if (result.sasDeviation < POWER_SIMULATION_COMPARISON_ALPHA)
+    		if (result.sasDeviation > sasTolerance)
     			buffer.append(" <font color='red'>(" + Number.format(result.sasDeviation) + ")</font></td><td>");
     		else
     			buffer.append(" (" + Number.format(result.sasDeviation) + ")</td><td>");
+    		
+    		buffer.append(Number.format(result.simulatedPower));
+    		if (result.simulationDeviation > simTolerance)
+    			buffer.append(" <font color='red'>(" + Number.format(result.simulationDeviation) + ")</font></td><td>");
+    		else
+    			buffer.append(" (" + Number.format(result.simulationDeviation) + ")</td><td>");
+
     		buffer.append(result.calculatedPower.getTest() + "</td><td>" + 
     				Number.format(result.calculatedPower.getSigmaScale()) + "</td><td>" + 
     				Number.format(result.calculatedPower.getBetaScale()) + "</td><td>" + 
     				result.calculatedPower.getTotalSampleSize() + "</td><td>" + 
     				Number.format(result.calculatedPower.getAlpha()) + "</td><td>" + 
     				result.calculatedPower.getPowerMethod() + "</td><td>" + 
-    				result.calculatedPower.getQuantile() + "</td><td></tr>");
+    				result.calculatedPower.getQuantile() + "</td></tr>");
     	}
     	
-    	buffer.append("</table></body></html>");
+    	buffer.append("</table><p>");
+    	
+    	if (imageFilename != null)
+    	{
+    		buffer.append("<p><img src='" + imageFilename + "' /></p>");
+    	}
+    	
+    	buffer.append("</body></html>");
 
     	FileWriter writer = null;
     	try
@@ -289,7 +367,7 @@ public class PowerChecker
     	// output the results
     	System.out.println("Calculation time: " + ((double) timer.calculationMilliseconds / 1000));
     	System.out.println("Simulation time: " + ((double) timer.simulationMilliseconds / 1000));
-    	System.out.println("Calc Power (lower, upper)\tSim Power (p-value)\tSAS Power (p-value)\tTest\tSigmaScale\tBetaScale\tTotal N\tAlpha\tPowerMethod\tQuantile");
+    	System.out.println("Calc Power (lower, upper)\tSAS Power (deviation)\tSim Power (deviation)\tTest\tSigmaScale\tBetaScale\tTotal N\tAlpha\tPowerMethod\tQuantile");
     	
     	for(Result result: checkerResults)
     	{
@@ -298,8 +376,8 @@ public class PowerChecker
     						Number.format(result.calculatedPower.getConfidenceInterval().getLowerLimit()) : "n/a") + ", " + 
     				(result.calculatedPower.getConfidenceInterval() != null ? 
     						Number.format(result.calculatedPower.getConfidenceInterval().getUpperLimit()) : "n/a") + ")\t" +  
+    	    		Number.format(result.sasPower) + " (" +  Number.format(result.sasDeviation) + ")\t" +
     				Number.format(result.simulatedPower) + " (" + Number.format(result.simulationDeviation) + ")\t" +
-    				Number.format(result.sasPower) + " (" +  Number.format(result.sasDeviation) + ")\t" +
     				result.calculatedPower.getTest() + "\t" + 
     				Number.format(result.calculatedPower.getSigmaScale()) + "\t" + 
     				Number.format(result.calculatedPower.getBetaScale()) + "\t" + 
@@ -311,17 +389,23 @@ public class PowerChecker
     	
     	System.out.println("Max Deviation from SAS: " + LongNumber.format(maxSasDeviation));
     	System.out.println("Max Deviation from Simulation: " + LongNumber.format(maxSimDeviation));
-
+    	if (maxSaslowerCIDeviation >= 0 || maxSasUpperCIDeviation >=0)
+    	{
+        	System.out.println("Max Deviation from SAS, Lower Confidence Limit: " + 
+        			LongNumber.format(maxSaslowerCIDeviation));
+        	System.out.println("Max Deviation from SAS, Upper Confidence Limit: " + 
+        			LongNumber.format(maxSasUpperCIDeviation));
+    	}
     }
     
     public boolean isSASDeviationBelowTolerance()
     {
-    	return (maxSasDeviation < sasTolerance);
+    	return (maxSasDeviation <= sasTolerance);
     }
     
     public boolean isSimulationDeviationBelowTolerance()
     {
-    	return (maxSimDeviation < simTolerance);
+    	return (maxSimDeviation <= simTolerance);
     }
     
     public void setSASTolerance(double tolerance)
