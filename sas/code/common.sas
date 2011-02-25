@@ -27,6 +27,8 @@
 %LET DATA_DIRECTORY = ..\data;
 /* Sas Test Code directory - DO NOT EDIT */
 %LET CODE_DIRECTORY = ..\code;
+/* Java results directory - DO NOT EDIT */
+%LET RESULTS_DIRECTORY = ..\..\text\results;
 
 /* 
 * The software modules listed below were last available from 
