@@ -20,7 +20,6 @@
  */
 package edu.cudenver.bios.power;
 
-import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.utils.ConfidenceInterval;
 
@@ -46,8 +45,8 @@ public class GLMMPower extends Power
 	double quantile = Double.NaN;
 	
 	// confidence limits for power if requested
-	// only available if solving for power in a fixed design
-	GLMMPowerConfidenceInterval confidenceInterval = null;
+	// only available if solving for power in a random design
+	ConfidenceInterval confidenceInterval = null;
 	
 	/**
 	 * Create a new GLMMPower object.
@@ -87,7 +86,7 @@ public class GLMMPower extends Power
 			double nominalPower, double actualPower, int sampleSize,
 			double betaScale, double sigmaScale, 
 			GLMMPowerParameters.PowerMethod method,
-			GLMMPowerConfidenceInterval confidenceInterval)
+			ConfidenceInterval confidenceInterval)
 	{
 		this(test, alpha, nominalPower,actualPower,sampleSize,
 				betaScale, sigmaScale, method, Double.NaN, confidenceInterval);
@@ -134,7 +133,7 @@ public class GLMMPower extends Power
 			double nominalPower, double actualPower, int sampleSize,
 			double betaScale, double sigmaScale, 
 			GLMMPowerParameters.PowerMethod method,
-			double quantile, GLMMPowerConfidenceInterval confidenceInterval)
+			double quantile, ConfidenceInterval confidenceInterval)
 	{
 		super(nominalPower, actualPower, sampleSize, alpha);
 		this.test = test;
@@ -245,7 +244,7 @@ public class GLMMPower extends Power
 	 * Get the confidence interval associated with power	
 	 * @return confidence interval
 	 */
-	public GLMMPowerConfidenceInterval getConfidenceInterval()
+	public ConfidenceInterval getConfidenceInterval()
 	{
 		return confidenceInterval;
 	}
@@ -254,7 +253,7 @@ public class GLMMPower extends Power
 	 * Set the confidence interval associated with power	
 	 * @param confidenceInterval the power confidence interval
 	 */
-	public void setConfidenceInterval(GLMMPowerConfidenceInterval confidenceInterval)
+	public void setConfidenceInterval(ConfidenceInterval confidenceInterval)
 	{
 		this.confidenceInterval = confidenceInterval;
 	}
