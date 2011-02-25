@@ -33,8 +33,9 @@ import edu.cudenver.bios.power.test.PowerChecker;
 import junit.framework.TestCase;
 
 /**
- * Unit test for fixed univariate design with comparison against
- * simulation and SAS output.
+ * Unit test for fixed univariate design with confidence intervals (powerlib example 4). 
+ * Compared against simulation and SAS output.
+ * 
  * @author Sarah Kreidler
  *
  */
@@ -94,7 +95,7 @@ public class TestConditionalUnivariateWithConfidenceLimits extends TestCase
         DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
         params.setDesignEssence(essenceMatrix);
         // add sample size multipliers
-        params.addSampleSize(10);
+        params.addSampleSize(12);
         
         // build between subject contrast
         double [][] between = {{1,-1}};

@@ -28,7 +28,7 @@
 /*
 * Private function to map the test name to the
 * corresponding power column in the holdpower
-* results matrix
+* results matrix.  To be used without CI's
 */
 START _getPowerColumns(testlist, univariate);	
 	if univariate=1 then do;
@@ -49,8 +49,7 @@ START _getPowerColumns(testlist, univariate);
 	    else if testlist[i] = "hlt" then TESTCOLUMNS = TESTCOLUMNS || {5};
 	  end;
 	end;
-	return(TESTCOLUMNS);
-
+	return (TESTCOLUMNS);
 FINISH _getPowerColumns;
 
 /*
@@ -95,3 +94,119 @@ START powerResultsToXML(out, holdpower, testlist, univariate);
 	closefile out;
 
 FINISH powerResultsToXML;
+
+
+
+/*
+* Private function to map the test name to the
+* corresponding power column in the holdpower
+* results matrix.  Inlcudes confidence intervals
+*/
+START _getPowerAndCIColumns(testlist, univariate,
+	testcolumns, ciLowerColumns, ciUpperColumns);	
+	if univariate=1 then do;
+	  TESTCOLUMNS = J(1,NCOL(testlist),9);
+	  cilowercolumns = J(1,NCOL(testlist),8);
+	  ciuppercolumns = J(1,NCOL(testlist),10);
+	end;
+	else do;
+	print testlist;
+	  *testcolumns = {};
+	  print "hi";
+	  do i=1 to NCOL(testlist);
+	    if testlist[i] = "unirep" then do;
+			TESTCOLUMNS = TESTCOLUMNS || {10};
+			cilowercolumns = cilowercolumns || {};
+			ciuppercolumns = ciuppercolumns || {};
+		end;
+	    else if testlist[i] = "unirep" then do;
+			TESTCOLUMNS = TESTCOLUMNS || {10};
+			cilowercolumns = cilowercolumns || {};
+			ciuppercolumns = ciuppercolumns || {};
+		end;
+	    else if testlist[i] = "unirepBox" then do;
+			TESTCOLUMNS = TESTCOLUMNS || {18};
+			cilowercolumns = cilowercolumns || {};
+			ciuppercolumns = ciuppercolumns || {};
+		end;
+	    else if testlist[i] = "unirepGG" then do;
+			TESTCOLUMNS = TESTCOLUMNS || {16};
+			cilowercolumns = cilowercolumns || {};
+			ciuppercolumns = ciuppercolumns || {};
+		end;
+	    else if testlist[i] = "unirepHF" then do;
+			TESTCOLUMNS = TESTCOLUMNS || {13};
+			cilowercolumns = cilowercolumns || {};
+			ciuppercolumns = ciuppercolumns || {};
+		end;
+	    else if testlist[i] = "wl" then do;
+			TESTCOLUMNS = TESTCOLUMNS || {7};
+			cilowercolumns = cilowercolumns || {};
+			ciuppercolumns = ciuppercolumns || {};
+		end;
+	    else if testlist[i] = "pbt" then do;
+			TESTCOLUMNS = TESTCOLUMNS || {6};
+			cilowercolumns = cilowercolumns || {};
+			ciuppercolumns = ciuppercolumns || {};
+		end;
+	    else if testlist[i] = "hlt" then do;
+			TESTCOLUMNS = TESTCOLUMNS || {5};
+			cilowercolumns = cilowercolumns || {};
+			ciuppercolumns = ciuppercolumns || {};
+		end;
+	  end;
+	end;
+FINISH _getPowerAndCIColumns;
+
+
+/*
+* Function to write results from powerlib to
+* and XML file.  Works with POWERLIB 2.1
+*
+* ARGUMENTS:
+*  out - filename reference for output file 
+*		 (user must call "filename ..." command externally)
+*  holdpower - matrix of power results
+*  testlist - list of tests to include in the power results
+*         (for univariate results, the same power will be repeated)
+*  univariate - 1 = univariate results, 0 = multivariate
+*
+* RETURNS: none
+*/
+START powerAndCIResultsToXML(out, holdpower, testlist, univariate);
+  RUN _getPowerAndCIColumns(testlist, univariate, 
+	testcolumns, ciLowerColumns, ciUpperColumns);
+  file out;
+	put "<powerList>";
+	do t=1 to NCOL(TESTLIST);
+		do i=1 to NROW(HOLDPOWER);
+			POWERCOL = TESTCOLUMNS[t];
+			put "<glmmPower test='" @;
+			put (TESTLIST[t]) @;
+			put "' alpha='" @;
+			put (HOLDPOWER[i,1]) @;
+			put "' nominalPower='" @;
+			put (HOLDPOWER[i,POWERCOL]) best17. @;
+			put "' actualPower='" @;
+			put (HOLDPOWER[i,POWERCOL]) best17. @;
+			put "' alphaLower='" @;
+			put (HOLDPOWER[i,6]) @;
+			put "' alphaUpper='" @;
+			put (HOLDPOWER[i,7]) @;
+			put "' ciLower='" @;
+			put (HOLDPOWER[i,CILOWERCOLUMNS[t]]) best17. @;
+			put "' ciUpper='" @;
+			put (HOLDPOWER[i,CIUPPERCOLUMNS[t]]) best17. @;
+			put "' betaScale='" @;
+			put (HOLDPOWER[i,3]) @;
+			put "' sigmaScale='" @;
+			put (HOLDPOWER[i,2]) @;
+			put "' sampleSize='" @;
+			put (HOLDPOWER[i,4]) @;
+			put "' powerMethod='conditional' />";
+        end;
+	end;
+	put "</powerList>";
+	closefile out;
+
+FINISH powerAndCIResultsToXML;
