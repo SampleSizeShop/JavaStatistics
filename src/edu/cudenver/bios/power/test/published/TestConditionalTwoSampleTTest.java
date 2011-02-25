@@ -54,7 +54,7 @@ public class TestConditionalTwoSampleTTest extends TestCase
     private static final int[] SAMPLE_SIZE_LIST = {10};
 
 	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestConditionalTwoSampleTTest.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalTwoSampleTTestOutput.html";
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalTwoSampleTTest.html";
 	private static final String TITLE = "Power results for Two Sample TTest";
 	private PowerChecker checker;
 	
