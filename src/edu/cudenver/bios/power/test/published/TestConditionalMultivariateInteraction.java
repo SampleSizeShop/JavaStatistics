@@ -32,8 +32,9 @@ import edu.cudenver.bios.power.test.PowerChecker;
 import junit.framework.TestCase;
 
 /**
- * Unit test for fixed univariate design with comparison against
- * simulation and SAS output.
+ * Unit test for fixed multvariate design with comparison against
+ * simulation and SAS output.  Based on example 5 from powerlib 
+ * (Johnson et al., 2009)
  * @author Sarah Kreidler
  *
  */
