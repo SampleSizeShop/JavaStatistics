@@ -39,14 +39,9 @@ import junit.framework.TestCase;
  */
 public class TestConditionalMultivariateInteraction extends TestCase
 {
-    private static final double[] ALPHA_LIST = {0.05};    
-    private static final double[] BETA_SCALE_LIST = {0,0.5,1,1.5,2};
-    private static final double[] SIGMA_SCALE_LIST = {1,2};
-    private static final int[] SAMPLE_SIZE_LIST = {10};
-
-	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestConditionalUnivariate.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "FixedUnivariateOutput.html";
-	private static final String TITLE = "Power results for fixed univariate";
+	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestConditionalMultivariateInteraction.xml";
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalMultivariateInteraction.html";
+	private static final String TITLE = "Power results for multivariate interaction";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -65,10 +60,58 @@ public class TestConditionalMultivariateInteraction extends TestCase
     /**
      * Test valid inputs for a univariate linear model with only fixed predictors
      */
-    public void testValidUnivariateFixed()
+    public void testMultivariateInteraction()
     {
         // build the inputs
-        GLMMPowerParameters params = buildValidUnivariateInputs();
+        GLMMPowerParameters params = new GLMMPowerParameters();
+        	
+        // build the matrix inputs
+        
+        // add tests
+        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
+        {
+            params.addTest(test);
+        }
+        
+        // add alpha values
+        params.addAlpha(0.01);
+
+        // build beta matrix
+        double [][] beta = {{1,0,0},{0,0,0},{0,0,0},{0,0,0}};
+        params.setBeta(new FixedRandomMatrix(beta, null, false));
+        // add beta scale values
+        for(double scale = 0; scale <= 2.0; scale += 0.50) params.addBetaScale(scale);
+        
+        // build theta null matrix
+        double [][] theta0 = {{0,0},{0,0},{0,0}};
+        params.setTheta(new Array2DRowRealMatrix(theta0));
+        
+        // build sigma matrix
+        double rho = 0.4;
+        double [][] sigma = {{1,rho,rho},{rho,1,rho},{rho,rho,1}};
+        params.setSigmaError(new Array2DRowRealMatrix(sigma));
+        // add sigma scale values
+        params.addSigmaScale(1);
+        params.addSigmaScale(2);
+        
+        // build design matrix
+        double[][] essenceData = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
+        RowMetaData[] rowMd = {new RowMetaData(1), new RowMetaData(1), 
+        		new RowMetaData(1), new RowMetaData(1)};
+        DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
+        params.setDesignEssence(essenceMatrix);
+        // add sample size multipliers
+        params.addSampleSize(5);
+        params.addSampleSize(10);
+        
+        // build between subject contrast
+        double [][] between = {{1,-1,0,0},{1,0,-1,0},{1,0,0,-1}};
+        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
+        
+        // build within subject contrast
+        double [][] within = {{1,1},{-1,0},{0,-1}};
+        params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
+        	
         System.out.println(TITLE);
         checker.checkPower(params);
 		checker.outputResults();
@@ -112,42 +155,7 @@ public class TestConditionalMultivariateInteraction extends TestCase
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
        
-        // add tests
-        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
-        {
-            params.addTest(test);
-        }
-        
-        // add alpha values
-        for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
-        // build beta matrix
-        double [][] beta = {{0},{1}};
-        params.setBeta(new FixedRandomMatrix(beta, null, false));
-        // add beta scale values
-        for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
-        
-        // build theta null matrix
-        double [][] theta0 = {{0}};
-        params.setTheta(new Array2DRowRealMatrix(theta0));
-        
-        // build sigma matrix
-        double [][] sigma = {{1}};
-        params.setSigmaError(new Array2DRowRealMatrix(sigma));
-        // add sigma scale values
-        for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
-        
-        // build design matrix
-        double[][] essenceData = {{1,0},{0,1}};
-        RowMetaData[] rowMd = {new RowMetaData(1), new RowMetaData(1)};
-        DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
-        params.setDesignEssence(essenceMatrix);
-        // add sample size multipliers
-        for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
-        
-        // build between subject contrast
-        double [][] between = {{1,-1}};
-        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
 
         return params;     
     }   
