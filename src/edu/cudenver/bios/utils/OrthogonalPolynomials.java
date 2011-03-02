@@ -1,6 +1,25 @@
+/*
+ * Java Statistics.  A java library providing power/sample size estimation for 
+ * the general linear model.
+ * 
+ * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 package edu.cudenver.bios.utils;
 
-import java.text.DecimalFormat;
 import java.util.HashSet;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
@@ -8,17 +27,25 @@ import org.apache.commons.math.linear.QRDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.stat.StatUtils;
 
+import edu.cudenver.bios.matrix.MatrixUtils;
+
+/**
+ * Class to generate orthogonal polynomial contrasts for unequally spaced
+ * measurements.
+ * 
+ * @author Sarah Kreidler
+ *
+ */
 public class OrthogonalPolynomials
 {
 
 	/**
 	 * Computes orthogonal polynomial contrasts for the specified data values.  Currently only
-	 * supports fitting (not prediction contrasts).  Based on the poly command from R 
-	 * (http://cran.r-project.org/)
+	 * supports fitting (not prediction contrasts).  
 	 * 
 	 * 	@param x the points at which the polynomials will be evaluated
 	 * @param maxDegree contrasts will be computed for degrees 1 to maxDegree
-	 * @return matrix containing 1st, 2nd,...maxDegree-th degree contrasts in each column
+	 * @return matrix containing 0th,1st, 2nd,...maxDegree-th degree contrasts in each column
 	 * @throws IllegalArgumentException
 	 */
 	public static RealMatrix orthogonalPolynomialCoefficients(double[] x, int maxDegree)
@@ -54,18 +81,8 @@ public class OrthogonalPolynomials
 		// do some mysterious QR decomposition stuff.  See Emerson (1968)
 		RealMatrix outerVector = new Array2DRowRealMatrix(xOuter);
 		QRDecompositionImpl qrDecomp = new QRDecompositionImpl(outerVector);
-		double[][] zData = new double[qrDecomp.getR().getRowDimension()][qrDecomp.getR().getColumnDimension()]; 
-		for(row = 0; row < qrDecomp.getR().getRowDimension(); row++)
-		{
-			for(int col = 0; col < qrDecomp.getR().getColumnDimension(); col++)
-			{
-				if (row == col) 
-					zData[row][col] = qrDecomp.getR().getEntry(row, col);
-				else
-					zData[row][col] = 0;
-			}
-		}
-		RealMatrix z = new Array2DRowRealMatrix(zData);
+
+		RealMatrix z = MatrixUtils.toDiagonalMatrix(qrDecomp.getR());
 		RealMatrix raw = qrDecomp.getQ().multiply(z);
 		
 		// column sum of squared elements in raw
@@ -93,46 +110,91 @@ public class OrthogonalPolynomials
 		return raw;
 	}
 	
-	public static RealMatrix withinSubjectContrastOneFactor()
-	{
-		Array2DRowRealMatrix orpolMatrix = null;
+	/**
+	 * Create a within subject contrast (U) for polynomial trends
+	 * in a single factor.
+	 * 
+	 * @param values values of factor
+	 * @return polynomial contrast matrix
+	 * @throws IllegalArgumentException
+	 */
+	public static RealMatrix withinSubjectContrast(double[] values)
+	throws IllegalArgumentException
+	{		
+		if (values == null || values.length < 2)
+			throw new IllegalArgumentException("must specify at least 2 values");
+
+		int p = values.length;
+
+		double mean = StatUtils.mean(values);
+		double[] centered = new double[p];
+		double scale = 0;
+		for(int i = 0; i < p; i++) 
+		{
+			double v = values[i] - mean;
+			centered[i] = v;
+			scale += v*v;
+		}
+		for(int i = 0; i < p; i++) centered[i] /= Math.sqrt(scale);
 		
-		return orpolMatrix;
-	}
-	
-	public static RealMatrix withinSubjectContrastTwoFactor()
-	{
-		Array2DRowRealMatrix orpolMatrix = null;
-		
-		return orpolMatrix;
-	}
-	
-	public static RealMatrix withinSubjectContrastThreeFactor()
-	{
-		Array2DRowRealMatrix orpolMatrix = null;
-		
-		return orpolMatrix;
+		RealMatrix poly = OrthogonalPolynomials.orthogonalPolynomialCoefficients(centered,p-1);
+		int[] rows = new int[poly.getRowDimension()];
+		for(int i = 0; i < rows.length; i++) rows[i] = i;
+		int[] cols = new int[poly.getColumnDimension()-1];
+		for(int i = 0; i < cols.length; i++) cols[i] = i+1;
+		return poly.getSubMatrix(rows, cols);	
 	}
 	
 	/**
-	 * Mini test program for the orthogonal polynomial coefficients
-	 * TODO: move this to unit test
-	 * @param args null
+	 * Create a within subject contrast (U) for polynomial trends
+	 * in two factors using a Kronecker product. It assumes Factor 1
+	 *  varies slowly and that Factor 2 varies rapidly.    
+	 * 
+	 * @param factor1Values values of first factor
+	 * @param factor2Values values of second factor
+	 * @return 2 factor polynomial contrast matrix
+	 * @throws IllegalArgumentException
 	 */
-	public static void main(String[] args)
+	public static RealMatrix withinSubjectContrast(double[] factor1Values, 
+			double[] factor2Values)
+	throws IllegalArgumentException
 	{
-		double[] x = {1,2,3,4,5,6};
-		RealMatrix poly = OrthogonalPolynomials.orthogonalPolynomialCoefficients(x,4);
+		if (factor1Values == null || factor1Values.length < 2 ||
+				factor2Values == null || factor2Values.length < 2)
+			throw new IllegalArgumentException("must specify at least 2 values for each factor");
+
+		RealMatrix factor1Contrast = withinSubjectContrast(factor1Values);
+		RealMatrix factor2Contrast = withinSubjectContrast(factor2Values);
+		
+		return MatrixUtils.KroneckerProduct(factor1Contrast, factor2Contrast);
+	}
 	
-	    DecimalFormat Number = new DecimalFormat("#0.000");
-		for(int row = 0; row < poly.getRowDimension(); row++)
-		{
-			for(int col= 0; col < poly.getColumnDimension(); col++)
-			{
-				System.out.print(Number.format(poly.getEntry(row, col)) + "\t");
-			}
-			System.out.print("\n");
-		}
+	/**
+	 * Create a within subject contrast (U) for polynomial trends
+	 * in three factors using a Kronecker product. It assumes Factor 1
+	 * varies most slowly and that Factor 3 varies most rapidly.      
+	 * 
+	 * @param factor1Values values of first factor
+	 * @param factor2Values values of second factor
+	 * @param factor3Values values of third factor
+	 * @return 3 factor polynomial contrast matrix
+	 * @throws IllegalArgumentException
+	 */
+	public static RealMatrix withinSubjectContrast(double[] factor1Values,
+			double[] factor2Values, double[] factor3Values)
+	{
+		if (factor1Values == null || factor1Values.length < 2 ||
+				factor2Values == null || factor2Values.length < 2 || 
+				factor3Values == null || factor2Values.length < 3)
+			throw new IllegalArgumentException("must specify at least 2 values for each factor");
+		
+		RealMatrix factor1Contrast = withinSubjectContrast(factor1Values);
+		RealMatrix factor2Contrast = withinSubjectContrast(factor2Values);
+		RealMatrix factor3Contrast = withinSubjectContrast(factor2Values);
+		
+		RealMatrix korneckerProduct12 = 
+			MatrixUtils.KroneckerProduct(factor1Contrast, factor2Contrast);
+		return MatrixUtils.KroneckerProduct(korneckerProduct12, factor3Contrast);
 	}
 	
 }
