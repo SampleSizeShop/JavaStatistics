@@ -26,7 +26,6 @@ import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.RowMetaData;
-import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
 import junit.framework.TestCase;
@@ -59,7 +58,7 @@ public class TestConditionalMultivariateInteraction extends TestCase
 	}
 	
     /**
-     * Test valid inputs for a univariate linear model with only fixed predictors
+     * Test valid inputs for a multivariate GLMM(F) testing for interaction effect
      */
     public void testMultivariateInteraction()
     {
@@ -122,42 +121,4 @@ public class TestConditionalMultivariateInteraction extends TestCase
 		checker.reset();
     }
 
-    /**
-     * Tests if the calculator throws an exception on invalid inputs
-     */
-    public void testInvalidInputs()
-    {
-        // build the inputs
-        GLMMPowerParameters params = buildValidUnivariateInputs();
-        // create a power calculator
-        GLMMPowerCalculator calc = new GLMMPowerCalculator();
-        params.setBeta(null);
-        
-        try
-        {
-        	calc.getPower(params);
-            fail();
-        }
-        catch (Exception e)
-        {
-            assertTrue(true);
-        }
-    }
-
-    
-
-
-    /********** helper functions to create the matrices ***********/
-    
-    /**
-     * Builds matrices for a univariate GLM with fixed predictors
-     */
-    private GLMMPowerParameters buildValidUnivariateInputs()
-    {
-        GLMMPowerParameters params = new GLMMPowerParameters();
-       
-
-
-        return params;     
-    }   
 }
