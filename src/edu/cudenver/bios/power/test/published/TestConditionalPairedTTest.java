@@ -35,7 +35,7 @@ import junit.framework.TestCase;
 *
 * Power for a paired t-test       
 * 
-*  This example based on the corresponding example from POWERLIB:
+*  based on the example 2 from POWERLIB:
 *   Johnson J.L., Muller K.E., Slaughter J.C., Gurka M.J., Gribbin M.J. and Simpson S.L. 
 *   (2009) POWERLIB: SAS/IML software for computing power in multivariate linear models, 
 *   Journal of Statistical Software, 30(5), 1-27.

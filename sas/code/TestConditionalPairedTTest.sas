@@ -18,19 +18,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-/* 
-* Conditional power for all tests with fixed design
-*/
-TITLE "Conditional Power, Fixed Design, Paired T-Test";
-%INCLUDE "common.sas";
-
-LIBNAME DATA_DIR "&DATA_DIRECTORY";
 ***************************************************************;
 * Power for a paired t-test.  Based on example 2 from 
 *   Johnson J.L., Muller K.E., Slaughter J.C., Gurka M.J., Gribbin M.J. and Simpson S.L. 
 *   (2009) POWERLIB: SAS/IML software for computing power in multivariate linear models, 
 *   Journal of Statistical Software, 30(5), 1-27.
 ***************************************************************;
+TITLE "Conditional Power, Fixed Design, Paired T-Test";
+%INCLUDE "common.sas";
+
+LIBNAME DATA_DIR "&DATA_DIRECTORY";
 
 PROC IML SYMSIZE=1000 WORKSIZE=2000;
 %INCLUDE "&POWERLIB_IML_FILE"/NOSOURCE2;
