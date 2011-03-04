@@ -37,7 +37,6 @@ START _getPowerColumns(testlist, univariate);
 	else do;
 	  do i=1 to NCOL(testlist);
 	    if testlist[i] = "unirep" then TESTCOLUMNS = TESTCOLUMNS || {10};
-	    else if testlist[i] = "unirep" then TESTCOLUMNS = TESTCOLUMNS || {10};
 	    else if testlist[i] = "unirepBox" then TESTCOLUMNS = TESTCOLUMNS || {18};
 	    else if testlist[i] = "unirepGG" then TESTCOLUMNS = TESTCOLUMNS || {16};
 	    else if testlist[i] = "unirepHF" then TESTCOLUMNS = TESTCOLUMNS || {13};
@@ -108,48 +107,41 @@ START _getPowerAndCIColumns(testlist, univariate,
 	end;
 	else do;
 	print testlist;
-	  *testcolumns = {};
-	  print "hi";
 	  do i=1 to NCOL(testlist);
 	    if testlist[i] = "unirep" then do;
-			TESTCOLUMNS = TESTCOLUMNS || {10};
-			cilowercolumns = cilowercolumns || {};
-			ciuppercolumns = ciuppercolumns || {};
-		end;
-	    else if testlist[i] = "unirep" then do;
-			TESTCOLUMNS = TESTCOLUMNS || {10};
-			cilowercolumns = cilowercolumns || {};
-			ciuppercolumns = ciuppercolumns || {};
+			TESTCOLUMNS = TESTCOLUMNS || {20};
+			cilowercolumns = cilowercolumns || {19};
+			ciuppercolumns = ciuppercolumns || {21};
 		end;
 	    else if testlist[i] = "unirepBox" then do;
-			TESTCOLUMNS = TESTCOLUMNS || {18};
-			cilowercolumns = cilowercolumns || {};
-			ciuppercolumns = ciuppercolumns || {};
+			TESTCOLUMNS = TESTCOLUMNS || {32};
+			cilowercolumns = cilowercolumns || {31};
+			ciuppercolumns = ciuppercolumns || {33};
 		end;
 	    else if testlist[i] = "unirepGG" then do;
-			TESTCOLUMNS = TESTCOLUMNS || {16};
-			cilowercolumns = cilowercolumns || {};
-			ciuppercolumns = ciuppercolumns || {};
+			TESTCOLUMNS = TESTCOLUMNS || {28};
+			cilowercolumns = cilowercolumns || {27};
+			ciuppercolumns = ciuppercolumns || {29};
 		end;
 	    else if testlist[i] = "unirepHF" then do;
-			TESTCOLUMNS = TESTCOLUMNS || {13};
-			cilowercolumns = cilowercolumns || {};
-			ciuppercolumns = ciuppercolumns || {};
+			TESTCOLUMNS = TESTCOLUMNS || {24};
+			cilowercolumns = cilowercolumns || {23};
+			ciuppercolumns = ciuppercolumns || {25};
 		end;
 	    else if testlist[i] = "wl" then do;
-			TESTCOLUMNS = TESTCOLUMNS || {7};
-			cilowercolumns = cilowercolumns || {};
-			ciuppercolumns = ciuppercolumns || {};
+			TESTCOLUMNS = TESTCOLUMNS || {15};
+			cilowercolumns = cilowercolumns || {14};
+			ciuppercolumns = ciuppercolumns || {16};
 		end;
 	    else if testlist[i] = "pbt" then do;
-			TESTCOLUMNS = TESTCOLUMNS || {6};
-			cilowercolumns = cilowercolumns || {};
-			ciuppercolumns = ciuppercolumns || {};
+			TESTCOLUMNS = TESTCOLUMNS || {12};
+			cilowercolumns = cilowercolumns || {11};
+			ciuppercolumns = ciuppercolumns || {13};
 		end;
 	    else if testlist[i] = "hlt" then do;
-			TESTCOLUMNS = TESTCOLUMNS || {5};
-			cilowercolumns = cilowercolumns || {};
-			ciuppercolumns = ciuppercolumns || {};
+			TESTCOLUMNS = TESTCOLUMNS || {9};
+			cilowercolumns = cilowercolumns || {8};
+			ciuppercolumns = ciuppercolumns || {10};
 		end;
 	  end;
 	end;
@@ -178,6 +170,8 @@ START powerAndCIResultsToXML(out, holdpower, testlist, univariate);
 	do t=1 to NCOL(TESTLIST);
 		do i=1 to NROW(HOLDPOWER);
 			POWERCOL = TESTCOLUMNS[t];
+			CLUPPERCOL = ciUpperColumns[t];
+			CLLOWERCOL = ciUpperColumns[t];
 			put "<glmmPower test='" @;
 			put (TESTLIST[t]) @;
 			put "' alpha='" @;
@@ -200,6 +194,11 @@ START powerAndCIResultsToXML(out, holdpower, testlist, univariate);
 			put (HOLDPOWER[i,2]) @;
 			put "' sampleSize='" @;
 			put (HOLDPOWER[i,4]) @;
+			* total shameless hack for example6, but I am sick of generic-ifying this function;
+			if NCOL(HOLDPOWER) = 34 then do;
+				put "' delta='" @;
+				put (HOLDPOWER[i,34]) best17. @;
+			end;
 			put "' powerMethod='conditional' />";
         end;
 	end;
@@ -207,3 +206,25 @@ START powerAndCIResultsToXML(out, holdpower, testlist, univariate);
 	closefile out;
 
 FINISH powerAndCIResultsToXML;
+
+
+/*
+* Function to write a list of matrices to a file
+*
+* ARGUMENTS:
+*  matrixList - list of matrices
+*
+* RETURNS: none
+*/
+START matrixListToXML(matrixList);
+	
+  file out;
+	put "<matrixList>";
+	do t=1 to 10;
+
+
+	end;
+	put "</matrixList>";
+	closefile out;
+
+FINISH matrixListToXML;
