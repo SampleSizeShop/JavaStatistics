@@ -34,6 +34,12 @@ import junit.framework.TestCase;
 /**
  * Unit test for fixed univariate design with comparison against
  * simulation and SAS output.
+ * 
+ * based on the example 3 from POWERLIB:
+*   Johnson J.L., Muller K.E., Slaughter J.C., Gurka M.J., Gribbin M.J. and Simpson S.L. 
+*   (2009) POWERLIB: SAS/IML software for computing power in multivariate linear models, 
+*   Journal of Statistical Software, 30(5), 1-27.
+*   
  * @author Sarah Kreidler
  *
  */
