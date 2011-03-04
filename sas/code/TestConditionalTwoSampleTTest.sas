@@ -32,7 +32,8 @@ LIBNAME DATA_DIR "&DATA_DIRECTORY";
 * Neurotoxicology and Teratology, vol 14, May-June, 1992       ;
 * The code reports power for a limited number of predicted     ;
 * differences in means, compared to the number of values       ;
-* needed for plotting.  Code for plot is in ExampleA02.sas     ;
+* needed for plotting.                                         ;
+* Based on example 1 from POWERLIB (Johnson et al, 2009)       ;
 ***************************************************************;
 
 PROC IML SYMSIZE=1000 WORKSIZE=2000;

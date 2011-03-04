@@ -40,7 +40,7 @@ import junit.framework.TestCase;
  * differences in means, compared to the number of values    
  * needed for plotting.           
  * 
- *  This example based on the corresponding example from POWERLIB:
+ *  This example based on the example  1 from POWERLIB:
  *   Johnson J.L., Muller K.E., Slaughter J.C., Gurka M.J., Gribbin M.J. and Simpson S.L. 
  *   (2009) POWERLIB: SAS/IML software for computing power in multivariate linear models, 
  *   Journal of Statistical Software, 30(5), 1-27.
