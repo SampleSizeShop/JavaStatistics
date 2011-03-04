@@ -45,25 +45,42 @@ import edu.cudenver.bios.utils.ConfidenceInterval;
 
 public class PowerChecker 
 {
+	private class SASPower extends GLMMPower
+	{
+		double delta = Double.NaN;
+		public SASPower(GLMMPowerParameters.Test test, double alpha, 
+				double nominalPower, double actualPower, int sampleSize,
+				double betaScale, double sigmaScale, 
+				GLMMPowerParameters.PowerMethod method,
+				double quantile, ConfidenceInterval confidenceInterval, double delta)
+		{
+			super(test, alpha, nominalPower, actualPower, sampleSize,
+					betaScale, sigmaScale, method, quantile, confidenceInterval);
+			this.delta = delta;
+		}
+	}
+	
+	
     private static final int SIMULATION_SIZE = 10000;
     private static DecimalFormat Number = new DecimalFormat("#0.000");
     private static DecimalFormat LongNumber = new DecimalFormat("#0.00000000");
 
-	private double sasTolerance = 0.00001;
-	private double simTolerance = 0.05;
-	
     private boolean simulate = true;
     private List<GLMMPower> sasPowers = null;
     
+    // maximum allowed deviation
+	private double sasTolerance = 0.00001;
+	private double simTolerance = 0.05;
+	
     // results
     private ArrayList<Result> checkerResults = new ArrayList<Result>();
     private double maxSasDeviation = 0;
     private double maxSimDeviation = 0;
-    private double maxSaslowerCIDeviation = -1;
-    private double maxSasUpperCIDeviation = -1;
+    private double maxSaslowerCIDeviation = 0;
+    private double maxSasUpperCIDeviation = 0;
+    private int sasResultsIndex = 0;
     
     private Timer timer = new Timer();
-    
     private class Timer
     {
     	public long calculationMilliseconds;
@@ -99,6 +116,8 @@ public class PowerChecker
     	double sasCIUpper;
     	double simulatedPower;
     	double sasDeviation;
+    	double sasCILowerDeviation;
+    	double sasCIUpperDeviation;
     	double simulationDeviation;
     	
     	public Result(GLMMPower calculatedPower,
@@ -106,6 +125,8 @@ public class PowerChecker
     			double sasCILower,
     			double sasCIUpper,
     			double sasDeviation,
+    			double sasCILowerDeviation,
+    			double sasCIUpperDeviation,
     			double simulatedPower,
     			double simulationDeviation)
     	{
@@ -114,19 +135,10 @@ public class PowerChecker
         	this.sasCILower = sasCILower;
         	this.sasCIUpper = sasCIUpper;
         	this.sasDeviation = sasDeviation;
+        	this.sasCILowerDeviation = sasCILowerDeviation;
+        	this.sasCIUpperDeviation = sasCIUpperDeviation;
     		this.simulatedPower = simulatedPower;
         	this.simulationDeviation = simulationDeviation;
-    	}
-    	
-    	public Result(GLMMPower calculatedPower,
-    			double sasPower,
-    			double sasDeviation,
-    			double simulatedPower,
-    			double simulationDeviation)
-    	{
-    		this(calculatedPower, 
-    				sasPower, Double.NaN, Double.NaN, sasDeviation, 
-    				simulatedPower, simulationDeviation);
     	}
     };
     
@@ -203,14 +215,19 @@ public class PowerChecker
     	}
     	
     	// accumulate results and calculate maximum absolute deviation
-    	for(int i = 0; i < results.size(); i++)
+    	for(int i = 0; i < results.size(); i++, sasResultsIndex++)
     	{
     		GLMMPower power = (GLMMPower) results.get(i);
     		GLMMPower simPower = (simResults != null ? (GLMMPower) simResults.get(i) : null);
-    		GLMMPower sasPower = (sasPowers != null ? (GLMMPower) sasPowers.get(i) : null);
+    		GLMMPower sasPower = (sasPowers != null ? (GLMMPower) sasPowers.get(sasResultsIndex) : null);
     		double simDeviation = Double.NaN;	
     		double sasDeviation = Double.NaN;	
-
+    		double sasLowerCIDeviation = Double.NaN;
+    		double sasUpperCIDeviation = Double.NaN;
+    		
+			ConfidenceInterval sasCI = null;
+			ConfidenceInterval calcCI = null;
+			
     		if (simPower != null)
     		{
     			simDeviation = Math.abs(power.getActualPower() - simPower.getActualPower());
@@ -220,20 +237,24 @@ public class PowerChecker
     		{
     			sasDeviation = Math.abs(power.getActualPower() - sasPower.getActualPower());
     			if (sasDeviation > maxSasDeviation) maxSasDeviation = sasDeviation;
-    			ConfidenceInterval sasCI = sasPower.getConfidenceInterval();
-    			ConfidenceInterval calcCI = power.getConfidenceInterval();
+    			sasCI = sasPower.getConfidenceInterval();
+    			calcCI = power.getConfidenceInterval();
     			if (sasCI != null && calcCI != null)
     			{
-    				double lowerCIDeviation = Math.abs(calcCI.getLowerLimit() - sasCI.getLowerLimit());
-    				double upperCIDeviation = Math.abs(calcCI.getUpperLimit() - sasCI.getUpperLimit());
-    				if (lowerCIDeviation > maxSaslowerCIDeviation) maxSaslowerCIDeviation = lowerCIDeviation;
-    				if (upperCIDeviation > maxSasUpperCIDeviation) maxSasUpperCIDeviation = upperCIDeviation;
+    				sasLowerCIDeviation = Math.abs(calcCI.getLowerLimit() - sasCI.getLowerLimit());
+    				sasUpperCIDeviation = Math.abs(calcCI.getUpperLimit() - sasCI.getUpperLimit());
+    				if (sasLowerCIDeviation > maxSaslowerCIDeviation) maxSaslowerCIDeviation = sasLowerCIDeviation;
+    				if (sasUpperCIDeviation > maxSasUpperCIDeviation) maxSasUpperCIDeviation = sasUpperCIDeviation;
     			}
     		}
-
+    		
     		checkerResults.add(new Result(power,
     			(sasPower != null ? sasPower.getActualPower(): Double.NaN),
+    			(sasCI != null ? sasCI.getLowerLimit(): Double.NaN),
+    			(sasCI != null ? sasCI.getUpperLimit(): Double.NaN),
     			sasDeviation,
+    			sasLowerCIDeviation,
+    			sasUpperCIDeviation,
     			(simPower != null ? simPower.getActualPower() : Double.NaN),
     			simDeviation));
     	}
@@ -245,6 +266,9 @@ public class PowerChecker
     	timer.reset();
     	maxSasDeviation = 0;
     	maxSimDeviation = 0;
+    	maxSaslowerCIDeviation = 0;
+    	maxSasUpperCIDeviation = 0;
+    	sasResultsIndex = 0;
     }
     
     /**
@@ -291,13 +315,15 @@ public class PowerChecker
     	if (checkerResults.size() > 0 && checkerResults.get(0).calculatedPower.getConfidenceInterval() != null)
     	{
     		ConfidenceInterval ci = checkerResults.get(0).calculatedPower.getConfidenceInterval();
-    		buffer.append("<th>Confidence Interval (&alpha;-lower="); 
-    		buffer.append(ci.getAlphaLower());
-    		buffer.append(", &alpha;-upper="); 
-    		buffer.append(ci.getAlphaUpper());
-    		buffer.append(")</th>");
+    		buffer.append("<th>Confidence Interval (CI)</th><th>&alpha;-lower</th><th>&alpha;-upper</th>");
     	}
-    	buffer.append("<th>SAS Power (deviation)</th><th>Sim Power (deviation)</th>");
+    	buffer.append("<th>SAS Power (deviation)</th>");
+    	if (checkerResults.size() > 0 && checkerResults.get(0).calculatedPower.getConfidenceInterval() != null)
+    	{
+    		ConfidenceInterval ci = checkerResults.get(0).calculatedPower.getConfidenceInterval();
+    		buffer.append("<th>SAS CI {deviation}</th>");
+    	}
+    	buffer.append("<th>Sim Power (deviation)</th>");
     	buffer.append("<th>Test</th><th>SigmaScale</th><th>BetaScale</th><th>Total N</th>");
     	buffer.append("<th>Alpha</th><th>PowerMethod</th><th>Quantile</th></tr>");
 
@@ -311,13 +337,31 @@ public class PowerChecker
     		{
     			buffer.append("(" + Number.format(ci.getLowerLimit()) + ", " + Number.format(ci.getUpperLimit()) + ")");
         		buffer.append("</td><td>");
+        		buffer.append(ci.getAlphaLower());
+        		buffer.append("</td><td>");
+        		buffer.append(ci.getAlphaUpper());
+        		buffer.append("</td><td>");
     		}
     		buffer.append(Number.format(result.sasPower));
     		if (result.sasDeviation > sasTolerance)
     			buffer.append(" <font color='red'>(" + Number.format(result.sasDeviation) + ")</font></td><td>");
     		else
     			buffer.append(" (" + Number.format(result.sasDeviation) + ")</td><td>");
-    		
+    		if (ci != null)
+    		{
+    			buffer.append("(" + Number.format(result.sasCILower) + ", " + Number.format(result.sasCIUpper) + ")");
+        		buffer.append("{"); 
+        		if (result.sasCILowerDeviation > sasTolerance)
+        			buffer.append("<font color='red'>" + Number.format(result.sasCILowerDeviation) + "</font>");
+        		else
+        			buffer.append(Number.format(result.sasCILowerDeviation));
+        		buffer.append(", ");
+        		if (result.sasCIUpperDeviation > sasTolerance)
+        			buffer.append("<font color='red'>" + Number.format(result.sasCIUpperDeviation) + "</font>");
+        		else
+        			buffer.append(Number.format(result.sasCIUpperDeviation));
+        		buffer.append("}</td><td>");
+    		}
     		buffer.append(Number.format(result.simulatedPower));
     		if (result.simulationDeviation > simTolerance)
     			buffer.append(" <font color='red'>(" + Number.format(result.simulationDeviation) + ")</font></td><td>");
@@ -329,7 +373,7 @@ public class PowerChecker
     				Number.format(result.calculatedPower.getBetaScale()) + "</td><td>" + 
     				result.calculatedPower.getTotalSampleSize() + "</td><td>" + 
     				Number.format(result.calculatedPower.getAlpha()) + "</td><td>" + 
-    				result.calculatedPower.getPowerMethod() + "</td><td>" + 
+    				powerMethodToString(result.calculatedPower.getPowerMethod()) + "</td><td>" + 
     				result.calculatedPower.getQuantile() + "</td></tr>");
     	}
     	
@@ -396,6 +440,24 @@ public class PowerChecker
         	System.out.println("Max Deviation from SAS, Upper Confidence Limit: " + 
         			LongNumber.format(maxSasUpperCIDeviation));
     	}
+    }
+    
+    private String powerMethodToString(GLMMPowerParameters.PowerMethod method)
+    {
+    	String value = null;
+    	switch (method)
+    	{
+    	case CONDITIONAL_POWER:
+    		value = "cond";
+    		break;
+    	case UNCONDITIONAL_POWER:
+    		value = "uncond";
+    		break;
+    	case QUANTILE_POWER:
+    		value = "quantile";
+    		break;    		
+    	}
+    	return value;
     }
     
     public boolean isSASDeviationBelowTolerance()
