@@ -32,6 +32,8 @@ PROC IML SYMSIZE=1000 WORKSIZE=2000;
 %INCLUDE "&POWERLIB_IML_FILE"/NOSOURCE2;
 %INCLUDE "XMLUTILITIES.IML"/NOSOURCE2;
 
+FREE HOLDALL;
+
 * Define inputs to power program;
 ESSENCEX = I(2);  *Balanced two group t test, cell mean coding;
 REPN = {12};
@@ -54,11 +56,31 @@ ALPHA_CL = .025;   *Lower confidence limit tail size;
 ALPHA_CU = .025;   *Upper confidence limit tail size;
 ROUND = 15;
 RUN POWER;
+HOLDALL = HOLDALL // _HOLDPOWER;
+
+* Statements to create one-sided lower confidence limits *;
+
+ALPHA_CL = 0.05;   *Lower confidence limit tail size;
+ALPHA_CU =   0;    *Upper confidence limit tail size;
+*Since WORK.PWRDT1 already exists, WORK.PWRDT2 is created.;
+
+RUN POWER;
+HOLDALL = HOLDALL // _HOLDPOWER;
+
+* Statements to create one-sided upper confidence limits *;
+
+ALPHA_CL = 0;      *Lower confidence limit tail size;
+ALPHA_CU = 0.05;   *Upper confidence limit tail size;
+*Since WORK.PWRDT1 and WORK.PWDT2 already exist, WORK.PWRDT3 is created.;
+
+RUN POWER;
+HOLDALL = HOLDALL // _HOLDPOWER;
+PRINT HOLDALL[COLNAME=_HOLDPOWERLBL];
 
 /* write to XML file */
 TEST_LIST = {"unirep"};
 filename out "&DATA_DIRECTORY\TestConditionalUnivariateWithConfidenceLimits.xml"; 
-RUN powerAndCIResultsToXML(out, _HOLDPOWER, TEST_LIST, 1);
+RUN powerAndCIResultsToXML(out, HOLDALL, TEST_LIST, 1);
 
 
 QUIT;

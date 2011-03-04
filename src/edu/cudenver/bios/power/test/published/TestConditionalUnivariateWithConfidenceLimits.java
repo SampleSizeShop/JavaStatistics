@@ -36,6 +36,11 @@ import junit.framework.TestCase;
  * Unit test for fixed univariate design with confidence intervals (powerlib example 4). 
  * Compared against simulation and SAS output.
  * 
+ *  based on the example 4 from POWERLIB:
+*   Johnson J.L., Muller K.E., Slaughter J.C., Gurka M.J., Gribbin M.J. and Simpson S.L. 
+*   (2009) POWERLIB: SAS/IML software for computing power in multivariate linear models, 
+*   Journal of Statistical Software, 30(5), 1-27.
+ * 
  * @author Sarah Kreidler
  *
  */
@@ -43,7 +48,7 @@ public class TestConditionalUnivariateWithConfidenceLimits extends TestCase
 {
 	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestConditionalUnivariateWithConfidenceLimits.xml";
 	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalUnivariateWithConfidenceLimits.html";
-	private static final String TITLE = "Power results for fixed univariate with confidence limits";
+	private static final String TITLE = "Power results for fixed univariate design with confidence limits";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -55,6 +60,7 @@ public class TestConditionalUnivariateWithConfidenceLimits extends TestCase
 		catch (Exception e)
 		{
 			System.err.println("Setup failed: " + e.getMessage());
+			e.printStackTrace();
 			fail();
 		}
 	}
@@ -76,9 +82,9 @@ public class TestConditionalUnivariateWithConfidenceLimits extends TestCase
         // build beta matrix
         double [][] beta = {{0},{1}};
         params.setBeta(new FixedRandomMatrix(beta, null, false));
-        // add beta scale values
-        for(double betaScale = 0; betaScale <= 0.75; betaScale += 0.01) params.addBetaScale(betaScale);
-        
+        // add beta scale values from 0 to 0.75
+        for(double betaScale = 0; betaScale < 0.76; betaScale += 0.01) params.addBetaScale(betaScale);
+
         // build theta null matrix
         double [][] theta0 = {{0}};
         params.setTheta(new Array2DRowRealMatrix(theta0));
@@ -105,12 +111,22 @@ public class TestConditionalUnivariateWithConfidenceLimits extends TestCase
         params.setConfidenceIntervalType(ConfidenceIntervalType.BETA_KNOWN_SIGMA_ESTIMATED);
         params.setSampleSizeForEstimates(24);
         params.setDesignMatrixRankForEstimates(2);
-        params.setAlphaLowerConfidenceLimit(0.025);
-        params.setAlphaUpperConfidenceLimit(0.025);
         
         // run the test
         System.out.println(TITLE);
+        // 2 sided CI
+        params.setAlphaLowerConfidenceLimit(0.025);
+        params.setAlphaUpperConfidenceLimit(0.025);
         checker.checkPower(params);
+        // 1 sided lower CI
+        params.setAlphaLowerConfidenceLimit(0.05);
+        params.setAlphaUpperConfidenceLimit(0);
+        checker.checkPower(params);
+        // 1 sided upper CI
+        params.setAlphaLowerConfidenceLimit(0);
+        params.setAlphaUpperConfidenceLimit(0.05);
+        checker.checkPower(params);
+        // output the results
 		checker.outputResults();
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
