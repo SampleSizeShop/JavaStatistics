@@ -20,6 +20,8 @@
  */
 package edu.cudenver.bios.matrix;
 
+import jsc.distributions.Normal;
+
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
 
@@ -52,6 +54,13 @@ public class MatrixUtils
 		return new Array2DRowRealMatrix(zData);
 	}
 	
+	/**
+	 * Calculate the horizontal direct product of two matrices
+	 * 
+	 * @param matrix1 first matrix
+	 * @param matrix2 second matrix
+	 * @return horizontal direct product of matrix 1 and matrix 2
+	 */
 	public static RealMatrix horizontalDirectProduct(RealMatrix matrix1, RealMatrix matrix2)
 	throws IllegalArgumentException
 	{
@@ -78,6 +87,13 @@ public class MatrixUtils
 		return productMatrix;
 	}
 	
+	/**
+	 * Calculate the Kronecker product of two matrices
+	 * 
+	 * @param matrix1 first matrix
+	 * @param matrix2 second matrix
+	 * @return Kronecker product of matrix 1 and matrix 2
+	 */
 	public static RealMatrix KroneckerProduct(RealMatrix matrix1, RealMatrix matrix2)
 	{
 		if (matrix1 == null ||matrix2 == null)
@@ -100,5 +116,72 @@ public class MatrixUtils
 		}
 		
 		return productMatrix;
+	}
+	
+	/**
+	 * Creates a matrix of the specified size with all cells set to the specified value
+	 * 
+	 * @param rows row dimension
+	 * @param cols column dimension
+	 * @param value fill value
+	 * @return rows x cols matrix with all cells set to the specified value
+	 */
+	public static RealMatrix createRealMatrixWithFilledValue(int rows, int cols, double value)
+	{
+		double[][] data = new double[rows][cols];
+		
+		for(int r = 0; r < rows; r++)
+		{
+			for(int c = 0; c < cols; c++)
+			{
+				data[r][c] = value;
+			}
+		}
+		return new Array2DRowRealMatrix(data);
+	}
+	
+	/**
+	 * Creates a matrix of the specified size with all cells set to the specified value
+	 * 
+	 * @param rows row dimension
+	 * @param cols column dimension
+	 * @param value fill value
+	 * @return rows x cols matrix with all cells set to the specified value
+	 */
+	public static RealMatrix createRandomColumn(int rows, double mean, double variance, int seed)
+	{
+		double[] data = new double[rows];
+        Normal dist = new Normal(mean, Math.sqrt(variance));
+        dist.setSeed(seed);
+        
+        for(int r = 0; r < rows; r++)
+        {
+        	data[r] = dist.random();
+        }
+		return new Array2DRowRealMatrix(data);
+	}
+	
+	/**
+	 * Horizontally append two matrices
+	 * @param matrix
+	 * @param column
+	 * @return the combined matrix
+	 * @throws IllegalArgumentException
+	 */
+	public static RealMatrix horizontalAppend(RealMatrix m1, RealMatrix m2)
+	throws IllegalArgumentException
+	{
+		if (m1 == null || m2 == null)
+			throw new IllegalArgumentException("Missing required argument");
+		if (m1.getRowDimension() != m2.getRowDimension())
+			throw new IllegalArgumentException("Row dimensions must be equal");
+		
+		RealMatrix newMatrix = 
+			new Array2DRowRealMatrix(m1.getRowDimension(),
+					m1.getColumnDimension()+m2.getColumnDimension());
+		newMatrix.setSubMatrix(m1.getData(), 0, 0);
+		newMatrix.setSubMatrix(m2.getData(), 0, m1.getColumnDimension());
+		
+		return newMatrix;		
 	}
 }
