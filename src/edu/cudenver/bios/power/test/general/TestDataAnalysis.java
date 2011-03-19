@@ -24,17 +24,17 @@ import java.text.DecimalFormat;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.LUDecompositionImpl;
-import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.glmm.GLMMTest;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters.Test;
 import jsc.distributions.FishersF;
 import jsc.distributions.Normal;
 import junit.framework.TestCase;
@@ -199,7 +199,7 @@ public class TestDataAnalysis extends TestCase
         GLMMPowerParameters params = new GLMMPowerParameters();
        
         // add tests
-        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
+        for(Test test: Test.values()) 
         {
             params.addTest(test);
         }
@@ -225,9 +225,7 @@ public class TestDataAnalysis extends TestCase
         
         // build design matrix
         double[][] essenceData = {{1,0},{0,1}};
-        RowMetaData[] rowMd = {new RowMetaData(1), new RowMetaData(1)};
-        DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
-        params.setDesignEssence(essenceMatrix);
+        params.setDesignEssence(new Array2DRowRealMatrix(essenceData));
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         
@@ -259,16 +257,10 @@ public class TestDataAnalysis extends TestCase
 
         int Q = 4;
         // create design matrix
-        RealMatrix essenceData = MatrixUtils.createRealIdentityMatrix(Q);
-        RowMetaData[] rowMd = {
-        		new RowMetaData(1), 
-        		new RowMetaData(1), 
-        		new RowMetaData(1), 
-        		new RowMetaData(1)
-        		};
-        DesignEssenceMatrix essence = 
-        	new DesignEssenceMatrix(essenceData.getData(), rowMd, null, null);
-        params.setDesignEssence(essence);
+        RealMatrix essenceMatrix = 
+        	org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(Q);
+        params.setDesignEssence(essenceMatrix);
+
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         
@@ -306,15 +298,15 @@ public class TestDataAnalysis extends TestCase
 	
     private FitResult fitModel(GLMMPowerParameters params, RealMatrix error)
     {
-    	params.getFirstAlpha();
-    	params.getFirstBetaScale();
-    	params.getFirstSigmaScale();
-    	params.getFirstSampleSize();
-    	params.getFirstTest();
+    	double alpha = params.getAlphaList().get(0);
+    	double betaScale = params.getBetaScaleList().get(0);
+    	double sigmaScale = params.getSigmaScaleList().get(0);
+    	int perGroupN = params.getSampleSizeList().get(0);
+    	Test test = params.getTestList().get(0);
     	
-        RealMatrix scaledBeta = params.getScaledBeta();
-        RealMatrix scaledSigma = params.getScaledSigmaError();
-        RealMatrix X = params.getDesign();
+        RealMatrix scaledBeta = params.getBeta().scalarMultiply(betaScale, true);
+        RealMatrix scaledSigma = params.getSigmaError().scalarMultiply(sigmaScale);
+        RealMatrix X = MatrixUtils.getFullDesignMatrix(params.getDesignEssence(), perGroupN);
         int N = X.getRowDimension();
         int rankX = new SingularValueDecompositionImpl(X).getRank();
         
@@ -370,12 +362,19 @@ public class TestDataAnalysis extends TestCase
         RealMatrix Ydiff = Ysim.subtract(YHat);
         RealMatrix sigmaHat = (Ydiff.transpose().multiply(Ydiff)).scalarMultiply(((double) 1/(double)(N - rankX)));    
         
-        // set the scaled sigma / beta to the new values
-        params.setScaledBeta(betaHat);
-        params.setScaledSigmaError(sigmaHat);
-        
         // calculate the observed F for the simulation
-        GLMMTest glmmTest = GLMMTestFactory.createGLMMTest(params);
+		// build a test object for the simulated matrices
+    	GLMMTest glmmTest = GLMMTestFactory.createGLMMTest(test, 
+				params.getFApproximationMethod(test),
+				params.getUnivariateCdfMethod(test), 
+				params.getDesignEssence(), 
+				XtXInverse, 
+				perGroupN,
+				params.getDesignRank(), 
+				params.getBetweenSubjectContrast().getCombinedMatrix(), 
+				params.getWithinSubjectContrast(), 
+				params.getTheta(), 
+				betaHat, sigmaHat);
         double fobs = glmmTest.getObservedF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
 
         // get the p-value from a central F distribution
@@ -385,7 +384,7 @@ public class TestDataAnalysis extends TestCase
         FishersF fdist = new FishersF(ndf, ddf);
         double pvalue = 1 - fdist.cdf(fobs);
         
-		System.out.println("Test: " + params.getCurrentTest() + 
+		System.out.println("Test: " + test + 
 				" Ndf: " + number.format(ndf) + 
 				" Ddf: " + number.format(ddf) +
 				" F-crit: " + number.format(fobs) + 

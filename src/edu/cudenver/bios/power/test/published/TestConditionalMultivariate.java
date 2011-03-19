@@ -24,15 +24,12 @@ import java.io.File;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.MatrixUtils;
-import org.apache.commons.math.linear.RealMatrix;
 
 import junit.framework.TestCase;
 
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RowMetaData;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters.Test;
 import edu.cudenver.bios.power.test.PowerChecker;
 
 /**
@@ -91,7 +88,7 @@ public class TestConditionalMultivariate extends TestCase
         GLMMPowerParameters params = new GLMMPowerParameters();
      
         // add tests
-        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
+        for(Test test: Test.values()) 
         {
             params.addTest(test);
         }
@@ -101,16 +98,7 @@ public class TestConditionalMultivariate extends TestCase
 
         int Q = 4;
         // create design matrix
-        RealMatrix essenceData = MatrixUtils.createRealIdentityMatrix(Q);
-        RowMetaData[] rowMd = {
-        		new RowMetaData(1), 
-        		new RowMetaData(1), 
-        		new RowMetaData(1), 
-        		new RowMetaData(1)
-        		};
-        DesignEssenceMatrix essence = 
-        	new DesignEssenceMatrix(essenceData.getData(), rowMd, null, null);
-        params.setDesignEssence(essence);
+        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(Q));
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         

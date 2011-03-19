@@ -20,12 +20,18 @@
  */
 package edu.cudenver.bios.power.parameters;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
-
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
+import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
+import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 
 /**
  * Container class for inputs for general linear model power calculations.
@@ -73,23 +79,7 @@ import edu.cudenver.bios.matrix.FixedRandomMatrix;
  *
  */
 public class GLMMPowerParameters extends PowerParameters
-{
-	private static final PowerMethod DEFAULT_POWER_METHOD = 
-		PowerMethod.CONDITIONAL_POWER;
-	private static final double DEFAULT_QUANTILE = 0.5;
-	
-	// the type of statistical test to use
-	public enum Test 
-	{
-		UNIREP,
-		UNIREP_BOX,
-		UNIREP_GEISSER_GREENHOUSE,
-		UNIREP_HUYNH_FELDT,
-		WILKS_LAMBDA,
-		PILLAI_BARTLETT_TRACE,
-		HOTELLING_LAWLEY_TRACE
-	};
-
+{	
 	// power methods
 	public enum PowerMethod
 	{
@@ -97,104 +87,74 @@ public class GLMMPowerParameters extends PowerParameters
 		UNCONDITIONAL_POWER,
 		QUANTILE_POWER
 	};
-
-	// type of approximation to use for unirep
-	public enum UnivariateCdf
-	{
-		MULLER_BARTON_APPROX,
-		MULLER_EDWARDS_TAYLOR_APPROX,
-		MULLER_EDWARDS_TAYLOR_EXACT,
-		MULLER_EDWARDS_TAYLOR_EXACT_APPROX
-	};
-
-	// available moment approximation methods
-	public enum MomentApproximationMethod
-	{
-		NONE,
-		PILLAI_ONE_MOMENT,
-		PILLAI_ONE_MOMENT_OMEGA_MULT,
-		MCKEON_TWO_MOMENT,
-		MCKEON_TWO_MOMENT_OMEGA_MULT,
-		MULLER_TWO_MOMENT,
-		MULLER_TWO_MOMENT_OMEGA_MULT,
-		RAO_TWO_MOMENT,
-		RAO_TWO_MOMENT_OMEGA_MULT
-	};
-
-	public enum ConfidenceIntervalType
-	{
-		NONE,
-		BETA_KNOWN_SIGMA_ESTIMATED,
-		BETA_SIGMA_ESTIMATED
-	}
 	
 	// parameters related to confidence intervals
 	ConfidenceIntervalType confidenceIntervalType = ConfidenceIntervalType.NONE;
 	double alphaLowerConfidenceLimit = 0.025;
 	double alphaUpperConfidenceLimit = 0.025;
-	double sampleSizeForEstimates = 0;
-	double designMatrixRankForEstimates = 0;
+	int sampleSizeForEstimates = 0;
+	int designMatrixRankForEstimates = 0;
 	
-	// type of statistical test being performed
-	PeekableList<Test> testList = new PeekableList<Test>();
-	
-	// beta matrix of regression coefficients
-	FixedRandomMatrix beta = null;
-	RealMatrix betaScaled = null; // beta matrix with scale factor applied
-	PeekableList<Double> betaScaleList = new PeekableList<Double>();
-	
-	// residual error matrix and associated scale factors
-	RealMatrix sigmaError = null;
-	RealMatrix sigmaErrorScaled = null;
-	PeekableList<Double> sigmaScaleList = new PeekableList<Double>();
-	
-	/* variance/ covariances required for random gaussian covariates */
-	RealMatrix sigmaOutcomeGaussianRandom = null;
-	RealMatrix sigmaGaussianRandom = null;
-	RealMatrix sigmaOutcome = null;
-
-	// C matrix - contrasts for between subject effects
-	FixedRandomMatrix betweenSubjectContrast = null;
-
-	// theta matrix - matrix of null hypothesis values
-	RealMatrix theta = null;
-
-	// U matrix - contrasts for within subject effects
-	RealMatrix withinSubjectContrast = null;
-
-	// set internally, full design matrix
-	RealMatrix design = null;
-	// caching of X'X inverse and rank since these are order(n^3)
-	RealMatrix XtXInverse = null;
-	int designRank = -1;
-	// the essence design matrix
-	DesignEssenceMatrix designEssence = null;
-
-	// for design matrices with a baseline covariate, power may be estimated
-	// with either conditional power (same as fixed effects), quantile power,
-	// or unconditional power
-	PeekableList<PowerMethod> powerMethodList = new PeekableList<PowerMethod>();
-	// list of quantiles to use for quantile power
-	PeekableList<Double> quantileList = new PeekableList<Double>();
-
-	// default approximation method
-	UnivariateCdf univariateCdf = UnivariateCdf.MULLER_EDWARDS_TAYLOR_APPROX;
-
-	MomentApproximationMethod momentMethod =
-		MomentApproximationMethod.NONE;
-
+	/** flags for selecting approximation methods, cdf methods **/
+	// approximation method setting.  These can be set for each statistical test
+	HashMap<Test,UnivariateCdfApproximation> univariateCdfMap = 
+		new HashMap<Test,UnivariateCdfApproximation>();
+	HashMap<Test,FApproximation> FMap = 
+		new HashMap<Test,FApproximation>();
 	// if true, use the exact calculation of the CDF of the non-centrality parameter
 	// (applies to quantile and conditional power only)
 	boolean nonCentralityCDFExact = false;
 	
+	/* lists which define a set of powers calculations for the current run
+	 * note that sample size, power, and alpha lists are defined in the PowerParameters super class 
+	 */
+	// type of statistical test being performed
+	ArrayList<Test> testList = new ArrayList<Test>();
+	// scale factors for the beta matrix
+	ArrayList<Double> betaScaleList = new ArrayList<Double>();
+	// scale factors for the sigma(error) matrix
+	ArrayList<Double> sigmaScaleList = new ArrayList<Double>();
+	// for design matrices with a baseline covariate, power may be estimated
+	// with either conditional power (same as fixed effects), quantile power,
+	// or unconditional power
+	ArrayList<PowerMethod> powerMethodList = new ArrayList<PowerMethod>();
+	// list of quantiles to use for quantile power
+	ArrayList<Double> quantileList = new ArrayList<Double>();
+	
+	/* matrix inputs to the power calculation.  */
+	// the design essence matrix 
+	/* For details please see Muller & Fetterman (2002) "Regression and ANOVA" */
+	RealMatrix designEssence = null;
+	// caching of X'X inverse and rank since these are order(n^3) operations
+	RealMatrix XtXInverse = null;
+	int designRank = -1;
+	// C matrix - contrasts for between subject effects
+	FixedRandomMatrix betweenSubjectContrast = null;
+	// U matrix - contrasts for within subject effects
+	RealMatrix withinSubjectContrast = null;
+	// theta matrix - matrix of null hypothesis values
+	RealMatrix theta = null;
+	// beta matrix of regression coefficients
+	FixedRandomMatrix beta = null;
+	// residual error matrix 
+	RealMatrix sigmaError = null;
+	// variance/ covariances required for random gaussian covariates 
+	// i.e. GLMM(F,g) designs
+	RealMatrix sigmaOutcomeGaussianRandom = null;
+	RealMatrix sigmaGaussianRandom = null;
+	RealMatrix sigmaOutcome = null;
+
 	/**
 	 * Constructor.  Creates an empty set of linear model power parameters
 	 */
 	public GLMMPowerParameters() 
 	{
 	    super();
+	    setTestDefaults();
 	}
 
+	/**** Functions for list inputs which define multiple power calculations ****/
+	
 	/**
 	 * Add the statistical test to those included in the power/sample size 
 	 * calculations
@@ -204,63 +164,261 @@ public class GLMMPowerParameters extends PowerParameters
 	{
     	testList.add(test);
 	}
-
-	/**
-	 * Lookup the default approximation for the current test
-	 * @param test statistical test
-	 */
-	private void setTestDefaults(Test test)
-	{
-		if (test != null)
-		{
-			switch (test)
-			{
-			case HOTELLING_LAWLEY_TRACE:
-				momentMethod = MomentApproximationMethod.MCKEON_TWO_MOMENT_OMEGA_MULT;
-				break;
-			case PILLAI_BARTLETT_TRACE:
-				momentMethod = MomentApproximationMethod.MULLER_TWO_MOMENT;
-				break;
-			case WILKS_LAMBDA:
-				momentMethod = MomentApproximationMethod.RAO_TWO_MOMENT_OMEGA_MULT;
-				break;
-			default:
-				momentMethod = MomentApproximationMethod.NONE;
-			}
-		}
-	}
 	
-	/**
-	 * Internally activates the first statistical test and prepares
-	 * for iteration over the test list
-	 * @return first test
-	 */
-    public Test getFirstTest()
+    /**
+     * Add a scale factor for the beta matrix.  This scale factor
+     * only effects the fixed portion of the beta matrix
+     * @param scale scale factor
+     */
+    public void addBetaScale(double scale)
     {
-    	Test test = testList.first();
-    	setTestDefaults(test);
-        return test;
-    }
-    
-	/**
-	 * Iterates to and activates the next  statistical test in the list.
-	 * @return next test or null if at end of list
-	 */
-    public Test getNextTest()
-    {
-    	Test test = testList.next();
-    	setTestDefaults(test);
-        return test;
+    	betaScaleList.add(new Double(scale));    	
     }
     
     /**
-     * Peek at the currently active statistical test
-     * @return currently active test
+     * Add a scale factor for the sigma error matrix.  Allows the user
+     * to tweak the estimates of residual variance in the model
+     * @param scale scale factor
      */
-    public Test getCurrentTest()
+    public void addSigmaScale(double scale)
     {
-        return testList.current();
+    	sigmaScaleList.add(new Double(scale));    	
+    }   
+    
+    /**
+     * Add a power method for use in power calculations
+     * @param method conditional, quantile, or unconditional power
+     */
+    public void addPowerMethod(PowerMethod method)
+    {
+    	powerMethodList.add(method);
     }
+    
+    /**
+     * Add a quantile (value between 0 and 1) to the list for use with the quantile
+     * power method.
+     * @param quantile value between 0 and 1 indicating the power quantile
+     */
+    public void addQuantile(double quantile)
+    {
+    	quantileList.add(new Double(quantile));
+    }
+    
+	/**
+	 * Get the list of statistical tests
+	 * @return list of statistical tests requested
+	 */
+	public ArrayList<Test> getTestList()
+	{
+		return testList;
+	}
+	
+    /**
+     * Get the list of beta scale factors
+     * @return beta scale list
+     */
+    public ArrayList<Double> getBetaScaleList()
+    {
+        return betaScaleList;
+    }
+
+    /**
+     * Get the list of sigma scale factors
+     * @return sigma scale list
+     */
+    public ArrayList<Double> getSigmaScaleList()
+    {
+        return sigmaScaleList;
+    }
+    
+    /**
+     * Get the list of power methods
+     * @return power method list
+     */
+    public ArrayList<PowerMethod> getPowerMethodList()
+    {
+    	return powerMethodList;
+    }
+	
+    /**
+     * Get the list of quantiles associated with a set of quantile power calculations
+     * @return list of quantiles
+     */
+    public ArrayList<Double> getQuantileList()
+    {
+    	return quantileList;
+    }
+	
+	/**** Functions for setting approximation and cdf methods ****/
+    
+    /**
+     * Sets the approximation method for the F statistic which is created
+     * by the underlying statistical test.
+     * @param test the statistical test for which the F approximation is being set
+     */
+    public void setFApproximationMethod(Test test, FApproximation method)
+    {
+    	FMap.put(test, method);
+    }
+    
+    /**
+     * Get the F approximation method for the specified test
+     * @param test
+     */
+    public FApproximation getFApproximationMethod(Test test)
+    {
+    	return FMap.get(test);
+    }
+    
+    /**
+     * Sets the CDF approximation method for the univariate tests
+     * @param test statistical test type
+     * @param method CDF approximation method
+     */
+    public void setUnivariateCdfMethod(Test test, UnivariateCdfApproximation method)
+    {
+    	univariateCdfMap.put(test, method);
+    }
+    
+    /**
+     * Get the CDF approximation method for the specified test
+     * @param test statistical test
+     * @return CDF approximation method
+     */
+    public UnivariateCdfApproximation getUnivariateCdfMethod(Test test)
+    {
+    	return univariateCdfMap.get(test);
+    }
+    
+    /**
+     * Indicates if the estimate of the non-centrality cdf
+     * uses the exact Davies' algorithm.  If false, a Satterthwaite
+     * approximation is used.
+     * @return true if exact Davies's algorithm is used.
+     */
+	public boolean isNonCentralityCDFExact() 
+	{
+		return nonCentralityCDFExact;
+	}
+
+    /**
+     * Set whether the estimate of the non-centrality cdf
+     * should use the exact Davies' algorithm.  If false, a Satterthwaite
+     * approximation is used.
+     * 
+     * @param nonCentralityCDFExact true for Davies' algorithm, false
+     * for Satterthwaite approximation.
+     */
+	public void setNonCentralityCDFExact(boolean nonCentralityCDFExact) 
+	{
+		this.nonCentralityCDFExact = nonCentralityCDFExact;
+	}
+    
+	/**** Functions for setting the matrix inputs ****/
+	
+	/**
+	 * Get the "essence" design matrix which contains 1 entry for
+	 * each row in the fixed portion of the full design matrix 
+	 * @return essence design matrix
+	 */
+	public RealMatrix getDesignEssence()
+	{
+		return designEssence;
+	}
+
+	/**
+	 * Set the "essence" design matrix which contains 1 entry for
+	 * each row in the fixed portion of the full design matrix 
+	 * @param designEssence design essence matrix.
+	 */
+	public void setDesignEssence(RealMatrix designEssence)
+	{
+		this.designEssence = designEssence;
+	}
+
+	/**
+	 * Get rank of design matrix
+	 * 
+	 * @return rank of design matrix
+	 */
+	public int getDesignRank()
+	{
+		if (designRank < 0)
+		{
+			designRank = new SingularValueDecompositionImpl(designEssence).getRank();
+		}
+		return designRank;
+	}
+	
+	/**
+	 * Get cached (X'X)-1.  Matrix inversion is order n^3 so we
+	 * cache this value
+	 * 
+	 * @return (X'X) inverse
+	 */
+	public RealMatrix getXtXInverse()
+	{
+		if (XtXInverse == null)
+		{
+	        XtXInverse = 
+	        	new LUDecompositionImpl(designEssence.transpose().multiply(designEssence)).getSolver().getInverse();
+		}
+		return XtXInverse;
+	}
+	
+	/**
+	 * Get the between subject contrast matrix (C)
+	 * @return C matrix
+	 */
+	public FixedRandomMatrix getBetweenSubjectContrast()
+	{
+		return betweenSubjectContrast;
+	}
+
+	/**
+	 * Set the between subject contrast matrix
+	 * @param betweenSubjectContrast C matrix
+	 */
+	public void setBetweenSubjectContrast(FixedRandomMatrix betweenSubjectContrast)
+	{
+		this.betweenSubjectContrast = betweenSubjectContrast;
+	}
+	
+	/**
+	 * Get the within subject contrast (U)
+	 * @return U matrix
+	 */
+	public RealMatrix getWithinSubjectContrast()
+	{
+		return withinSubjectContrast;
+	}
+
+	/**
+	 * Set the within subject contrast (U)
+	 * @param withinSubjectContrast U matrix
+	 */
+	public void setWithinSubjectContrast(RealMatrix withinSubjectContrast)
+	{
+		this.withinSubjectContrast = withinSubjectContrast;
+	}
+
+	/**
+	 * Get the theta null matrix
+	 * @return theta null
+	 */
+	public RealMatrix getTheta()
+	{
+		return theta;
+	}
+
+	/**
+	 * Set the theta null matrix
+	 * @param theta null hypothesis matrix
+	 */
+	public void setTheta(RealMatrix theta)
+	{
+		this.theta = theta;
+	}
 	
     /**
      * Get the beta matrix
@@ -279,7 +437,7 @@ public class GLMMPowerParameters extends PowerParameters
 	{
 		this.beta = beta;
 	}
-
+	
 	/**
 	 * Get the residual error covariance matrix
 	 * @return sigma error
@@ -352,569 +510,122 @@ public class GLMMPowerParameters extends PowerParameters
 		this.sigmaOutcome = sigmaOutcome;
 	}
 
-	/**
-	 * Get the between subject contrast matrix (C)
-	 * @return C matrix
-	 */
-	public FixedRandomMatrix getBetweenSubjectContrast()
-	{
-		return betweenSubjectContrast;
-	}
 
 	/**
-	 * Set the between subject contrast matrix
-	 * @param betweenSubjectContrast C matrix
+	 * Fill in the F approximation method defaults
 	 */
-	public void setBetweenSubjectContrast(FixedRandomMatrix betweenSubjectContrast)
+	private void setTestDefaults()
 	{
-		this.betweenSubjectContrast = betweenSubjectContrast;
-	}
-
-	/**
-	 * Get the theta null matrix
-	 * @return theta null
-	 */
-	public RealMatrix getTheta()
-	{
-		return theta;
-	}
-
-	/**
-	 * Set the theta null matrix
-	 * @param theta null hypothesis matrix
-	 */
-	public void setTheta(RealMatrix theta)
-	{
-		this.theta = theta;
-	}
-
-	/**
-	 * Get the within subject contrast (U)
-	 * @return U matrix
-	 */
-	public RealMatrix getWithinSubjectContrast()
-	{
-		return withinSubjectContrast;
-	}
-
-	/**
-	 * Set the within subject contrast (U)
-	 * @param withinSubjectContrast U matrix
-	 */
-	public void setWithinSubjectContrast(RealMatrix withinSubjectContrast)
-	{
-		this.withinSubjectContrast = withinSubjectContrast;
-	}
-
-	/**
-	 * Get the full design matrix.  This value is cached.
-	 * @return design matrix
-	 */
-	public RealMatrix getDesign()
-	{
-		return getDesign(false);
-	}
-	
-	/**
-	 * Get rank of design matrix
-	 * 
-	 * @return rank of design matrix
-	 */
-	public int getDesignRank()
-	{
-		if (designRank < 0)
+		for(GLMMTestFactory.Test test : GLMMTestFactory.Test.values())
 		{
-			designRank = new SingularValueDecompositionImpl(getDesign()).getRank();
+			switch (test)
+			{
+			case HOTELLING_LAWLEY_TRACE:
+				FMap.put(test, FApproximation.MCKEON_TWO_MOMENT_OMEGA_MULT);
+				break;
+			case PILLAI_BARTLETT_TRACE:
+				FMap.put(test, FApproximation.MULLER_TWO_MOMENT);
+				break;
+			case WILKS_LAMBDA:
+				FMap.put(test, FApproximation.RAO_TWO_MOMENT_OMEGA_MULT);
+				break;
+			default:
+				FMap.put(test, FApproximation.NONE);
+			}
 		}
-		return designRank;
-	}
-	
-	/**
-	 * Get cached (X'X)-1.  Matrix inversion is order n^3 so we
-	 * cache this value
-	 * 
-	 * @return (X'X) inverse
-	 */
-	public RealMatrix getXtXInverse()
-	{
-		if (XtXInverse == null)
-		{
-			RealMatrix X = getDesign();
-	        XtXInverse = new LUDecompositionImpl(X.transpose().multiply(X)).getSolver().getInverse();
-		}
-		return XtXInverse;
-	}
-	
-	/**
-	 * Regenerates the design matrix and fills any random columns with a new
-	 * realization of random values based on a normal distribution.
-	 * 
-	 * @return full design matrix
-	 */
-	public RealMatrix getDesign(boolean force)
-	{
-		if (design == null && designEssence != null)
-		{
-			// if only an essence matrix is specified, retrieve the full design matrix
-			design = designEssence.getFullDesignMatrix();
-			XtXInverse = null;
-			designRank = -1;
-		}
-		else if (force);
-		{
-			designEssence.updateRandomColumns(design);
-			XtXInverse = null;
-		}
-		return design;
-	}
-	
-	/**
-	 * Set the full design matrix - in most cases, this is set
-	 * internally and an essence matrix should be used.
-	 * @param design
-	 */
-	public void setDesign(RealMatrix design)
-	{
-		this.design = design;
 	}
 
-	/**
-	 * Get the "essence" design matrix which contains 1 entry for
-	 * each row in the fixed portion of the full design matrix 
-	 * @return essence design matrix
-	 */
-	public DesignEssenceMatrix getDesignEssence()
-	{
-		return designEssence;
-	}
+    /**** Confidence interval settings ****/
 
 	/**
-	 * Set the "essence" design matrix which contains 1 entry for
-	 * each row in the fixed portion of the full design matrix 
-	 * @param designEssence design essence matrix.
+	 * Get the lower tail probability on the power confidence interval
 	 */
-	public void setDesignEssence(DesignEssenceMatrix designEssence)
-	{
-		this.designEssence = designEssence;
-	}
-
-	/**
-	 * Get the current moment approximation method
-	 * @return moment approximation method
-	 */
-	public MomentApproximationMethod getMomentMethod()
-	{
-		return momentMethod;
-	}
-
-	/**
-	 * Set the current moment approximation method
-	 * @param momentMethod moment approximation method
-	 */
-	public void setMomentMethod(MomentApproximationMethod momentMethod)
-	{
-		this.momentMethod = momentMethod;
-	}
-
-	/**
-	 * Get the method for estimating the univariate cdf
-	 * @return univariate cdf method
-	 */
-	public UnivariateCdf getUnivariateCdf()
-	{
-		return univariateCdf;
-	}
-
-	/**
-	 * Set the method for estimating the univariate cdf
-	 * @param univariateCdf unvariate cdf method
-	 */
-	public void setUnivariateCdf(UnivariateCdf univariateCdf)
-	{
-		this.univariateCdf = univariateCdf;
-	}
-
-    /**
-     * Add a scale factor for the sigma error matrix.  Allows the user
-     * to tweak the estimates of residual variance in the model
-     * @param scale scale factor
-     */
-    public void addSigmaScale(double scale)
-    {
-    	sigmaScaleList.add(new Double(scale));    	
-    }
-    
-    /**
-     * Add a scale factor for the beta matrix.  This scale factor
-     * only effects the fixed portion of the beta matrix
-     * @param scale scale factor
-     */
-    public void addBetaScale(double scale)
-    {
-    	betaScaleList.add(new Double(scale));    	
-    }    
-	
-	/**
-	 * Internally scales the beta matrix with the first beta scale and prepares
-	 * for iteration over the beta scale list
-	 * @return first beta scale factor
-	 */
-    public Double getFirstBetaScale()
-    {
-        Double betaScale = betaScaleList.first();
-        if (betaScale != null)
-            betaScaled = beta.scalarMultiply(betaScale.doubleValue(), true);
-        return betaScale;
-    }
-    
-	/**
-	 * Internally scales the beta matrix with the next beta scale in the beta 
-	 * scale list
-	 * @return next beta scale factor
-	 */
-    public Double getNextBetaScale()
-    {
-        Double betaScale = betaScaleList.next();
-        if (betaScale != null)
-            betaScaled = beta.scalarMultiply(betaScale.doubleValue(), true);
-        return betaScale;
-    }
-    
-	/**
-	 * Peek at the current beta scale factor
-	 * @return current beta scale factor
-	 */
-    public Double getCurrentBetaScale()
-    {
-        return betaScaleList.current();
-    }
-	
-    /**
-     * Get the scaled beta matrix.  Value depends on previous calls to
-     * getFirstBetaScale and getNextBetaScale
-     * @return scaled beta matrix
-     */
-	public RealMatrix getScaledBeta()
-	{
-	    return (betaScaled != null ? betaScaled : beta.getCombinedMatrix());
-	}
-	
-	/**
-	 * Internally scales the sigma error matrix with the first sigma scale and prepares
-	 * for iteration over the sigma scale list
-	 * @return first sigma scale factor
-	 */
-    public Double getFirstSigmaScale()
-    {
-        Double sigmaScale = sigmaScaleList.first();
-        if (sigmaScale != null)
-            sigmaErrorScaled = sigmaError.scalarMultiply(sigmaScale.doubleValue());
-        return sigmaScale;        
-    }
-	/**
-	 * Internally scales the sigma matrix with the next sigma scale in the sigma 
-	 * scale list
-	 * @return next sigma scale factor
-	 */
-    public Double getNextSigmaScale()
-    {
-        Double sigmaScale = sigmaScaleList.next();
-        if (sigmaScale != null)
-            sigmaErrorScaled = sigmaError.scalarMultiply(sigmaScale.doubleValue());
-        return sigmaScale;    
-    }
-	/**
-	 * Peek at the current sigma scale factor
-	 * @return current sigma scale factor
-	 */
-    public Double getCurrentSigmaScale()
-    {
-        return sigmaScaleList.current();
-    }
-    
-    /**
-     * Get the scaled sigma matrix.  Value depends on previous calls to
-     * getFirstSigmaScale and getNextSigmaScale
-     * @return scaled sigma matrix
-     */
-    public RealMatrix getScaledSigmaError()
-    {
-        return (sigmaErrorScaled != null ? sigmaErrorScaled : sigmaError);
-    }
-    
-	/**
-	 * Internally selects the first per group sample size and sets the 
-	 * design to null, forcing the full design matrix to be regenerated when
-	 * next requested
-	 * @return first per group sample size
-	 */
-    @Override
-    public Integer getFirstSampleSize()
-    {
-        Integer sampleSize = sampleSizeList.first();
-        if (sampleSize != null)
-        {
-            designEssence.setGroupSampleSize(sampleSize.intValue());
-            design = null;
-        }
-        return sampleSize;
-    }
-    
-	/**
-	 * Internally selects the next per group sample size and sets the 
-	 * design to null, forcing the full design matrix to be regenerated when
-	 * next requested
-	 * @return next per group sample size
-	 */
-    @Override
-    public Integer getNextSampleSize()
-    {
-        Integer sampleSize = sampleSizeList.next();
-        if (sampleSize != null)
-        {
-            designEssence.setGroupSampleSize(sampleSize.intValue());
-            design = null;
-        }
-        return sampleSize;
-    }
-    
-    /**
-     * Peek at the current sample size
-     */
-    @Override
-    public Integer getCurrentSampleSize()
-    {
-        return sampleSizeList.current();
-    }
-    
-    /**
-     * Set the per-group sample size
-     * @param sampleSize
-     */
-    public void setGroupSampleSize(int sampleSize)
-    {
-        designEssence.setGroupSampleSize(sampleSize);
-        design = null;
-    }
-
-    /**
-     * Get the list of beta scale factors
-     * @return beta scale list
-     */
-    public PeekableList<Double> getBetaScaleList()
-    {
-        return betaScaleList;
-    }
-
-    /**
-     * Get the list of sigma scale factors
-     * @return sigma scale list
-     */
-    public PeekableList<Double> getSigmaScaleList()
-    {
-        return sigmaScaleList;
-    }
-
-    /**
-     * Force a rescale of the beta matrix
-     * @param betaScale scale factor
-     */
-    public void scaleBeta(double betaScale)
-    {
-        if (betaScale != Double.NaN)
-            betaScaled = beta.scalarMultiply(betaScale, true);
-    }
-    
-    /**
-     * Reset the scaled beta matrix
-     * @param scaledBeta new scaled beta matrix
-     */
-    public void setScaledBeta(RealMatrix scaledBeta)
-    {
-        betaScaled = scaledBeta;
-    }
-    
-    /**
-     * Force a rescale of the sigma error matrix
-     * @param sigmaScale scale factor
-     */
-    public void scaleSigmaError(double sigmaScale)
-    {
-        if (sigmaScale != Double.NaN)
-            sigmaErrorScaled = sigmaError.scalarMultiply(sigmaScale);
-    }
-    
-    /**
-     * Reset the scaled sigma error matrix
-     * @param scaledSigma new scaled sigma error matrix
-     */
-    public void setScaledSigmaError(RealMatrix scaledSigma)
-    {
-        sigmaErrorScaled = scaledSigma;
-    }
-    
-    /**
-     * Add a power method for use in power calculations
-     * @param method conditional, quantile, or unconditional power
-     */
-    public void addPowerMethod(PowerMethod method)
-    {
-    	powerMethodList.add(method);
-    }
-    
-	/**
-	 * Internally selects the first power method and prepares the list
-	 * for iteration
-	 * @return first power method
-	 */
-    public PowerMethod getFirstPowerMethod()
-    {
-    	PowerMethod method = powerMethodList.first();
-    	// if no methods are specified, just use conditional power
-    	if (method == null)
-    		return DEFAULT_POWER_METHOD;
-    	else
-    		return method;
-    }
-    
-    /**
-     * Activates the next power method 
-     * @return next power method
-     */
-    public PowerMethod getNextPowerMethod()
-    {
-    	PowerMethod method = powerMethodList.next();
-        return method;
-    }
-    
-    /**
-     * Peeks at the currently active power method
-     * @return currently active power method
-     */
-    public PowerMethod getCurrentPowerMethod()
-    {
-    	PowerMethod method = powerMethodList.current();
-    	// if no methods are specified, just use conditional power
-    	if (method == null)
-    		return DEFAULT_POWER_METHOD;
-    	else
-    		return method;
-    		
-    }
-        
-    /**
-     * Add a quantile (value between 0 and 1) to the list for use with the quantile
-     * power method.
-     * @param quantile value between 0 and 1 indicating the power quantile
-     */
-    public void addQuantile(double quantile)
-    {
-    	quantileList.add(new Double(quantile));
-    }
-    
-	/**
-	 * Internally selects the first quantile and prepares the list
-	 * for iteration.  Only used for quantile power.
-	 * @return first quantile
-	 */
-    public Double getFirstQuantile()
-    {
-    	Double quantile = quantileList.first();
-    	// if no quantiles specified, return default
-    	if (quantile == null)
-    		return new Double(DEFAULT_QUANTILE); 
-    	else
-    		return quantile;
-    }
-    
-    /**
-     * Activates the next quantile in the quantile list
-     * @return next quantile
-     */
-    public Double getNextQuantile()
-    {
-    	Double quantile = quantileList.next();
-        return quantile;
-    }
-    
-    /**
-     * Peek at currently active quantile value
-     * @return current quantile
-     */
-    public Double getCurrentQuantile()
-    {
-        return quantileList.current();
-    }
-
-    /**
-     * Indicates if the estimate of the non-centrality cdf
-     * uses the exact Davies' algorithm.  If false, a Satterthwaite
-     * approximation is used.
-     * @return true if exact Davies's algorithm is used.
-     */
-	public boolean isNonCentralityCDFExact() 
-	{
-		return nonCentralityCDFExact;
-	}
-
-    /**
-     * Set whether the estimate of the non-centrality cdf
-     * should use the exact Davies' algorithm.  If false, a Satterthwaite
-     * approximation is used.
-     * 
-     * @param nonCentralityCDFExact true for Davies' algorithm, false
-     * for Satterthwaite approximation.
-     */
-	public void setNonCentralityCDFExact(boolean nonCentralityCDFExact) 
-	{
-		this.nonCentralityCDFExact = nonCentralityCDFExact;
-	}
-	
 	public double getAlphaLowerConfidenceLimit()
 	{
 		return alphaLowerConfidenceLimit;
 	}
 
+	/**
+	 * Set the lower tail probability for the power confidence interval
+	 * @param alphaLowerConfidenceLimit lower tail probability for the confidence interval
+	 */
 	public void setAlphaLowerConfidenceLimit(double alphaLowerConfidenceLimit)
 	{
 		this.alphaLowerConfidenceLimit = alphaLowerConfidenceLimit;
 	}
 
+	/**
+	 * Get the upper tail probability on the power confidence interval
+	 */
 	public double getAlphaUpperConfidenceLimit()
 	{
 		return alphaUpperConfidenceLimit;
 	}
 
+	/**
+	 * Set the upper tail probability for the power confidence interval
+	 * @param alphaUpperConfidenceLimit upper tail probability for the confidence interval
+	 */
 	public void setAlphaUpperConfidenceLimit(double alphaUpperConfidenceLimit)
 	{
 		this.alphaUpperConfidenceLimit = alphaUpperConfidenceLimit;
 	}
 
-	public double getSampleSizeForEstimates()
+	/**
+	 * Get the sample size for the data set from which the beta and
+	 * sigma estimates were derived
+	 * @return sample size for data set used to estimate beta and sigma
+	 */
+	public int getSampleSizeForEstimates()
 	{
 		return sampleSizeForEstimates;
 	}
 
-	public void setSampleSizeForEstimates(double sampleSizeForEstimates)
+	/**
+	 * Set the sample size of the data set from which the beta and sigma estimates 
+	 * were derived
+	 * @param sampleSizeForEstimates sample size for data set used to estimate beta and sigma
+	 */
+	public void setSampleSizeForEstimates(int sampleSizeForEstimates)
 	{
 		this.sampleSizeForEstimates = sampleSizeForEstimates;
 	}
 
-	public double getDesignMatrixRankForEstimates()
+	/**
+	 * Get the rank of the design matrix for the data set used to estimate beta and sigma
+	 * @return rank of the design matrix for the estimation data set 
+	 */
+	public int getDesignMatrixRankForEstimates()
 	{
 		return designMatrixRankForEstimates;
 	}
 
-	public void setDesignMatrixRankForEstimates(double designMatrixRankForEstimates)
+	/**
+	 * Set the rank of the design matrix for the data set used to estimate beta and sigma
+	 * @param designMatrixRankForEstimates rank of the design matrix for the estimation data set
+	 */
+	public void setDesignMatrixRankForEstimates(int designMatrixRankForEstimates)
 	{
 		this.designMatrixRankForEstimates = designMatrixRankForEstimates;
 	}
 
+	/**
+	 * Get the type of confidence interval.  The confidence intervals can either be constructed
+	 * under the assumption that both beta and sigma are estimates, 
+	 * or that beta is fixed and only sigma is estimated.
+	 * @return type of confidence interval
+	 */
 	public ConfidenceIntervalType getConfidenceIntervalType()
 	{
 		return confidenceIntervalType;
 	}
 
+	/**
+	 * Get the type of confidence interval.  The confidence intervals can either be constructed
+	 * under the assumption that both beta and sigma are estimates, 
+	 * or that beta is fixed and only sigma is estimated.
+	 * @param ConfidenceIntervalType type of confidence interval
+	 */
 	public void setConfidenceIntervalType(ConfidenceIntervalType ConfidenceIntervalType)
 	{
 		this.confidenceIntervalType = ConfidenceIntervalType;

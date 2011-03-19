@@ -28,9 +28,11 @@ import org.apache.commons.math.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.matrix.RandomColumnMetaData;
 import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.glmm.NonCentralityDistribution;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import jsc.distributions.Normal;
@@ -58,14 +60,28 @@ public class TestNonCentralityDistribution extends TestCase
     public void testApproximateNonCentralCDF()
     {
         GLMMPowerParameters params = buildValidMultivariateRandomInputs();
-        params.getFirstAlpha();
-        params.getFirstBetaScale();
-        params.getFirstSigmaScale();
-        params.getFirstSampleSize();
-        params.getFirstTest();
+        double betaScale = params.getBetaScaleList().get(0);
+        double sigmaScale = params.getSigmaScaleList().get(0);
+        int perGroupN = params.getSampleSizeList().get(0);
+        Test test = params.getTestList().get(0);
 
+//        Test test, RealMatrix F, RealMatrix FtFinverse, int N, 
+//		FixedRandomMatrix CFixedRand, RealMatrix U, 
+//		RealMatrix thetaNull, RealMatrix beta, 
+//		RealMatrix sigmaError, RealMatrix sigmaG, boolean exact
+        
+        
         NonCentralityDistribution ncd = 
-            new NonCentralityDistribution(params, false);
+            new NonCentralityDistribution(test, params.getDesignEssence(),
+            		params.getXtXInverse(), 
+            		MatrixUtils.getTotalSampleSize(params.getDesignEssence(), perGroupN), 
+            		params.getBetweenSubjectContrast(),
+            		params.getWithinSubjectContrast(),
+            		params.getTheta(),
+            		params.getBeta().scalarMultiply(betaScale, true),
+            		params.getSigmaError().scalarMultiply(sigmaScale),
+            		params.getSigmaGaussianRandom(),
+            		false);
 
         for(double crit = 1; crit < 15; crit++)
         {
@@ -78,14 +94,22 @@ public class TestNonCentralityDistribution extends TestCase
     public void testApproximateNonCentralInverseCDF()
     {
         GLMMPowerParameters params = buildValidMultivariateRandomInputs();
-        params.getFirstAlpha();
-        params.getFirstBetaScale();
-        params.getFirstSigmaScale();
-        params.getFirstSampleSize();
-        params.getFirstTest();
+        double betaScale = params.getBetaScaleList().get(0);
+        double sigmaScale = params.getSigmaScaleList().get(0);
+        int perGroupN = params.getSampleSizeList().get(0);
+        Test test = params.getTestList().get(0);
 
         NonCentralityDistribution ncd = 
-            new NonCentralityDistribution(params, false);
+            new NonCentralityDistribution(test, params.getDesignEssence(),
+            		params.getXtXInverse(), 
+            		MatrixUtils.getTotalSampleSize(params.getDesignEssence(), perGroupN), 
+            		params.getBetweenSubjectContrast(),
+            		params.getWithinSubjectContrast(),
+            		params.getTheta(),
+            		params.getBeta().scalarMultiply(betaScale, true),
+            		params.getSigmaError().scalarMultiply(sigmaScale),
+            		params.getSigmaGaussianRandom(),
+            		false);
 
         for(double w = 0.10; w < 1; w += 0.1)
         {
@@ -112,7 +136,7 @@ public class TestNonCentralityDistribution extends TestCase
         params.addQuantile(0.75);
         
         // add tests - only HL andUNIREP value for random case
-        params.addTest(GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE);
+        params.addTest(Test.HOTELLING_LAWLEY_TRACE);
         //params.addTest(GLMMPowerParameters.Test.UNIREP);
         
         // add alpha values
@@ -122,16 +146,7 @@ public class TestNonCentralityDistribution extends TestCase
         int Q = 3;
         // create design matrix
         double[][] essFixedData = {{1,0,0},{0,1,0},{0,0,1}};
-        RowMetaData[] rowMd = {
-        		new RowMetaData(1), 
-        		new RowMetaData(1), 
-        		new RowMetaData(1)
-        		};
-        double[][] essRandomData = {{1},{1},{1}};
-        RandomColumnMetaData[] randColMd = {new RandomColumnMetaData(MEAN, VARIANCE)};
-        DesignEssenceMatrix essence = new DesignEssenceMatrix(essFixedData, rowMd, 
-        		essRandomData, randColMd);
-        params.setDesignEssence(essence);
+        params.setDesignEssence(org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(Q));
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         

@@ -23,9 +23,10 @@ package edu.cudenver.bios.power.test.published;
 import java.io.File;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
+import org.apache.commons.math.linear.MatrixUtils;
+
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RowMetaData;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
 import junit.framework.TestCase;
@@ -80,7 +81,7 @@ public class TestConditionalTwoSampleTTest extends TestCase
         GLMMPowerParameters params = new GLMMPowerParameters();
         
         // add tests
-        params.addTest(GLMMPowerParameters.Test.UNIREP);
+        params.addTest(Test.UNIREP);
         
         // add alpha values
         params.addAlpha(0.05);
@@ -102,10 +103,7 @@ public class TestConditionalTwoSampleTTest extends TestCase
         for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
         
         // build design matrix
-        double[][] essenceData = {{1,0},{0,1}};
-        RowMetaData[] rowMd = {new RowMetaData(1), new RowMetaData(1)};
-        DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
-        params.setDesignEssence(essenceMatrix);
+        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(2));
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         

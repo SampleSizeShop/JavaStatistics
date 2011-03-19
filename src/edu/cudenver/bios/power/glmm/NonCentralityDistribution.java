@@ -36,6 +36,8 @@ import org.apache.commons.math.linear.RealMatrix;
 import edu.cudenver.bios.distribution.ChiSquareTerm;
 import edu.cudenver.bios.distribution.NonCentralFDistribution;
 import edu.cudenver.bios.distribution.WeightedSumOfNoncentralChiSquaresDistribution;
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 
 /**
@@ -65,7 +67,7 @@ public class NonCentralityDistribution
     // indicates if an "exact" cdf should be calculated via Davie's algorithm or
     // with the Satterthwaite approximation from Glueck & Muller
     protected boolean exact;
-    
+
     /**
      * Function calculating the difference between the probability of a target quantile 
      * and the  (used by the bisection solver from Apache Commons Math)
@@ -93,7 +95,10 @@ public class NonCentralityDistribution
      * otherwise a Satterthwaite style approximation is used.
      * @throws IllegalArgumentException
      */
-    public NonCentralityDistribution(GLMMPowerParameters params, boolean exact)
+    public NonCentralityDistribution(Test test, RealMatrix F, RealMatrix FtFinverse, int N, 
+    		FixedRandomMatrix CFixedRand, RealMatrix U, 
+    		RealMatrix thetaNull, RealMatrix beta, 
+    		RealMatrix sigmaError, RealMatrix sigmaG, boolean exact)
     throws IllegalArgumentException
     {
         this.exact = exact;
@@ -101,31 +106,33 @@ public class NonCentralityDistribution
         {                    
             // TODO: need to calculate H0, need to adjust H1 for Unirep
             // get design matrix for fixed parameters only
-            RealMatrix F = params.getDesignEssence().getFullDesignMatrixFixed();
+//            RealMatrix F = params.getDesignEssence().getFullDesignMatrixFixed();
             qF = F.getColumnDimension();
-            a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
-            N = F.getRowDimension();
+            a = CFixedRand.getCombinedMatrix().getRowDimension();
+//            N = F.getRowDimension();
             // get fixed contrasts
-            RealMatrix Cfixed = params.getBetweenSubjectContrast().getFixedMatrix();
-            RealMatrix CGaussian = params.getBetweenSubjectContrast().getRandomMatrix();
+            RealMatrix Cfixed = CFixedRand.getFixedMatrix();
+            RealMatrix CGaussian = CFixedRand.getRandomMatrix();
             // build intermediate terms h1, S
-            RealMatrix FtFinverse = 
-                new LUDecompositionImpl(F.transpose().multiply(F)).getSolver().getInverse();
+            if (FtFinverse == null)
+            {
+            	FtFinverse = new LUDecompositionImpl(F.transpose().multiply(F)).getSolver().getInverse();
+            }
             RealMatrix P = Cfixed.multiply(FtFinverse).multiply(F.transpose());
             RealMatrix PPt = P.multiply(P.transpose());            
             T1 = new LUDecompositionImpl(PPt).getSolver().getInverse();
             FT1 = new CholeskyDecompositionImpl(T1).getL();
             // calculate theta difference
-            RealMatrix theta0 = params.getTheta();
-            RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
-            RealMatrix B = params.getScaledBeta();
-            RealMatrix U = params.getWithinSubjectContrast();
+//            RealMatrix theta0 = params.getTheta();
+            RealMatrix C = CFixedRand.getCombinedMatrix();
+//            RealMatrix B = params.getScaledBeta();
+//            RealMatrix U = params.getWithinSubjectContrast();
             // thetaHat = C * Beta * U
-            RealMatrix thetaHat = C.multiply(B.multiply(U));
+            RealMatrix thetaHat = C.multiply(beta.multiply(U));
             // thetaHat - thetaNull.  
-            RealMatrix thetaDiff = thetaHat.subtract(theta0);
+            RealMatrix thetaDiff = thetaHat.subtract(thetaNull);
             // TODO: specific to HLT or UNIREP
-            RealMatrix sigmaStarInverse = getSigmaStarInverse(params);
+            RealMatrix sigmaStarInverse = getSigmaStarInverse(U, sigmaError, test);
             RealMatrix H1matrix = thetaDiff.transpose().multiply(T1).multiply(thetaDiff).multiply(sigmaStarInverse);
             H1 = H1matrix.getTrace();
             // matrix which represents the non-centrality parameter as a linear combination of chi-squared r.v.'s
@@ -146,7 +153,7 @@ public class NonCentralityDistribution
                 if (value > 0) sStar++;
             }
             // TODO: throw error if sStar is <= 0
-            double stddevG = Math.sqrt(params.getDesignEssence().getColumnMetaData(0).getVariance());
+            double stddevG = Math.sqrt(sigmaG.getEntry(0, 0));
             RealMatrix svec = sEigenDecomp.getVT();
             mzSq = svec.multiply(FT1.transpose()).multiply(CGaussian).scalarMultiply(1/stddevG);
             for(int i = 0; i < mzSq.getRowDimension(); i++)
@@ -339,13 +346,12 @@ public class NonCentralityDistribution
      * @param params GLMM input parameters
      * @return sigma star inverse
      */
-    private RealMatrix getSigmaStarInverse(GLMMPowerParameters params)
+    private RealMatrix getSigmaStarInverse(RealMatrix U, RealMatrix sigmaError, Test test)
     {
-        RealMatrix U = params.getWithinSubjectContrast();
         // sigma* = U'*sigmaE*U
-        RealMatrix sigmaStar = U.transpose().multiply(params.getScaledSigmaError()).multiply(U);
+        RealMatrix sigmaStar = U.transpose().multiply(sigmaError).multiply(U);
         
-        if (params.getCurrentTest() == GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE)
+        if (test == Test.HOTELLING_LAWLEY_TRACE)
         {
             return new LUDecompositionImpl(sigmaStar).getSolver().getInverse();
         }

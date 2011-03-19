@@ -27,8 +27,6 @@ import org.apache.commons.math.linear.EigenDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-
 /**
  * Implementation of the univariate approach to repeated measures test 
  * with Huynh-Feldt correction (UNIREP-HF) for the general linear multivariate model. 
@@ -47,15 +45,32 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
 	 * Create a UNIREP-HF test object for the specified parameters
 	 * @param params GLMM input parameters
 	 */
-    public GLMMTestUnirepHuynhFeldt(GLMMPowerParameters params)
+    public GLMMTestUnirepHuynhFeldt(FApproximation fMethod, 
+    		UnivariateCdfApproximation cdfMethod,
+    		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
+    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		RealMatrix beta, RealMatrix sigmaError)
     {
-        super(params);
+        super(fMethod, cdfMethod, Xessence, XtXInverse, perGroupN, rank,
+        		C, U, thetaNull, beta, sigmaError);
 
         // verify that U is orthonormal to an identity matrix
         // if not, build an orthonormal U from the specified U matrix
         createOrthonormalU();
 
         // pre-calculate the values for epsilon (correction for violation of sphericity)
+        calculateUnirepCorrection();
+    }
+    
+    /**
+     * Reset the per group sample size for this test.  Recalculates epsilon
+     * and expected value of epsilon
+     * @param perGroupN per group sample size
+     */
+    @Override
+    public void setPerGroupSampleSize(int perGroupN)
+    {
+    	super.setPerGroupSampleSize(perGroupN);
         calculateUnirepCorrection();
     }
 
@@ -69,9 +84,7 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
      */
     @Override
     public double getDenominatorDF(DistributionType type)
-    {
-        RealMatrix U = params.getWithinSubjectContrast();
-        
+    {       
         // b = #columns in within subject contrast matrix
         int b = U.getColumnDimension();
         
@@ -81,9 +94,9 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
         // power analysis (under alternative) and for data analysis.  For power under
         // the null, we multiply by the expected value of the epsilon estimate
         if (type == DistributionType.POWER_NULL)
-            df = b*(N - r)*this.unirepEpsilonExpectedValue;
+            df = b*(totalN - rank)*this.unirepEpsilonExpectedValue;
         else
-            df = b*(N - r)*this.unirepEpsilon;
+            df = b*(totalN - rank)*this.unirepEpsilon;
 
         return df;
     }
@@ -99,8 +112,8 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
     @Override
     public double getNonCentrality(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double a = C.getRowDimension();
+        double b = U.getColumnDimension();
         
         // calculate non-centrality and adjust for sphericity 
         return a*b*getObservedF(type)*unirepEpsilon;
@@ -117,8 +130,8 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
     @Override
     public double getNumeratorDF(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double a = C.getRowDimension();
+        double b = U.getColumnDimension();
         
         double df = Double.NaN;
 
@@ -139,10 +152,9 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
      */
     private void calculateUnirepCorrection()
     {          
-        RealMatrix U = params.getWithinSubjectContrast();
         int b = new SingularValueDecompositionImpl(U).getRank();
         // get the sigmaStar matrix: U' *sigmaError * U
-        RealMatrix sigmaStar = U.transpose().multiply(params.getScaledSigmaError().multiply(U));
+        RealMatrix sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
         // ensure symmetry
         sigmaStar = sigmaStar.add(sigmaStar.transpose()).scalarMultiply(0.5); 
         // normalize
@@ -197,18 +209,18 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
         // E[h(lambda)] = h(lambda) + g1 / (N - r)
         // h(lambda) = h1(lambda) / (b*h2(lambda)
         // see Muller, Barton (1989) for details
-        double h1 = N * sumLambda * sumLambda - 2 * sumLambdaSquared;
-        double h2 = (N - r) * sumLambdaSquared - (sumLambda * sumLambda);
+        double h1 = totalN * sumLambda * sumLambda - 2 * sumLambdaSquared;
+        double h2 = (totalN - rank) * sumLambdaSquared - (sumLambda * sumLambda);
         double g1 = 0;
         for(int i = 0; i < distinctEigenValues.size(); i++)
         {
             EigenValueMultiplicityPair evmI = distinctEigenValues.get(i);
             // derivatives of sub-equations comprising epsilon estimator
-            double h1firstDerivative = (2 * N * sumLambda) - (4 *evmI.eigenValue); 
-            double h1secondDerivative = 2 * N - 4;
+            double h1firstDerivative = (2 * totalN * sumLambda) - (4 *evmI.eigenValue); 
+            double h1secondDerivative = 2 * totalN - 4;
 
-            double h2firstDerivative = (2 * (N - r) * evmI.eigenValue) - (2 * sumLambda); 
-            double h2secondDerivative = 2 * (N - r) - 2;
+            double h2firstDerivative = (2 * (totalN - rank) * evmI.eigenValue) - (2 * sumLambda); 
+            double h2secondDerivative = 2 * (totalN - rank) - 2;
 
             // derivatives of estimate of epsilon
             double firstDerivative = ((h1firstDerivative) - ((h1 * h2firstDerivative) / h2)) / (h2 *b); 
@@ -233,7 +245,7 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
             }
         }
 
-        this.unirepEpsilonExpectedValue = (N*b*unirepEpsilon - 2)/(b*(N - r - b*unirepEpsilon))  + g1 / (N - r);
+        this.unirepEpsilonExpectedValue = (totalN*b*unirepEpsilon - 2)/(b*(totalN - rank - b*unirepEpsilon))  + g1 / (totalN - rank);
 
 
         // ensure that expected value is within bounds 1/b to 1

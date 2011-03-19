@@ -25,8 +25,6 @@ import jsc.distributions.FishersF;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-
 /**
  * Abstract base class for statistical tests for the GLMM
  * @author Sarah Kreidler
@@ -34,36 +32,107 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
  */
 public abstract class GLMMTest
 {    
+	// type of approximation to use for unirep
+	public enum UnivariateCdfApproximation
+	{
+		MULLER_BARTON_APPROX,
+		MULLER_EDWARDS_TAYLOR_APPROX,
+		MULLER_EDWARDS_TAYLOR_EXACT,
+		MULLER_EDWARDS_TAYLOR_EXACT_APPROX
+	};
+
+	// available moment approximation methods
+	public enum FApproximation
+	{
+		NONE,
+		PILLAI_ONE_MOMENT,
+		PILLAI_ONE_MOMENT_OMEGA_MULT,
+		MCKEON_TWO_MOMENT,
+		MCKEON_TWO_MOMENT_OMEGA_MULT,
+		MULLER_TWO_MOMENT,
+		MULLER_TWO_MOMENT_OMEGA_MULT,
+		RAO_TWO_MOMENT,
+		RAO_TWO_MOMENT_OMEGA_MULT
+	};
+	
     // for the unirep test, the degrees of freedom change depending on two 
     // factors - data analysis (i.e. simulation or model fit) vs. power analysis,
     // and whether we need df for the F distribution under the null or the 
     // alternative hypothesis
     public enum DistributionType
     {
-        POWER_NULL,
-        POWER_ALTERNATIVE,
-        DATA_ANALYSIS_NULL
+    	DATA_ANALYSIS_NULL,
+    	POWER_NULL,
+    	POWER_ALTERNATIVE    	
     };
     
-    // store incoming parameters
-    protected GLMMPowerParameters params;
+    // approximation information
+    protected FApproximation fMethod;
+    protected UnivariateCdfApproximation cdfMethod;
 
-    // cache some common operations like rank, sample size, etc.
-    protected double N; // total sample size (row dimension of design matrix)
-    protected double r; // rank of the design matrix
+    // study design matrices
+    protected RealMatrix Xessence;
+    protected RealMatrix XtXInverse;
+    protected double totalN; // total sample size 
+    protected double rank; // rank of the design matrix
+    // contrasts
+    protected RealMatrix C; // between subject
+    protected RealMatrix U; // within subject
+    // null hypothesis values
+    protected RealMatrix thetaNull; 
+    // estimated beta parameters - only for power analysis
+    protected RealMatrix beta;
+    // estimated sigma error matrix
+    protected RealMatrix sigmaError;
+    // the M matrix: [C(X'X)-1C']-1
+    protected RealMatrix M = null;
     
     /**
      * Create a statistical test for the given set of GLMM parameters
      * @param params GLMM input parameters
      */
-    public GLMMTest(GLMMPowerParameters params)
+    public GLMMTest(FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
+    		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
+    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		RealMatrix beta, RealMatrix sigmaError)
     {
-        this.params = params;
-        RealMatrix X = params.getDesign();
-        N = X.getRowDimension();
-        r = params.getDesignRank();
+        this.fMethod = fMethod;
+        this.cdfMethod = cdfMethod;
+        this.Xessence = Xessence;
+        this.XtXInverse =  XtXInverse;
+        this.totalN =  Xessence.getRowDimension() * perGroupN; 
+        this.rank = rank; 
+        this.C = C; 
+        this.U =  U; 
+        this.thetaNull =  thetaNull; 
+        this.beta =  beta;
+        this.sigmaError = sigmaError;
+        
+        // cache the value of M
+        RealMatrix cxxc = C.multiply((XtXInverse.scalarMultiply(perGroupN)).multiply(C.transpose()));
+        this.M = new LUDecompositionImpl(cxxc).getSolver().getInverse();
     }
-
+    
+    /**
+     * Reset the total sample size for this test
+     * @param totalN total sample size
+     */
+    public void setPerGroupSampleSize(int perGroupN)
+    {
+    	this.totalN = Xessence.getRowDimension() * perGroupN; 
+        RealMatrix cxxc = C.multiply((XtXInverse.scalarMultiply(perGroupN)).multiply(C.transpose()));
+        this.M = new LUDecompositionImpl(cxxc).getSolver().getInverse();
+    }
+    
+    /**
+     * Reset the total sample size for this test
+     * @param totalN total sample size
+     */
+    public void setBeta(RealMatrix beta)
+    {
+    	this.beta = beta;
+    }
+    
     /**
      * Calculate the critical F value under the specified distribution
      * 
@@ -75,7 +144,6 @@ public abstract class GLMMTest
     public double getCriticalF(DistributionType type, double alpha)
     throws IllegalArgumentException
     {                               
-        
         double ndf = getNumeratorDF(type);
         double ddf = getDenominatorDF(type);
 
@@ -124,26 +192,18 @@ public abstract class GLMMTest
      * @param params matrices input by user
      * @return H matrix
      */
-    protected RealMatrix getHypothesisSumOfSquares(GLMMPowerParameters params)
-    {
-        // convenience variables
-        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
-        RealMatrix B = params.getScaledBeta();
-        RealMatrix U = params.getWithinSubjectContrast();
-        RealMatrix theta0 = params.getTheta();
-        
+    protected RealMatrix getHypothesisSumOfSquares()
+    {        
         // thetaHat = C * Beta * U
-        RealMatrix thetaHat = C.multiply(B.multiply(U));
+        RealMatrix thetaHat = C.multiply(beta.multiply(U));
         // thetaHat - thetaNull.  Multiple by negative one to do subtraction
-        RealMatrix thetaDiff = thetaHat.subtract(theta0);
-        // get X'X invserse
-        RealMatrix XtXInverse = params.getXtXInverse();
+        RealMatrix thetaDiff = thetaHat.subtract(thetaNull);
         
-        // the middle term [C(X'X)-1C']-1
-        RealMatrix cxxc = C.multiply(XtXInverse.multiply(C.transpose()));
-        RealMatrix cxxcInverse = new LUDecompositionImpl(cxxc).getSolver().getInverse();
+//        // the middle term [C(X'X)-1C']-1 TODO: cache this?
+//        RealMatrix cxxc = C.multiply(XtXInverse.multiply(C.transpose()));
+//        RealMatrix cxxcInverse = new LUDecompositionImpl(cxxc).getSolver().getInverse();
         // calculate the hypothesis sum of squares: (thetaHat - thetaNull)'[C(X'X)-1C'](thetaHat - thetaNull)
-        RealMatrix hss = thetaDiff.transpose().multiply(cxxcInverse.multiply(thetaDiff));
+        RealMatrix hss = thetaDiff.transpose().multiply(M.multiply(thetaDiff));
         
         return hss;
         
@@ -155,10 +215,9 @@ public abstract class GLMMTest
      * @param params matrices input by the user
      * @return error sum of squares
      */
-    protected RealMatrix getErrorSumOfSquares(GLMMPowerParameters params)
+    protected RealMatrix getErrorSumOfSquares()
     {        
-        RealMatrix U = params.getWithinSubjectContrast();
-        return U.transpose().multiply(params.getScaledSigmaError().multiply(U)).scalarMultiply(N-r);
+        return U.transpose().multiply(sigmaError.multiply(U)).scalarMultiply(totalN-rank);
     }    
     
 }

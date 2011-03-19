@@ -40,6 +40,7 @@ import org.xml.sax.InputSource;
 import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.utils.ConfidenceInterval;
 
@@ -48,7 +49,7 @@ public class PowerChecker
 	private class SASPower extends GLMMPower
 	{
 		double delta = Double.NaN;
-		public SASPower(GLMMPowerParameters.Test test, double alpha, 
+		public SASPower(Test test, double alpha, 
 				double nominalPower, double actualPower, int sampleSize,
 				double betaScale, double sigmaScale, 
 				GLMMPowerParameters.PowerMethod method,
@@ -62,7 +63,7 @@ public class PowerChecker
 	
 	
     private static final int SIMULATION_SIZE = 10000;
-    private static DecimalFormat Number = new DecimalFormat("#0.000");
+    private static DecimalFormat Number = new DecimalFormat("#0.0000000");
     private static DecimalFormat LongNumber = new DecimalFormat("#0.00000000");
 
     private boolean simulate = true;
@@ -324,8 +325,8 @@ public class PowerChecker
     		buffer.append("<th>SAS CI {deviation}</th>");
     	}
     	buffer.append("<th>Sim Power (deviation)</th>");
-    	buffer.append("<th>Test</th><th>SigmaScale</th><th>BetaScale</th><th>Total N</th>");
-    	buffer.append("<th>Alpha</th><th>PowerMethod</th><th>Quantile</th></tr>");
+    	buffer.append("<th>Test</th><th>Sigma Scale</th><th>Beta Scale</th><th>Total N</th>");
+    	buffer.append("<th>Alpha</th><th>Power Method</th><th>Quantile</th></tr>");
 
     	for(Result result: checkerResults)
     	{

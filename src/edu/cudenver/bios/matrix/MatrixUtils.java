@@ -184,4 +184,40 @@ public class MatrixUtils
 		
 		return newMatrix;		
 	}
+	
+	/**
+	 * Regenerates the design matrix assuming a fixed (GLMM(F)) design
+	 * 
+	 * @return full design matrix
+	 */
+	public static RealMatrix getFullDesignMatrix(RealMatrix designEssence, int sampleSize)
+	{
+		return MatrixUtils.KroneckerProduct(designEssence, 
+				MatrixUtils.createRealMatrixWithFilledValue(sampleSize, 1, 1));
+	}
+	
+	/**
+	 * Regenerates the design matrix and fills any random columns with a new
+	 * realization of random values based on a normal distribution.
+	 * 
+	 * @return full design matrix
+	 */
+	public static RealMatrix getFullDesignMatrix(RealMatrix designEssence, 
+			RealMatrix sigmaGaussianRandom, int sampleSize)
+	{
+		RealMatrix fixed = MatrixUtils.KroneckerProduct(designEssence, 
+				MatrixUtils.createRealMatrixWithFilledValue(sampleSize, 1, 1));
+			// GLMM(F, g), so we need to append a random column
+			return MatrixUtils.horizontalAppend(fixed, 
+					MatrixUtils.createRandomColumn(sampleSize, 0, 
+							sigmaGaussianRandom.getEntry(0, 0), 1234));
+	}
+	
+    /**
+     * Returns the total sample size for the current per group sample size
+     */
+    public static int getTotalSampleSize(RealMatrix designEssence, int perGroupSize)
+    {
+    	return designEssence.getRowDimension() * perGroupSize;
+    }
 }

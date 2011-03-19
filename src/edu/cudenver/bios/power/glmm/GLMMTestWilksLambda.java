@@ -24,9 +24,6 @@ import org.apache.commons.math.linear.InvalidMatrixException;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters.MomentApproximationMethod;
-
 /**
  * Implementation of the Wilk's Lambda (WL) test for the
  * general linear multivariate model
@@ -40,9 +37,13 @@ public class GLMMTestWilksLambda extends GLMMTest
 	 * Create a Wilk's Lambda test object for the specified parameters
 	 * @param params GLMM input parameters
 	 */
-    public GLMMTestWilksLambda(GLMMPowerParameters params)
+    public GLMMTestWilksLambda(FApproximation fMethod,
+    		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
+    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		RealMatrix beta, RealMatrix sigmaError)
     {
-        super(params);
+        super(fMethod, null, Xessence, XtXInverse, perGroupN, rank,
+        		C, U, thetaNull, beta, sigmaError);
     }
     
     /**
@@ -55,10 +56,7 @@ public class GLMMTestWilksLambda extends GLMMTest
      */
     @Override
     public double getDenominatorDF(DistributionType type)
-    {
-        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
-        RealMatrix U = params.getWithinSubjectContrast();
-        
+    {        
         // a = #rows in between subject contrast matrix, C
         double a = C.getRowDimension();
         // b = #columns in within subject contrast matrix
@@ -74,7 +72,7 @@ public class GLMMTestWilksLambda extends GLMMTest
         
         if (a*a*b*b <= 4)
         {
-            df = N - r - b + 1;
+            df = totalN - rank - b + 1;
         }
         else
         {
@@ -82,7 +80,7 @@ public class GLMMTestWilksLambda extends GLMMTest
             if (gDenominator == 0)
                 throw new IllegalArgumentException("Within and between subject contrasts yielded divide by zero: row of C=" + a + ", cols of U=" + b);
             double g = Math.sqrt((a*a*b*b - 4) / gDenominator);
-            df = (g*((N - r) - (b - a +1)/2)) - (a*b - 2)/2;
+            df = (g*((totalN - rank) - (b - a +1)/2)) - (a*b - 2)/2;
         }
         
         return df;
@@ -100,18 +98,15 @@ public class GLMMTestWilksLambda extends GLMMTest
     public double getNonCentrality(DistributionType type)
     {
         // calculate the hypothesis and error sum of squares matrices
-        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
-        RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
-        
-        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
-        RealMatrix U = params.getWithinSubjectContrast();
+        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares();
+        RealMatrix errorSumOfSquares = getErrorSumOfSquares();
         
         // a = #rows in between subject contrast matrix, C
         double a = C.getRowDimension();
         // b = #columns in within subject contrast matrix, U
         double b = U.getColumnDimension();
         double s = (a < b) ? a : b;  
-        double p = params.getScaledBeta().getColumnDimension();
+        double p = beta.getColumnDimension();
         
         double adjustedW = Double.NaN;
         double g = Double.NaN;
@@ -129,11 +124,9 @@ public class GLMMTestWilksLambda extends GLMMTest
         
         
         if ((s == 1 && p > 1) ||
-                params.getMomentMethod() == MomentApproximationMethod.RAO_TWO_MOMENT_OMEGA_MULT)
+                fMethod == FApproximation.RAO_TWO_MOMENT_OMEGA_MULT)
         {
-            RealMatrix X = params.getDesign();
-            double N = X.getRowDimension();
-            return N * g * (1 - adjustedW) / adjustedW;
+            return totalN * g * (1 - adjustedW) / adjustedW;
         }
         else
         {
@@ -152,8 +145,8 @@ public class GLMMTestWilksLambda extends GLMMTest
     @Override
     public double getNumeratorDF(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double a = C.getRowDimension();
+        double b = U.getColumnDimension();
 
         return a*b;
     }
@@ -170,11 +163,8 @@ public class GLMMTestWilksLambda extends GLMMTest
     public double getObservedF(DistributionType type)
     {
         // calculate the hypothesis and error sum of squares matrices
-        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
-        RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
-        
-        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
-        RealMatrix U = params.getWithinSubjectContrast();
+        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares();
+        RealMatrix errorSumOfSquares = getErrorSumOfSquares();
         
         // a = #rows in between subject contrast matrix, C
         double a = C.getRowDimension();
@@ -212,16 +202,16 @@ public class GLMMTestWilksLambda extends GLMMTest
         if (!H.isSquare() || !E.isSquare() || H.getColumnDimension() != E.getRowDimension())
             throw new InvalidMatrixException("Failed to compute Wilks Lambda: hypothesis and error matrices must be square and same dimensions");
         
-        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double a = C.getRowDimension();
+        double b = U.getColumnDimension();
         double s = (a < b) ? a : b;  
-        double p = params.getScaledBeta().getColumnDimension();
+        double p = beta.getColumnDimension();
         
         RealMatrix adjustedH = H;
         if (type != DistributionType.DATA_ANALYSIS_NULL && ((s == 1 && p > 1) ||
-                params.getMomentMethod() == MomentApproximationMethod.RAO_TWO_MOMENT_OMEGA_MULT))
+                fMethod == FApproximation.RAO_TWO_MOMENT_OMEGA_MULT))
         {
-            adjustedH = H.scalarMultiply((N - r)/N);
+            adjustedH = H.scalarMultiply((totalN - rank)/totalN);
         }
         
         RealMatrix T = adjustedH.add(E);

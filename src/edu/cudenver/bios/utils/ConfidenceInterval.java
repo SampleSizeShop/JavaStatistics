@@ -39,9 +39,9 @@ public class ConfidenceInterval
 	{
 		if (lowerLimit > upperLimit)
 			throw new IllegalArgumentException("invalid bounds for confidence interval");
-		if (alphaLower <= 0 || alphaLower >= 1 || 
-				alphaUpper <= 0 || alphaUpper >= 1 ||
-				alphaUpper + alphaLower >= 1)
+		if (alphaLower < 0 || alphaLower > 1 || 
+				alphaUpper < 0 || alphaUpper > 1 ||
+				alphaUpper + alphaLower > 1)
 			throw new IllegalArgumentException("invalid alpha values for confidence interval");
 		
 		this.alphaLower = alphaLower;

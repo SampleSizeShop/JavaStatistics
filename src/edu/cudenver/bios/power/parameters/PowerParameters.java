@@ -31,68 +31,95 @@ import java.util.ArrayList;
 */
 public abstract class PowerParameters
 {
-	// wrapper class to allow easy iteration / peek into 
-	// a list
-    protected class PeekableList<T>
-    {
-        ArrayList<T> list = new ArrayList<T>();
-        T currentItem = null;
-        int currentIndex = -1;
-        
-        public void add(T object) { list.add(object); }
-        
-        public T first()
-        {
-            if (list.size() > 0)
-            {
-                currentItem = list.get(0);
-                currentIndex = 0;
-            }
-            return currentItem;
-        }
-        
-        public T next()
-        {
-            if (list.size() > 0 && currentIndex < list.size()-1)
-            {
-                currentIndex++;
-                currentItem = list.get(currentIndex);
-            }
-            else
-            {
-                currentItem = null;
-            }
-            return currentItem;
-        }
-        
-        public T current()
-        {
-            return currentItem;
-        }
-        
-        public int size() { return list.size(); }
-    }
+//	// wrapper class to allow easy iteration / peek into 
+//	// a list
+//    protected class PeekableList<T>
+//    {
+//        ArrayList<T> list = new ArrayList<T>();
+//        T currentItem = null;
+//        int currentIndex = -1;
+//        
+//        public void add(T object) { list.add(object); }
+//        
+//        public T first()
+//        {
+//            if (list.size() > 0)
+//            {
+//                currentItem = list.get(0);
+//                currentIndex = 0;
+//            }
+//            return currentItem;
+//        }
+//        
+//        public T next()
+//        {
+//            if (list.size() > 0 && currentIndex < list.size()-1)
+//            {
+//                currentIndex++;
+//                currentItem = list.get(currentIndex);
+//            }
+//            else
+//            {
+//                currentItem = null;
+//            }
+//            return currentItem;
+//        }
+//        
+//        public T current()
+//        {
+//            return currentItem;
+//        }
+//        
+//        public int size() { return list.size(); }
+//    }
     
 	/**
 	 * List of power values
 	 */
-    PeekableList<Double> powerList = new PeekableList<Double>();
+    ArrayList<Double> powerList = new ArrayList<Double>();
     
 	/**
 	 * List of sample size values
 	 */
-    PeekableList<Integer> sampleSizeList = new PeekableList<Integer>();
+    ArrayList<Integer> sampleSizeList = new ArrayList<Integer>();
     
     /**
      * power level (type I error level)
      */
-    PeekableList<Double> alphaList = new PeekableList<Double>();
+    ArrayList<Double> alphaList = new ArrayList<Double>();
     
     /**
      * Create an empty power parameter object
      */
     public PowerParameters() {}
 
+    /**
+     * Get the list of desired power values
+     * @return list of desired power values
+     */
+	public ArrayList<Double> getPowerList()
+	{
+		return powerList;
+	}
+
+	/**
+	 * Get the list of sample sizes.
+	 * @return list of sample sizes
+	 */
+	public ArrayList<Integer> getSampleSizeList()
+	{
+		return sampleSizeList;
+	}
+
+	/**
+	 * Get the list of Type I error (alpha) values.
+	 * @return list of alpha values
+	 */
+	public ArrayList<Double> getAlphaList()
+	{
+		return alphaList;
+	}
+    
     /**
      *  Add a power to the list of calculations
      *  
@@ -122,88 +149,5 @@ public abstract class PowerParameters
     {
     	alphaList.add(new Double(alpha));
     }
-    
-    /**
-     * Iterate to the first type I error in the list
-     * @return first alpha
-     */
-	public Double getFirstAlpha()
-	{
-	    return alphaList.first();
-	}
-	
-	/**
-	 * Iterate to the next type I error in the list
-	 * @return next alpha
-	 */
-    public Double getNextAlpha()
-    {
-        return alphaList.next();
-    }
-    
-    /**
-     * Peek at the currently active alpha value
-     * @return current alpha
-     */
-    public Double getCurrentAlpha()
-    {
-        return alphaList.current();
-    }
-    
-    /**
-     * Iterate to the first (per group) sample size in the list
-     * @return first sample size
-     */
-    public Integer getFirstSampleSize()
-    {
-        return sampleSizeList.first();
-    }
-    
-    /**
-     * Iterate to the next (per group) sample size in the list
-     * or null if at the end of the list
-     * @return next sample size
-     */
-    public Integer getNextSampleSize()
-    {
-        return sampleSizeList.next();
-    }
-    
-    /**
-     * Peek at the currently active sample size value
-     * @return current sample size
-     */
-    public Integer getCurrentSampleSize()
-    {
-        return sampleSizeList.current();
-    }
-    
-    /**
-     * Iterate to the first power in the list (specified for sample
-     * size or detectable difference calculations)
-     * @return first power
-     */
-    public Double getFirstPower()
-    {
-        return powerList.first();
-    }
-    
-    /**
-     * Iterate to the next power in the list (specified for sample
-     * size or detectable difference calculations)
-     * @return next power
-     */
-    public Double getNextPower()
-    {
-        return powerList.next();
-    }
-    
-    /**
-     * Peek at the currently active power value
-     * @return current power
-     */
-    public Double getCurrentPower()
-    {
-        return powerList.current();
-    }
+
 }

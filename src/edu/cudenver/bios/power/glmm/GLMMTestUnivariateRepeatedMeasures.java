@@ -29,9 +29,7 @@ import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 import org.apache.commons.math.util.MathUtils;
-
 import edu.cudenver.bios.matrix.GramSchmidtOrthonormalization;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 
 /**
  * Implementation of the uncorreected univariate approach to repeated measures test 
@@ -63,9 +61,14 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
 	 * Create a UNIREP test object for the specified parameters
 	 * @param params GLMM input parameters
 	 */
-    public GLMMTestUnivariateRepeatedMeasures(GLMMPowerParameters params)
+    public GLMMTestUnivariateRepeatedMeasures(FApproximation fMethod, 
+    		UnivariateCdfApproximation cdfMethod,
+    		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
+    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		RealMatrix beta, RealMatrix sigmaError)
     {
-        super(params);
+        super(fMethod, cdfMethod, Xessence, XtXInverse, perGroupN, rank,
+        		C, U, thetaNull, beta, sigmaError);
         
         // verify that U is orthonormal to an identity matrix
         // if not, build an orthonormal U from the specified U matrix
@@ -85,9 +88,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
      */
     @Override
     public double getDenominatorDF(DistributionType type)
-    {
-        RealMatrix U = params.getWithinSubjectContrast();
-        
+    {       
         // b = #columns in within subject contrast matrix
         int b = U.getColumnDimension();
         
@@ -99,9 +100,9 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         // power analysis under the alternative.  The ddf are the same for power
         // under the null and for data analysis
         if (type == DistributionType.POWER_ALTERNATIVE)
-            df = b*(N - r) * this.unirepEpsilon;
+            df = b*(totalN - rank) * this.unirepEpsilon;
         else
-            df = b*(N - r);
+            df = b*(totalN - rank);
         
         return df;
     }
@@ -117,8 +118,8 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     @Override
     public double getNonCentrality(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double a = C.getRowDimension();
+        double b = U.getColumnDimension();
         
         // calculate non-centrality and adjust for sphericity 
         return a*b*getObservedF(type)*unirepEpsilon;
@@ -135,8 +136,8 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     @Override
     public double getNumeratorDF(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double a = C.getRowDimension();
+        double b = U.getColumnDimension();
         
         double df = Double.NaN;
         // for the unirep test, the degrees of freedom change for power under the null vs alternative, and
@@ -165,8 +166,8 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     public double getObservedF(DistributionType type)
     {
         // calculate the hypothesis and error sum of squares matrices
-        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
-        RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
+        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares();
+        RealMatrix errorSumOfSquares = getErrorSumOfSquares();
         
         double association = 0.0;
         
@@ -198,10 +199,9 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
      */
     private void calculateUnirepCorrection()
     {          
-        RealMatrix U = params.getWithinSubjectContrast();
         int b = new SingularValueDecompositionImpl(U).getRank();
         // get the sigmaStar matrix: U' *sigmaError * U
-        RealMatrix sigmaStar = U.transpose().multiply(params.getScaledSigmaError().multiply(U));
+        RealMatrix sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
         // ensure symmetry
         sigmaStar = sigmaStar.add(sigmaStar.transpose()).scalarMultiply(0.5); 
         // normalize
@@ -254,9 +254,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
      * UNIREP tests
      */
     protected void createOrthonormalU()
-    {
-        RealMatrix U = params.getWithinSubjectContrast();
-        
+    {        
         RealMatrix UtU = U.transpose().multiply(U);
         double upperLeft = UtU.getEntry(0, 0);
         if (upperLeft != 0) UtU = UtU.scalarMultiply(1/upperLeft);
@@ -278,7 +276,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         {
             // U matrix deviates from Identity, so create one that is orthonormal
             RealMatrix Utmp = new GramSchmidtOrthonormalization(U).getQ();
-            params.setWithinSubjectContrast(Utmp);
+            U = Utmp;
         }
     }
 }

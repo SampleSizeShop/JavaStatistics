@@ -23,9 +23,12 @@ package edu.cudenver.bios.power.test.published;
 import java.io.File;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
+import org.apache.commons.math.linear.MatrixUtils;
+
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.RowMetaData;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
 import junit.framework.TestCase;
@@ -68,7 +71,7 @@ public class TestConditionalMultivariateInteraction extends TestCase
         // build the matrix inputs
         
         // add tests
-        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
+        for(Test test: Test.values()) 
         {
             params.addTest(test);
         }
@@ -95,11 +98,7 @@ public class TestConditionalMultivariateInteraction extends TestCase
         params.addSigmaScale(2);
         
         // build design matrix
-        double[][] essenceData = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
-        RowMetaData[] rowMd = {new RowMetaData(1), new RowMetaData(1), 
-        		new RowMetaData(1), new RowMetaData(1)};
-        DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
-        params.setDesignEssence(essenceMatrix);
+        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(4));
         // add sample size multipliers
         params.addSampleSize(5);
         params.addSampleSize(10);

@@ -23,34 +23,55 @@ package edu.cudenver.bios.power.test.published;
 import java.io.File;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
+import org.apache.commons.math.linear.RealMatrix;
+
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RowMetaData;
-import edu.cudenver.bios.power.GLMMPowerCalculator;
+import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.utils.OrthogonalPolynomials;
 import junit.framework.TestCase;
 
 /**
  * Unit test for fixed multivariate design including confidence intervals
  * with comparison against simulation and SAS output.
+ * 
+ *  based on the example 6 from POWERLIB:
+*   Johnson J.L., Muller K.E., Slaughter J.C., Gurka M.J., Gribbin M.J. and Simpson S.L. 
+*   (2009) POWERLIB: SAS/IML software for computing power in multivariate linear models, 
+*   Journal of Statistical Software, 30(5), 1-27.
+*   
  * @author Sarah Kreidler
  *
  */
 public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
 {
-
-
 	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestConditionalMultivariateWithConfidenceLimits.xml";
 	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalMultivariateWithConfidenceLimits.html";
-	private static final String TITLE = "Power results for fixed univariate";
+	private static final String TITLE = "Power results for multivariate design, UNIREP-GG with confidence limits";
 	private PowerChecker checker;
+	
+    // set beta matrix
+	private double[][] beta = 
+	{
+			{2.9, 3.2, 3.5, 3.2},
+			{2.9, 3.2, 3.5, 3.2},
+			{2.9, 3.2, 3.5, 3.2},
+			{2.9, 3.2, 3.5, 3.2},
+			{2.9, 3.2, 3.5, 3.2},
+			{2.9, 3.2, 3.5, 3.2},
+			{2.9, 3.2, 3.5, 3.2},
+			{2.9, 3.2, 3.5, 3.2},
+			{2.9, 3.2, 3.5, 3.2},
+			{2.9, 3.2, 3.5, 3.2}
+	};
 	
 	public void setUp()
 	{
 		try
 		{
-			checker = new PowerChecker(DATA_FILE, true);
+			checker = new PowerChecker(DATA_FILE, false);
 		}
 		catch (Exception e)
 		{
@@ -64,49 +85,19 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
      */
     public void testMultivariateWithConfidenceLimits()
     {
-        // build the inputs        
-        GLMMPowerParameters params = new GLMMPowerParameters();
-        
-        // add tests
-        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
-        {
-            params.addTest(test);
-        }
-        
-        // add alpha values - bonferroni corrected for 6 comparisons
-        params.addAlpha(0.05/6);
+    	GLMMPowerParameters params = buildInputs();
+    	
+    	for(double delta = 0; delta < 0.0501; delta += 0.0008)
+    	{
+    		// increase the gender difference by 2 * delta
+    		RealMatrix betaMatrix = params.getBeta().getFixedMatrix();
+    		for(int row = 0; row < 5; row++) betaMatrix.setEntry(row, 2, beta[row][2] + delta);
+    		for(int row = 5; row < 10; row++) betaMatrix.setEntry(row, 2, beta[row][2] - delta);
 
-        // build beta matrix
-        double [][] beta = {{0},{1}};
-        params.setBeta(new FixedRandomMatrix(beta, null, false));
-        // add beta scale values
-        //for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
-        
-        // build theta null matrix
-        double [][] theta0 = {{0}};
-        params.setTheta(new Array2DRowRealMatrix(theta0));
-        
-        // build sigma matrix
-        double [][] sigma = {{1}};
-        params.setSigmaError(new Array2DRowRealMatrix(sigma));
-        // add sigma scale values
-      //  for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
-        
-        // build design matrix
-        double[][] essenceData = {{1,0},{0,1}};
-        RowMetaData[] rowMd = {new RowMetaData(1), new RowMetaData(1)};
-        DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
-        params.setDesignEssence(essenceMatrix);
-        // add sample size multipliers
-     //   for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
-        
-        // build between subject contrast
-        double [][] between = {{1,-1}};
-        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
-        
-        
+            checker.checkPower(params);
+    	}
+
         System.out.println(TITLE);
-        checker.checkPower(params);
 		checker.outputResults();
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
@@ -114,4 +105,65 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
 		checker.reset();
     }
 
+    
+    private GLMMPowerParameters buildInputs()
+    {
+        // build the inputs        
+    	GLMMPowerParameters params = new GLMMPowerParameters();
+        
+        // add tests
+    	//params.addTest(Test.UNIREP_GEISSER_GREENHOUSE);
+    	params.addTest(Test.UNIREP);
+    	params.addTest(Test.UNIREP_BOX);
+    	params.addTest(Test.UNIREP_GEISSER_GREENHOUSE);
+    	params.addTest(Test.UNIREP_HUYNH_FELDT);
+    	params.addTest(Test.WILKS_LAMBDA);
+    	params.addTest(Test.PILLAI_BARTLETT_TRACE);
+    	params.addTest(Test.HOTELLING_LAWLEY_TRACE);
+
+    	//params.addTest(Test.HOTELLING_LAWLEY_TRACE);
+        // add alpha values - bonferroni corrected for 6 comparisons
+        params.addAlpha(0.05/6);
+        
+        // add beta scale values
+        params.addBetaScale(1);
+        
+        // build theta null matrix
+        double [][] theta0 = {{0,0,0}};
+        params.setTheta(new Array2DRowRealMatrix(theta0));
+        
+        // build sigma matrix
+        double [][] sigma = {{0.08380, 0.05020, 0.03560, 0.05330},
+       		 {0.05020, 0.05370, 0.03250, 0.03330},                         
+             {0.03560, 0.03250, 0.04410, 0.03860},                          
+             {0.05330, 0.03330, 0.03860, 0.07220}};
+        params.setSigmaError(new Array2DRowRealMatrix(sigma));
+        // add sigma scale values
+        params.addSigmaScale(1);
+        
+        // build design matrix
+        params.setDesignEssence(org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(10));
+        // add sample size multipliers
+        for(int sampleSize = 2; sampleSize <= 10; sampleSize++) params.addSampleSize(sampleSize);
+        
+        // build beta matrix
+        params.setBeta(new FixedRandomMatrix(beta, null, false));
+        
+        // build between subject contrast
+        double [][] between = {{1,1,1,1,1,-1,-1,-1,-1,-1}};
+        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
+        
+        double[] regions = {1,2,3,4};
+        params.setWithinSubjectContrast(OrthogonalPolynomials.withinSubjectContrast(regions));
+        
+        // parameters for confidence limits
+        params.setConfidenceIntervalType(ConfidenceIntervalType.BETA_KNOWN_SIGMA_ESTIMATED);
+        params.setSampleSizeForEstimates(21);
+        params.setDesignMatrixRankForEstimates(1);
+        // 2 sided CI
+        params.setAlphaLowerConfidenceLimit(0.025);
+        params.setAlphaUpperConfidenceLimit(0.025);
+        
+        return params;
+    }
 }

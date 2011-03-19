@@ -23,8 +23,6 @@ package edu.cudenver.bios.power.glmm;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-
 /**
  * Implementation of the univariate approach to repeated measures test 
  * with Box correction (UNIREP-Box) for the general linear multivariate model. 
@@ -41,10 +39,15 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
 	 * Create a UNIREP-Box test object for the specified parameters
 	 * @param params GLMM input parameters
 	 */
-    public GLMMTestUnirepBox(GLMMPowerParameters params)
+    public GLMMTestUnirepBox(FApproximation fMethod, 
+    		UnivariateCdfApproximation cdfMethod,
+    		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
+    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		RealMatrix beta, RealMatrix sigmaError)
     {
         // unirep base class will calculate epsilon for box correction
-        super(params);
+        super(fMethod, cdfMethod, Xessence, XtXInverse, perGroupN, rank,
+        		C, U, thetaNull, beta, sigmaError);
     }
     
     /**
@@ -57,9 +60,7 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
      */
     @Override
     public double getDenominatorDF(DistributionType type)
-    {
-        RealMatrix U = params.getWithinSubjectContrast();
-        
+    {        
         // b = #columns in within subject contrast matrix
         int b = U.getColumnDimension();
         
@@ -69,9 +70,9 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
         // power analysis under the alternative.  The ddf are the same for power
         // under the null and for data analysis
         if (type == DistributionType.POWER_ALTERNATIVE)
-            df = b*(N - r) * this.unirepEpsilon;
+            df = b*(totalN - rank) * this.unirepEpsilon;
         else
-            df = (N - r);
+            df = (totalN - rank);
         
         return df;
     }
@@ -87,8 +88,8 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
     @Override
     public double getNonCentrality(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double a = C.getRowDimension();
+        double b = U.getColumnDimension();
         
         // calculate non-centrality and adjust for sphericity 
         return a*b*getObservedF(type)*unirepEpsilon;
@@ -105,8 +106,8 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
     @Override
     public double getNumeratorDF(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double a = C.getRowDimension();
+        double b = U.getColumnDimension();
 
         double df = Double.NaN;
 

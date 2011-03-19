@@ -40,7 +40,7 @@ public class TestPowerParameters extends TestCase
         MyParams params = buildParams();
 
         int alphaCount = 0;
-        for(Double alpha = params.getFirstAlpha(); alpha != null; alpha = params.getNextAlpha())
+        for(Double alpha : params.getAlphaList())
         {
             System.out.println("alpha = " + alpha);
             alphaCount++;
@@ -48,8 +48,7 @@ public class TestPowerParameters extends TestCase
         assertEquals(alphaCount, alphaList.length);
         
         int sampleSizeCount = 0;
-        for(Integer sampleSize = params.getFirstSampleSize(); sampleSize != null; 
-            sampleSize = params.getNextSampleSize())
+        for(Integer sampleSize: params.getSampleSizeList())
         {
             System.out.println("sample size = " + sampleSize);
             sampleSizeCount++;
@@ -62,10 +61,9 @@ public class TestPowerParameters extends TestCase
         MyParams params = buildParams();
 
         int count = 0;
-        for(Double alpha = params.getFirstAlpha(); alpha != null; alpha = params.getNextAlpha())
+        for(Double alpha : params.getAlphaList())
         {
-            for(Integer sampleSize = params.getFirstSampleSize(); sampleSize != null; 
-                sampleSize = params.getNextSampleSize())
+            for(Integer sampleSize: params.getSampleSizeList())
             {
                 System.out.println("alpha = " + alpha + ", sampleSize = " + sampleSize);
                 count++;

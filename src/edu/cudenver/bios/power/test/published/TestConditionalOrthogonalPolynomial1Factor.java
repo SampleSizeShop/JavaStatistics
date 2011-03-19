@@ -24,12 +24,11 @@ import java.io.File;
 import java.text.DecimalFormat;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
+import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RowMetaData;
-import edu.cudenver.bios.power.GLMMPowerCalculator;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
 import edu.cudenver.bios.utils.OrthogonalPolynomials;
@@ -71,7 +70,7 @@ public class TestConditionalOrthogonalPolynomial1Factor extends TestCase
         GLMMPowerParameters params = new GLMMPowerParameters();
         
         // add tests
-        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
+        for(Test test: Test.values()) 
         {
             params.addTest(test);
         }
@@ -104,10 +103,7 @@ public class TestConditionalOrthogonalPolynomial1Factor extends TestCase
         params.addSigmaScale(1);
         
         // build design matrix
-        double[][] essenceData = {{1,0},{0,1}};
-        RowMetaData[] rowMd = {new RowMetaData(1), new RowMetaData(1)};
-        DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
-        params.setDesignEssence(essenceMatrix);
+        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(2));
         // add sample size multipliers
         params.addSampleSize(10);
         params.addSampleSize(20);

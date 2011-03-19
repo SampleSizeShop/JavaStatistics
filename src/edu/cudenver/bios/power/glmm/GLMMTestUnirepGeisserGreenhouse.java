@@ -29,8 +29,6 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealMatrixChangingVisitor;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-
 /**
  * Implementation of the univariate approach to repeated measures test 
  * with Geisser-Greenhouse correction (UNIREP-GG) for the general linear multivariate model. 
@@ -63,9 +61,14 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
 	 * Create a UNIREP-GG test object for the specified parameters
 	 * @param params GLMM input parameters
 	 */
-    public GLMMTestUnirepGeisserGreenhouse(GLMMPowerParameters params)
+    public GLMMTestUnirepGeisserGreenhouse(FApproximation fMethod, 
+    		UnivariateCdfApproximation cdfMethod,
+    		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
+    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		RealMatrix beta, RealMatrix sigmaError)
     {
-        super(params);
+        super(fMethod, cdfMethod, Xessence, XtXInverse, perGroupN, rank,
+        		C, U, thetaNull, beta, sigmaError);
 
         // verify that U is orthonormal to an identity matrix
         // if not, build an orthonormal U from the specified U matrix
@@ -76,6 +79,18 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     }
 
     /**
+     * Reset the per group sample size for this test.  Recalculates epsilon
+     * and expected value of epsilon
+     * @param perGroupN per group sample size
+     */
+    @Override
+    public void setPerGroupSampleSize(int perGroupN)
+    {
+    	super.setPerGroupSampleSize(perGroupN);
+        calculateUnirepCorrection();
+    }
+    
+    /**
      * Calculate the denominator degrees of freedom for the UNIREP-GG, based on
      * whether the null or alternative hypothesis is assumed true.  
      * 
@@ -85,9 +100,7 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
      */
     @Override
     public double getDenominatorDF(DistributionType type)
-    {
-        RealMatrix U = params.getWithinSubjectContrast();
-        
+    {        
         // b = #columns in within subject contrast matrix
         int b = U.getColumnDimension();
 
@@ -97,9 +110,9 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
         // power analysis (under alternative) and for data analysis.  For power under
         // the null, we multiply by the expected value of the epsilon estimate
         if (type == DistributionType.POWER_NULL)
-            df = b*(N - r)*this.unirepEpsilonExpectedValue;
+            df = b*(totalN - rank)*this.unirepEpsilonExpectedValue;
         else
-            df = b*(N - r)*this.unirepEpsilon; 
+            df = b*(totalN - rank)*this.unirepEpsilon; 
         
         return df;
     }
@@ -115,8 +128,8 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     @Override
     public double getNonCentrality(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double a = C.getRowDimension();
+        double b = U.getColumnDimension();
         
         // calculate non-centrality and adjust for sphericity 
         return a*b*getObservedF(type)*unirepEpsilon;
@@ -133,8 +146,8 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     @Override
     public double getNumeratorDF(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double a = C.getRowDimension();
+        double b = U.getColumnDimension();
         
         double df = Double.NaN;
 
@@ -155,10 +168,9 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
      */
     private void calculateUnirepCorrection()
     {          
-        RealMatrix U = params.getWithinSubjectContrast();
         int b = new SingularValueDecompositionImpl(U).getRank();
         // get the sigmaStar matrix: U' *sigmaError * U
-        RealMatrix sigmaStar = U.transpose().multiply(params.getScaledSigmaError().multiply(U));
+        RealMatrix sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
         // ensure symmetry
         sigmaStar = sigmaStar.add(sigmaStar.transpose()).scalarMultiply(0.5); 
         // normalize
@@ -252,7 +264,7 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
 
         RealMatrix outerProduct = eigenColumnVector.outerProduct(eigenColumnVector);
         double sum = outerProduct.walkInOptimizedOrder(new SummationVisitor());
-        double nu = (N - r);
+        double nu = (totalN - rank);
         double expT1 = (2*nu*sumLambdaSquared) + (nu*nu*sumLambda*sumLambda);
         double expT2 = (nu*(nu + 1)*sumLambdaSquared) + (nu*sum*sum);
         unirepEpsilonExpectedValue = (1/(double)b)*(expT1/expT2);

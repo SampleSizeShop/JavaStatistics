@@ -24,9 +24,6 @@ import org.apache.commons.math.linear.InvalidMatrixException;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters.MomentApproximationMethod;
-
 /**
  * Implementation of the Hotelling Lawley Trace (HLT) test for the
  * general linear multivariate model
@@ -40,9 +37,13 @@ public class GLMMTestHotellingLawley extends GLMMTest
 	 * Create a Hotelling-Lawley Trace test object for the specified parameters
 	 * @param params GLMM input parameters
 	 */
-    public GLMMTestHotellingLawley(GLMMPowerParameters params)
+    public GLMMTestHotellingLawley(FApproximation fMethod,
+    		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
+    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		RealMatrix beta, RealMatrix sigmaError)
     {
-        super(params);
+        super(fMethod, null, Xessence, XtXInverse, perGroupN, rank,
+        		C, U, thetaNull, beta, sigmaError);
     }
     
     /**
@@ -55,10 +56,7 @@ public class GLMMTestHotellingLawley extends GLMMTest
      */
     @Override
     public double getDenominatorDF(DistributionType type)
-    {
-        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
-        RealMatrix U = params.getWithinSubjectContrast();
-        
+    {       
         // a = #rows in between subject contrast matrix, C
         double a = (double) C.getRowDimension();
         // b = #columns in within subject contrast matrix
@@ -67,15 +65,15 @@ public class GLMMTestHotellingLawley extends GLMMTest
         double s = (a < b) ? a : b;  
         
         double df = Double.NaN;
-        if (params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT ||
-                params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT)
+        if (fMethod == FApproximation.PILLAI_ONE_MOMENT ||
+        		fMethod == FApproximation.PILLAI_ONE_MOMENT_OMEGA_MULT)
         {
-            df = s * ((N - r) - b -1) + 2;
+            df = s * ((totalN - rank) - b -1) + 2;
         }
         else
         {
-            double t1 = (N - r) * (N - r) - (N - r) * (2 * b + 3) + b * (b + 3);
-            double t2 = ((N - r) * (a  + b + 1) - (a + 2 * b + b * b - 1));
+            double t1 = (totalN - rank) * (totalN - rank) - (totalN - rank) * (2 * b + 3) + b * (b + 3);
+            double t2 = ((totalN - rank) * (a  + b + 1) - (a + 2 * b + b * b - 1));
             df = 4 + (a * b + 2) * (t1/t2);
         }
         // TODO Auto-generated method stub
@@ -94,15 +92,11 @@ public class GLMMTestHotellingLawley extends GLMMTest
     public double getNonCentrality(DistributionType type)
     {
         // calculate the hypothesis and error sum of squares matrices
-        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
-        RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
-        
-        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
-        RealMatrix U = params.getWithinSubjectContrast();
-        RealMatrix B = params.getScaledBeta();
-        
+        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares();
+        RealMatrix errorSumOfSquares = getErrorSumOfSquares();
+                
         // check if we are uni or multi variate
-        double p = B.getColumnDimension();
+        double p = beta.getColumnDimension();
         // a = #rows in between subject contrast matrix, C
         double a = C.getRowDimension();
         // b = #columns in within subject contrast matrix, U
@@ -113,11 +107,11 @@ public class GLMMTestHotellingLawley extends GLMMTest
         double HLT = getHotellingLawleyTrace(hypothesisSumOfSquares, errorSumOfSquares);
         
         if ((s == 1 && p > 1) ||
-                params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT ||
-                params.getMomentMethod() == MomentApproximationMethod.MCKEON_TWO_MOMENT_OMEGA_MULT)
+                fMethod == FApproximation.PILLAI_ONE_MOMENT_OMEGA_MULT ||
+                fMethod == FApproximation.MCKEON_TWO_MOMENT_OMEGA_MULT)
         {
-            HLT *= ((double)(N - r)/(double)N);
-            return N * s * HLT / s;
+            HLT *= ((double)(totalN - rank)/(double)totalN);
+            return totalN * s * HLT / s;
         }
         else
         {
@@ -136,8 +130,8 @@ public class GLMMTestHotellingLawley extends GLMMTest
     @Override
     public double getNumeratorDF(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double a = C.getRowDimension();
+        double b = U.getColumnDimension();
         
         return a * b;
     }
@@ -155,13 +149,13 @@ public class GLMMTestHotellingLawley extends GLMMTest
     {       
         if (type == DistributionType.DATA_ANALYSIS_NULL)
         {
-            RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
-            RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
+            RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares();
+            RealMatrix errorSumOfSquares = getErrorSumOfSquares();
             double HLT = getHotellingLawleyTrace(hypothesisSumOfSquares, errorSumOfSquares);
             double ddf = getDenominatorDF(type);
             double ndf = getNumeratorDF(type);
-            double b = params.getWithinSubjectContrast().getColumnDimension();
-            return HLT * (((N-r)-b-1)*ddf) / (ndf*(ddf-2));
+            double b = U.getColumnDimension();
+            return HLT * (((totalN-rank)-b-1)*ddf) / (ndf*(ddf-2));
         }
         else
         {

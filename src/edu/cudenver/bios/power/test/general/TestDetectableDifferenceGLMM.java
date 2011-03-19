@@ -33,9 +33,9 @@ import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters.Test;
 
 import jsc.distributions.Normal;
 import junit.framework.TestCase;
@@ -180,7 +180,7 @@ public class TestDetectableDifferenceGLMM extends TestCase
         GLMMPowerParameters params = new GLMMPowerParameters();
        
         // add tests
-        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
+        for(Test test: Test.values()) 
         {
             params.addTest(test);
         }
@@ -206,9 +206,7 @@ public class TestDetectableDifferenceGLMM extends TestCase
         
         // build design matrix
         double[][] essenceData = {{1,0},{0,1}};
-        RowMetaData[] rowMd = {new RowMetaData(1), new RowMetaData(1)};
-        DesignEssenceMatrix essenceMatrix = new DesignEssenceMatrix(essenceData, rowMd, null, null);
-        params.setDesignEssence(essenceMatrix);
+        params.setDesignEssence(new Array2DRowRealMatrix(essenceData));
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         
@@ -240,16 +238,8 @@ public class TestDetectableDifferenceGLMM extends TestCase
 
         int Q = 4;
         // create design matrix
-        RealMatrix essenceData = MatrixUtils.createRealIdentityMatrix(Q);
-        RowMetaData[] rowMd = {
-        		new RowMetaData(1), 
-        		new RowMetaData(1), 
-        		new RowMetaData(1), 
-        		new RowMetaData(1)
-        		};
-        DesignEssenceMatrix essence = 
-        	new DesignEssenceMatrix(essenceData.getData(), rowMd, null, null);
-        params.setDesignEssence(essence);
+        RealMatrix essenceMatrix = MatrixUtils.createRealIdentityMatrix(Q);
+        params.setDesignEssence(essenceMatrix);
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         
@@ -301,31 +291,21 @@ public class TestDetectableDifferenceGLMM extends TestCase
         params.addQuantile(0.75);
         
         // add tests - only HL andUNIREP value for random case
-        params.addTest(GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE);
-        params.addTest(GLMMPowerParameters.Test.UNIREP);
+        params.addTest(Test.HOTELLING_LAWLEY_TRACE);
+        params.addTest(Test.UNIREP);
         
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
         int P = 3;
         int Q = 3;
-        // create design matrix
-        double[][] essFixedData = {{1,0,0},{0,1,0},{0,0,1}};
-        RowMetaData[] rowMd = {
-        		new RowMetaData(1), 
-        		new RowMetaData(1), 
-        		new RowMetaData(1)
-        		};
-        double[][] essRandomData = {{1},{1},{1}};
-        RandomColumnMetaData[] randColMd = {new RandomColumnMetaData(MEAN, VARIANCE)};
-        DesignEssenceMatrix essence = new DesignEssenceMatrix(essFixedData, rowMd, 
-        		essRandomData, randColMd);
-        params.setDesignEssence(essence);
+        // create design essence matrix
+        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(Q));
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         
         // build sigma G matrix
-        double[][] sigmaG = {{1}};
+        double[][] sigmaG = {{VARIANCE}};
         params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
 
         // build sigma Y matrix

@@ -23,11 +23,17 @@ package edu.cudenver.bios.power.glmm;
 import jsc.distributions.ChiSquared;
 import jsc.distributions.FishersF;
 import edu.cudenver.bios.distribution.NonCentralFDistribution;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.utils.ConfidenceInterval;
 
 public class GLMMPowerConfidenceInterval extends ConfidenceInterval
 {
+	public enum ConfidenceIntervalType
+	{
+		NONE,
+		BETA_KNOWN_SIGMA_ESTIMATED,
+		BETA_SIGMA_ESTIMATED
+	}
+	
 	/**
 	 * Compute confidence limits for power the GLMM(F) 
 	 * (i.e. fixed predictors only).  This function is only called if the 
@@ -41,22 +47,17 @@ public class GLMMPowerConfidenceInterval extends ConfidenceInterval
 	 * @param params
 	 * @return list of confidence limits: lower limit, upper limit 
 	 */
-	public GLMMPowerConfidenceInterval(GLMMPowerParameters params)
+	public GLMMPowerConfidenceInterval(
+			ConfidenceIntervalType ciType, double alphaLower, double alphaUpper, 
+			int sampleSizeForEstimates, int designRankForEstimates, double alpha,
+			GLMMTest test)
 	throws IllegalArgumentException
-	{
-		// create a test
-        GLMMTest test = GLMMTestFactory.createGLMMTest(params);
-		
+	{	
 		// bail if no confidence limits are requested
-		if (params.getConfidenceIntervalType() == 
-			GLMMPowerParameters.ConfidenceIntervalType.NONE)
+		if (ciType == ConfidenceIntervalType.NONE)
 			throw new IllegalArgumentException("invalid confidence interval type");
 
-		// full error checking performed in validateInputs routine
-
-		// get the alpha tail probabilities
-		double alphaLower = params.getAlphaLowerConfidenceLimit();
-		double alphaUpper = params.getAlphaUpperConfidenceLimit();
+		// TODO: error checking
 
 		// get the degrees of freedom and noncentrality for the GLH we are using for power
 		// (called the "target" sample)
@@ -66,24 +67,22 @@ public class GLMMPowerConfidenceInterval extends ConfidenceInterval
 		double alternativeF = omega / targetHypothesisDF;
 
 		// calculate the noncentrality for the estimation sample
-		double estimationErrorDF = params.getSampleSizeForEstimates() - params.getDesignMatrixRankForEstimates();
+		double estimationErrorDF = sampleSizeForEstimates - designRankForEstimates;
 		double estimationNoncentrality = omega;
 		FishersF centralFDist = new FishersF(targetHypothesisDF, targetErrorDF);
-		double criticalF = centralFDist.inverseCdf(1 - params.getCurrentAlpha());
+		double criticalF = centralFDist.inverseCdf(1 - alpha);
 
 		// calculate the lower bound on the noncentrality 
 		double noncentralityLower = 0;
 		if (alphaLower > 0)
 		{
-			if (params.getConfidenceIntervalType() == 
-				GLMMPowerParameters.ConfidenceIntervalType.BETA_KNOWN_SIGMA_ESTIMATED)
+			if (ciType == 	ConfidenceIntervalType.BETA_KNOWN_SIGMA_ESTIMATED)
 			{
 				ChiSquared chiSquareDist = new ChiSquared(estimationErrorDF);
 				double chiLower = chiSquareDist.inverseCdf(alphaLower);
 				noncentralityLower = (chiLower / estimationErrorDF) * estimationNoncentrality;
 			}
-			else if (params.getConfidenceIntervalType() == 
-				GLMMPowerParameters.ConfidenceIntervalType.BETA_SIGMA_ESTIMATED)
+			else if (ciType == ConfidenceIntervalType.BETA_SIGMA_ESTIMATED)
 			{
 				FishersF boundFDist = new FishersF(targetHypothesisDF, estimationErrorDF);
 				double boundLower = boundFDist.inverseCdf(1 - alphaLower);
@@ -108,17 +107,17 @@ public class GLMMPowerConfidenceInterval extends ConfidenceInterval
 		}
 
 		// calculate the lower bound for power
-		double powerLower = params.getCurrentAlpha();
+		double powerLower = alpha;
 		if (alphaLower > 0)
 		{
 			NonCentralFDistribution powerFDist = 
 				new NonCentralFDistribution(targetHypothesisDF, targetErrorDF, noncentralityLower);
 			powerLower = 1- powerFDist.cdf(criticalF);
 		}
-		if (powerLower < params.getCurrentAlpha())
+		if (powerLower < alpha)
 		{
 			// minimum power is the alpha level
-			powerLower = params.getCurrentAlpha();
+			powerLower = alpha;
 		}
 
 		// now let's work on the upper limit
@@ -126,15 +125,13 @@ public class GLMMPowerConfidenceInterval extends ConfidenceInterval
 		double noncentralityUpper = Double.POSITIVE_INFINITY;
 		if (alphaUpper > 0)
 		{
-			if (params.getConfidenceIntervalType() == 
-				GLMMPowerParameters.ConfidenceIntervalType.BETA_KNOWN_SIGMA_ESTIMATED)
+			if (ciType == ConfidenceIntervalType.BETA_KNOWN_SIGMA_ESTIMATED)
 			{
 				ChiSquared chiSquareDist = new ChiSquared(estimationErrorDF);
 				double chiUpper = chiSquareDist.inverseCdf(1 - alphaUpper);
 				noncentralityUpper = (chiUpper / estimationErrorDF) * estimationNoncentrality;
 			}
-			else if (params.getConfidenceIntervalType() == 
-				GLMMPowerParameters.ConfidenceIntervalType.BETA_SIGMA_ESTIMATED)
+			else if (ciType == ConfidenceIntervalType.BETA_SIGMA_ESTIMATED)
 			{
 				FishersF boundFDist = new FishersF(targetHypothesisDF, estimationErrorDF);
 				double boundUpper = boundFDist.inverseCdf(alphaUpper);
@@ -166,10 +163,10 @@ public class GLMMPowerConfidenceInterval extends ConfidenceInterval
 				new NonCentralFDistribution(targetHypothesisDF, targetErrorDF, noncentralityUpper);
 			powerUpper = 1- powerFDist.cdf(criticalF);
 		}
-		if (powerUpper < params.getCurrentAlpha())
+		if (powerUpper < alpha)
 		{
 			// minimum power is the alpha level
-			powerUpper = params.getCurrentAlpha();
+			powerUpper = alpha;
 		}
 
 		this.alphaLower = alphaLower;

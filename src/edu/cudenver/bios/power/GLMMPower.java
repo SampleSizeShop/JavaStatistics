@@ -20,6 +20,7 @@
  */
 package edu.cudenver.bios.power;
 
+import edu.cudenver.bios.power.glmm.GLMMTestFactory;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.utils.ConfidenceInterval;
 
@@ -35,7 +36,7 @@ public class GLMMPower extends Power
 	// scale factor for the sigma error matrix
 	double sigmaScale;
 	// statistical test performed
-	GLMMPowerParameters.Test test;
+	GLMMTestFactory.Test test;
 	
 	/* optional parameters */
 	// power method - specified if a baseline covariate is used
@@ -60,7 +61,7 @@ public class GLMMPower extends Power
 	 * @param sigmaScale scale factor for error covariance matrix
 	 * @param method method used for power calculation
 	 */
-	public GLMMPower(GLMMPowerParameters.Test test, double alpha, 
+	public GLMMPower(GLMMTestFactory.Test test, double alpha, 
 			double nominalPower, double actualPower, int sampleSize,
 			double betaScale, double sigmaScale, 
 			GLMMPowerParameters.PowerMethod method)
@@ -82,7 +83,7 @@ public class GLMMPower extends Power
 	 * @param method method used for power calculation
 	 * @param confidenceInterval confidence interval if requested
 	 */
-	public GLMMPower(GLMMPowerParameters.Test test, double alpha, 
+	public GLMMPower(GLMMTestFactory.Test test, double alpha, 
 			double nominalPower, double actualPower, int sampleSize,
 			double betaScale, double sigmaScale, 
 			GLMMPowerParameters.PowerMethod method,
@@ -105,7 +106,7 @@ public class GLMMPower extends Power
 	 * @param method method used for power calculation
 	 * @param quantile optional quantile value (for quantile power only)
 	 */
-	public GLMMPower(GLMMPowerParameters.Test test, double alpha, 
+	public GLMMPower(GLMMTestFactory.Test test, double alpha, 
 			double nominalPower, double actualPower, int sampleSize,
 			double betaScale, double sigmaScale, 
 			GLMMPowerParameters.PowerMethod method,
@@ -129,7 +130,7 @@ public class GLMMPower extends Power
 	 * @param quantile optional quantile value (for quantile power only)
 	 * @param confidenceInterval confidence interval if requested
 	 */
-	public GLMMPower(GLMMPowerParameters.Test test, double alpha, 
+	public GLMMPower(GLMMTestFactory.Test test, double alpha, 
 			double nominalPower, double actualPower, int sampleSize,
 			double betaScale, double sigmaScale, 
 			GLMMPowerParameters.PowerMethod method,
@@ -185,7 +186,7 @@ public class GLMMPower extends Power
 	 * Get the statistical test performed
 	 * @return statistical test
 	 */
-	public GLMMPowerParameters.Test getTest()
+	public GLMMTestFactory.Test getTest()
 	{
 		return test;
 	}
@@ -195,7 +196,7 @@ public class GLMMPower extends Power
 	 * @param test the statistical test
 	 * @see edu.cudenver.bios.power.parameters.GLMMPowerParameters.Test
 	 */
-	public void setTest(GLMMPowerParameters.Test test)
+	public void setTest(GLMMTestFactory.Test test)
 	{
 		this.test = test;
 	}

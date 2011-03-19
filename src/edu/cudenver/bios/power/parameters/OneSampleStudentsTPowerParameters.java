@@ -20,6 +20,8 @@
  */
 package edu.cudenver.bios.power.parameters;
 
+import java.util.ArrayList;
+
 /**
  * Input parameters for the one sample students' t test
  * @author Sarah Kreidler
@@ -41,10 +43,10 @@ public class OneSampleStudentsTPowerParameters extends PowerParameters
 	}
 	
     // means under the null and alternative hypotheses
-	PeekableList<MeanPair> meansList = new PeekableList<MeanPair>();
+	ArrayList<MeanPair> meansList = new ArrayList<MeanPair>();
     
     // estimated population std dev
-	PeekableList<Double> sigmaList = new PeekableList<Double>();
+	ArrayList<Double> sigmaList = new ArrayList<Double>();
     
     // indicates if a one or two tailed test should be performed
     boolean twoTailed = true;
@@ -99,60 +101,22 @@ public class OneSampleStudentsTPowerParameters extends PowerParameters
 	}
 
 	/**
-	 * Get the first standard deviation and prepare the list of
-	 * standard deviations for iteration
-	 * @return first standard deviation
+	 * Get the list of mean (null and alternative) pairs
+	 * @return list of null and alternative means
 	 */
-    public Double getFirstSigma()
-    {
-        return sigmaList.first();  
-    }
-    
+	public ArrayList<MeanPair> getMeansList()
+	{
+		return meansList;
+	}
+
 	/**
-	 * Get the next standard deviation or null if at the end of the
-	 * standard deviations list
-	 * @return next standard deviation
+	 * Get list of variance values
+	 * @return list of variance values
 	 */
-    public Double getNextSigma()
-    {
-        return sigmaList.next(); 
-    }
-    
-    /**
-     * Peek at the current standard deviation
-     * @return current sigma
-     */
-    public Double getCurrentSigma()
-    {
-        return sigmaList.current();
-    }
-    
-    /**
-     * Get the first null/alternative mean pair and prepare the list
-     * for iteration.
-     * @return first null/alternative mean pair
-     */
-    public MeanPair getFirstMeans()
-    {
-        return meansList.first();  
-    }
-    
-    /**
-     * Get the next null/alternative mean pair or null if at the end
-     * of the list
-     * @return next null/alternative mean pair
-     */
-    public MeanPair getNextMeans()
-    {
-        return meansList.next(); 
-    }
-    
-    /**
-     * Peek at the currently selected null/alternative mean pair
-     * @return current null/alternative mean pair
-     */
-    public MeanPair getCurrentMeans()
-    {
-        return meansList.current();
-    }
+	public ArrayList<Double> getSigmaList()
+	{
+		return sigmaList;
+	}
+
+	
 }

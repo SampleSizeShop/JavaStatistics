@@ -31,6 +31,7 @@ import org.w3c.dom.NodeList;
 import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.Power;
 import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.utils.ConfidenceInterval;
 
@@ -154,37 +155,37 @@ public class SASOutputParser
 		return null;
 	}
 	
-	public static GLMMPowerParameters.Test stringToTest(String testString)
+	public static Test stringToTest(String testString)
 	{
 		if (testString != null)
 		{
 			if (TEST_HOTELLING_LAWLEY_TRACE.equals(testString))
 			{
-				return GLMMPowerParameters.Test.HOTELLING_LAWLEY_TRACE;
+				return Test.HOTELLING_LAWLEY_TRACE;
 			}
 			else if (TEST_PILLAI_BARTLETT_TRACE.equals(testString))
 			{
-				return GLMMPowerParameters.Test.PILLAI_BARTLETT_TRACE;
+				return Test.PILLAI_BARTLETT_TRACE;
 			}
 			else if (TEST_WILKS_LAMBDA.equals(testString))
 			{
-				return GLMMPowerParameters.Test.WILKS_LAMBDA;
+				return Test.WILKS_LAMBDA;
 			}
 			else if (TEST_UNIREP.equals(testString))
 			{
-				return GLMMPowerParameters.Test.UNIREP;
+				return Test.UNIREP;
 			}
 			else if (TEST_UNIREP_BOX.equals(testString))
 			{
-				return GLMMPowerParameters.Test.UNIREP_BOX;
+				return Test.UNIREP_BOX;
 			}
 			else if (TEST_UNIREP_GG.equals(testString))
 			{
-				return GLMMPowerParameters.Test.UNIREP_GEISSER_GREENHOUSE;
+				return Test.UNIREP_GEISSER_GREENHOUSE;
 			}
 			else if (TEST_UNIREP_HF.equals(testString))
 			{
-				return GLMMPowerParameters.Test.UNIREP_HUYNH_FELDT;
+				return Test.UNIREP_HUYNH_FELDT;
 			}
 		}
 		return null;

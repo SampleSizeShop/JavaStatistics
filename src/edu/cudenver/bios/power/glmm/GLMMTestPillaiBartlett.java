@@ -24,9 +24,6 @@ import org.apache.commons.math.linear.InvalidMatrixException;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters.MomentApproximationMethod;
-
 /**
  * Implementation of the Pillai Bartlett Trace (PBT) test for the
  * general linear multivariate model
@@ -40,9 +37,13 @@ public class GLMMTestPillaiBartlett extends GLMMTest
 	 * Create a Pillai Bartlett Trace test object for the specified parameters
 	 * @param params GLMM input parameters
 	 */
-    public GLMMTestPillaiBartlett(GLMMPowerParameters params)
+    public GLMMTestPillaiBartlett(FApproximation fMethod,
+    		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
+    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		RealMatrix beta, RealMatrix sigmaError)
     {
-        super(params);
+        super(fMethod, null, Xessence, XtXInverse, perGroupN, rank,
+        		C, U, thetaNull, beta, sigmaError);
     }   
     
     /**
@@ -55,10 +56,7 @@ public class GLMMTestPillaiBartlett extends GLMMTest
      */
     @Override
     public double getDenominatorDF(DistributionType type)
-    {
-        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
-        RealMatrix U = params.getWithinSubjectContrast();
-        
+    {        
         // a = #rows in between subject contrast matrix, C
         double a = C.getRowDimension();
         // b = #columns in within subject contrast matrix
@@ -67,17 +65,17 @@ public class GLMMTestPillaiBartlett extends GLMMTest
         double s = (a < b) ? a : b;  
         
         double df = Double.NaN;
-        if (params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT ||
-                params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT)
+        if (fMethod == FApproximation.PILLAI_ONE_MOMENT ||
+                fMethod == FApproximation.PILLAI_ONE_MOMENT_OMEGA_MULT)
         {
-            df = s * ((N - r) - b + s);
+            df = s * ((totalN - rank) - b + s);
         }
         else
         {
-            double mu1= a * b / (N - r + a);
-            double factor1 = (N - r + a - b) / (N - r + a - 1);
-            double factor2 = (N - r) / (N - r + a + 2);
-            double variance = 2 * a * b * factor1 * factor2 / ((N - r + a)*(N - r + a));
+            double mu1= a * b / (totalN - rank + a);
+            double factor1 = (totalN - rank + a - b) / (totalN - rank + a - 1);
+            double factor2 = (totalN - rank) / (totalN - rank + a + 2);
+            double variance = 2 * a * b * factor1 * factor2 / ((totalN - rank + a)*(totalN - rank + a));
             double mu2 = variance + mu1 * mu1;
             double m1 = mu1 / s;
             double m2 = mu2 / (s*s);
@@ -100,15 +98,11 @@ public class GLMMTestPillaiBartlett extends GLMMTest
     public double getNonCentrality(DistributionType type)
     {
         // calculate the hypothesis and error sum of squares matrices
-        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
-        RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
-        
-        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
-        RealMatrix U = params.getWithinSubjectContrast();
-        RealMatrix B = params.getScaledBeta();
+        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares();
+        RealMatrix errorSumOfSquares = getErrorSumOfSquares();
         
         // check if we are uni or multi variate
-        double p = B.getColumnDimension();
+        double p = beta.getColumnDimension();
         // a = #rows in between subject contrast matrix, C
         double a = C.getRowDimension();
         // b = #columns in within subject contrast matrix, U
@@ -119,12 +113,10 @@ public class GLMMTestPillaiBartlett extends GLMMTest
         double PB = getPillaiBartlettTrace(hypothesisSumOfSquares, errorSumOfSquares);
         
         if ((s == 1 && p > 1) ||
-                params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT ||
-                params.getMomentMethod() == MomentApproximationMethod.MULLER_TWO_MOMENT_OMEGA_MULT)
+                fMethod == FApproximation.PILLAI_ONE_MOMENT_OMEGA_MULT ||
+                fMethod == FApproximation.MULLER_TWO_MOMENT_OMEGA_MULT)
         {
-            RealMatrix X = params.getDesign();
-            int N = X.getRowDimension();
-            return N * s * PB / (s - PB);
+            return totalN * s * PB / (s - PB);
         }
         else
         {
@@ -143,23 +135,23 @@ public class GLMMTestPillaiBartlett extends GLMMTest
     @Override
     public double getNumeratorDF(DistributionType type)
     {
-        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double a = C.getRowDimension();
+        double b = U.getColumnDimension();
         double s = (a < b) ? a : b;  
         
         double df = Double.NaN;
         if (
-        		params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT ||
-                params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT)
+        		fMethod == FApproximation.PILLAI_ONE_MOMENT ||
+                fMethod == FApproximation.PILLAI_ONE_MOMENT_OMEGA_MULT)
         {
             df = a * b;
         }
         else
         {
-            double mu1= a * b / (N - r + a);
-            double factor1 = (N - r + a - b) / (N - r + a - 1);
-            double factor2 = (N - r) / (N - r + a + 2);
-            double variance = 2 * a * b * factor1 * factor2 / ((N - r + a)*(N - r + a));
+            double mu1= a * b / (totalN - rank + a);
+            double factor1 = (totalN - rank + a - b) / (totalN - rank + a - 1);
+            double factor2 = (totalN - rank) / (totalN - rank + a + 2);
+            double variance = 2 * a * b * factor1 * factor2 / ((totalN - rank + a)*(totalN - rank + a));
             double mu2 = variance + mu1 * mu1;
             double m1 = mu1 / s;
             double m2 = mu2 / (s*s);
@@ -182,11 +174,8 @@ public class GLMMTestPillaiBartlett extends GLMMTest
     public double getObservedF(DistributionType type)
     {
         // calculate the hypothesis and error sum of squares matrices
-        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares(params);
-        RealMatrix errorSumOfSquares = getErrorSumOfSquares(params);
-        
-        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
-        RealMatrix U = params.getWithinSubjectContrast();
+        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares();
+        RealMatrix errorSumOfSquares = getErrorSumOfSquares();
         
         // a = #rows in between subject contrast matrix, C
         double a = C.getRowDimension();
@@ -217,17 +206,17 @@ public class GLMMTestPillaiBartlett extends GLMMTest
         if (!H.isSquare() || !E.isSquare() || H.getColumnDimension() != E.getRowDimension())
             throw new InvalidMatrixException("Failed to compute Pillai-Bartlett Trace: hypothesis and error matrices must be square and same dimensions");
         
-        double a = params.getBetweenSubjectContrast().getCombinedMatrix().getRowDimension();
-        double b = params.getWithinSubjectContrast().getColumnDimension();
+        double a = C.getRowDimension();
+        double b = U.getColumnDimension();
         double s = (a < b) ? a : b;  
-        double p = params.getScaledBeta().getColumnDimension();
+        double p = beta.getColumnDimension();
         
         RealMatrix adjustedH = H;
         if ((s == 1 && p > 1) ||
-                params.getMomentMethod() == MomentApproximationMethod.PILLAI_ONE_MOMENT_OMEGA_MULT ||
-                params.getMomentMethod() == MomentApproximationMethod.MULLER_TWO_MOMENT_OMEGA_MULT)
+                fMethod == FApproximation.PILLAI_ONE_MOMENT_OMEGA_MULT ||
+                fMethod == FApproximation.MULLER_TWO_MOMENT_OMEGA_MULT)
         {
-            adjustedH = H.scalarMultiply(((double)(N - r)/(double)N));
+            adjustedH = H.scalarMultiply(((double)(totalN - rank)/(double)totalN));
         }
             
         RealMatrix T = adjustedH.add(E);

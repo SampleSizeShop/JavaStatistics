@@ -20,7 +20,10 @@
  */
 package edu.cudenver.bios.power.glmm;
 
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
+import org.apache.commons.math.linear.RealMatrix;
+
+import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
+import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
 
 /**
  * Factory class for generating a GLMM test object
@@ -30,28 +33,60 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
  *
  */
 public class GLMMTestFactory
-{
-    public static GLMMTest createGLMMTest(GLMMPowerParameters params)
+{	
+	// the type of statistical test to use
+	public enum Test 
+	{
+		UNIREP,
+		UNIREP_BOX,
+		UNIREP_GEISSER_GREENHOUSE,
+		UNIREP_HUYNH_FELDT,
+		WILKS_LAMBDA,
+		PILLAI_BARTLETT_TRACE,
+		HOTELLING_LAWLEY_TRACE
+	};
+	
+    public static GLMMTest createGLMMTest(Test test, 
+    		FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
+    		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
+    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		RealMatrix beta, RealMatrix sigmaError)
     throws IllegalArgumentException
     {
-        switch (params.getCurrentTest())
+        switch (test)
         {
         case UNIREP:
-            return new GLMMTestUnivariateRepeatedMeasures(params);
+            return new GLMMTestUnivariateRepeatedMeasures(fMethod, cdfMethod,
+            		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
+            		beta, sigmaError);
         case UNIREP_BOX:
-            return new GLMMTestUnirepBox(params);
+            return new GLMMTestUnirepBox(fMethod, cdfMethod,
+            		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
+            		beta, sigmaError);
         case UNIREP_GEISSER_GREENHOUSE:
-            return new GLMMTestUnirepGeisserGreenhouse(params);
+            return new GLMMTestUnirepGeisserGreenhouse(fMethod, cdfMethod,
+            		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
+            		beta, sigmaError);
         case UNIREP_HUYNH_FELDT:
-            return new GLMMTestUnirepHuynhFeldt(params);
+            return new GLMMTestUnirepHuynhFeldt(fMethod, cdfMethod,
+            		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
+            		beta, sigmaError);
         case WILKS_LAMBDA:
-            return new GLMMTestWilksLambda(params);
+            return new GLMMTestWilksLambda(fMethod, 
+            		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
+            		beta, sigmaError);
         case HOTELLING_LAWLEY_TRACE:
-            return new GLMMTestHotellingLawley(params);
+            return new GLMMTestHotellingLawley(fMethod, 
+            		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
+            		beta, sigmaError);
         case PILLAI_BARTLETT_TRACE:
-            return new GLMMTestPillaiBartlett(params);
+            return new GLMMTestPillaiBartlett(fMethod, 
+            		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
+            		beta, sigmaError);
         default:
             throw new IllegalArgumentException("Unknown GLMM test statistic");
         }
     }
+    
+    
 }

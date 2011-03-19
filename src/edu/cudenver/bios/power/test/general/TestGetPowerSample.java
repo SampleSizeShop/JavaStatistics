@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
+import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
@@ -14,6 +15,7 @@ import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.RandomColumnMetaData;
 import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.GLMMPowerCalculator;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 
@@ -74,7 +76,7 @@ public class TestGetPowerSample extends TestCase
 		params.addQuantile(0.5);
 		
 		// add UNIREP as the statistical test
-		params.addTest(GLMMPowerParameters.Test.UNIREP);
+		params.addTest(Test.UNIREP);
 
 		// add alpha values
 		params.addAlpha(0.05);
@@ -82,22 +84,12 @@ public class TestGetPowerSample extends TestCase
 		int P = 3;
 		int Q = 3;
 		// create design matrix
-		double[][] essFixedData = {{1,0,0},{0,1,0},{0,0,1}};
-		RowMetaData[] rowMd = {
-				new RowMetaData(1), 
-				new RowMetaData(1), 
-				new RowMetaData(1)
-		};
-		double[][] essRandomData = {{1},{1},{1}};
-		RandomColumnMetaData[] randColMd = {new RandomColumnMetaData(MEAN, VARIANCE)};
-		DesignEssenceMatrix essence = new DesignEssenceMatrix(essFixedData, rowMd, 
-				essRandomData, randColMd);
-		params.setDesignEssence(essence);
+		params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(Q));
 		// add sample size multipliers
 		//  for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
 		params.addSampleSize(10);
 		// build sigma G matrix
-		double[][] sigmaG = {{1}};
+		double[][] sigmaG = {{VARIANCE}};
 		params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
 
 		// build sigma Y matrix
