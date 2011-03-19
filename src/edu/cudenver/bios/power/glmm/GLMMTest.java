@@ -109,8 +109,9 @@ public abstract class GLMMTest
         this.sigmaError = sigmaError;
         
         // cache the value of M
-        RealMatrix cxxc = C.multiply((XtXInverse.scalarMultiply(perGroupN)).multiply(C.transpose()));
-        this.M = new LUDecompositionImpl(cxxc).getSolver().getInverse();
+        RealMatrix cxxcEssence = C.multiply((XtXInverse).multiply(C.transpose()));
+        RealMatrix cxxcEssenceInverse = new LUDecompositionImpl(cxxcEssence).getSolver().getInverse();
+        this.M = cxxcEssenceInverse.scalarMultiply(perGroupN);
     }
     
     /**
@@ -120,8 +121,9 @@ public abstract class GLMMTest
     public void setPerGroupSampleSize(int perGroupN)
     {
     	this.totalN = Xessence.getRowDimension() * perGroupN; 
-        RealMatrix cxxc = C.multiply((XtXInverse.scalarMultiply(perGroupN)).multiply(C.transpose()));
-        this.M = new LUDecompositionImpl(cxxc).getSolver().getInverse();
+        RealMatrix cxxcEssence = C.multiply((XtXInverse).multiply(C.transpose()));
+        RealMatrix cxxcEssenceInverse = new LUDecompositionImpl(cxxcEssence).getSolver().getInverse();
+        this.M = cxxcEssenceInverse.scalarMultiply(perGroupN);
     }
     
     /**
@@ -199,9 +201,6 @@ public abstract class GLMMTest
         // thetaHat - thetaNull.  Multiple by negative one to do subtraction
         RealMatrix thetaDiff = thetaHat.subtract(thetaNull);
         
-//        // the middle term [C(X'X)-1C']-1 TODO: cache this?
-//        RealMatrix cxxc = C.multiply(XtXInverse.multiply(C.transpose()));
-//        RealMatrix cxxcInverse = new LUDecompositionImpl(cxxc).getSolver().getInverse();
         // calculate the hypothesis sum of squares: (thetaHat - thetaNull)'[C(X'X)-1C'](thetaHat - thetaNull)
         RealMatrix hss = thetaDiff.transpose().multiply(M.multiply(thetaDiff));
         
