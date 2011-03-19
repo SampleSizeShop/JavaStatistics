@@ -23,8 +23,9 @@ public class RandomErrorMatrix
 
 	public RandomErrorMatrix(int rows, int cols, RealMatrix sigma)
 	{
-		matrix = new Array2DRowRealMatrix(rows, cols);
+		this.matrix = new Array2DRowRealMatrix(rows, cols);
 		this.sigma = sigma;
+		this.normalDist = new Normal();
 	}
 
 	public void setSeed(long seed)
