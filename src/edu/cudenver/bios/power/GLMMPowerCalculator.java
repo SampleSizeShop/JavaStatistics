@@ -475,6 +475,10 @@ public class GLMMPowerCalculator implements PowerCalculator
 	 */
     private void initialize(GLMMPowerParameters params)
     {           	
+    	// if no power methods are specified, add conditional as a default
+    	if (params.getPowerMethodList().size() <= 0)
+    		params.addPowerMethod(PowerMethod.CONDITIONAL_POWER);
+    	
         // update the sigma error if we have a baseline covariate
         RealMatrix sigmaG = params.getSigmaGaussianRandom();
         RealMatrix sigmaY = params.getSigmaOutcome();
@@ -1201,7 +1205,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     				sampleSize), scaledBeta.getColumnDimension(), scaledSigmaError);
     	
     	double power = Double.NaN;
-    	int rejectionCount = 0;
+
     	if (params.getSigmaGaussianRandom() != null && 
     			method != PowerMethod.CONDITIONAL_POWER)
     	{
@@ -1209,6 +1213,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     		
     		for(int gInstance = 0; gInstance < SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL; gInstance++)
     		{
+    	    	int rejectionCount = 0;
     			// force a new realization of the design matrix (i.e. a new covariate column)
         		RealMatrix X = MatrixUtils.getFullDesignMatrix(params.getDesignEssence(), 
         				params.getSigmaGaussianRandom(), sampleSize);
@@ -1238,6 +1243,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     		// GLMM(F) design, conditional power
     		// run the simulations
     		RealMatrix X = MatrixUtils.getFullDesignMatrix(params.getDesignEssence(), sampleSize);
+        	int rejectionCount = 0;
     		for(int i = 0; i < iterations; i++)
     		{
 				SimulationFit fit = 
