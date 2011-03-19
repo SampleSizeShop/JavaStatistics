@@ -32,6 +32,8 @@ import org.apache.commons.math.linear.RealMatrix;
  */
 public abstract class GLMMTest
 {    
+	// cutoff for noncentrality parameters to avoid very small negative numbers
+	protected static final double TOLERANCE = 0.0000000000001;
 	// type of approximation to use for unirep
 	public enum UnivariateCdfApproximation
 	{

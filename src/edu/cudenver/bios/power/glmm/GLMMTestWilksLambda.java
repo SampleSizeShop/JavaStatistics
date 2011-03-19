@@ -122,16 +122,18 @@ public class GLMMTestWilksLambda extends GLMMTest
             adjustedW = Math.pow(W, 1/g);
         }
         
-        
+        double omega;
         if ((s == 1 && p > 1) ||
                 fMethod == FApproximation.RAO_TWO_MOMENT_OMEGA_MULT)
         {
-            return totalN * g * (1 - adjustedW) / adjustedW;
+            omega = totalN * g * (1 - adjustedW) / adjustedW;
         }
         else
         {
-            return getDenominatorDF(type) * (1 - adjustedW) / adjustedW;
+            omega = getDenominatorDF(type) * (1 - adjustedW) / adjustedW;
         }
+        if (Math.abs(omega) < TOLERANCE) omega = 0;
+        return Math.abs(omega);
     }
 
     /**
