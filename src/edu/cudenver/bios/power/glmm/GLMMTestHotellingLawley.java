@@ -46,6 +46,18 @@ public class GLMMTestHotellingLawley extends GLMMTest
         		C, U, thetaNull, beta, sigmaError);
     }
     
+	/**
+	 * Create a Hotelling-Lawley Trace test object for data analysis.  Used for
+	 * simulation.
+	 * @param params GLMM input parameters
+	 */
+    public GLMMTestHotellingLawley(FApproximation fMethod,
+    		RealMatrix X, RealMatrix XtXInverse, int rank, RealMatrix Y,
+    		RealMatrix C, RealMatrix U, RealMatrix thetaNull)
+    {
+        super(fMethod, null, X, XtXInverse, rank, Y, C, U, thetaNull);
+    }
+    
     /**
      * Calculate the denominator degrees of freedom for the HLT, based on
      * whether the null or alternative hypothesis is assumed true.  

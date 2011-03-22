@@ -24,6 +24,8 @@ import org.apache.commons.math.linear.InvalidMatrixException;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 
+import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
+
 /**
  * Implementation of the Pillai Bartlett Trace (PBT) test for the
  * general linear multivariate model
@@ -45,6 +47,18 @@ public class GLMMTestPillaiBartlett extends GLMMTest
         super(fMethod, null, Xessence, XtXInverse, perGroupN, rank,
         		C, U, thetaNull, beta, sigmaError);
     }   
+    
+	/**
+	 * Create a Pillai-Bartlett Trace test object for data analysis.  Used for
+	 * simulation.
+	 * @param params GLMM input parameters
+	 */
+    public GLMMTestPillaiBartlett(FApproximation fMethod,
+    		RealMatrix X, RealMatrix XtXInverse, int rank, RealMatrix Y,
+    		RealMatrix C, RealMatrix U, RealMatrix thetaNull)
+    {
+        super(fMethod, null, X, XtXInverse, rank, Y, C, U, thetaNull);
+    }
     
     /**
      * Calculate the denominator degrees of freedom for the PBT, based on

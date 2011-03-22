@@ -68,6 +68,31 @@ public abstract class GLMMTest
     	POWER_ALTERNATIVE    	
     };
     
+    /**
+     * container class for model fit
+     */
+    public class ModelFit
+    {
+    	public RealMatrix sigma;
+    	public RealMatrix beta;
+    	public double numeratorDF;
+    	public double denominatorDF;
+    	public double Fvalue;
+    	public double Pvalue;
+    	
+    	public ModelFit(double Pvalue, double Fvalue, 
+    			double numeratorDF, double denominatorDF,
+    			RealMatrix sigma, RealMatrix beta)
+    	{
+        	this.sigma = sigma;
+        	this.beta = beta;
+        	this.Pvalue = Pvalue;
+        	this.Fvalue = Fvalue;
+        	this.numeratorDF = numeratorDF;
+        	this.denominatorDF = denominatorDF;
+    	}
+    }
+    
     // approximation information
     protected FApproximation fMethod;
     protected UnivariateCdfApproximation cdfMethod;
@@ -90,7 +115,7 @@ public abstract class GLMMTest
     protected RealMatrix M = null;
     
     /**
-     * Create a statistical test for the given set of GLMM parameters
+     * Create a statistical test for to compute power
      * @param params GLMM input parameters
      */
     public GLMMTest(FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
@@ -117,6 +142,46 @@ public abstract class GLMMTest
     }
     
     /**
+     * Create a test to perform data analysis
+     * @param fMethod
+     * @param cdfMethod
+     * @param X
+     * @param XtXInverse
+     * @param rank
+     * @param Y
+     * @param C
+     * @param U
+     * @param thetaNull
+     */
+    public GLMMTest(FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
+    		RealMatrix X, RealMatrix XtXInverse, int rank, RealMatrix Y,
+    		RealMatrix C, RealMatrix U, RealMatrix thetaNull)
+    {
+        this.fMethod = fMethod;
+        this.cdfMethod = cdfMethod;
+        this.Xessence = null;
+        this.XtXInverse =  XtXInverse;
+        if (this.XtXInverse == null)
+        {
+        	this.XtXInverse = 
+            	new LUDecompositionImpl(X.transpose().multiply(X)).getSolver().getInverse();
+        }
+        this.totalN =  X.getRowDimension(); 
+        this.rank = rank; 
+        this.C = C; 
+        this.U =  U; 
+        this.thetaNull =  thetaNull; 
+        this.beta =  XtXInverse.multiply(X.transpose()).multiply(Y);
+        RealMatrix YHat = X.multiply(this.beta);
+        RealMatrix Ydiff = Y.subtract(YHat);
+        this.sigmaError = (Ydiff.transpose().multiply(Ydiff)).scalarMultiply(((double) 1/(totalN - rank)));
+           
+        // cache the value of M
+        RealMatrix cxxcEssence = C.multiply((XtXInverse).multiply(C.transpose()));
+        M = new LUDecompositionImpl(cxxcEssence).getSolver().getInverse();
+    }
+    
+    /**
      * Reset the total sample size for this test
      * @param totalN total sample size
      */
@@ -135,6 +200,25 @@ public abstract class GLMMTest
     public void setBeta(RealMatrix beta)
     {
     	this.beta = beta;
+    }
+    
+    /**
+     * Fit the model
+     * @return model fit object 
+     */
+    public ModelFit getModelFit()
+    {
+        double fobs = getObservedF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
+
+        // get the p-value from a central F distribution
+        double ndf = getNumeratorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
+        double ddf = getDenominatorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
+        
+        FishersF fdist = new FishersF(ndf, ddf);
+        double pvalue = 1 - fdist.cdf(fobs);
+        
+       	return new ModelFit(pvalue, fobs, ndf, ddf,
+    			sigmaError, beta);
     }
     
     /**

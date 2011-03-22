@@ -46,11 +46,45 @@ public class GLMMTestFactory
 		HOTELLING_LAWLEY_TRACE
 	};
 	
-    public static GLMMTest createGLMMTest(Test test, 
+	public static GLMMTest createGLMMTestForDataAnalysis(Test test,
+			FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
+			RealMatrix X, RealMatrix XtXinverse, int rank, 
+			RealMatrix Y, RealMatrix C, RealMatrix U, RealMatrix thetaNull)
+	{
+        switch (test)
+        {
+        case UNIREP:
+            return new GLMMTestUnivariateRepeatedMeasures(fMethod, cdfMethod,
+            		X, XtXinverse, rank, Y, C, U, thetaNull);
+        case UNIREP_BOX:
+            return new GLMMTestUnirepBox(fMethod, cdfMethod,
+            		X, XtXinverse, rank, Y, C, U, thetaNull);
+        case UNIREP_GEISSER_GREENHOUSE:
+            return new GLMMTestUnirepGeisserGreenhouse(fMethod, cdfMethod,
+            		X, XtXinverse, rank, Y, C, U, thetaNull);
+        case UNIREP_HUYNH_FELDT:
+            return new GLMMTestUnirepHuynhFeldt(fMethod, cdfMethod,
+            		X, XtXinverse, rank, Y, C, U, thetaNull);
+        case WILKS_LAMBDA:
+            return new GLMMTestWilksLambda(fMethod, 
+            		X, XtXinverse, rank, Y, C, U, thetaNull);
+        case HOTELLING_LAWLEY_TRACE:
+            return new GLMMTestHotellingLawley(fMethod, 
+            		X, XtXinverse, rank, Y, C, U, thetaNull);
+        case PILLAI_BARTLETT_TRACE:
+            return new GLMMTestPillaiBartlett(fMethod, 
+            		X, XtXinverse, rank, Y, C, U, thetaNull);
+        default:
+            throw new IllegalArgumentException("Unknown GLMM test statistic");
+        }
+    }	
+	
+	
+    public static GLMMTest createGLMMTestForPower(Test test, 
     		FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
-    		RealMatrix beta, RealMatrix sigmaError)
+    		RealMatrix beta, RealMatrix sigmaError, int nuForEstimatedSigma)
     throws IllegalArgumentException
     {
         switch (test)
@@ -58,19 +92,19 @@ public class GLMMTestFactory
         case UNIREP:
             return new GLMMTestUnivariateRepeatedMeasures(fMethod, cdfMethod,
             		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
-            		beta, sigmaError);
+            		beta, sigmaError, nuForEstimatedSigma);
         case UNIREP_BOX:
             return new GLMMTestUnirepBox(fMethod, cdfMethod,
             		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
-            		beta, sigmaError);
+            		beta, sigmaError, nuForEstimatedSigma);
         case UNIREP_GEISSER_GREENHOUSE:
             return new GLMMTestUnirepGeisserGreenhouse(fMethod, cdfMethod,
             		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
-            		beta, sigmaError);
+            		beta, sigmaError, nuForEstimatedSigma);
         case UNIREP_HUYNH_FELDT:
             return new GLMMTestUnirepHuynhFeldt(fMethod, cdfMethod,
             		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
-            		beta, sigmaError);
+            		beta, sigmaError, nuForEstimatedSigma);
         case WILKS_LAMBDA:
             return new GLMMTestWilksLambda(fMethod, 
             		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 

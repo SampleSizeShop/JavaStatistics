@@ -23,6 +23,9 @@ package edu.cudenver.bios.power.glmm;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 
+import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
+import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
+
 /**
  * Implementation of the univariate approach to repeated measures test 
  * with Box correction (UNIREP-Box) for the general linear multivariate model. 
@@ -43,11 +46,23 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
     		UnivariateCdfApproximation cdfMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
-    		RealMatrix beta, RealMatrix sigmaError)
+    		RealMatrix beta, RealMatrix sigmaError, int nuForEstimatedSigma)
     {
         // unirep base class will calculate epsilon for box correction
         super(fMethod, cdfMethod, Xessence, XtXInverse, perGroupN, rank,
-        		C, U, thetaNull, beta, sigmaError);
+        		C, U, thetaNull, beta, sigmaError, nuForEstimatedSigma);
+    }
+    
+	/**
+	 * Create a UNIREP test object for data analysis
+	 * @param params GLMM input parameters
+	 */
+    public GLMMTestUnirepBox(FApproximation fMethod, 
+    		UnivariateCdfApproximation cdfMethod,
+    		RealMatrix X, RealMatrix XtXInverse, int rank, RealMatrix Y,
+    		RealMatrix C, RealMatrix U, RealMatrix thetaNull)
+    {
+        super(fMethod, cdfMethod, X, XtXInverse, rank, Y,  C, U, thetaNull);
     }
     
     /**

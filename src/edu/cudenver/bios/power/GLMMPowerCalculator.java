@@ -44,6 +44,7 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.PowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
+import edu.cudenver.bios.power.glmm.GLMMTest.ModelFit;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval;
 import edu.cudenver.bios.power.glmm.GLMMTest;
@@ -713,7 +714,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 
     	RealMatrix scaledBeta = params.getBeta().scalarMultiply(betaScale, true);
     	RealMatrix scaledSigmaError = params.getSigmaError().scalarMultiply(sigmaScale);
-    	GLMMTest glmmTest = GLMMTestFactory.createGLMMTest(test, 
+    	GLMMTest glmmTest = GLMMTestFactory.createGLMMTestForPower(test, 
 				params.getFApproximationMethod(test),
 				params.getUnivariateCdfMethod(test), 
 				params.getDesignEssence(), 
@@ -723,7 +724,9 @@ public class GLMMPowerCalculator implements PowerCalculator
 				params.getBetweenSubjectContrast().getCombinedMatrix(), 
 				params.getWithinSubjectContrast(), 
 				params.getTheta(), 
-				scaledBeta, scaledSigmaError);
+				scaledBeta, scaledSigmaError,
+				(params.getConfidenceIntervalType() != ConfidenceIntervalType.NONE ? 
+						params.getSampleSizeForEstimates() - params.getDesignMatrixRankForEstimates(): 0));
 
     	NonCentralityDistribution nonCentralityDist = null;
     	if (method != PowerMethod.CONDITIONAL_POWER)
@@ -804,7 +807,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     {
     	RealMatrix scaledBeta = params.getBeta().scalarMultiply(STARTING_BETA_SCALE, true);
     	RealMatrix scaledSigmaError = params.getSigmaError().scalarMultiply(sigmaScale);
-    	GLMMTest glmmTest = GLMMTestFactory.createGLMMTest(test, 
+    	GLMMTest glmmTest = GLMMTestFactory.createGLMMTestForPower(test, 
 				params.getFApproximationMethod(test),
 				params.getUnivariateCdfMethod(test), 
 				params.getDesignEssence(), 
@@ -814,7 +817,9 @@ public class GLMMPowerCalculator implements PowerCalculator
 				params.getBetweenSubjectContrast().getCombinedMatrix(), 
 				params.getWithinSubjectContrast(), 
 				params.getTheta(), 
-				scaledBeta, scaledSigmaError);
+				scaledBeta, scaledSigmaError,
+				(params.getConfidenceIntervalType() != ConfidenceIntervalType.NONE ? 
+						params.getSampleSizeForEstimates() - params.getDesignMatrixRankForEstimates(): 0));
 
     	NonCentralityDistribution nonCentralityDist = null;
     	if (method != PowerMethod.CONDITIONAL_POWER)
@@ -973,48 +978,27 @@ public class GLMMPowerCalculator implements PowerCalculator
 			RandomErrorMatrix randomErrors, 
 			int perGroupSampleSize, double alpha)
     {
+    	// get a new set of errors
 		RealMatrix error = randomErrors.random();
 		int N = X.getRowDimension();
 		int rank = params.getDesignRank();
 		
 		// calculate simulated Y based on Y = X beta + error
-		RealMatrix Ysim = (X.multiply(scaledBeta)).add(error);
-		// calculate beta-Hat
-		if (XtXinverse == null)
-		{
-			XtXinverse = params.getXtXInverse();
-		}
-		RealMatrix betaHat = XtXinverse.multiply(X.transpose()).multiply(Ysim);
-		// calculate Y-hat
-		RealMatrix YHat = (X.multiply(betaHat));
-		// calculate sigma-Hat
-		RealMatrix Ydiff = Ysim.subtract(YHat);
-		RealMatrix sigmaHat = (Ydiff.transpose().multiply(Ydiff)).scalarMultiply(((double) 1/(N - rank)));    
+		RealMatrix Ysim = (X.multiply(scaledBeta)).add(error);  
 
 		// build a test object for the simulated matrices
-    	GLMMTest glmmTest = GLMMTestFactory.createGLMMTest(test, 
+    	GLMMTest glmmTest = GLMMTestFactory.createGLMMTestForDataAnalysis(test, 
 				params.getFApproximationMethod(test),
 				params.getUnivariateCdfMethod(test), 
-				params.getDesignEssence(), 
-				XtXinverse, 
-				perGroupSampleSize,
-				params.getDesignRank(), 
+				X, XtXinverse, params.getDesignRank(), Ysim, 
 				params.getBetweenSubjectContrast().getCombinedMatrix(), 
 				params.getWithinSubjectContrast(), 
-				params.getTheta(), 
-				betaHat, sigmaHat);
-		// calculate the observed F for the simulation
-		double fobs = glmmTest.getObservedF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
-
-		// get the p-value from a central F distribution
-		double ndf = glmmTest.getNumeratorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
-		double ddf = glmmTest.getDenominatorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
-
-		FishersF fdist = new FishersF(ndf, ddf);
-		double pvalue = 1 - fdist.cdf(fobs);
+				params.getTheta());
+    	ModelFit fit = glmmTest.getModelFit();
 		
 		// return the fit information for the simulated matrices
-		return new SimulationFit(pvalue, fobs, ndf, ddf, Ysim, YHat, sigmaHat, betaHat);
+		return new SimulationFit(fit.Pvalue, fit.Fvalue, fit.numeratorDF, 
+				fit.denominatorDF, Ysim, X.multiply(fit.beta), fit.sigma, fit.beta);
     }
     
     /**
@@ -1131,7 +1115,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     {
     	RealMatrix scaledBeta = params.getBeta().scalarMultiply(betaScale, true);
     	RealMatrix scaledSigmaError = params.getSigmaError().scalarMultiply(sigmaScale);
-    	GLMMTest glmmTest = GLMMTestFactory.createGLMMTest(test, 
+    	GLMMTest glmmTest = GLMMTestFactory.createGLMMTestForPower(test, 
 				params.getFApproximationMethod(test),
 				params.getUnivariateCdfMethod(test), 
 				params.getDesignEssence(), 
@@ -1141,7 +1125,9 @@ public class GLMMPowerCalculator implements PowerCalculator
 				params.getBetweenSubjectContrast().getCombinedMatrix(), 
 				params.getWithinSubjectContrast(), 
 				params.getTheta(), 
-				scaledBeta, scaledSigmaError);
+				scaledBeta, scaledSigmaError,
+				(params.getConfidenceIntervalType() != ConfidenceIntervalType.NONE ? 
+						params.getSampleSizeForEstimates() - params.getDesignMatrixRankForEstimates(): 0));
 
     	NonCentralityDistribution nonCentralityDist = null;
     	if (method != PowerMethod.CONDITIONAL_POWER)
