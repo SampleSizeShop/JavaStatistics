@@ -334,6 +334,9 @@ public class GLMMPowerParameters extends PowerParameters
 	public void setDesignEssence(RealMatrix designEssence)
 	{
 		this.designEssence = designEssence;
+		designRank = new SingularValueDecompositionImpl(designEssence).getRank();
+		XtXInverse = 
+        	new LUDecompositionImpl(this.designEssence.transpose().multiply(this.designEssence)).getSolver().getInverse();
 	}
 
 	/**
