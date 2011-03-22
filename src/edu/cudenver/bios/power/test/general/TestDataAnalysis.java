@@ -31,9 +31,20 @@ import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.matrix.RowMetaData;
+import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
 import edu.cudenver.bios.power.glmm.GLMMTest;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory;
+import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
+import edu.cudenver.bios.power.glmm.GLMMTest.ModelFit;
+import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
+import edu.cudenver.bios.power.glmm.GLMMTestHotellingLawley;
+import edu.cudenver.bios.power.glmm.GLMMTestPillaiBartlett;
+import edu.cudenver.bios.power.glmm.GLMMTestUnirepBox;
+import edu.cudenver.bios.power.glmm.GLMMTestUnirepGeisserGreenhouse;
+import edu.cudenver.bios.power.glmm.GLMMTestUnirepHuynhFeldt;
+import edu.cudenver.bios.power.glmm.GLMMTestUnivariateRepeatedMeasures;
+import edu.cudenver.bios.power.glmm.GLMMTestWilksLambda;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import jsc.distributions.FishersF;
 import jsc.distributions.Normal;
@@ -61,335 +72,188 @@ public class TestDataAnalysis extends TestCase
     private Normal normalDist = new Normal();
     private DecimalFormat number = new DecimalFormat("#0.000");
     
-    private double[][] univariateErrorData = {
-    	{ 2.67 },
-    	{ 0.97 },
-    	{0.55},
-    	{1.57},
-    	{-0.12},
-    	{-1.02},
-    	{0.94},
-    	{-1.25},
-    	{0.94},
-    	{-0.08},
-    	{0.09},
-    	{0.78},
-    	{-0.30},
-    	{-0.59},
-    	{-0.53},
-    	{0.20},
-    	{2.89},
-    	{-1.04},
-    	{2.05},
-    	{-1.08}
-    };
-    private Array2DRowRealMatrix univariateErrorMatrix = new Array2DRowRealMatrix(univariateErrorData);
-    
-    private double[][] multivariateErrorData = {
-    		{-1.56,-0.88, 0.58},
-    		 {2.03, -1.88, -0.16},
-    		 {0.19, -0.07,  0.67},
-    		 {0.83, -0.22,  0.63},
-    		 {-1.40, -1.47,  1.71},
-    		 {0.07, -0.53, -0.09},
-    		 {-0.20, -0.87,  0.06},
-    		 {0.27, -1.12, -1.42},
-    		 {-0.01,  0.08, -0.38},
-    		{1.66, -0.53, -0.75},
-    		{0.25,  1.73,  0.08},
-    		{-1.05,  0.61, -0.15},
-    		{2.01, -0.54, -1.34},
-    		{-1.06,  0.16,  1.88},
-    		{-1.43,  2.18, -0.39},
-    		{-0.75, -0.19, -1.46},
-    		{-1.08, -0.91,  0.80},
-    		{-1.16, -1.68,  0.61},
-    		{1.67,  1.00,  0.55},
-    		{-0.47, -0.07,  0.14}
-        };
-        private Array2DRowRealMatrix multivariateErrorMatrix = new Array2DRowRealMatrix(multivariateErrorData);
-    
-    
-    private class FitResult {
-    	public double ndf;
-    	public double ddf;
-    	public double fCrit;
-    	public double pValue;
+    // design matrix for multivariate tests
+    private RealMatrix essenceMultivariate = 
+    	org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(4);
+    private RealMatrix XMultivariate = MatrixUtils.KroneckerProduct(essenceMultivariate, 
+    		MatrixUtils.createRealMatrixWithFilledValue(5, 1, 1));
+	private int rankXMultivariate = new SingularValueDecompositionImpl(essenceMultivariate).getRank();
+	private RealMatrix XtXInverseMultivariate = 
+    	new LUDecompositionImpl(XMultivariate.transpose().multiply(XMultivariate)).getSolver().getInverse();
     	
-    	public FitResult(double ndf, double ddf, double fCrit, double pValue)
-    	{
-    		this.ndf = ndf;
-    		this.ddf = ddf;
-    		this.fCrit = fCrit;
-    		this.pValue = pValue;
-    	}
-    };  
+	// design matrix for univariate tests
+    private RealMatrix essenceUnivariate = 
+    	org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(2);
+    private RealMatrix XUnivariate = MatrixUtils.KroneckerProduct(essenceUnivariate, 
+    		MatrixUtils.createRealMatrixWithFilledValue(10, 1, 1));
+	private int rankXUnivariate = new SingularValueDecompositionImpl(essenceUnivariate).getRank();
+	private RealMatrix XtXInverseUnivariate = 
+    	new LUDecompositionImpl(XUnivariate.transpose().multiply(XUnivariate)).getSolver().getInverse();
+
+	// contrasts - univariate
+    double [][] betweenUnivariate = {{1,-1}};
+    RealMatrix CUnivariate = new Array2DRowRealMatrix(betweenUnivariate);
+    RealMatrix UUnivariate = MatrixUtils.createRealMatrixWithFilledValue(1, 1, 1);
+    RealMatrix ThetaNullUnivariate = MatrixUtils.createRealMatrixWithFilledValue(1, 1, 0);
+	// contrasts - multivariate
+    double [][] betweenMultivariate = {{1,-1,0,0},{1,0,-1,0},{1,0,0,-1}};
+    RealMatrix CMultivariate = new Array2DRowRealMatrix(betweenMultivariate);
+    double [][] withinMultivariate = {{1,1},{-1,0},{0,-1}};
+    RealMatrix UMultivariate = new Array2DRowRealMatrix(withinMultivariate);
+    RealMatrix ThetaNullMultivariate = MatrixUtils.createRealMatrixWithFilledValue(3, 2, 0);
     
-	private void testUnirep()
+    // univariate Y data
+    double[] YUnivariateData =
+    {
+    		2.67,
+    		0.97,
+    		0.55,
+    		1.57,
+    		-0.12,
+    		-1.02,
+    		0.94,
+    		-1.25,
+    		0.94,
+    		-0.08,
+    		2.09,
+    		2.7800000000000002,
+    		1.7,
+    		1.4100000000000001,
+    		1.47,
+    		2.2,
+    		4.890000000000001,
+    		0.96,
+    		4.05,
+    		0.9199999999999999
+    };
+    private RealMatrix YUnivariate = new Array2DRowRealMatrix(YUnivariateData);
+    
+    // multivariate Y data
+    double[][] YMultivariateData = 
+    {
+    		{0.43999999999999995, -0.88, 0.58},
+    		{4.029999999999999, -1.88, -0.16},
+    		{2.19, -0.07, 0.67},
+    		{2.83, -0.22, 0.63},
+    		{0.6000000000000001, -1.47, 1.71},
+    		{0.07, -0.53, -0.09},
+    		{-0.2, -0.87, 0.06},
+    		{0.27, -1.12, -1.42},
+    		{-0.01, 0.08, -0.38},
+    		{1.66, -0.53, -0.75},
+    		{0.25, 1.73, 0.08},
+    		{-1.05, 0.61, -0.15},
+    		{2.01, -0.54, -1.34},
+    		{-1.06, 0.16, 1.88},
+    		{-1.43, 2.18, -0.39},
+    		{-0.75, -0.19, -1.46},
+    		{-1.08, -0.91, 0.8},
+    		{-1.16, -1.68, 0.61},
+    		{1.67, 1.0, 0.55},
+    		{-0.47, -0.07, 0.14}
+    };
+    private RealMatrix YMultivariate = new Array2DRowRealMatrix(YMultivariateData);
+    
+	public void testUnirep()
 	{
-		GLMMPowerParameters params = buildUnivariateInputs();
-		params.addTest(Test.UNIREP);
-		FitResult result = fitModel(params, univariateErrorMatrix);
+		GLMMTest unirepTest = new GLMMTestUnivariateRepeatedMeasures(
+				FApproximation.NONE, 
+				UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX,
+				XUnivariate, XtXInverseUnivariate, rankXUnivariate, YUnivariate,
+		CUnivariate, UUnivariate, ThetaNullUnivariate);
 
-		
+		ModelFit fit = unirepTest.getModelFit();
+		checkFit(Test.UNIREP, fit);		
 	}
 	
-	private void testBox()
+	public void testBox()
 	{
-		GLMMPowerParameters params = buildUnivariateInputs();
-		params.addTest(Test.UNIREP_BOX);
-		FitResult result = fitModel(params, univariateErrorMatrix);
+		GLMMTest unirepBoxTest = new GLMMTestUnirepBox(
+				FApproximation.NONE, 
+				UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX,
+				XUnivariate, XtXInverseUnivariate, rankXUnivariate, YUnivariate,
+		CUnivariate, UUnivariate, ThetaNullUnivariate);
+
+		ModelFit fit = unirepBoxTest.getModelFit();
+		checkFit(Test.UNIREP_BOX, fit);		
 
 	}
 	
-	private void testGeisserGreenhouse()
+	public void testGeisserGreenhouse()
 	{
-		GLMMPowerParameters params = buildUnivariateInputs();
-		params.addTest(Test.UNIREP_GEISSER_GREENHOUSE);
-		FitResult result = fitModel(params, univariateErrorMatrix);
+		GLMMTest unirepGGTest = new GLMMTestUnirepGeisserGreenhouse(
+				FApproximation.NONE, 
+				UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX,
+				XUnivariate, XtXInverseUnivariate, rankXUnivariate, YUnivariate,
+		CUnivariate, UUnivariate, ThetaNullUnivariate);
+
+		ModelFit fit = unirepGGTest.getModelFit();
+		checkFit(Test.UNIREP_GEISSER_GREENHOUSE, fit);		
 		
 	}
 	
-	private void testHuynhFeldt()
+	public void testHuynhFeldt()
 	{
-		GLMMPowerParameters params = buildUnivariateInputs();
-		params.addTest(Test.UNIREP_HUYNH_FELDT);
-		FitResult result = fitModel(params, univariateErrorMatrix);
-		
+		GLMMTest unirepHFTest = new GLMMTestUnirepHuynhFeldt(
+				FApproximation.NONE, 
+				UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX,
+				XUnivariate, XtXInverseUnivariate, rankXUnivariate, YUnivariate,
+		CUnivariate, UUnivariate, ThetaNullUnivariate);
+
+		ModelFit fit = unirepHFTest.getModelFit();
+		checkFit(Test.UNIREP_HUYNH_FELDT, fit);				
 	}
 	
 	public void testWilksLambda()
 	{
-//		GLMMPowerParameters paramsUni = buildUnivariateInputs();
-//		
-//		paramsUni.addTest(Test.WILKS_LAMBDA);
-//		FitResult resultUni = fitModel(paramsUni, univariateErrorMatrix);
-		
-		GLMMPowerParameters params = buildMultivariateInputs();
-		
-		params.addTest(Test.WILKS_LAMBDA);
-		FitResult result = fitModel(params, multivariateErrorMatrix);
+		GLMMTest wilksTest = new GLMMTestWilksLambda(
+				FApproximation.NONE, 
+				XMultivariate, XtXInverseMultivariate, rankXMultivariate, YMultivariate,
+		CMultivariate, UMultivariate, ThetaNullMultivariate);
 
+		ModelFit fit = wilksTest.getModelFit();
+		checkFit(Test.WILKS_LAMBDA, fit);		
 	}
 	
 	public void testPillaiBartlett()
 	{
-		
-		GLMMPowerParameters params = buildMultivariateInputs();
-		
-		params.addTest(Test.PILLAI_BARTLETT_TRACE);
-		FitResult result = fitModel(params, multivariateErrorMatrix);
+		GLMMTest pillaiTest = new GLMMTestPillaiBartlett(
+				FApproximation.NONE, 
+				XMultivariate, XtXInverseMultivariate, rankXMultivariate, YMultivariate,
+		CMultivariate, UMultivariate, ThetaNullMultivariate);
 
+		ModelFit fit = pillaiTest.getModelFit();
+		checkFit(Test.PILLAI_BARTLETT_TRACE, fit);		
 	}
 	
 	public void testHotellingLawley()
 	{
-		GLMMPowerParameters params = buildMultivariateInputs();
-		
-		params.addTest(Test.HOTELLING_LAWLEY_TRACE);
-		FitResult result = fitModel(params, multivariateErrorMatrix);
+		GLMMTest hltTest = new GLMMTestHotellingLawley(
+				FApproximation.NONE, 
+				XMultivariate, XtXInverseMultivariate, rankXMultivariate, YMultivariate,
+		CMultivariate, UMultivariate, ThetaNullMultivariate);
 
+		ModelFit fit = hltTest.getModelFit();
+		checkFit(Test.HOTELLING_LAWLEY_TRACE, fit);		
 	}
 	
-    /**
-     * Builds matrices for a univariate GLM with fixed predictors
-     */
-    private GLMMPowerParameters buildUnivariateInputs()
-    {
-        GLMMPowerParameters params = new GLMMPowerParameters();
-       
-        // add tests
-        for(Test test: Test.values()) 
-        {
-            params.addTest(test);
-        }
-        
-        // add alpha values
-        for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
-
-        // build beta matrix
-        double [][] beta = {{0},{1}};
-        params.setBeta(new FixedRandomMatrix(beta, null, false));
-        // add beta scale values
-        for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
-        
-        // build theta null matrix
-        double [][] theta0 = {{0}};
-        params.setTheta(new Array2DRowRealMatrix(theta0));
-        
-        // build sigma matrix
-        double [][] sigma = {{1}};
-        params.setSigmaError(new Array2DRowRealMatrix(sigma));
-        // add sigma scale values
-        for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
-        
-        // build design matrix
-        double[][] essenceData = {{1,0},{0,1}};
-        params.setDesignEssence(new Array2DRowRealMatrix(essenceData));
-        // add sample size multipliers
-        for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
-        
-        // build between subject contrast
-        double [][] between = {{1,-1}};
-        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
-
-        return params;     
-    }   
-
-    /**
-     * Builds matrices for a multivariate GLM with fixed predictors
-     */
-    private GLMMPowerParameters buildMultivariateInputs()
-    {
-        GLMMPowerParameters params = new GLMMPowerParameters();
-     
-        // add tests
-//        for(GLMMPowerParameters.Test test: GLMMPowerParameters.Test.values()) 
-//        {
-//            params.addTest(test);
-//        }
-        params.addTest(Test.WILKS_LAMBDA);
-        params.addTest(Test.PILLAI_BARTLETT_TRACE);
-        params.addTest(Test.HOTELLING_LAWLEY_TRACE);
-
-        // add alpha values
-        for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
-
-        int Q = 4;
-        // create design matrix
-        RealMatrix essenceMatrix = 
-        	org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(Q);
-        params.setDesignEssence(essenceMatrix);
-
-        // add sample size multipliers
-        for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
-        
-        // build sigma matrix
-        double rho = 0.4;
-        double [][] sigma = {{1,rho,rho},{rho,1,rho},{rho,rho,1}}; // compound symmetry
-        // double [][] sigma = {{1,0.2,0.3},{0.2,1,0.2},{0.3,0.2,1}}; // toeplitz
-        params.setSigmaError(new Array2DRowRealMatrix(sigma));
-        // add sigma scale values
-        for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
-        
-        // build beta matrix
-        double [][] beta = {{1,0,0},{0,0,0},{0,0,0},{0,0,0}};
-        params.setBeta(new FixedRandomMatrix(beta, null,  false));
-        // add beta scale values
-        for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
-        
-        // build theta null matrix
-        double [][] theta0 = {{0,0},{0,0},{0,0}};
-        params.setTheta(new Array2DRowRealMatrix(theta0));
-
-        // build between subject contrast
-        double [][] between = {{1,-1,0,0},{1,0,-1,0},{1,0,0,-1}};
-        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
-
-        // build within subject contrast
-        double [][] within = {{1,1},{-1,0},{0,-1}};
-        params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
-
-        //RealMatrix U = params.getWithinSubjectContrast();
-        //RealMatrix upu = U.multiply(U.transpose());
-        
-        return params;     
-    }   
-	
-    private FitResult fitModel(GLMMPowerParameters params, RealMatrix error)
-    {
-    	double alpha = params.getAlphaList().get(0);
-    	double betaScale = params.getBetaScaleList().get(0);
-    	double sigmaScale = params.getSigmaScaleList().get(0);
-    	int perGroupN = params.getSampleSizeList().get(0);
-    	Test test = params.getTestList().get(0);
-    	
-        RealMatrix scaledBeta = params.getBeta().scalarMultiply(betaScale, true);
-        RealMatrix scaledSigma = params.getSigmaError().scalarMultiply(sigmaScale);
-        RealMatrix X = MatrixUtils.getFullDesignMatrix(params.getDesignEssence(), perGroupN);
-        int N = X.getRowDimension();
-        int rankX = new SingularValueDecompositionImpl(X).getRank();
-        
-        // calculate simulated Y based on Y = X beta + error
-        //RealMatrix Ysim = (X.multiply(scaledBeta)).add(error);
-        double[][] simData = {
-            	{1,2,3},
-            	{1,2,3},
-            	{1,2.7, 3},
-            	{1,1,3},
-            	{1,2, 3},
-            	{1,4, 2},
-            	{1,2, 2},
-            	{1,3.5, 2},
-            	{1,4, 2},
-            	{1,4, 2},
-            	{1,4, 2},
-            	{1,6 ,2}, 
-            	{1,4, 2}, 
-            	{1,5 ,2}, 
-            	{1,4, 2}, 
-            	{-1,0, 2}, 
-            	{-1,0, 1}, 
-            	{-1,0, 2}, 
-            	{-1.2, 0, 1.5}, 
-            	{-1,0, 2}
-            };
-        RealMatrix Ysim = new Array2DRowRealMatrix(simData);
-        
-//        for(int r = 0; r < Ysim.getRowDimension(); r++)
-//        {
-//        	for (int c = 0; c < Ysim.getColumnDimension(); c++)
-//        	{
-//        		System.out.print(Ysim.getEntry(r, c) + " ");
-//        	}
-//        	System.out.print("\n");
-//        }
-        // calculate beta-Hat
-        RealMatrix XtX = X.transpose().multiply(X);
-        RealMatrix XtXInverse = new LUDecompositionImpl(XtX).getSolver().getInverse();
-        RealMatrix betaHat = XtXInverse.multiply(X.transpose()).multiply(Ysim);
-//      for(int r = 0; r < betaHat.getRowDimension(); r++)
-//      {
-//      	for (int c = 0; c < betaHat.getColumnDimension(); c++)
-//      	{
-//      		System.out.print(betaHat.getEntry(r, c) + " ");
-//      	}
-//      	System.out.print("\n");
-//      }
-        // calculate Y-hat
-        RealMatrix YHat = (X.multiply(betaHat));
-        // calculate sigma-Hat
-        RealMatrix Ydiff = Ysim.subtract(YHat);
-        RealMatrix sigmaHat = (Ydiff.transpose().multiply(Ydiff)).scalarMultiply(((double) 1/(double)(N - rankX)));    
-        
-        // calculate the observed F for the simulation
-		// build a test object for the simulated matrices
-    	GLMMTest glmmTest = GLMMTestFactory.createGLMMTest(test, 
-				params.getFApproximationMethod(test),
-				params.getUnivariateCdfMethod(test), 
-				params.getDesignEssence(), 
-				XtXInverse, 
-				perGroupN,
-				params.getDesignRank(), 
-				params.getBetweenSubjectContrast().getCombinedMatrix(), 
-				params.getWithinSubjectContrast(), 
-				params.getTheta(), 
-				betaHat, sigmaHat);
-        double fobs = glmmTest.getObservedF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
-
-        // get the p-value from a central F distribution
-        double ndf = glmmTest.getNumeratorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
-        double ddf = glmmTest.getDenominatorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
-        
-        FishersF fdist = new FishersF(ndf, ddf);
-        double pvalue = 1 - fdist.cdf(fobs);
-        
+    private void checkFit(Test test, ModelFit fit)
+    {        
 		System.out.println("Test: " + test + 
-				" Ndf: " + number.format(ndf) + 
-				" Ddf: " + number.format(ddf) +
-				" F-crit: " + number.format(fobs) + 
-				" p-value: " + number.format(pvalue));
-		
-        return new FitResult(ndf, ddf, fobs, pvalue);
+				" Ndf: " + number.format(fit.numeratorDF) + 
+				" Ddf: " + number.format(fit.denominatorDF) +
+				" F-crit: " + number.format(fit.Fvalue) + 
+				" p-value: " + number.format(fit.Pvalue));
+		RealMatrix beta = fit.beta;
+		System.out.println("Parameter estimates:");
+		for(int r = 0; r < beta.getRowDimension(); r++)
+		{
+			for(int c = 0; c < beta.getColumnDimension(); c++)
+			{
+				System.out.println("Beta["+ r+ "," + c+ "]=" + beta.getEntry(r, c));
+			}
+		}
+
+
     }
 }
