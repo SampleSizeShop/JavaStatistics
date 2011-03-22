@@ -220,4 +220,23 @@ public class MatrixUtils
     {
     	return designEssence.getRowDimension() * perGroupSize;
     }
+    
+    /**
+     * Return the element wise sum of squares
+     * @param matrix input matrix
+     * @return sum of squares
+     */
+    public static double getSumOfSquares(RealMatrix matrix)
+    {
+    	double sum = 0.0;
+		for(int r = 0; r < matrix.getRowDimension(); r++)
+		{
+			for(int c = 0; c < matrix.getColumnDimension(); c++)
+			{
+				double value = matrix.getEntry(r, c);
+				sum += value * value;
+			}
+		}
+		return sum;
+    }
 }
