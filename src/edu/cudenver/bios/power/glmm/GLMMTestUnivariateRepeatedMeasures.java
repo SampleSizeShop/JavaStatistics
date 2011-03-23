@@ -29,7 +29,6 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 import org.apache.commons.math.util.MathUtils;
 import edu.cudenver.bios.matrix.GramSchmidtOrthonormalization;
-import edu.cudenver.bios.matrix.MatrixUtils;
 
 /**
  * Implementation of the uncorreected univariate approach to repeated measures test 
@@ -42,9 +41,40 @@ import edu.cudenver.bios.matrix.MatrixUtils;
 public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
 {    
     protected static final double TOLERANCE = 0.000000000001;
-    protected double unirepEpsilon = Double.NaN;
-    protected double estimatedSigmaCorrection = 1;
+    // if sigma is estimated, then this value will be set to totalN_est - rank_est
+    // where totalN_est is the sample size for the data set from which sigma was estimated
+    // and rank_est is the rank of the design matrix in the data set used for estimation
     protected int nuForEstimatedSigma = 0;
+    // cache some of the eigenvalue information for use in the GG and Huynh-Feldt
+    protected ArrayList<EigenValueMultiplicityPair> distinctSigmaStarEigenValues = new ArrayList<EigenValueMultiplicityPair>();
+    protected double sumLambda = 0;
+    protected double sumLambdaSquared = 0;
+    protected double[] sigmaStarEigenvalues = null;
+    protected int rankC = 0; // rank of C
+    protected int rankU = 0; // rank of U
+    
+    /* correction factors for sphericity
+     * these differ for data analysis, power under the null and power under the alternative
+     * also, the values depend on whether sigma is known or estimated
+     * For full details please see
+     * 
+     * Gribbin MJ (2007). Better Power Methods for the Univariate Approach to Repeated Measures.
+     * Ph.D. thesis, University of North Carolina at Chapel Hill.
+     * (see p61, equation 50-52 and table 4.1)
+     * 
+     * Per Gribbin, epsilonD is the epsilon value under the null case, and epsilonN
+     * is the sphericity parameter in the non-null case
+     */
+    protected double epsilonD = Double.NaN; 
+    protected double epsilonN = Double.NaN; 
+    protected double dataAnalysisNDFCorrection = 1;
+    protected double dataAnalysisDDFCorrection = 1;
+    protected double powerNullNDFCorrection = 1;
+    protected double powerNullDDFCorrection = 1;
+    protected double powerAlternativeNDFCorrection = 1;
+    protected double powerAlternativeDDFCorrection = 1;
+    protected double noncentralityCorrection = 1;
+    
     // class for tracking eigen value information during epsilon calculation
     protected class EigenValueMultiplicityPair
     {
@@ -76,7 +106,13 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         createOrthonormalU();
         
         // pre-calculate the values for epsilon (correction for violation of sphericity)
-        calculateUnirepCorrection(nuForEstimatedSigma);
+        calculateEpsilon(nuForEstimatedSigma);
+        // calculate the adjustment factors for degrees of freedom, noncentrality
+        // as described in Gribbin.  Note that calculateEpsilon must be called before
+        // these functions
+        calculateNDFCorrection();
+        calculateDDFCorrection();
+        calculateNoncentralityCorrection();
     }
     
 	/**
@@ -92,9 +128,29 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         // verify that U is orthonormal to an identity matrix
         // if not, build an orthonormal U from the specified U matrix
         createOrthonormalU();
-        
+
         // pre-calculate the values for epsilon (correction for violation of sphericity)
-        calculateUnirepCorrection(nuForEstimatedSigma);
+        calculateEpsilon(nuForEstimatedSigma);
+        // calculate the adjustment factors for degrees of freedom, noncentrality
+        // as described in Gribbin.  Note that calculateEpsilon must be called before
+        // these functions
+        calculateNDFCorrection();
+        calculateDDFCorrection();
+        calculateNoncentralityCorrection();
+    }
+    
+    @Override
+    public void setPerGroupSampleSize(int perGroupN)
+    {
+    	super.setPerGroupSampleSize(perGroupN);
+        // pre-calculate the values for epsilon (correction for violation of sphericity)
+        calculateEpsilon(nuForEstimatedSigma);
+        // calculate the adjustment factors for degrees of freedom, noncentrality
+        // as described in Gribbin.  Note that calculateEpsilon must be called before
+        // these functions
+        calculateNDFCorrection();
+        calculateDDFCorrection();
+        calculateNoncentralityCorrection();
     }
     
     /**
@@ -111,17 +167,25 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         // b = #columns in within subject contrast matrix
         int b = U.getColumnDimension();
         
-        double df = Double.NaN;
+        double df = b*(totalN - rank);
         // for the unirep test, the degrees of freedom change for power under the null vs alternative, and
         // also if we are doing data analysis under the null hypothesis
 
         // in the uncorrected test, we adjust by epsilon only for
         // power analysis under the alternative.  The ddf are the same for power
         // under the null and for data analysis
-        if (type == DistributionType.POWER_ALTERNATIVE)
-            df = b*(totalN - rank) * this.unirepEpsilon;
-        else
-            df = b*(totalN - rank);
+        switch (type)
+        {
+        case POWER_ALTERNATIVE:
+        	df *= powerAlternativeDDFCorrection;
+        	break;
+        case POWER_NULL:
+        	df *= powerNullDDFCorrection;
+        	break;
+        case DATA_ANALYSIS_NULL:
+        	df *= dataAnalysisDDFCorrection;
+        	break;
+        }
         
         return df;
     }
@@ -137,11 +201,17 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     @Override
     public double getNonCentrality(DistributionType type)
     {
-        double a = C.getRowDimension();
+        //double a = C.getRowDimension();
         double b = U.getColumnDimension();
-        
+        RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares();
+        // TODO: cache sig star, lam bar
+        RealMatrix sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
+        double lambdaBar = sigmaStar.getTrace() / b;
+
+        return (hypothesisSumOfSquares.getTrace() / (lambdaBar / noncentralityCorrection));
         // calculate non-centrality and adjust for sphericity 
-        return a*b*getObservedF(type)*(nuForEstimatedSigma > 0 ? this.estimatedSigmaCorrection : this.unirepEpsilon);
+
+        //return a*b*getObservedF(type)*(nuForEstimatedSigma > 0 ? this.estimatedSigmaCorrection : this.unirepEpsilon);
     }
 
     /**
@@ -158,17 +228,25 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         double a = C.getRowDimension();
         double b = U.getColumnDimension();
         
-        double df = Double.NaN;
+        double df = a * b;
         // for the unirep test, the degrees of freedom change for power under the null vs alternative, and
         // also if we are doing data analysis under the null hypothesis
 
         // in the uncorrected, we adjust by epsilon only for
         // power analysis under the alternative.  The ndf are the same for power
         // under the null and for data analysis
-        if (type == DistributionType.POWER_ALTERNATIVE)
-            df = a * b * (nuForEstimatedSigma > 0 ? this.estimatedSigmaCorrection : this.unirepEpsilon);
-        else
-            df = a * b;
+        switch (type)
+        {
+        case POWER_ALTERNATIVE:
+        	df *= powerAlternativeNDFCorrection;
+        	break;
+        case POWER_NULL:
+        	df *= powerNullNDFCorrection;
+        	break;
+        case DATA_ANALYSIS_NULL:
+        	df *= dataAnalysisNDFCorrection;
+        	break;
+        }
 
         return df;
     }
@@ -216,93 +294,74 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     /**
      * Calculate the epsilon to correct for violations of sphericity
      */
-    private void calculateUnirepCorrection(int nuForEstimatedSigma)
+    protected void calculateEpsilon(int nuForEstimatedSigma)
     {          
-    	int a = new SingularValueDecompositionImpl(C).getRank();
-        int b = new SingularValueDecompositionImpl(U).getRank();
-        // get the sigmaStar matrix: U' *sigmaError * U
-        RealMatrix sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
-        double sigmaStarTrace = sigmaStar.getTrace();
+    	rankC = new SingularValueDecompositionImpl(C).getRank();
+        rankU = new SingularValueDecompositionImpl(U).getRank();
+        
+        RealMatrix sigmaStar = null;
+        double sigmaStarTrace = Double.NaN;
+        if (nuForEstimatedSigma <= 0)
+        {
+            // get the sigmaStar matrix: U' *sigmaError * U
+            sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
+            sigmaStarTrace = sigmaStar.getTrace();
+        }
+        else
+        {
+        	// sigma matrix assumed to be estimated
+        	sigmaStar = getErrorSumOfSquares().scalarMultiply((double)1/(double)(totalN - rank));
+        	sigmaStarTrace = sigmaStar.getTrace();
+        }
+
         // ensure symmetry
         sigmaStar = sigmaStar.add(sigmaStar.transpose()).scalarMultiply(0.5); 
         // normalize
         sigmaStar = sigmaStar.scalarMultiply(1/sigmaStarTrace);
         
         // get the eigen values of the normalized sigmaStar matrix
-        double[] eigenValues = new EigenDecompositionImpl(sigmaStar, TOLERANCE).getRealEigenvalues();
-        if (eigenValues.length <= 0) throw new IllegalArgumentException("Failed to compute eigenvalues for sigma* matrix");
-        Arrays.sort(eigenValues); // put eigenvalues in ascending order
-
-        // calculate epsilon (correction for violation of sphericity)
+        sigmaStarEigenvalues = new EigenDecompositionImpl(sigmaStar, TOLERANCE).getRealEigenvalues();
+        if (sigmaStarEigenvalues.length <= 0) throw new IllegalArgumentException("Failed to compute eigenvalues for sigma* matrix");
+        Arrays.sort(sigmaStarEigenvalues);
+        // get the trace of sigma* and sigma* squared    
         // to avoid looping over the eigenvalues twice, we also calculate the multiplicity for distinct eigenvalues
-        
-        // list of distinct eigenvalues with multiplicity
-        ArrayList<EigenValueMultiplicityPair> distinctEigenValues = new ArrayList<EigenValueMultiplicityPair>();
+
         // initialize values for the first eigen value
-        double first = eigenValues[0];
-        distinctEigenValues.add(new EigenValueMultiplicityPair(first, 1));
-        double sumLambda = first;
-        double sumLambdaSquared = first * first;
+        double first = sigmaStarEigenvalues[0];
+        distinctSigmaStarEigenValues.add(new EigenValueMultiplicityPair(first, 1));
+        sumLambda = first; // sum of the eigenvalues (i.e. trace of sigmaStar)
+        sumLambdaSquared = first * first;  // sum of squared eignevalues (trace of sigmaStar squared)
         
         // loop over remaining eigen values, saving distinct eigen values
-        for(int i = 1; i < eigenValues.length; i++)
+        for(int i = 1; i < sigmaStarEigenvalues.length; i++)
         {
-            double value = eigenValues[i];
+            double value = sigmaStarEigenvalues[i];
             // build the sum & sum of squares of eigen values
             sumLambda += value;
             sumLambdaSquared += value * value;
             
             // determine if this is a distinct eigen value and calculate multiplicity
-            EigenValueMultiplicityPair prev = distinctEigenValues.get(distinctEigenValues.size()-1);
+            EigenValueMultiplicityPair prev = distinctSigmaStarEigenValues.get(distinctSigmaStarEigenValues.size()-1);
             if (Math.abs(prev.eigenValue - value) > TOLERANCE)
             {
                 // found new distinct eigen value
-                distinctEigenValues.add(new EigenValueMultiplicityPair(value, 1));
+            	distinctSigmaStarEigenValues.add(new EigenValueMultiplicityPair(value, 1));
             }
             else
             {
                 // repeat of same eigenvalue, so  increment the multiplicity
                 prev.multiplicity++;
             }
-        }
+        }       
+        
+        //get the hypothesis sum of squares times 1/a
+        RealMatrix HDivA = getHypothesisSumOfSquares().scalarAdd((double)1/(double)rankC);
         
         // calculate estimate of epsilon (correction for violation of spehericity assumption)
-        unirepEpsilon = (sumLambda*sumLambda) / (b * (sumLambdaSquared));        
-        
-        if (nuForEstimatedSigma > 0)
-        {
-        	// if sigma error is estimated, we adjust slightly
-        	RealMatrix estSigStar = getErrorSumOfSquares().scalarMultiply((double)1/(double)(totalN - rank));
-        	double estSigStarTrace = estSigStar.getTrace();
-        	double estSigStarTraceSquared = estSigStarTrace * estSigStarTrace;
-        	double estSigStarSumSquares = MatrixUtils.getSumOfSquares(estSigStar);
-        	// Generalized approx unbiased
-        	double epsilonTilde =  ( (nuForEstimatedSigma+1) * estSigStarTraceSquared - 2 * estSigStarTraceSquared ) /
-                             ( b * (nuForEstimatedSigma * estSigStarSumSquares - estSigStarTraceSquared) ) ; 
-          	if (epsilonTilde > 1) epsilonTilde = 1; 
-           	double mult = nuForEstimatedSigma * nuForEstimatedSigma + nuForEstimatedSigma - 2;
-           	
-           	RealMatrix H = getHypothesisSumOfSquares();
-           	double epsilonHatNumerator =  
-           		nuForEstimatedSigma * (estSigStarTraceSquared * nuForEstimatedSigma * (nuForEstimatedSigma+1) + 
-           				estSigStarTrace * H.getTrace() * (2*mult/a) - 
-           				estSigStarSumSquares * 2 * nuForEstimatedSigma) ;
-           	double epsilonHatDenominator = (estSigStarSumSquares * nuForEstimatedSigma * nuForEstimatedSigma + 
-           			(estSigStar.multiply(H)).getTrace() *(2*mult/a) - 
-           			estSigStarTraceSquared* nuForEstimatedSigma)* nuForEstimatedSigma ;
-           	double epsilonHat = epsilonHatNumerator / (b * epsilonHatDenominator);
-           	
-           	estimatedSigmaCorrection = epsilonHat;
-//           	E_1_2 = EXEPS;
-//            	IF (POWERCALC={6}) THEN E_1_2 = EPSTILDE_RM;  *** for HF crit val ***;
-//            	IF (POWERCALC={7}) THEN E_1_2 = EPS;     *** for GG crit val ***; 
-//               	IF (CDFPOWERCALC = 1) THEN E_3_5 = EPS;  *** MB ***;
-//                                      ELSE E_3_5 = EPSNHAT;
-//           	E_4=EPS; 
-//           	CL1DF = B * NU_EST * E_4 / E_3_5;
-//                END;
-        	
-        }
+        epsilonD = (sumLambda*sumLambda) / (rankU * (sumLambdaSquared));        
+        epsilonN = (sumLambda * sumLambda + 
+        		2 * sumLambda * HDivA.getTrace()) / 
+        		(rankU * (sumLambdaSquared + 2 * (sigmaStar.multiply(HDivA).getTrace())));        	
     }
     
     /**
@@ -335,5 +394,38 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
             RealMatrix Utmp = new GramSchmidtOrthonormalization(U).getQ();
             U = Utmp;
         }
+    }
+    
+    /**
+     * Calculate the correction factors for numerator degrees of 
+     * freedom for data analysis, power under the null and power
+     * under the alternative
+     */
+    protected void calculateNDFCorrection()
+    {
+        dataAnalysisNDFCorrection = 1;
+        powerNullNDFCorrection = 1;
+        powerAlternativeNDFCorrection = epsilonN;
+    }
+    
+    /**
+     * Calculate the correction factors for denominator degrees of 
+     * freedom for data analysis, power under the null and power
+     * under the alternative
+     */
+    protected void calculateDDFCorrection()
+    {
+        dataAnalysisDDFCorrection = 1;
+        powerNullDDFCorrection = 1;
+        powerAlternativeDDFCorrection = epsilonD;
+    }
+    
+    /**
+     * Calculate the correction factors for noncentrality 
+     * parameter.  This is only relevant for power under the alternative.
+     */
+    protected void calculateNoncentralityCorrection()
+    {
+        noncentralityCorrection = epsilonN;
     }
 }

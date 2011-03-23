@@ -66,75 +66,41 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
     }
     
     /**
-     * Calculate the denominator degrees of freedom for the UNIREP-Box, based on
-     * whether the null or alternative hypothesis is assumed true.  
-     * 
-     * @param type distribution type
-     * @return denominator degrees of freedom
-     * @throws IllegalArgumentException
+     * Calculate the correction factors for numerator degrees of 
+     * freedom for data analysis, power under the null and power
+     * under the alternative
      */
     @Override
-    public double getDenominatorDF(DistributionType type)
-    {        
-        // b = #columns in within subject contrast matrix
-        int b = U.getColumnDimension();
-        
-        double df = Double.NaN;
-
-        // for the conservative, or "Box" test, we adjust by epsilon only for
-        // power analysis under the alternative.  The ddf are the same for power
-        // under the null and for data analysis
-        if (type == DistributionType.POWER_ALTERNATIVE)
-            df = b*(totalN - rank) * this.unirepEpsilon;
-        else
-            df = (totalN - rank);
-        
-        return df;
-    }
-
-    /**
-     * Calculate the non-centrality parameter for the UNIREP-Box, based on
-     * whether the null or alternative hypothesis is assumed true.  
-     * 
-     * @param type distribution type
-     * @return non-centrality parameter
-     * @throws IllegalArgumentException
-     */
-    @Override
-    public double getNonCentrality(DistributionType type)
+    protected void calculateNDFCorrection()
     {
-        double a = C.getRowDimension();
-        double b = U.getColumnDimension();
-        
-        // calculate non-centrality and adjust for sphericity 
-        return a*b*getObservedF(type)*unirepEpsilon;
+    	double b = (double) U.getColumnDimension();
+        dataAnalysisNDFCorrection = 1.0/b;
+        powerNullNDFCorrection = 1.0/b;
+        powerAlternativeNDFCorrection = epsilonN;
     }
-
+    
     /**
-     * Calculate the numerator degrees of freedom for the UNIREP-Box, based on
-     * whether the null or alternative hypothesis is assumed true.  
-     * 
-     * @param type distribution type
-     * @return numerator degrees of freedom
-     * @throws IllegalArgumentException
+     * Calculate the correction factors for denominator degrees of 
+     * freedom for data analysis, power under the null and power
+     * under the alternative
      */
     @Override
-    public double getNumeratorDF(DistributionType type)
+    protected void calculateDDFCorrection()
     {
-        double a = C.getRowDimension();
-        double b = U.getColumnDimension();
-
-        double df = Double.NaN;
-
-        // for the conservative, or "Box" test, we adjust by epsilon only for
-        // power analysis under the alternative.  The ndf are the same for power
-        // under the null and for data analysis
-        if (type == DistributionType.POWER_ALTERNATIVE)
-            df = a * b * this.unirepEpsilon;
-        else
-            df = a;
-
-        return df;
+    	double b = (double) U.getColumnDimension();
+        dataAnalysisDDFCorrection = 1.0/b;
+        powerNullDDFCorrection = 1.0/b;
+        powerAlternativeDDFCorrection = epsilonD;
+    }
+    
+    /**
+     * Calculate the correction factors for noncentrality 
+     * parameter.  This is only relevant for power under the alternative.
+     */
+    @Override
+    protected void calculateNoncentralityCorrection()
+    {
+        noncentralityCorrection = epsilonN;
     }
 
 }

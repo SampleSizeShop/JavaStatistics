@@ -41,8 +41,7 @@ import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
 public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
 {
     protected static final double TOLERANCE = 0.000000000001;
-    double unirepEpsilon = Double.NaN;
-    double unirepEpsilonExpectedValue = Double.NaN;
+    double expectedEpsilon = Double.NaN;
 
 	/**
 	 * Create a UNIREP-HF test object for the specified parameters
@@ -56,13 +55,6 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
     {
         super(fMethod, cdfMethod, Xessence, XtXInverse, perGroupN, rank,
         		C, U, thetaNull, beta, sigmaError, nuForEstimatedSigma);
-
-        // verify that U is orthonormal to an identity matrix
-        // if not, build an orthonormal U from the specified U matrix
-        createOrthonormalU();
-
-        // pre-calculate the values for epsilon (correction for violation of sphericity)
-        calculateUnirepCorrection();
     }
     
 	/**
@@ -75,157 +67,17 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull)
     {
         super(fMethod, cdfMethod, X, XtXInverse, rank, Y,  C, U, thetaNull);
-        
-        // verify that U is orthonormal to an identity matrix
-        // if not, build an orthonormal U from the specified U matrix
-        createOrthonormalU();
-
-        // pre-calculate the values for epsilon (correction for violation of sphericity)
-        calculateUnirepCorrection();
-    }
-    
-    /**
-     * Reset the per group sample size for this test.  Recalculates epsilon
-     * and expected value of epsilon
-     * @param perGroupN per group sample size
-     */
-    @Override
-    public void setPerGroupSampleSize(int perGroupN)
-    {
-    	super.setPerGroupSampleSize(perGroupN);
-        calculateUnirepCorrection();
-    }
-
-    /**
-     * Calculate the denominator degrees of freedom for the UNIREP-HF, based on
-     * whether the null or alternative hypothesis is assumed true.  
-     * 
-     * @param type distribution type
-     * @return denominator degrees of freedom
-     * @throws IllegalArgumentException
-     */
-    @Override
-    public double getDenominatorDF(DistributionType type)
-    {       
-        // b = #columns in within subject contrast matrix
-        int b = U.getColumnDimension();
-        
-        double df = Double.NaN;
-
-        // HF correction, we multiply the ddf by the epsilon estimate for
-        // power analysis (under alternative) and for data analysis.  For power under
-        // the null, we multiply by the expected value of the epsilon estimate
-        if (type == DistributionType.POWER_NULL)
-            df = b*(totalN - rank)*this.unirepEpsilonExpectedValue;
-        else
-            df = b*(totalN - rank)*this.unirepEpsilon;
-
-        return df;
-    }
-
-    /**
-     * Calculate the non-centrality parameter for the UNIREP-HF, based on
-     * whether the null or alternative hypothesis is assumed true.  
-     * 
-     * @param type distribution type
-     * @return non-centrality parameter
-     * @throws IllegalArgumentException
-     */
-    @Override
-    public double getNonCentrality(DistributionType type)
-    {
-        double a = C.getRowDimension();
-        double b = U.getColumnDimension();
-        
-        // calculate non-centrality and adjust for sphericity 
-        return a*b*getObservedF(type)*unirepEpsilon;
-    }
-
-    /**
-     * Calculate the numerator degrees of freedom for the UNIREP-HF, based on
-     * whether the null or alternative hypothesis is assumed true.  
-     * 
-     * @param type distribution type
-     * @return numerator degrees of freedom
-     * @throws IllegalArgumentException
-     */
-    @Override
-    public double getNumeratorDF(DistributionType type)
-    {
-        double a = C.getRowDimension();
-        double b = U.getColumnDimension();
-        
-        double df = Double.NaN;
-
-        // HF correction, we multiply the ndf by the epsilon estimate for
-        // power analysis (under alternative) and for data analysis.  For power under
-        // the null, we multiply by the expected value of the epsilon estimate
-        if (type == DistributionType.POWER_NULL)
-            df = a * b * this.unirepEpsilonExpectedValue;
-        else
-            df = a * b * this.unirepEpsilon;
-        
-        return df;
     }
 
     /**
      * Calculate the Huynh-Feldt epsilon to correct for violations
      * of sphericity
      */
-    private void calculateUnirepCorrection()
-    {          
-        int b = new SingularValueDecompositionImpl(U).getRank();
-        // get the sigmaStar matrix: U' *sigmaError * U
-        RealMatrix sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
-        // ensure symmetry
-        sigmaStar = sigmaStar.add(sigmaStar.transpose()).scalarMultiply(0.5); 
-        // normalize
-        sigmaStar = sigmaStar.scalarMultiply(1/sigmaStar.getTrace());
-
-        // get the eigen values of the normalized sigmaStar matrix
-        double[] eigenValues = new EigenDecompositionImpl(sigmaStar, TOLERANCE).getRealEigenvalues();
-        if (eigenValues.length <= 0) throw new IllegalArgumentException("Failed to compute eigenvalues for sigma* matrix");
-        Arrays.sort(eigenValues); // put eigenvalues in ascending order
-
-        // calculate epsilon (correction for violation of sphericity)
-        // to avoid looping over the eigenvalues twice, we also calculate the multiplicity for distinct eigenvalues
-
-        // list of distinct eigenvalues with multiplicity
-        ArrayList<EigenValueMultiplicityPair> distinctEigenValues = new ArrayList<EigenValueMultiplicityPair>();
-        // initialize values for the first eigen value
-        double first = eigenValues[0];
-        distinctEigenValues.add(new EigenValueMultiplicityPair(first, 1));
-        double sumLambda = first;
-        double sumLambdaSquared = first * first;
-
-        // loop over remaining eigen values, saving distinct eigen values
-        for(int i = 1; i < eigenValues.length; i++)
-        {
-            double value = eigenValues[i];
-            // build the sum & sum of squares of eigen values
-            sumLambda += value;
-            sumLambdaSquared += value * value;
-
-            // determine if this is a distinct eigen value and calculate multiplicity
-            EigenValueMultiplicityPair prev = distinctEigenValues.get(distinctEigenValues.size()-1);
-            if (Math.abs(prev.eigenValue - value) > TOLERANCE)
-            {
-                // found new distinct eigen value
-                distinctEigenValues.add(new EigenValueMultiplicityPair(value, 1));
-            }
-            else
-            {
-                // repeat of same eigenvalue, so  increment the multiplicity
-                prev.multiplicity++;
-            }
-        }
-
-        // calculate estimate of epsilon (correction for violation of spehericity assumption)
-        unirepEpsilon = (sumLambda*sumLambda) / (b * (sumLambdaSquared));
-
-        // For Huynh Feldt, we also need the expected value of the epsilon
-        // estimate.  Note, the estimates of epsilon represent different functions of the
-        // eigenvalues, so the resulting derivatives and expected values are specific to each test
+    @Override
+    protected void calculateEpsilon(int nuForEstimatedSigma)
+    {           
+    	super.calculateEpsilon(nuForEstimatedSigma);
+    	double b = rankU;
 
         // calculate the expected value of the epsilon estimate
         // E[h(lambda)] = h(lambda) + g1 / (N - r)
@@ -234,9 +86,9 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
         double h1 = totalN * sumLambda * sumLambda - 2 * sumLambdaSquared;
         double h2 = (totalN - rank) * sumLambdaSquared - (sumLambda * sumLambda);
         double g1 = 0;
-        for(int i = 0; i < distinctEigenValues.size(); i++)
+        for(int i = 0; i < distinctSigmaStarEigenValues.size(); i++)
         {
-            EigenValueMultiplicityPair evmI = distinctEigenValues.get(i);
+            EigenValueMultiplicityPair evmI = distinctSigmaStarEigenValues.get(i);
             // derivatives of sub-equations comprising epsilon estimator
             double h1firstDerivative = (2 * totalN * sumLambda) - (4 *evmI.eigenValue); 
             double h1secondDerivative = 2 * totalN - 4;
@@ -255,11 +107,11 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
             // accumulate the first term of g1 (sum over distinct eigen vals of 1st derivative * eigen val ^2 * multiplicity)
             g1 += secondDerivative * evmI.eigenValue * evmI.eigenValue * evmI.multiplicity;
             // loop over elements not equal to current
-            for(int j = 0; j < distinctEigenValues.size(); j++)
+            for(int j = 0; j < distinctSigmaStarEigenValues.size(); j++)
             {
                 if (i != j)
                 {
-                    EigenValueMultiplicityPair evmJ = distinctEigenValues.get(j);
+                    EigenValueMultiplicityPair evmJ = distinctSigmaStarEigenValues.get(j);
                     // accumulate second term of g1
                     g1 += ((firstDerivative * evmI.eigenValue * evmI.multiplicity * evmJ.eigenValue * evmJ.multiplicity) /
                             (evmI.eigenValue - evmJ.eigenValue));
@@ -267,22 +119,58 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
             }
         }
 
-        this.unirepEpsilonExpectedValue = (totalN*b*unirepEpsilon - 2)/(b*(totalN - rank - b*unirepEpsilon))  + g1 / (totalN - rank);
+        expectedEpsilon = (totalN*b*epsilonD - 2)/(b*(totalN - rank - b*epsilonD))  + g1 / (totalN - rank);
 
 
         // ensure that expected value is within bounds 1/b to 1
-        if (unirepEpsilonExpectedValue != Double.NaN)
+        if (expectedEpsilon != Double.NaN)
         {
-            if (unirepEpsilonExpectedValue < 1/b)
+            if (expectedEpsilon < 1/b)
             {
-                unirepEpsilonExpectedValue = 1/b;
+            	expectedEpsilon = 1/b;
             }
-            else if (unirepEpsilonExpectedValue > 1)
+            else if (expectedEpsilon > 1)
             {
-                unirepEpsilonExpectedValue = 1;
+            	expectedEpsilon = 1;
             }
         }
 
     }
 
+    /**
+     * Calculate the correction factors for numerator degrees of 
+     * freedom for data analysis, power under the null and power
+     * under the alternative
+     */
+    @Override
+    protected void calculateNDFCorrection()
+    {
+        dataAnalysisNDFCorrection = epsilonD;
+        powerNullNDFCorrection = expectedEpsilon;
+        powerAlternativeNDFCorrection = epsilonN;
+    }
+    
+    /**
+     * Calculate the correction factors for denominator degrees of 
+     * freedom for data analysis, power under the null and power
+     * under the alternative
+     */
+    @Override
+    protected void calculateDDFCorrection()
+    {
+        dataAnalysisDDFCorrection = epsilonD;
+        powerNullDDFCorrection = expectedEpsilon;
+        powerAlternativeDDFCorrection = epsilonD;
+    }
+    
+    /**
+     * Calculate the correction factors for noncentrality 
+     * parameter.  This is only relevant for power under the alternative.
+     */
+    @Override
+    protected void calculateNoncentralityCorrection()
+    {
+        noncentralityCorrection = epsilonN;
+    }
+    
 }
