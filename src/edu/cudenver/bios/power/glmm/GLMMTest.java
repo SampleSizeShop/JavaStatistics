@@ -280,7 +280,7 @@ public abstract class GLMMTest
      * @param params matrices input by user
      * @return H matrix
      */
-    protected RealMatrix getHypothesisSumOfSquares()
+    public RealMatrix getHypothesisSumOfSquares()
     {        
         // thetaHat = C * Beta * U
         RealMatrix thetaHat = C.multiply(beta.multiply(U));
@@ -300,7 +300,7 @@ public abstract class GLMMTest
      * @param params matrices input by the user
      * @return error sum of squares
      */
-    protected RealMatrix getErrorSumOfSquares()
+    public RealMatrix getErrorSumOfSquares()
     {        
         return U.transpose().multiply(sigmaError.multiply(U)).scalarMultiply(totalN-rank);
     }    
