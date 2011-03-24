@@ -29,6 +29,7 @@ import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 import org.apache.commons.math.util.MathUtils;
 import edu.cudenver.bios.matrix.GramSchmidtOrthonormalization;
+import edu.cudenver.bios.matrix.MatrixUtils;
 
 /**
  * Implementation of the uncorreected univariate approach to repeated measures test 
@@ -44,12 +45,11 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     // if sigma is estimated, then this value will be set to totalN_est - rank_est
     // where totalN_est is the sample size for the data set from which sigma was estimated
     // and rank_est is the rank of the design matrix in the data set used for estimation
-    protected int nuForEstimatedSigma = 0;
+    protected int nuEst =  0;
     // cache some of the eigenvalue information for use in the GG and Huynh-Feldt
     protected ArrayList<EigenValueMultiplicityPair> distinctSigmaStarEigenValues = new ArrayList<EigenValueMultiplicityPair>();
     protected double sumLambda = 0;
     protected double sumLambdaSquared = 0;
-    protected double[] sigmaStarEigenvalues = null;
     protected int rankC = 0; // rank of C
     protected int rankU = 0; // rank of U
     
@@ -65,8 +65,12 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
      * Per Gribbin, epsilonD is the epsilon value under the null case, and epsilonN
      * is the sphericity parameter in the non-null case
      */
+    // sphericity components when sigma known
     protected double epsilonD = Double.NaN; 
     protected double epsilonN = Double.NaN; 
+    // sphericity components when sigma estimated
+    protected double epsilonTildeN = Double.NaN;
+    protected double epsilonTildeR = Double.NaN;
     protected double dataAnalysisNDFCorrection = 1;
     protected double dataAnalysisDDFCorrection = 1;
     protected double powerNullNDFCorrection = 1;
@@ -96,17 +100,17 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     		UnivariateCdfApproximation cdfMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
-    		RealMatrix beta, RealMatrix sigmaError, int nuForEstimatedSigma)
+    		RealMatrix beta, RealMatrix sigmaError, int nuEst)
     {
         super(fMethod, cdfMethod, Xessence, XtXInverse, perGroupN, rank,
         		C, U, thetaNull, beta, sigmaError);
-        this.nuForEstimatedSigma = nuForEstimatedSigma;
+        this.nuEst = nuEst;
         // verify that U is orthonormal to an identity matrix
         // if not, build an orthonormal U from the specified U matrix
         createOrthonormalU();
         
         // pre-calculate the values for epsilon (correction for violation of sphericity)
-        calculateEpsilon(nuForEstimatedSigma);
+        calculateEpsilon();
         // calculate the adjustment factors for degrees of freedom, noncentrality
         // as described in Gribbin.  Note that calculateEpsilon must be called before
         // these functions
@@ -130,7 +134,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         createOrthonormalU();
 
         // pre-calculate the values for epsilon (correction for violation of sphericity)
-        calculateEpsilon(nuForEstimatedSigma);
+        calculateEpsilon();
         // calculate the adjustment factors for degrees of freedom, noncentrality
         // as described in Gribbin.  Note that calculateEpsilon must be called before
         // these functions
@@ -144,7 +148,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     {
     	super.setPerGroupSampleSize(perGroupN);
         // pre-calculate the values for epsilon (correction for violation of sphericity)
-        calculateEpsilon(nuForEstimatedSigma);
+        calculateEpsilon();
         // calculate the adjustment factors for degrees of freedom, noncentrality
         // as described in Gribbin.  Note that calculateEpsilon must be called before
         // these functions
@@ -206,12 +210,12 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares();
         // TODO: cache sig star, lam bar
         RealMatrix sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
-        double lambdaBar = sigmaStar.getTrace() / b;
+        double lambdaBar = sigmaStar.getTrace() / rankU;
 
         return (hypothesisSumOfSquares.getTrace() / (lambdaBar / noncentralityCorrection));
         // calculate non-centrality and adjust for sphericity 
 
-        //return a*b*getObservedF(type)*(nuForEstimatedSigma > 0 ? this.estimatedSigmaCorrection : this.unirepEpsilon);
+        //return a*b*getObservedF(type)*(nuEst > 0 ? this.estimatedSigmaCorrection : this.unirepEpsilon);
     }
 
     /**
@@ -294,33 +298,20 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     /**
      * Calculate the epsilon to correct for violations of sphericity
      */
-    protected void calculateEpsilon(int nuForEstimatedSigma)
+    protected void calculateEpsilon()
     {          
     	rankC = new SingularValueDecompositionImpl(C).getRank();
         rankU = new SingularValueDecompositionImpl(U).getRank();
         
-        RealMatrix sigmaStar = null;
-        double sigmaStarTrace = Double.NaN;
-        if (nuForEstimatedSigma <= 0)
-        {
-            // get the sigmaStar matrix: U' *sigmaError * U
-            sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
-            sigmaStarTrace = sigmaStar.getTrace();
-        }
-        else
-        {
-        	// sigma matrix assumed to be estimated
-        	sigmaStar = getErrorSumOfSquares().scalarMultiply((double)1/(double)(totalN - rank));
-        	sigmaStarTrace = sigmaStar.getTrace();
-        }
+        // get the sigmaStar matrix: U' *sigmaError * U
+       RealMatrix  sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
 
         // ensure symmetry
         sigmaStar = sigmaStar.add(sigmaStar.transpose()).scalarMultiply(0.5); 
-        // normalize
-        sigmaStar = sigmaStar.scalarMultiply(1/sigmaStarTrace);
         
         // get the eigen values of the normalized sigmaStar matrix
-        sigmaStarEigenvalues = new EigenDecompositionImpl(sigmaStar, TOLERANCE).getRealEigenvalues();
+        double[] sigmaStarEigenvalues = 
+        	new EigenDecompositionImpl(sigmaStar.scalarMultiply(1/sigmaStar.getTrace()), TOLERANCE).getRealEigenvalues();
         if (sigmaStarEigenvalues.length <= 0) throw new IllegalArgumentException("Failed to compute eigenvalues for sigma* matrix");
         Arrays.sort(sigmaStarEigenvalues);
         // get the trace of sigma* and sigma* squared    
@@ -355,13 +346,37 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         }       
         
         //get the hypothesis sum of squares times 1/a
-        RealMatrix HDivA = getHypothesisSumOfSquares().scalarAdd((double)1/(double)rankC);
+        RealMatrix H  = getHypothesisSumOfSquares();
+        RealMatrix HDivA = H.scalarMultiply((double)1/(double)rankC);
         
         // calculate estimate of epsilon (correction for violation of spehericity assumption)
         epsilonD = (sumLambda*sumLambda) / (rankU * (sumLambdaSquared));        
         epsilonN = (sumLambda * sumLambda + 
         		2 * sumLambda * HDivA.getTrace()) / 
-        		(rankU * (sumLambdaSquared + 2 * (sigmaStar.multiply(HDivA).getTrace())));        	
+        		(rankU * (sumLambdaSquared + 
+        				2 * (sigmaStar.scalarMultiply(1/sigmaStar.getTrace()).multiply(HDivA).getTrace())));        	
+        
+        if (nuEst > 0)
+        {
+        	double sigStarTrace = sigmaStar.getTrace();
+        	double sigStarSqTrace = MatrixUtils.getSumOfSquares(sigmaStar); //sigmaStar.transpose().multiply(sigmaStar).getTrace();
+        	RealMatrix sigStarH = sigmaStar.multiply(getHypothesisSumOfSquares());
+        	double sigStarHTrace = sigStarH.getTrace();
+//           	EPSNHAT_NUM =  NU_EST # (Q3 # NU_EST # (NU_EST+{1}) + Q1 # Q2 # ({2}#MULT/A) - Q4 # {2} # NU_EST) ;
+//           	EPSNHAT_DEN = (Q4 # NU_EST # NU_EST + Q5 #(2#MULT/A) - Q3# NU_EST)# NU_EST ;
+//           	EPSNHAT = EPSNHAT_NUM / (B # EPSNHAT_DEN);
+        	double multiplier = nuEst * nuEst + nuEst - 2;
+        	double numerator = nuEst * (nuEst*(nuEst + 1)*sigStarTrace*sigStarTrace - 
+        			2 * nuEst * sigStarSqTrace + 
+        			2 * multiplier * H.getTrace() * sigStarTrace / rankC);
+        	double denominator = nuEst * (nuEst*nuEst*sigStarSqTrace - nuEst *sigStarTrace*sigStarTrace + 
+					2 *multiplier * sigStarHTrace / rankC);
+
+        	epsilonTildeN = numerator / ( rankU *denominator);
+        	
+        	epsilonTildeR = ((nuEst + 1)*rankU*epsilonD - 2) / (rankU*(nuEst - rankU * epsilonD));
+        	epsilonTildeR = (epsilonTildeR < 1 ? epsilonTildeR : 1);
+        }
     }
     
     /**
@@ -405,7 +420,10 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     {
         dataAnalysisNDFCorrection = 1;
         powerNullNDFCorrection = 1;
-        powerAlternativeNDFCorrection = epsilonN;
+        if (nuEst <= 0)
+        	powerAlternativeNDFCorrection = epsilonN;
+        else
+        	powerAlternativeNDFCorrection = epsilonTildeN;
     }
     
     /**
@@ -426,6 +444,9 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
      */
     protected void calculateNoncentralityCorrection()
     {
-        noncentralityCorrection = epsilonN;
+    	if (nuEst <= 0)
+    		noncentralityCorrection = epsilonN;
+    	else
+    		noncentralityCorrection = epsilonTildeN;
     }
 }

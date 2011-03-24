@@ -74,9 +74,9 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
      * of sphericity
      */
     @Override
-    protected void calculateEpsilon(int nuForEstimatedSigma)
+    protected void calculateEpsilon()
     {           
-    	super.calculateEpsilon(nuForEstimatedSigma);
+    	super.calculateEpsilon();
     	double b = rankU;
 
         // calculate the expected value of the epsilon estimate
@@ -146,8 +146,17 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
     protected void calculateNDFCorrection()
     {
         dataAnalysisNDFCorrection = epsilonD;
-        powerNullNDFCorrection = expectedEpsilon;
-        powerAlternativeNDFCorrection = epsilonN;
+        if (nuEst <= 0)
+        {
+        	powerNullNDFCorrection = expectedEpsilon;
+        	powerAlternativeNDFCorrection = epsilonN;
+        }
+        else
+        {    
+        	// sigma estimated
+        	powerNullNDFCorrection = epsilonTildeR;
+        	powerAlternativeNDFCorrection = epsilonTildeN;	
+        }
     }
     
     /**
@@ -159,8 +168,16 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
     protected void calculateDDFCorrection()
     {
         dataAnalysisDDFCorrection = epsilonD;
-        powerNullDDFCorrection = expectedEpsilon;
-        powerAlternativeDDFCorrection = epsilonD;
+       	powerAlternativeDDFCorrection = epsilonD;
+        if (nuEst <= 0)
+        {
+        	powerNullDDFCorrection = expectedEpsilon;
+        }
+        else
+        {
+        	// sigma estimated
+        	powerNullDDFCorrection = epsilonTildeR;
+        }
     }
     
     /**
@@ -170,7 +187,10 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
     @Override
     protected void calculateNoncentralityCorrection()
     {
-        noncentralityCorrection = epsilonN;
+    	if (nuEst <= 0)
+    		noncentralityCorrection = epsilonN;
+    	else
+    		noncentralityCorrection = epsilonTildeN;
     }
     
 }

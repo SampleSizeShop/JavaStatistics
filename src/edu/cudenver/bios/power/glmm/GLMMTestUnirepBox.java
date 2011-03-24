@@ -46,11 +46,11 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
     		UnivariateCdfApproximation cdfMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
-    		RealMatrix beta, RealMatrix sigmaError, int nuForEstimatedSigma)
+    		RealMatrix beta, RealMatrix sigmaError, int nuEst)
     {
         // unirep base class will calculate epsilon for box correction
         super(fMethod, cdfMethod, Xessence, XtXInverse, perGroupN, rank,
-        		C, U, thetaNull, beta, sigmaError, nuForEstimatedSigma);
+        		C, U, thetaNull, beta, sigmaError, nuEst);
     }
     
 	/**
@@ -73,10 +73,13 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
     @Override
     protected void calculateNDFCorrection()
     {
-    	double b = (double) U.getColumnDimension();
-        dataAnalysisNDFCorrection = 1.0/b;
-        powerNullNDFCorrection = 1.0/b;
-        powerAlternativeNDFCorrection = epsilonN;
+    	//double b = (double) U.getColumnDimension();
+        dataAnalysisNDFCorrection = 1.0/rankU;
+        powerNullNDFCorrection = 1.0/rankU;
+        if (nuEst <= 0)
+        	powerAlternativeNDFCorrection = epsilonN;
+        else
+        	powerAlternativeNDFCorrection = epsilonTildeN;
     }
     
     /**
@@ -87,9 +90,8 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
     @Override
     protected void calculateDDFCorrection()
     {
-    	double b = (double) U.getColumnDimension();
-        dataAnalysisDDFCorrection = 1.0/b;
-        powerNullDDFCorrection = 1.0/b;
+        dataAnalysisDDFCorrection = 1.0/rankU;
+        powerNullDDFCorrection = 1.0/rankU;
         powerAlternativeDDFCorrection = epsilonD;
     }
     
@@ -100,7 +102,10 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
     @Override
     protected void calculateNoncentralityCorrection()
     {
-        noncentralityCorrection = epsilonN;
+    	if (nuEst <= 0)
+    		noncentralityCorrection = epsilonN;
+    	else
+    		noncentralityCorrection = epsilonTildeN;
     }
 
 }

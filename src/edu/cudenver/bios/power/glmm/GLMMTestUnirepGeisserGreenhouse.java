@@ -59,10 +59,10 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     		UnivariateCdfApproximation cdfMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
-    		RealMatrix beta, RealMatrix sigmaError, int nuForEstimatedSigma)
+    		RealMatrix beta, RealMatrix sigmaError, int nuEst)
     {
         super(fMethod, cdfMethod, Xessence, XtXInverse, perGroupN, rank,
-        		C, U, thetaNull, beta, sigmaError, nuForEstimatedSigma);
+        		C, U, thetaNull, beta, sigmaError, nuEst);
     }
 
 	/**
@@ -82,9 +82,9 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
      * of sphericity
      */
     @Override
-    protected void calculateEpsilon(int nuForEstimatedSigma)
+    protected void calculateEpsilon()
     {          
-    	super.calculateEpsilon(nuForEstimatedSigma);
+    	super.calculateEpsilon();
 
 //         calculate the expected value of the epsilon estimate
 //         E[f(lambda)] = f(lambda) + g1 / (N - r)
@@ -161,8 +161,16 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     protected void calculateNDFCorrection()
     {
         dataAnalysisNDFCorrection = epsilonD;
-        powerNullNDFCorrection = expectedEpsilon;
-        powerAlternativeNDFCorrection = epsilonN;
+        if (nuEst <= 0)
+        {
+        	powerNullNDFCorrection = expectedEpsilon;
+        	powerAlternativeNDFCorrection = epsilonN;
+        }
+        else
+        {
+        	powerNullNDFCorrection = epsilonD;
+        	powerAlternativeNDFCorrection = epsilonTildeN;
+        }
     }
     
     /**
@@ -174,8 +182,12 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     protected void calculateDDFCorrection()
     {
         dataAnalysisDDFCorrection = epsilonD;
-        powerNullDDFCorrection = expectedEpsilon;
         powerAlternativeDDFCorrection = epsilonD;
+        if (nuEst <= 0)
+        	powerNullDDFCorrection = expectedEpsilon;
+        else
+        	powerNullDDFCorrection = epsilonD;
+
     }
     
     /**
@@ -185,7 +197,10 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     @Override
     protected void calculateNoncentralityCorrection()
     {
-        noncentralityCorrection = epsilonN;
+    	if (nuEst <= 0)
+    		noncentralityCorrection = epsilonN;
+    	else
+    		noncentralityCorrection = epsilonTildeN;
     }
     
     
