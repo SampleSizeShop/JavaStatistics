@@ -71,7 +71,7 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
 	{
 		try
 		{
-			checker = new PowerChecker(DATA_FILE, false);
+			checker = new PowerChecker(DATA_FILE, true);
 		}
 		catch (Exception e)
 		{
@@ -85,18 +85,21 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
      */
     public void testMultivariateWithConfidenceLimits()
     {
-    	GLMMPowerParameters params = buildInputs();
-    	
-    	for(double delta = 0; delta < 0.0501; delta += 0.0008)
+    	Test[] testList = Test.values();
+    	for(Test test: testList)
     	{
-    		// increase the gender difference by 2 * delta
-    		RealMatrix betaMatrix = params.getBeta().getFixedMatrix();
-    		for(int row = 0; row < 5; row++) betaMatrix.setEntry(row, 2, beta[row][2] + delta);
-    		for(int row = 5; row < 10; row++) betaMatrix.setEntry(row, 2, beta[row][2] - delta);
+    		GLMMPowerParameters params = buildInputs(test);
 
-            checker.checkPower(params);
+    		for(double delta = 0.0; delta < 0.2001; delta += 0.0008)
+    		{
+    			// increase the gender difference by 2 * delta
+    			RealMatrix betaMatrix = params.getBeta().getFixedMatrix();
+    			for(int row = 0; row < 5; row++) betaMatrix.setEntry(row, 2, beta[row][2] + delta);
+    			for(int row = 5; row < 10; row++) betaMatrix.setEntry(row, 2, beta[row][2] - delta);
+
+    			checker.checkPower(params);
+    		}
     	}
-
         System.out.println(TITLE);
 		checker.outputResults();
 		checker.outputResults(TITLE, OUTPUT_FILE);
@@ -106,22 +109,14 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
     }
 
     
-    private GLMMPowerParameters buildInputs()
+    private GLMMPowerParameters buildInputs(Test test)
     {
         // build the inputs        
     	GLMMPowerParameters params = new GLMMPowerParameters();
         
         // add tests
-    	//params.addTest(Test.UNIREP_GEISSER_GREENHOUSE);
-    	params.addTest(Test.UNIREP);
-    	params.addTest(Test.UNIREP_BOX);
-    	params.addTest(Test.UNIREP_GEISSER_GREENHOUSE);
-    	params.addTest(Test.UNIREP_HUYNH_FELDT);
-    	params.addTest(Test.WILKS_LAMBDA);
-    	params.addTest(Test.PILLAI_BARTLETT_TRACE);
-    	params.addTest(Test.HOTELLING_LAWLEY_TRACE);
+    	params.addTest(test);
 
-    	//params.addTest(Test.HOTELLING_LAWLEY_TRACE);
         // add alpha values - bonferroni corrected for 6 comparisons
         params.addAlpha(0.05/6);
         
