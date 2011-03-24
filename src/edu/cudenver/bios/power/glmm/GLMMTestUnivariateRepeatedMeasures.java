@@ -449,4 +449,15 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     	else
     		noncentralityCorrection = epsilonTildeN;
     }
+    
+    /**
+     * Get the degrees of freedom for the Chi-sqaured distribution used
+     * in building confidence limits on power as described by Gribbin.
+     *  
+     * @return
+     */
+    public double getConfidenceLimitsDegreesOfFreedom()
+    {
+       	return rankU * nuEst * powerAlternativeDDFCorrection / noncentralityCorrection;
+    }
 }
