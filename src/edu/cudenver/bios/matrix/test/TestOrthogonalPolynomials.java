@@ -24,6 +24,7 @@ import java.text.DecimalFormat;
 
 import org.apache.commons.math.linear.RealMatrix;
 
+import edu.cudenver.bios.matrix.OrthogonalPolynomialContrastCollection;
 import edu.cudenver.bios.matrix.OrthogonalPolynomials;
 import junit.framework.TestCase;
 
@@ -40,9 +41,12 @@ public class TestOrthogonalPolynomials extends TestCase
 	public void testOneFactorContrast()
 	{
 		double[] x = {1,2,3,4};
-		RealMatrix contrast = OrthogonalPolynomials.withinSubjectContrast(x);
+		String name = "x";
+		OrthogonalPolynomialContrastCollection contrastCollection = 
+			OrthogonalPolynomials.withinSubjectContrast(x, name);
 	
-		printMatrix("One factor contrast", contrast);		
+		printMatrix("Grand mean", contrastCollection.getGrandMean());
+		printMatrix("One factor contrast", contrastCollection.getMainEffectContrast(name));		
 	}
 
 	/**
@@ -51,10 +55,16 @@ public class TestOrthogonalPolynomials extends TestCase
 	public void testTwoFactorContrast()
 	{
 		double[] x1 = {1,2,4};
+		String x1Name = "x1";
 		double[] x2 = {1,3,5};
-		RealMatrix contrast = OrthogonalPolynomials.withinSubjectContrast(x1,x2);
+		String x2Name = "x2";
+		OrthogonalPolynomialContrastCollection contrastCollection = 
+			OrthogonalPolynomials.withinSubjectContrast(x1,x1Name,x2,x2Name);
 	
-		printMatrix("Two factor contrast", contrast);		
+		printMatrix("Grand mean", contrastCollection.getGrandMean());
+		printMatrix("Main effect x1", contrastCollection.getMainEffectContrast(x1Name));
+		printMatrix("Main effect x2", contrastCollection.getMainEffectContrast(x2Name));
+		printMatrix("Two factor contrast", contrastCollection.getTwoFactorInteractionContrast(x1Name, x2Name));		
 	}
 	
 	/**
@@ -63,11 +73,22 @@ public class TestOrthogonalPolynomials extends TestCase
 	public void testThreeFactorContrast()
 	{
 		double[] x1 = {1,2,3};
+		String x1Name = "x1";
 		double[] x2 = {1,2,3};
+		String x2Name = "x2";
 		double[] x3 = {1,2,3};
-		RealMatrix contrast = OrthogonalPolynomials.withinSubjectContrast(x1,x2,x3);
+		String x3Name = "x3";
+		OrthogonalPolynomialContrastCollection contrastCollection = 
+			OrthogonalPolynomials.withinSubjectContrast(x1,x1Name,x2,x2Name,x3,x3Name);
 	
-		printMatrix("Three factor contrast", contrast);		
+		printMatrix("Grand mean", contrastCollection.getGrandMean());
+		printMatrix("Main effect x1", contrastCollection.getMainEffectContrast(x1Name));
+		printMatrix("Main effect x2", contrastCollection.getMainEffectContrast(x2Name));
+		printMatrix("Main effect x3", contrastCollection.getMainEffectContrast(x3Name));
+		printMatrix("Two factor contrast: x1, x2", contrastCollection.getTwoFactorInteractionContrast(x1Name, x2Name));		
+		printMatrix("Two factor contrast: x1, x3", contrastCollection.getTwoFactorInteractionContrast(x1Name, x3Name));		
+		printMatrix("Two factor contrast: x2, x3", contrastCollection.getTwoFactorInteractionContrast(x2Name, x3Name));		
+		printMatrix("Three factor contrast", contrastCollection.getThreeFactorInteractionContrast(x1Name, x2Name, x3Name));		
 	}
 	
 	/**
