@@ -117,31 +117,25 @@ public class OrthogonalPolynomials
 	 * @return polynomial contrast matrix
 	 * @throws IllegalArgumentException
 	 */
-	public static RealMatrix withinSubjectContrast(double[] values)
+	public static OrthogonalPolynomialContrastCollection withinSubjectContrast(double[] values, String factorName)
 	throws IllegalArgumentException
 	{		
 		if (values == null || values.length < 2)
 			throw new IllegalArgumentException("must specify at least 2 values");
 
-		int p = values.length;
-
-		double mean = StatUtils.mean(values);
-		double[] centered = new double[p];
-		double scale = 0;
-		for(int i = 0; i < p; i++) 
-		{
-			double v = values[i] - mean;
-			centered[i] = v;
-			scale += v*v;
-		}
-		for(int i = 0; i < p; i++) centered[i] /= Math.sqrt(scale);
+		double[] centered = centerAndScale(values);
 		
-		RealMatrix poly = OrthogonalPolynomials.orthogonalPolynomialCoefficients(centered,p-1);
-		int[] rows = new int[poly.getRowDimension()];
-		for(int i = 0; i < rows.length; i++) rows[i] = i;
-		int[] cols = new int[poly.getColumnDimension()-1];
-		for(int i = 0; i < cols.length; i++) cols[i] = i+1;
-		return poly.getSubMatrix(rows, cols);	
+		RealMatrix poly = OrthogonalPolynomials.orthogonalPolynomialCoefficients(centered,centered.length-1);
+		
+		// get zero trend
+		RealMatrix zeroTrend = poly.getColumnMatrix(0);
+		// get 1-nth trend
+		RealMatrix trends = poly.getSubMatrix(0, poly.getRowDimension()-1, 1, poly.getColumnDimension()-1);
+		
+		OrthogonalPolynomialContrastCollection results = new OrthogonalPolynomialContrastCollection();
+		results.setGrandMean(zeroTrend);
+		results.addMainEffectContrast(factorName, trends);
+		return results;
 	}
 	
 	/**
@@ -154,18 +148,48 @@ public class OrthogonalPolynomials
 	 * @return 2 factor polynomial contrast matrix
 	 * @throws IllegalArgumentException
 	 */
-	public static RealMatrix withinSubjectContrast(double[] factor1Values, 
-			double[] factor2Values)
+	public static OrthogonalPolynomialContrastCollection withinSubjectContrast(double[] factor1Values, String factor1Name,
+			double[] factor2Values, String factor2Name)
 	throws IllegalArgumentException
 	{
 		if (factor1Values == null || factor1Values.length < 2 ||
 				factor2Values == null || factor2Values.length < 2)
 			throw new IllegalArgumentException("must specify at least 2 values for each factor");
 
-		RealMatrix factor1Contrast = withinSubjectContrast(factor1Values);
-		RealMatrix factor2Contrast = withinSubjectContrast(factor2Values);
+		double[] centeredFactor1 = centerAndScale(factor1Values);
+		double[] centeredFactor2 = centerAndScale(factor2Values);
 		
-		return MatrixUtils.KroneckerProduct(factor1Contrast, factor2Contrast);
+		// get the orthogonal polynomials for the 0 - nth polynomials, where n = length of factor array
+		RealMatrix factor1OrthoPoly = orthogonalPolynomialCoefficients(centeredFactor1,centeredFactor1.length-1);
+		RealMatrix factor2OrthoPoly = orthogonalPolynomialCoefficients(centeredFactor2,centeredFactor2.length-1);
+		
+		// extract the zero-order trends
+		RealMatrix zeroTrendFactor1 = factor1OrthoPoly.getColumnMatrix(0);
+		RealMatrix zeroTrendFactor2 = factor2OrthoPoly.getColumnMatrix(0);
+		// extract the 1-nth trends
+		RealMatrix trendsFactor1 = 
+			factor1OrthoPoly.getSubMatrix(0, factor1OrthoPoly.getRowDimension()-1, 
+				1, factor1OrthoPoly.getColumnDimension()-1);
+		RealMatrix trendsFactor2 = 
+			factor2OrthoPoly.getSubMatrix(0, factor2OrthoPoly.getRowDimension()-1, 
+				1, factor2OrthoPoly.getColumnDimension()-1);
+		
+		// build the grand mean
+		RealMatrix grandMean = MatrixUtils.KroneckerProduct(zeroTrendFactor1, zeroTrendFactor2);
+		
+		// build the main effects contrasts
+		RealMatrix mainEffectFactor1 = MatrixUtils.KroneckerProduct(trendsFactor1, zeroTrendFactor2);
+		RealMatrix mainEffectFactor2 = MatrixUtils.KroneckerProduct(zeroTrendFactor1, trendsFactor2);
+		// build the interaction contrast
+		RealMatrix interactionContrast =  MatrixUtils.KroneckerProduct(trendsFactor1, trendsFactor2);
+		
+		// build the contrast collection
+		OrthogonalPolynomialContrastCollection results = new OrthogonalPolynomialContrastCollection();
+		results.setGrandMean(grandMean);
+		results.addMainEffectContrast(factor1Name, mainEffectFactor1);
+		results.addMainEffectContrast(factor2Name, mainEffectFactor2);
+		results.addTwoFactorInteractionContrast(factor1Name, factor2Name, interactionContrast);
+		return results;
 	}
 	
 	/**
@@ -179,21 +203,102 @@ public class OrthogonalPolynomials
 	 * @return 3 factor polynomial contrast matrix
 	 * @throws IllegalArgumentException
 	 */
-	public static RealMatrix withinSubjectContrast(double[] factor1Values,
-			double[] factor2Values, double[] factor3Values)
+	public static OrthogonalPolynomialContrastCollection withinSubjectContrast(double[] factor1Values, String factor1Name,
+			double[] factor2Values, String factor2Name, double[] factor3Values, String factor3Name)
 	{
 		if (factor1Values == null || factor1Values.length < 2 ||
 				factor2Values == null || factor2Values.length < 2 || 
-				factor3Values == null || factor2Values.length < 3)
+				factor3Values == null || factor3Values.length < 2)
 			throw new IllegalArgumentException("must specify at least 2 values for each factor");
 		
-		RealMatrix factor1Contrast = withinSubjectContrast(factor1Values);
-		RealMatrix factor2Contrast = withinSubjectContrast(factor2Values);
-		RealMatrix factor3Contrast = withinSubjectContrast(factor2Values);
+		// center and scale the values
+		double[] centeredFactor1 = centerAndScale(factor1Values);
+		double[] centeredFactor2 = centerAndScale(factor2Values);
+		double[] centeredFactor3 = centerAndScale(factor3Values);
 		
-		RealMatrix korneckerProduct12 = 
-			MatrixUtils.KroneckerProduct(factor1Contrast, factor2Contrast);
-		return MatrixUtils.KroneckerProduct(korneckerProduct12, factor3Contrast);
+		// get the orthogonal polynomials for the 0 - nth polynomials, where n = length of factor array
+		RealMatrix factor1OrthoPoly = orthogonalPolynomialCoefficients(centeredFactor1,centeredFactor1.length-1);
+		RealMatrix factor2OrthoPoly = orthogonalPolynomialCoefficients(centeredFactor2,centeredFactor2.length-1);
+		RealMatrix factor3OrthoPoly = orthogonalPolynomialCoefficients(centeredFactor3,centeredFactor3.length-1);
+
+		// extract the zero-order trends
+		RealMatrix zeroTrendFactor1 = factor1OrthoPoly.getColumnMatrix(0);
+		RealMatrix zeroTrendFactor2 = factor2OrthoPoly.getColumnMatrix(0);
+		RealMatrix zeroTrendFactor3 = factor3OrthoPoly.getColumnMatrix(0);
+		// extract the 1-nth trends
+		RealMatrix trendsFactor1 = 
+			factor1OrthoPoly.getSubMatrix(0, factor1OrthoPoly.getRowDimension()-1, 
+				1, factor1OrthoPoly.getColumnDimension()-1);
+		RealMatrix trendsFactor2 = 
+			factor2OrthoPoly.getSubMatrix(0, factor2OrthoPoly.getRowDimension()-1, 
+				1, factor2OrthoPoly.getColumnDimension()-1);
+		RealMatrix trendsFactor3 = 
+			factor3OrthoPoly.getSubMatrix(0, factor3OrthoPoly.getRowDimension()-1, 
+				1, factor3OrthoPoly.getColumnDimension()-1);
+		
+		// build the grand mean
+		RealMatrix grandMean = 
+			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(zeroTrendFactor1, zeroTrendFactor2),
+					zeroTrendFactor3);
+		
+		// build the main effects contrasts
+		RealMatrix mainEffectFactor1 = 
+			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(trendsFactor1, zeroTrendFactor2),
+					zeroTrendFactor3);
+		RealMatrix mainEffectFactor2 = 
+			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(zeroTrendFactor1, trendsFactor2),
+				zeroTrendFactor3);
+		RealMatrix mainEffectFactor3 =  
+			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(zeroTrendFactor1, zeroTrendFactor2),
+					trendsFactor3);
+		
+		// build the pairwise interaction contrasts
+		RealMatrix interaction12 = 
+			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(trendsFactor1, trendsFactor2),
+					zeroTrendFactor3);
+		RealMatrix interaction13 = 
+			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(trendsFactor1, zeroTrendFactor2),
+				trendsFactor3);
+		RealMatrix interaction23 = 
+			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(zeroTrendFactor1, trendsFactor2),
+					trendsFactor3);
+		
+		// build 3-factor interaction
+		RealMatrix interaction123 = 
+			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(trendsFactor1, trendsFactor2),
+					trendsFactor3);
+		
+		// build the contrast collection
+		OrthogonalPolynomialContrastCollection results = new OrthogonalPolynomialContrastCollection();
+		results.setGrandMean(grandMean);
+		results.addMainEffectContrast(factor1Name, mainEffectFactor1);
+		results.addMainEffectContrast(factor2Name, mainEffectFactor2);
+		results.addMainEffectContrast(factor3Name, mainEffectFactor3);
+		results.addTwoFactorInteractionContrast(factor1Name, factor2Name, interaction12);
+		results.addTwoFactorInteractionContrast(factor1Name, factor3Name, interaction13);
+		results.addTwoFactorInteractionContrast(factor2Name, factor3Name, interaction23);
+		results.addThreeFactorInteractionContrast(factor1Name, factor2Name, factor3Name, interaction123);
+		return results;
 	}
 	
+	/**
+	 * Center and scale the incoming factor values
+	 * @param values
+	 */
+	private static double[] centerAndScale(double[] values)
+	{
+		int p = values.length;
+		double mean = StatUtils.mean(values);
+		double[] centered = new double[p];
+		double scale = 0;
+		for(int i = 0; i < p; i++) 
+		{
+			double v = values[i] - mean;
+			centered[i] = v;
+			scale += v*v;
+		}
+		for(int i = 0; i < p; i++) centered[i] /= Math.sqrt(scale);
+		return centered;
+	}
+
 }
