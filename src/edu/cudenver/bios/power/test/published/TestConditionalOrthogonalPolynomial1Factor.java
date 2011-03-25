@@ -28,10 +28,10 @@ import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.matrix.OrthogonalPolynomials;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
-import edu.cudenver.bios.utils.OrthogonalPolynomials;
 import junit.framework.TestCase;
 
 /**
