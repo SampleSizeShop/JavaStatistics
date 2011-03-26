@@ -48,6 +48,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     protected int nuEst =  0;
     // cache some of the eigenvalue information for use in the GG and Huynh-Feldt
     protected ArrayList<EigenValueMultiplicityPair> distinctSigmaStarEigenValues = new ArrayList<EigenValueMultiplicityPair>();
+    protected double[] sigmaStarEigenValues = null;
     protected double sumLambda = 0;
     protected double sumLambdaSquared = 0;
     protected int rankC = 0; // rank of C
@@ -310,23 +311,23 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         sigmaStar = sigmaStar.add(sigmaStar.transpose()).scalarMultiply(0.5); 
         
         // get the eigen values of the normalized sigmaStar matrix
-        double[] sigmaStarEigenvalues = 
+        sigmaStarEigenValues = 
         	new EigenDecompositionImpl(sigmaStar.scalarMultiply(1/sigmaStar.getTrace()), TOLERANCE).getRealEigenvalues();
-        if (sigmaStarEigenvalues.length <= 0) throw new IllegalArgumentException("Failed to compute eigenvalues for sigma* matrix");
-        Arrays.sort(sigmaStarEigenvalues);
+        if (sigmaStarEigenValues.length <= 0) throw new IllegalArgumentException("Failed to compute eigenvalues for sigma* matrix");
+        Arrays.sort(sigmaStarEigenValues);
         // get the trace of sigma* and sigma* squared    
         // to avoid looping over the eigenvalues twice, we also calculate the multiplicity for distinct eigenvalues
 
         // initialize values for the first eigen value
-        double first = sigmaStarEigenvalues[0];
+        double first = sigmaStarEigenValues[0];
         distinctSigmaStarEigenValues.add(new EigenValueMultiplicityPair(first, 1));
         sumLambda = first; // sum of the eigenvalues (i.e. trace of sigmaStar)
         sumLambdaSquared = first * first;  // sum of squared eignevalues (trace of sigmaStar squared)
         
         // loop over remaining eigen values, saving distinct eigen values
-        for(int i = 1; i < sigmaStarEigenvalues.length; i++)
+        for(int i = 1; i < sigmaStarEigenValues.length; i++)
         {
-            double value = sigmaStarEigenvalues[i];
+            double value = sigmaStarEigenValues[i];
             // build the sum & sum of squares of eigen values
             sumLambda += value;
             sumLambdaSquared += value * value;
