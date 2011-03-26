@@ -349,19 +349,21 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         RealMatrix H  = getHypothesisSumOfSquares();
         RealMatrix HDivA = H.scalarMultiply((double)1/(double)rankC);
         
+    	double sigStarTrace = sigmaStar.getTrace();
+    	double sigStarSqTrace = MatrixUtils.getSumOfSquares(sigmaStar); //sigmaStar.transpose().multiply(sigmaStar).getTrace();
+    	RealMatrix sigStarH = sigmaStar.multiply(getHypothesisSumOfSquares());
+    	double sigStarHTrace = sigStarH.getTrace();
+    	
         // calculate estimate of epsilon (correction for violation of spehericity assumption)
-        epsilonD = (sumLambda*sumLambda) / (rankU * (sumLambdaSquared));        
-        epsilonN = (sumLambda * sumLambda + 
-        		2 * sumLambda * HDivA.getTrace()) / 
-        		(rankU * (sumLambdaSquared + 
-        				2 * (sigmaStar.scalarMultiply(1/sigmaStar.getTrace()).multiply(HDivA).getTrace())));        	
+        epsilonD = (sigStarTrace*sigStarTrace) / (rankU * (sigStarSqTrace));        
+        epsilonN = (sigStarTrace * sigStarTrace + 
+        		2 * sigStarTrace * HDivA.getTrace()) / 
+        		(rankU * (sigStarSqTrace + 
+        				2 * (sigmaStar.multiply(HDivA).getTrace())));        	
         
         if (nuEst > 0)
         {
-        	double sigStarTrace = sigmaStar.getTrace();
-        	double sigStarSqTrace = MatrixUtils.getSumOfSquares(sigmaStar); //sigmaStar.transpose().multiply(sigmaStar).getTrace();
-        	RealMatrix sigStarH = sigmaStar.multiply(getHypothesisSumOfSquares());
-        	double sigStarHTrace = sigStarH.getTrace();
+
 //           	EPSNHAT_NUM =  NU_EST # (Q3 # NU_EST # (NU_EST+{1}) + Q1 # Q2 # ({2}#MULT/A) - Q4 # {2} # NU_EST) ;
 //           	EPSNHAT_DEN = (Q4 # NU_EST # NU_EST + Q5 #(2#MULT/A) - Q3# NU_EST)# NU_EST ;
 //           	EPSNHAT = EPSNHAT_NUM / (B # EPSNHAT_DEN);
