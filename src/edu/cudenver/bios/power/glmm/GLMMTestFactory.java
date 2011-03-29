@@ -24,6 +24,7 @@ import org.apache.commons.math.linear.RealMatrix;
 
 import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
+import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
 
 /**
  * Factory class for generating a GLMM test object
@@ -48,22 +49,23 @@ public class GLMMTestFactory
 	
 	public static GLMMTest createGLMMTestForDataAnalysis(Test test,
 			FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
+			UnivariateEpsilonApproximation epsilonMethod,
 			RealMatrix X, RealMatrix XtXinverse, int rank, 
 			RealMatrix Y, RealMatrix C, RealMatrix U, RealMatrix thetaNull)
 	{
         switch (test)
         {
         case UNIREP:
-            return new GLMMTestUnivariateRepeatedMeasures(fMethod, cdfMethod,
+            return new GLMMTestUnivariateRepeatedMeasures(fMethod, cdfMethod, epsilonMethod,
             		X, XtXinverse, rank, Y, C, U, thetaNull);
         case UNIREP_BOX:
-            return new GLMMTestUnirepBox(fMethod, cdfMethod,
+            return new GLMMTestUnirepBox(fMethod, cdfMethod, epsilonMethod,
             		X, XtXinverse, rank, Y, C, U, thetaNull);
         case UNIREP_GEISSER_GREENHOUSE:
-            return new GLMMTestUnirepGeisserGreenhouse(fMethod, cdfMethod,
+            return new GLMMTestUnirepGeisserGreenhouse(fMethod, cdfMethod, epsilonMethod,
             		X, XtXinverse, rank, Y, C, U, thetaNull);
         case UNIREP_HUYNH_FELDT:
-            return new GLMMTestUnirepHuynhFeldt(fMethod, cdfMethod,
+            return new GLMMTestUnirepHuynhFeldt(fMethod, cdfMethod, epsilonMethod,
             		X, XtXinverse, rank, Y, C, U, thetaNull);
         case WILKS_LAMBDA:
             return new GLMMTestWilksLambda(fMethod, 
@@ -82,6 +84,7 @@ public class GLMMTestFactory
 	
     public static GLMMTest createGLMMTestForPower(Test test, 
     		FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
+    		UnivariateEpsilonApproximation epsilonMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError, int nuForEstimatedSigma)
@@ -90,19 +93,19 @@ public class GLMMTestFactory
         switch (test)
         {
         case UNIREP:
-            return new GLMMTestUnivariateRepeatedMeasures(fMethod, cdfMethod,
+            return new GLMMTestUnivariateRepeatedMeasures(fMethod, cdfMethod, epsilonMethod,
             		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
             		beta, sigmaError, nuForEstimatedSigma);
         case UNIREP_BOX:
-            return new GLMMTestUnirepBox(fMethod, cdfMethod,
+            return new GLMMTestUnirepBox(fMethod, cdfMethod, epsilonMethod,
             		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
             		beta, sigmaError, nuForEstimatedSigma);
         case UNIREP_GEISSER_GREENHOUSE:
-            return new GLMMTestUnirepGeisserGreenhouse(fMethod, cdfMethod,
+            return new GLMMTestUnirepGeisserGreenhouse(fMethod, cdfMethod, epsilonMethod,
             		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
             		beta, sigmaError, nuForEstimatedSigma);
         case UNIREP_HUYNH_FELDT:
-            return new GLMMTestUnirepHuynhFeldt(fMethod, cdfMethod,
+            return new GLMMTestUnirepHuynhFeldt(fMethod, cdfMethod, epsilonMethod,
             		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
             		beta, sigmaError, nuForEstimatedSigma);
         case WILKS_LAMBDA:

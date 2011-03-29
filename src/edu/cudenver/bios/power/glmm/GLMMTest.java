@@ -43,7 +43,15 @@ public abstract class GLMMTest
 		MULLER_EDWARDS_TAYLOR_EXACT_APPROX
 	};
 
-	// available moment approximation methods
+	// type of approximation to use for mean epsilon 
+	// for Huynh-Feldt and Geisser-Greenhouse
+	public enum UnivariateEpsilonApproximation
+	{
+		MULLER_BARTON_APPROX,
+		MULLER_EDWARDS_TAYLOR_APPROX,
+	};
+	
+	// available f approximation methods
 	public enum FApproximation
 	{
 		NONE,
@@ -95,7 +103,6 @@ public abstract class GLMMTest
     
     // approximation information
     protected FApproximation fMethod;
-    protected UnivariateCdfApproximation cdfMethod;
 
     // study design matrices
     protected RealMatrix Xessence;
@@ -118,13 +125,12 @@ public abstract class GLMMTest
      * Create a statistical test for to compute power
      * @param params GLMM input parameters
      */
-    public GLMMTest(FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
+    public GLMMTest(FApproximation fMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError)
     {
         this.fMethod = fMethod;
-        this.cdfMethod = cdfMethod;
         this.Xessence = Xessence;
         this.XtXInverse =  XtXInverse;
         this.totalN =  Xessence.getRowDimension() * perGroupN; 
@@ -140,7 +146,7 @@ public abstract class GLMMTest
         RealMatrix cxxcEssenceInverse = new LUDecompositionImpl(cxxcEssence).getSolver().getInverse();
         this.M = cxxcEssenceInverse.scalarMultiply(perGroupN);
     }
-    
+        
     /**
      * Create a test to perform data analysis
      * @param fMethod
@@ -153,12 +159,11 @@ public abstract class GLMMTest
      * @param U
      * @param thetaNull
      */
-    public GLMMTest(FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
+    public GLMMTest(FApproximation fMethod, 
     		RealMatrix X, RealMatrix XtXInverse, int rank, RealMatrix Y,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull)
     {
         this.fMethod = fMethod;
-        this.cdfMethod = cdfMethod;
         this.Xessence = null;
         this.XtXInverse =  XtXInverse;
         if (this.XtXInverse == null)

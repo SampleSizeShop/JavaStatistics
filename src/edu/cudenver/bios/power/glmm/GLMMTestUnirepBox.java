@@ -21,10 +21,6 @@
 package edu.cudenver.bios.power.glmm;
 
 import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.linear.SingularValueDecompositionImpl;
-
-import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
-import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
 
 /**
  * Implementation of the univariate approach to repeated measures test 
@@ -43,13 +39,13 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
 	 * @param params GLMM input parameters
 	 */
     public GLMMTestUnirepBox(FApproximation fMethod, 
-    		UnivariateCdfApproximation cdfMethod,
+    		UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError, int nuEst)
     {
         // unirep base class will calculate epsilon for box correction
-        super(fMethod, cdfMethod, Xessence, XtXInverse, perGroupN, rank,
+        super(fMethod, cdfMethod, epsilonMethod, Xessence, XtXInverse, perGroupN, rank,
         		C, U, thetaNull, beta, sigmaError, nuEst);
     }
     
@@ -58,11 +54,11 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
 	 * @param params GLMM input parameters
 	 */
     public GLMMTestUnirepBox(FApproximation fMethod, 
-    		UnivariateCdfApproximation cdfMethod,
+    		UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
     		RealMatrix X, RealMatrix XtXInverse, int rank, RealMatrix Y,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull)
     {
-        super(fMethod, cdfMethod, X, XtXInverse, rank, Y,  C, U, thetaNull);
+        super(fMethod, cdfMethod, epsilonMethod, X, XtXInverse, rank, Y,  C, U, thetaNull);
     }
     
     /**

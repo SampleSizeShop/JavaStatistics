@@ -33,6 +33,7 @@ import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
 import edu.cudenver.bios.power.glmm.GLMMTest;
+import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory;
 import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTest.ModelFit;
@@ -159,6 +160,7 @@ public class TestDataAnalysis extends TestCase
 		GLMMTest unirepTest = new GLMMTestUnivariateRepeatedMeasures(
 				FApproximation.NONE, 
 				UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX,
+				UnivariateEpsilonApproximation.MULLER_EDWARDS_TAYLOR_APPROX,
 				XUnivariate, XtXInverseUnivariate, rankXUnivariate, YUnivariate,
 		CUnivariate, UUnivariate, ThetaNullUnivariate);
 
@@ -171,6 +173,7 @@ public class TestDataAnalysis extends TestCase
 		GLMMTest unirepBoxTest = new GLMMTestUnirepBox(
 				FApproximation.NONE, 
 				UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX,
+				UnivariateEpsilonApproximation.MULLER_EDWARDS_TAYLOR_APPROX,
 				XUnivariate, XtXInverseUnivariate, rankXUnivariate, YUnivariate,
 		CUnivariate, UUnivariate, ThetaNullUnivariate);
 
@@ -184,6 +187,7 @@ public class TestDataAnalysis extends TestCase
 		GLMMTest unirepGGTest = new GLMMTestUnirepGeisserGreenhouse(
 				FApproximation.NONE, 
 				UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX,
+				UnivariateEpsilonApproximation.MULLER_EDWARDS_TAYLOR_APPROX,
 				XUnivariate, XtXInverseUnivariate, rankXUnivariate, YUnivariate,
 		CUnivariate, UUnivariate, ThetaNullUnivariate);
 
@@ -197,6 +201,7 @@ public class TestDataAnalysis extends TestCase
 		GLMMTest unirepHFTest = new GLMMTestUnirepHuynhFeldt(
 				FApproximation.NONE, 
 				UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX,
+				UnivariateEpsilonApproximation.MULLER_EDWARDS_TAYLOR_APPROX,
 				XUnivariate, XtXInverseUnivariate, rankXUnivariate, YUnivariate,
 		CUnivariate, UUnivariate, ThetaNullUnivariate);
 

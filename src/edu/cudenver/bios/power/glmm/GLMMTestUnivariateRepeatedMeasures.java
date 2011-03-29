@@ -30,6 +30,7 @@ import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 import org.apache.commons.math.util.MathUtils;
 import edu.cudenver.bios.matrix.GramSchmidtOrthonormalization;
 import edu.cudenver.bios.matrix.MatrixUtils;
+import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
 
 /**
  * Implementation of the uncorreected univariate approach to repeated measures test 
@@ -66,6 +67,13 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
      * Per Gribbin, epsilonD is the epsilon value under the null case, and epsilonN
      * is the sphericity parameter in the non-null case
      */
+    
+    //  CDF approximation method;
+    protected UnivariateCdfApproximation cdfMethod;
+    // epsilon approximation information - this only applies to HF, GG, but
+    // added to this class to avoid duplicated code
+    protected UnivariateEpsilonApproximation epsilonMethod;
+    
     // sphericity components when sigma known
     protected double epsilonD = Double.NaN; 
     protected double epsilonN = Double.NaN; 
@@ -98,13 +106,15 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
 	 * @param params GLMM input parameters
 	 */
     public GLMMTestUnivariateRepeatedMeasures(FApproximation fMethod, 
-    		UnivariateCdfApproximation cdfMethod,
+    		UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError, int nuEst)
     {
-        super(fMethod, cdfMethod, Xessence, XtXInverse, perGroupN, rank,
+        super(fMethod, Xessence, XtXInverse, perGroupN, rank,
         		C, U, thetaNull, beta, sigmaError);
+        this.cdfMethod = cdfMethod;
+        this.epsilonMethod = epsilonMethod;
         this.nuEst = nuEst;
         // verify that U is orthonormal to an identity matrix
         // if not, build an orthonormal U from the specified U matrix
@@ -125,11 +135,13 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
 	 * @param params GLMM input parameters
 	 */
     public GLMMTestUnivariateRepeatedMeasures(FApproximation fMethod, 
-    		UnivariateCdfApproximation cdfMethod,
+    		UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
     		RealMatrix X, RealMatrix XtXInverse, int rank, RealMatrix Y,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull)
     {
-        super(fMethod, cdfMethod, X, XtXInverse, rank, Y,  C, U, thetaNull);
+        super(fMethod, X, XtXInverse, rank, Y,  C, U, thetaNull);
+        this.cdfMethod = cdfMethod;
+        this.epsilonMethod = epsilonMethod;
         // verify that U is orthonormal to an identity matrix
         // if not, build an orthonormal U from the specified U matrix
         createOrthonormalU();

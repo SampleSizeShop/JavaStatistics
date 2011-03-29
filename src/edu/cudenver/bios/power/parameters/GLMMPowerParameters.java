@@ -30,6 +30,7 @@ import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
 import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
+import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 
@@ -99,6 +100,8 @@ public class GLMMPowerParameters extends PowerParameters
 	// approximation method setting.  These can be set for each statistical test
 	HashMap<Test,UnivariateCdfApproximation> univariateCdfMap = 
 		new HashMap<Test,UnivariateCdfApproximation>();
+	HashMap<Test,UnivariateEpsilonApproximation> univariateEpsilonMap = 
+		new HashMap<Test,UnivariateEpsilonApproximation>();
 	HashMap<Test,FApproximation> FMap = 
 		new HashMap<Test,FApproximation>();
 	// if true, use the exact calculation of the CDF of the non-centrality parameter
@@ -249,6 +252,47 @@ public class GLMMPowerParameters extends PowerParameters
     	return quantileList;
     }
 	
+	/**
+	 * Clear the list of statistical tests
+	 */
+	public void clearTestList()
+	{
+		testList.clear();
+	}
+	
+    /**
+     * Clear the list of beta scale factors
+     */
+    public void clearBetaScaleList()
+    {
+        betaScaleList.clear();
+    }
+
+    /**
+     * Clear the list of sigma scale factors
+     */
+    public void clearSigmaScaleList()
+    {
+        sigmaScaleList.clear();
+    }
+    
+    /**
+     * Clear the list of power methods
+     */
+    public void clearPowerMethodList()
+    {
+    	powerMethodList.clear();
+    }
+	
+    /**
+     * Clear the list of quantiles associated with a set of quantile power calculations
+     */
+    public void clearQuantileList()
+    {
+    	quantileList.clear();
+    }
+    
+    
 	/**** Functions for setting approximation and cdf methods ****/
     
     /**
@@ -288,6 +332,26 @@ public class GLMMPowerParameters extends PowerParameters
     public UnivariateCdfApproximation getUnivariateCdfMethod(Test test)
     {
     	return univariateCdfMap.get(test);
+    }
+    
+    /**
+     * Sets the approximation method for mean epsilon the univariate tests
+     * @param test statistical test type
+     * @param method epsilon approximation method
+     */
+    public void setUnivariateEpsilonMethod(Test test, UnivariateEpsilonApproximation method)
+    {
+    	univariateEpsilonMap.put(test, method);
+    }
+    
+    /**
+     * Get the approximation method for mean epsilon for the specified univariate test
+     * @param test statistical test
+     * @return Epsilon approximation method
+     */
+    public UnivariateEpsilonApproximation getUnivariateEpsilonMethod(Test test)
+    {
+    	return univariateEpsilonMap.get(test);
     }
     
     /**

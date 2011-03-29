@@ -23,8 +23,6 @@ package edu.cudenver.bios.power;
 import java.util.ArrayList;
 import java.util.List;
 
-import jsc.distributions.FishersF;
-
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.analysis.UnivariateRealFunction;
 import org.apache.commons.math.analysis.integration.TrapezoidIntegrator;
@@ -717,6 +715,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     	GLMMTest glmmTest = GLMMTestFactory.createGLMMTestForPower(test, 
 				params.getFApproximationMethod(test),
 				params.getUnivariateCdfMethod(test), 
+				params.getUnivariateEpsilonMethod(test), 
 				params.getDesignEssence(), 
 				params.getXtXInverse(), 
 				STARTING_SAMPLE_SIZE,
@@ -810,6 +809,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     	GLMMTest glmmTest = GLMMTestFactory.createGLMMTestForPower(test, 
 				params.getFApproximationMethod(test),
 				params.getUnivariateCdfMethod(test), 
+				params.getUnivariateEpsilonMethod(test), 
 				params.getDesignEssence(), 
 				params.getXtXInverse(), 
 				sampleSize,
@@ -980,8 +980,6 @@ public class GLMMPowerCalculator implements PowerCalculator
     {
     	// get a new set of errors
 		RealMatrix error = randomErrors.random();
-		int N = X.getRowDimension();
-		int rank = params.getDesignRank();
 		
 		// calculate simulated Y based on Y = X beta + error
 		RealMatrix Ysim = (X.multiply(scaledBeta)).add(error);  
@@ -990,6 +988,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     	GLMMTest glmmTest = GLMMTestFactory.createGLMMTestForDataAnalysis(test, 
 				params.getFApproximationMethod(test),
 				params.getUnivariateCdfMethod(test), 
+				params.getUnivariateEpsilonMethod(test), 
 				X, XtXinverse, params.getDesignRank(), Ysim, 
 				params.getBetweenSubjectContrast().getCombinedMatrix(), 
 				params.getWithinSubjectContrast(), 
@@ -1118,6 +1117,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     	GLMMTest glmmTest = GLMMTestFactory.createGLMMTestForPower(test, 
 				params.getFApproximationMethod(test),
 				params.getUnivariateCdfMethod(test), 
+				params.getUnivariateEpsilonMethod(test), 
 				params.getDesignEssence(), 
 				params.getXtXInverse(), 
 				sampleSize,
@@ -1229,12 +1229,12 @@ public class GLMMPowerCalculator implements PowerCalculator
     		// GLMM(F) design, conditional power
     		// run the simulations
     		RealMatrix X = MatrixUtils.getFullDesignMatrix(params.getDesignEssence(), sampleSize);
+    		RealMatrix XtXInverse = params.getXtXInverse().scalarMultiply(1/(double)sampleSize);
         	int rejectionCount = 0;
     		for(int i = 0; i < iterations; i++)
     		{
 				SimulationFit fit = 
-					simulateAndFitModel(params, test, X, params.getXtXInverse().scalarMultiply(1/(double)sampleSize), 
-							scaledBeta, randomErrors, 
+					simulateAndFitModel(params, test, X, XtXInverse, scaledBeta, randomErrors, 
 						sampleSize, alpha);
 				if (fit.Pvalue <= alpha) rejectionCount++;
     		}

@@ -40,12 +40,12 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
 	 * @param params GLMM input parameters
 	 */
     public GLMMTestUnirepHuynhFeldt(FApproximation fMethod, 
-    		UnivariateCdfApproximation cdfMethod,
+    		UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError, int nuForEstimatedSigma)
     {
-        super(fMethod, cdfMethod, Xessence, XtXInverse, perGroupN, rank,
+        super(fMethod, cdfMethod, epsilonMethod, Xessence, XtXInverse, perGroupN, rank,
         		C, U, thetaNull, beta, sigmaError, nuForEstimatedSigma);
     }
     
@@ -54,11 +54,11 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
 	 * @param params GLMM input parameters
 	 */
     public GLMMTestUnirepHuynhFeldt(FApproximation fMethod, 
-    		UnivariateCdfApproximation cdfMethod,
+    		UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
     		RealMatrix X, RealMatrix XtXInverse, int rank, RealMatrix Y,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull)
     {
-        super(fMethod, cdfMethod, X, XtXInverse, rank, Y,  C, U, thetaNull);
+        super(fMethod, cdfMethod, epsilonMethod, X, XtXInverse, rank, Y,  C, U, thetaNull);
     }
 
     /**

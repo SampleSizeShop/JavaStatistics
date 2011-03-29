@@ -24,6 +24,8 @@ import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealMatrixChangingVisitor;
 
+import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
+
 /**
  * Implementation of the univariate approach to repeated measures test 
  * with Geisser-Greenhouse correction (UNIREP-GG) for the general linear multivariate model. 
@@ -56,12 +58,12 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
 	 * @param params GLMM input parameters
 	 */
     public GLMMTestUnirepGeisserGreenhouse(FApproximation fMethod, 
-    		UnivariateCdfApproximation cdfMethod,
+    		UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError, int nuEst)
     {
-        super(fMethod, cdfMethod, Xessence, XtXInverse, perGroupN, rank,
+        super(fMethod, cdfMethod, epsilonMethod, Xessence, XtXInverse, perGroupN, rank,
         		C, U, thetaNull, beta, sigmaError, nuEst);
     }
 
@@ -70,11 +72,11 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
 	 * @param params GLMM input parameters
 	 */
     public GLMMTestUnirepGeisserGreenhouse(FApproximation fMethod, 
-    		UnivariateCdfApproximation cdfMethod,
+    		UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
     		RealMatrix X, RealMatrix XtXInverse, int rank, RealMatrix Y,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull)
     {
-        super(fMethod, cdfMethod, X, XtXInverse, rank, Y,  C, U, thetaNull);
+        super(fMethod, cdfMethod, epsilonMethod, X, XtXInverse, rank, Y,  C, U, thetaNull);
     }
     
     /**

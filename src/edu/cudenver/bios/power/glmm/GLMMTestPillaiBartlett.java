@@ -44,7 +44,7 @@ public class GLMMTestPillaiBartlett extends GLMMTest
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError)
     {
-        super(fMethod, null, Xessence, XtXInverse, perGroupN, rank,
+        super(fMethod, Xessence, XtXInverse, perGroupN, rank,
         		C, U, thetaNull, beta, sigmaError);
     }   
     
@@ -57,7 +57,7 @@ public class GLMMTestPillaiBartlett extends GLMMTest
     		RealMatrix X, RealMatrix XtXInverse, int rank, RealMatrix Y,
     		RealMatrix C, RealMatrix U, RealMatrix thetaNull)
     {
-        super(fMethod, null, X, XtXInverse, rank, Y, C, U, thetaNull);
+        super(fMethod, X, XtXInverse, rank, Y, C, U, thetaNull);
     }
     
     /**
