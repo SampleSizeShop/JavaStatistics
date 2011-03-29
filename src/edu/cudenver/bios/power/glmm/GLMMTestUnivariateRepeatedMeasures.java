@@ -373,6 +373,8 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         		2 * sigStarTrace * HDivA.getTrace()) / 
         		(rankU * (sigStarSqTrace + 
         				2 * (sigmaStar.multiply(HDivA).getTrace())));        	
+        if (cdfMethod == UnivariateCdfApproximation.MULLER_BARTON_APPROX)
+        	epsilonN = epsilonD;
         
         if (nuEst > 0)
         {

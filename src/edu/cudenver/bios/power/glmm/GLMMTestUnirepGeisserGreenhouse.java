@@ -88,7 +88,7 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     {          
     	super.calculateEpsilon();
 
-    	if (this.cdfMethod == UnivariateCdfApproximation.MULLER_BARTON_APPROX)
+    	if (this.epsilonMethod == UnivariateEpsilonApproximation.MULLER_BARTON_APPROX)
     	{
     		// calculate the expected value of the epsilon estimate
     		//  E[f(lambda)] = f(lambda) + g1 / (N - r)

@@ -71,7 +71,7 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
     	super.calculateEpsilon();
     	double b = rankU;
 
-    	if (this.cdfMethod == UnivariateCdfApproximation.MULLER_BARTON_APPROX)
+    	if (this.epsilonMethod == UnivariateEpsilonApproximation.MULLER_BARTON_APPROX)
     	{
     		// calculate the expected value of the epsilon estimate
     		// E[h(lambda)] = h(lambda) + g1 / (N - r)
