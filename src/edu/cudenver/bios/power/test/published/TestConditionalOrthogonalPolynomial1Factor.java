@@ -115,7 +115,8 @@ public class TestConditionalOrthogonalPolynomial1Factor extends TestCase
         
         // build within subject contrast
         double[] times ={2, 4 ,6, 8, 10};
-        RealMatrix U = OrthogonalPolynomials.withinSubjectContrast(times);
+        String name = "times";
+        RealMatrix U = OrthogonalPolynomials.withinSubjectContrast(times, name).getMainEffectContrast(name);
         printMatrix("U Matrix", U);
         params.setWithinSubjectContrast(U);
         
