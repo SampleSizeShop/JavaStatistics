@@ -69,7 +69,7 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 	{
 		try
 		{
-			checker = new PowerChecker(DATA_FILE, false);
+			checker = new PowerChecker(DATA_FILE, true);
 		}
 		catch (Exception e)
 		{
@@ -87,9 +87,7 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 		System.out.println(TITLE);
 
 		// add all tests
-		//for(Test test: Test.values()) 
-		Test[] testList = {Test.UNIREP};
-		for(Test test: testList)
+		for(Test test: Test.values()) 
 		{
 			// set up the matrices
 			GLMMPowerParameters params = buildInputsWithoutContrasts();
@@ -109,23 +107,23 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 			params.setTheta(thetaNull);
 			checker.checkPower(params);
 
-//			// run power for 2 factor contrasts
-//			U = withinSubjectContrasts.getTwoFactorInteractionContrast(nameD, nameE);
-//			C = betweenSubjectContrasts.getTwoFactorInteractionContrast(nameA, nameB).transpose();
-//			thetaNull = MatrixUtils.createRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
-//			params.setWithinSubjectContrast(U);
-//			params.setBetweenSubjectContrast(new FixedRandomMatrix(C.getData(), null, true));
-//			params.setTheta(thetaNull);
-//			checker.checkPower(params);
-//
-//			// run power for 3 factor contrasts
-//			U = withinSubjectContrasts.getThreeFactorInteractionContrast(nameD, nameE, nameF);
-//			C = betweenSubjectContrasts.getThreeFactorInteractionContrast(nameA, nameB, nameC).transpose();
-//			thetaNull = MatrixUtils.createRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
-//			params.setWithinSubjectContrast(U);
-//			params.setBetweenSubjectContrast(new FixedRandomMatrix(C.getData(), null, true));
-//			params.setTheta(thetaNull);
-//			checker.checkPower(params);
+			// run power for 2 factor contrasts
+			U = withinSubjectContrasts.getTwoFactorInteractionContrast(nameD, nameE);
+			C = betweenSubjectContrasts.getTwoFactorInteractionContrast(nameA, nameB).transpose();
+			thetaNull = MatrixUtils.createRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
+			params.setWithinSubjectContrast(U);
+			params.setBetweenSubjectContrast(new FixedRandomMatrix(C.getData(), null, true));
+			params.setTheta(thetaNull);
+			checker.checkPower(params);
+
+			// run power for 3 factor contrasts
+			U = withinSubjectContrasts.getThreeFactorInteractionContrast(nameD, nameE, nameF);
+			C = betweenSubjectContrasts.getThreeFactorInteractionContrast(nameA, nameB, nameC).transpose();
+			thetaNull = MatrixUtils.createRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
+			params.setWithinSubjectContrast(U);
+			params.setBetweenSubjectContrast(new FixedRandomMatrix(C.getData(), null, true));
+			params.setTheta(thetaNull);
+			checker.checkPower(params);
 		}
 		// output and test the results
 		checker.outputResults();
