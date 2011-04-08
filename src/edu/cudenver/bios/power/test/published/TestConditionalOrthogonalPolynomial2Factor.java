@@ -30,7 +30,6 @@ import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.matrix.OrthogonalPolynomialContrastCollection;
 import edu.cudenver.bios.matrix.OrthogonalPolynomials;
-import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
@@ -47,10 +46,13 @@ import junit.framework.TestCase;
  */
 public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 {
-	private static final String DATA_FILE =  "sas" + File.separator + "data" + File.separator + "TestConditionalOrthogonalPolynomial2Factor.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalOrthogonalPolynomial2Factor.html";
+	private static final String MB_DATA_FILE =  "data" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMB.xml";
+	private static final String MEST_DATA_FILE =  "data" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMEST.xml";
+
+	private static final String MB_OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMB.html";
+	private static final String MEST_OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMEST.html";
+
 	private static final String TITLE = "Power results for 2 within factor orthogonal polynomial contrasts";
-	private PowerChecker checker;
 	
 	// groups for factors A,B, and C
 	double[] factorA = {1,2,4};
@@ -72,29 +74,102 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 	RealMatrix sigStarH = 
 		org.apache.commons.math.linear.MatrixUtils.createRealDiagonalMatrix(varH);
 	RealMatrix[] sigmaStars = {sigStarE, sigStarF, sigStarG, sigStarH};
-	
-	public void setUp()
+
+	/**
+	 * Test GLMM(F) with 2 Factor polynomial U matrix using the
+	 * Muller & Barton (1989) approximation
+	 */
+	public void testTwoFactorContrastMullerBarton()
 	{
+		PowerChecker checker = null;
+		// create a power checker
 		try
 		{
-			checker = new PowerChecker(DATA_FILE, true);
+			checker = new PowerChecker(MB_DATA_FILE, true);
+			checker.setSymmetryThreshold(1.0E-14);
 		}
 		catch (Exception e)
 		{
 			System.err.println("Setup failed: " + e.getMessage());
 			fail();
 		}    
+		
+		// set up the matrices and approximation method
+		GLMMPowerParameters params = buildSharedInputs();
+		// calculate power using Muller & Barton approximations
+		params.setUnivariateCdfMethod(Test.UNIREP, 
+				UnivariateCdfApproximation.MULLER_BARTON_APPROX);
+		params.setUnivariateCdfMethod(Test.UNIREP_BOX, 
+				UnivariateCdfApproximation.MULLER_BARTON_APPROX);
+		params.setUnivariateCdfMethod(Test.UNIREP_GEISSER_GREENHOUSE, 
+				UnivariateCdfApproximation.MULLER_BARTON_APPROX);
+		params.setUnivariateCdfMethod(Test.UNIREP_HUYNH_FELDT, 
+				UnivariateCdfApproximation.MULLER_BARTON_APPROX);
+		// set epsilon method to Muller Barton
+		params.setUnivariateEpsilonMethod(Test.UNIREP_GEISSER_GREENHOUSE, 
+				UnivariateEpsilonApproximation.MULLER_BARTON_APPROX);
+		params.setUnivariateEpsilonMethod(Test.UNIREP_HUYNH_FELDT, 
+				UnivariateEpsilonApproximation.MULLER_BARTON_APPROX);
+
+		checkPower(checker, TITLE +  ": Muller Barton", MB_OUTPUT_FILE, params, false);
+	}
+	
+	/**
+	 * Test GLMM(F) with 2 Factor polynomial U matrix using the
+	 * Muller & Barton (1989) approximation
+	 */
+	public void testTwoFactorContrastMullerEdwardsSimpsonTaylor()
+	{
+		PowerChecker checker = null;
+		// create a power checker
+		try
+		{
+			checker = new PowerChecker(MEST_DATA_FILE, true);
+			checker.setSymmetryThreshold(1.0E-14);
+		}
+		catch (Exception e)
+		{
+			System.err.println("Setup failed: " + e.getMessage());
+			fail();
+		}    
+		
+		// set up the matrices and approximation method
+		GLMMPowerParameters params = buildSharedInputs();
+		// calculate power using Muller, Edwards, Taylor approximations
+		params.setUnivariateCdfMethod(Test.UNIREP, 
+				UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
+		params.setUnivariateCdfMethod(Test.UNIREP_BOX, 
+				UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
+		params.setUnivariateCdfMethod(Test.UNIREP_GEISSER_GREENHOUSE, 
+				UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
+		params.setUnivariateCdfMethod(Test.UNIREP_HUYNH_FELDT, 
+				UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
+		// set epsilon method to Muller, Edwards, Taylor approximation
+		params.setUnivariateEpsilonMethod(Test.UNIREP_GEISSER_GREENHOUSE, 
+				UnivariateEpsilonApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
+		params.setUnivariateEpsilonMethod(Test.UNIREP_HUYNH_FELDT, 
+				UnivariateEpsilonApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
+
+		checkPower(checker, TITLE + ": Muller Edwards Simpson Taylor", MEST_OUTPUT_FILE, params, true);
 	}
 
 	/**
-	 * Test GLMM(F) with 2 Factor polynomial U matrix
+	 * 
+	 * @param checker
+	 * @param outputFilename
+	 * @param params
 	 */
-	public void testTwoFactorPolynomialContrasts()
+	private void checkPower(PowerChecker checker, String title, String outputFilename, 
+			GLMMPowerParameters params, boolean verifyAgainstSimulation)
 	{
-		System.out.println(TITLE);
-		
-		// set up the matrices
-		GLMMPowerParameters params = buildSharedInputs();
+		System.out.println(title);
+		/* 
+		 * get orthogonal contrasts for within subject factors
+		 * Log base 2 spacing Clip (2,4,16) and Region(2,8,32) 
+		 */
+		OrthogonalPolynomialContrastCollection collection = 
+			OrthogonalPolynomials.withinSubjectContrast(factorA, nameA, factorB, nameB);
+		params.setWithinSubjectContrast(collection.getTwoFactorInteractionContrast(nameA, nameB));
 		
 		// theta critical matrix used to back-tranform beta from U
 		//	 THETA = {.25}#{.5 1 -1 .5}; * =Theta(cr) from 1st sentence *after* 
@@ -115,54 +190,33 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 			{
 				RealMatrix U = params.getWithinSubjectContrast();
 				// 1st paragraph in section 2.4, Coffey and Muller 2003 *;
-				RealMatrix sigmaError = U.multiply(sigStar).multiply(U.transpose());
+				RealMatrix sigmaTemp = U.multiply(sigStar).multiply(U.transpose());
+				int dimension = sigmaTemp.getRowDimension();
+				RealMatrix Uother = 
+					MatrixUtils.createRealMatrixWithFilledValue(dimension, 1, 1/Math.sqrt(U.getColumnDimension()));
+				Uother = MatrixUtils.horizontalAppend(Uother, collection.getMainEffectContrast(nameA));
+				Uother = MatrixUtils.horizontalAppend(Uother, collection.getMainEffectContrast(nameB));
+				double varianceMean = (double) sigStar.getTrace() / (double) sigStar.getColumnDimension();
+				RealMatrix sigmaError = sigmaTemp.add(Uother.multiply(Uother.transpose()).scalarMultiply(varianceMean));
+				
+				printMatrix("Sigma Error",sigmaError);
 				// 1st paragraph in section 2.4, Coffey and Muller 2003 *; 
 				RealMatrix beta = thetaCr.multiply(U.transpose());       
 				params.setSigmaError(sigmaError);
 				params.setBeta(new FixedRandomMatrix(beta.getData(), null, false));
-			
-				// calculate power using Muller & Barton approximations
-				params.setUnivariateCdfMethod(Test.UNIREP, 
-						UnivariateCdfApproximation.MULLER_BARTON_APPROX);
-				params.setUnivariateCdfMethod(Test.UNIREP_BOX, 
-						UnivariateCdfApproximation.MULLER_BARTON_APPROX);
-				params.setUnivariateCdfMethod(Test.UNIREP_GEISSER_GREENHOUSE, 
-						UnivariateCdfApproximation.MULLER_BARTON_APPROX);
-				params.setUnivariateCdfMethod(Test.UNIREP_HUYNH_FELDT, 
-						UnivariateCdfApproximation.MULLER_BARTON_APPROX);
-				// set epsilon method to Muller Barton
-				params.setUnivariateEpsilonMethod(Test.UNIREP_GEISSER_GREENHOUSE, 
-						UnivariateEpsilonApproximation.MULLER_BARTON_APPROX);
-				params.setUnivariateEpsilonMethod(Test.UNIREP_HUYNH_FELDT, 
-						UnivariateEpsilonApproximation.MULLER_BARTON_APPROX);
-				checker.checkPower(params);
 
-				// calculate power using Muller, Edwards, Taylor approximations
-				params.setUnivariateCdfMethod(Test.UNIREP, 
-						UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
-				params.setUnivariateCdfMethod(Test.UNIREP_BOX, 
-						UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
-				params.setUnivariateCdfMethod(Test.UNIREP_GEISSER_GREENHOUSE, 
-						UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
-				params.setUnivariateCdfMethod(Test.UNIREP_HUYNH_FELDT, 
-						UnivariateCdfApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
-				// set epsilon method to Muller, Edwards, Taylor approximation
-				params.setUnivariateEpsilonMethod(Test.UNIREP_GEISSER_GREENHOUSE, 
-						UnivariateEpsilonApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
-				params.setUnivariateEpsilonMethod(Test.UNIREP_HUYNH_FELDT, 
-						UnivariateEpsilonApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
 				checker.checkPower(params);
 			}
 
 		}
 		// output and test the results
 		checker.outputResults();
-		checker.outputResults(TITLE, OUTPUT_FILE);
+		checker.outputResults(title, outputFilename);
 		assertTrue(checker.isSASDeviationBelowTolerance());
-		assertTrue(checker.isSimulationDeviationBelowTolerance());
+		if (verifyAgainstSimulation)
+			assertTrue(checker.isSimulationDeviationBelowTolerance());
 		checker.reset();
 	}
-
 	
 	
 	/**
@@ -172,7 +226,7 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 	private void printMatrix(String title, RealMatrix m)
 	{
 		System.out.println(title);
-		DecimalFormat Number = new DecimalFormat("#0.000");
+		DecimalFormat Number = new DecimalFormat("#0.00000000000000000000");
 		for(int row = 0; row < m.getRowDimension(); row++)
 		{
 			for(int col= 0; col < m.getColumnDimension(); col++)
@@ -193,20 +247,13 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 
 		// build the inputs        
 		GLMMPowerParameters params = new GLMMPowerParameters();
-		
+
 		// add alpha values - bonferroni corrected for 6 comparisons
 		params.addAlpha(0.04);
 
 		// build the design matrix 
 		params.setDesignEssence(org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1));
 
-		/* 
-		 * get orthogonal contrasts for within subject factors
-		 * Log base 2 spacing Clip (2,4,16) and Region(2,8,32) 
-		 */
-		OrthogonalPolynomialContrastCollection collection = 
-			OrthogonalPolynomials.withinSubjectContrast(factorA, nameA, factorB, nameB);
-		params.setWithinSubjectContrast(collection.getTwoFactorInteractionContrast(nameA, nameB));
 		// set between subject contrast
 		double[][] cData = {{1}};
 		params.setBetweenSubjectContrast(new FixedRandomMatrix(cData, null, true));
