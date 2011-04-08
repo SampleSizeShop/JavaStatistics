@@ -33,7 +33,7 @@ import org.apache.commons.math.linear.RealMatrix;
 public abstract class GLMMTest
 {    
 	// cutoff for noncentrality parameters to avoid very small negative numbers
-	protected static final double TOLERANCE = 0.0000000000001;
+	protected double eigenTolerance = 1.0E-15;
 	// type of approximation to use for unirep
 	public enum UnivariateCdfApproximation
 	{
@@ -310,4 +310,12 @@ public abstract class GLMMTest
         return U.transpose().multiply(sigmaError.multiply(U)).scalarMultiply(totalN-rank);
     }    
     
+    /**
+     * Set threshold for eigen value decomposition
+     * @param tolerance tolerance for eigen decomposition
+     */
+    public void setEigenTolerance(double tolerance)
+    {
+    	this.eigenTolerance = tolerance;
+    }
 }

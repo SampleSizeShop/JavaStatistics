@@ -42,7 +42,6 @@ import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
  */
 public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
 {    
-    protected static final double TOLERANCE = 0.000000000001;
     // if sigma is estimated, then this value will be set to totalN_est - rank_est
     // where totalN_est is the sample size for the data set from which sigma was estimated
     // and rank_est is the rank of the design matrix in the data set used for estimation
@@ -324,7 +323,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         
         // get the eigen values of the normalized sigmaStar matrix
         sigmaStarEigenValues = 
-        	new EigenDecompositionImpl(sigmaStar.scalarMultiply(1/sigmaStar.getTrace()), TOLERANCE).getRealEigenvalues();
+        	new EigenDecompositionImpl(sigmaStar.scalarMultiply(1/sigmaStar.getTrace()), eigenTolerance).getRealEigenvalues();
         if (sigmaStarEigenValues.length <= 0) throw new IllegalArgumentException("Failed to compute eigenvalues for sigma* matrix");
         Arrays.sort(sigmaStarEigenValues);
         // get the trace of sigma* and sigma* squared    
@@ -346,7 +345,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
             
             // determine if this is a distinct eigen value and calculate multiplicity
             EigenValueMultiplicityPair prev = distinctSigmaStarEigenValues.get(distinctSigmaStarEigenValues.size()-1);
-            if (Math.abs(prev.eigenValue - value) > TOLERANCE)
+            if (Math.abs(prev.eigenValue - value) > eigenTolerance)
             {
                 // found new distinct eigen value
             	distinctSigmaStarEigenValues.add(new EigenValueMultiplicityPair(value, 1));

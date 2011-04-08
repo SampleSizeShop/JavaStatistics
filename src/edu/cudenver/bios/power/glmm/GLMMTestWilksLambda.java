@@ -35,6 +35,7 @@ import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
  */
 public class GLMMTestWilksLambda extends GLMMTest
 {
+	private static final double TOLERANCE = 1.0E-15;
 	/**
 	 * Create a Wilk's Lambda test object for the specified parameters
 	 * @param params GLMM input parameters
