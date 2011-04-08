@@ -121,7 +121,7 @@ QUIT;
 
 *** Section that creates plot with confidence limits for power for N=40***;
 
-FILENAME OUT01 "&DATA_DIRECTORY\TestConditionalMultivariateWithConfidenceLimits.png";
+FILENAME OUT01 "&RESULTS_DIRECTORY\TestConditionalMultivariateWithConfidenceLimits.png";
 
 GOPTIONS RESET=ALL GSFNAME=OUT01 DEVICE=PNG
 CBACK=WHITE COLORS=(BLACK) HORIGIN=0IN VORIGIN=0IN
