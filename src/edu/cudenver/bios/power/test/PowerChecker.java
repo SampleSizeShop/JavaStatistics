@@ -34,6 +34,7 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.commons.math.linear.CholeskyDecompositionImpl;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -61,7 +62,8 @@ public class PowerChecker
 		}
 	}
 	
-	
+	private double positivityThreshold = CholeskyDecompositionImpl.DEFAULT_ABSOLUTE_POSITIVITY_THRESHOLD;
+	private double symmetryThreshold = CholeskyDecompositionImpl.DEFAULT_RELATIVE_SYMMETRY_THRESHOLD;
     private static final int SIMULATION_SIZE = 10000;
     private static DecimalFormat Number = new DecimalFormat("#0.0000000");
     private static DecimalFormat LongNumber = new DecimalFormat("#0.00000000");
@@ -186,7 +188,8 @@ public class PowerChecker
     {
     	// create a power calculator
     	GLMMPowerCalculator calc = new GLMMPowerCalculator();
-
+    	calc.setPositivityThreshold(positivityThreshold);
+    	calc.setSymmetryThreshold(symmetryThreshold);
     	// perform the calculations
     	System.out.println("Calculating power...");
     	long startTime = System.currentTimeMillis();
@@ -481,5 +484,13 @@ public class PowerChecker
     	simTolerance = tolerance;
     }
     
+    public void setPositivityThreshold(double threshold)
+    {
+    	this.positivityThreshold = threshold;
+    }
     
+    public void setSymmetryThreshold(double threshold)
+    {
+    	this.symmetryThreshold = threshold;
+    }
 }
