@@ -24,7 +24,7 @@
 * code in order to run these modules.
 */
 /* Directory in which to write output from SAS test cases - DO NOT EDIT */
-%LET DATA_DIRECTORY = ..\data;
+%LET DATA_DIRECTORY = ..\..\data;
 /* Sas Test Code directory - DO NOT EDIT */
 %LET CODE_DIRECTORY = ..\code;
 /* Java results directory - DO NOT EDIT */

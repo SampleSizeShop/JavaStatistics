@@ -1,5 +1,6 @@
 REM
-REM This file runs all SAS code which generates XML inputs to the java unit tests
+REM This file runs all SAS code which generates XML inputs to the java unit tests.  Note, this only includes
+REM examples described in the GLIMMPSE paper.  Additional .sas files must be run individuals.
 REM
 "C:\Program Files\SAS\SASFoundation\9.2\sas.exe" -NOSPLASH -NOLOG -NOPRINT -NOLOG -NOPRINT -sysin ./TestConditionalMultivariate.sas
 "C:\Program Files\SAS\SASFoundation\9.2\sas.exe" -NOSPLASH -NOLOG -NOPRINT -NOLOG -NOPRINT -sysin ./TestConditionalMultivariateInteraction.sas
