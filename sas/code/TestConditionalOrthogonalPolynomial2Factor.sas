@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 /* 
-* Conditional power for all tests with fixed design
+* Conditional power for multipvariate with two within subject factors
 */
-TITLE "Conditional Power, Fixed Design, Multivariate";
+TITLE1 "Test in multivariate model with two within factors - based on example 9 from POWERLIB";
+TITLE2 "From Coffey C.S. and Muller K.E. (2003) Properties of ";
+TITLE3 "internal pilots with the univariate approach to repeated measures";
+TITLE4 "Statistics in Medicine, 22(15)";
 %INCLUDE "common.sas";
 
 LIBNAME DATA_DIR "&DATA_DIRECTORY";
@@ -30,42 +33,71 @@ PROC IML SYMSIZE=1000 WORKSIZE=2000;
 %INCLUDE "&POWERLIB_IML_FILE"/NOSOURCE2;
 %INCLUDE "XMLUTILITIES.IML"/NOSOURCE2;
 
-OPT_ON = {ORTHU UN HF GG BOX  HLT PBT WLK MMETHOD  UMETHOD MMETHOD};
-* Specifying the option ORTHU in OPT_ON allows the program to provide;
-* an orthonormal U matrix if one is not given by the user;
-* This is the case for the following code;
-
-P=3;
-Q=4;
-C=J(Q-1,1,1)||(-I(Q-1));
-U=( J(P-1,1,1)||(-I(P-1)) )`;
-ALPHA=0.05;
-
-VARIANCE=1;  RHO=0.4;
-SIGMA=VARIANCE#(I(P)#(1-RHO) + J(P,P,RHO)); *Compound symmetry;
-*SIGMA={1 0.2 0.3,0.2 1 0.2,0.3 0.2 1};
-SIGSCAL={1, 2};
-PRINT SIGMA;
-ESSENCEX=I(Q); REPN={5, 10}; *REPN={5,10}; 
-BETA=J(Q,P,0);
-BETA[1,1]=1;
-BETASCAL=DO(0, 2.0 , 0.50);
-
-*MMETHOD={4,4,4};   *two moment null approximations + OS noncen multiplier ON;
-
-*UCDF = {4,2,2,4};  * UN and Box (4) exact via Davies' algorithm (1980), as in; 
-                   * Muller Edwards Taylor (2003). If exact fails then ; 
-                   * switch to approximation 2, MET 2003;
-                   * HF and GG: (2) Muller, Edwards, and Taylor (2004) approx;
-
-* Output full precision ;
+ALPHA = .04;
+OPT_ON = {UN HF GG BOX  HLT PBT WLK UMETHOD MMETHOD NOPRINT};
+OPT_OFF = {COLLAPSE WARN};
 ROUND = 15;
 
-RUN POWER;
+BETASCAL = 1;
+THETA = {.25}#{.5 1 -1 .5}; * =Theta(cr) from 1st sentence *after* 
+                            *  equation 7, Coffey and Muller (2003); 
 
+* Following from Table II in Coffey and Muller (2003) *;
+VARSTARE = {.47960 .01000 .01000 .01000}; * epsilon ~ .28 *; 
+VARSTARF = {.34555 .06123 .05561 .04721}; * epsilon ~ .50 *;
+VARSTARG = {.23555 .17123 .05561 .04721}; * epsilon ~ .72 *;
+VARSTARH = {.12740 .12740 .12740 .12740}; * epsilon = 1 *;
+VARSTAR = VARSTARE//VARSTARF//VARSTARG//VARSTARH;
+
+SIGSCAL = {0.50 1.00 2.00}; * <=> gamma in Coffey and Muller (2003) *;
+
+* Log base 2 spacing Clip (2,4,16) and Region(2,8,32) *;
+* Get orthonormal U matrices *;
+RUN UPOLY2({1 2 4},"A", {1 3 5},"B",
+            UA,NMA, UB,NMB, UAB,NMAB);
+U = UAB;
+C = 1;
+
+ESSENCEX = {1};
+REPN = {20};
+
+* Run with Muller Barton approximation ;
+UCDF = J(4,1,1);
+UMETHOD = J(2,1,1);
+  DO IVAR = 1 TO 4 BY 1;
+    SIGSTAR = DIAG(VARSTAR[IVAR,*]);
+    SIGMA = U*SIGSTAR*U`;  * 1st paragraph in section 2.4, Coffey and Muller 2003 *;
+    BETA = THETA*U`;       * 1st paragraph in section 2.4, Coffey and Muller 2003 *; 
+
+    RUN POWER;
+    HOLDALL = HOLDALL//_HOLDPOWER;
+  END;
+PRINT HOLDALL[COLNAME=_HOLDPOWERLBL];
 /* write the data to an XML file */
-TEST_LIST = {'unirep' 'unirepBox' 'unirepGG' 'unirepHF' 'wl' 'pbt' 'hlt'};
-filename out "&DATA_DIRECTORY\TestConditionalMultivariate.xml";
-RUN powerResultsToXML(out, _HOLDPOWER, TEST_LIST, 0);
+TEST_LIST = {'unirep' 'unirepBox' 'unirepGG' 'unirepHF'};
+filename out "&DATA_DIRECTORY\TestConditionalOrthogonalPolynomial2FactorMB.xml";
+RUN powerResultsToXML(out, HOLDALL, TEST_LIST, 0);
+
+
+* Run with Muller, Edwards, Simpson, Taylor approximation ;
+FREE HOLDALL;
+UCDF = J(4,1,2);
+UMETHOD = J(2,1,2);
+  DO IVAR = 1 TO 4 BY 1;
+    SIGSTAR = DIAG(VARSTAR[IVAR,*]);
+    SIGMA = U*SIGSTAR*U`;  * 1st paragraph in section 2.4, Coffey and Muller 2003 *;
+    BETA = THETA*U`;       * 1st paragraph in section 2.4, Coffey and Muller 2003 *; 
+
+    RUN POWER;
+    HOLDALL = HOLDALL//_HOLDPOWER;
+  END;
+PRINT HOLDALL[COLNAME=_HOLDPOWERLBL];
+/* write the data to an XML file */
+TEST_LIST = {'unirep' 'unirepBox' 'unirepGG' 'unirepHF'};
+filename out "&DATA_DIRECTORY\TestConditionalOrthogonalPolynomial2FactorMEST.xml";
+RUN powerResultsToXML(out, HOLDALL, TEST_LIST, 0);
+
 
 QUIT;
+
+
