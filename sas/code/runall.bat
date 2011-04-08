@@ -2,9 +2,9 @@ REM
 REM This file runs all SAS code which generates XML inputs to the java unit tests.  Note, this only includes
 REM examples described in the GLIMMPSE paper.  Additional .sas files must be run individuals.
 REM
-"C:\Program Files\SAS\SASFoundation\9.2\sas.exe" -NOSPLASH -NOLOG -NOPRINT -NOLOG -NOPRINT -sysin ./TestConditionalMultivariate.sas
-"C:\Program Files\SAS\SASFoundation\9.2\sas.exe" -NOSPLASH -NOLOG -NOPRINT -NOLOG -NOPRINT -sysin ./TestConditionalMultivariateInteraction.sas
-"C:\Program Files\SAS\SASFoundation\9.2\sas.exe" -NOSPLASH -NOLOG -NOPRINT -NOLOG -NOPRINT -sysin ./TestConditionalMultivariateWithConfidenceLimits.sas
+"C:\Program Files\SAS\SASFoundation\9.2\sas.exe" -NOSPLASH -NOLOG -NOPRINT -sysin ./TestConditionalMultivariate.sas
+"C:\Program Files\SAS\SASFoundation\9.2\sas.exe" -NOSPLASH -NOLOG -NOPRINT -sysin ./TestConditionalMultivariateInteraction.sas
+"C:\Program Files\SAS\SASFoundation\9.2\sas.exe" -NOSPLASH -NOLOG -NOPRINT -sysin ./TestConditionalMultivariateWithConfidenceLimits.sas
 "C:\Program Files\SAS\SASFoundation\9.2\sas.exe" -NOSPLASH -NOLOG -NOPRINT -sysin ./TestConditionalOrthogonalPolynomial1Factor.sas
 "C:\Program Files\SAS\SASFoundation\9.2\sas.exe" -NOSPLASH -NOLOG -NOPRINT -sysin ./TestConditionalOrthogonalPolynomial2Factor.sas
 "C:\Program Files\SAS\SASFoundation\9.2\sas.exe" -NOSPLASH -NOLOG -NOPRINT -sysin ./TestConditionalOrthogonalPolynomial3Factor.sas
