@@ -11,14 +11,16 @@ import org.apache.commons.math.linear.RealMatrix;
  */
 public class RandomErrorMatrix
 {
-	private static final double RELATIVE_SYMMETRY_THRESHOLD = 
+	private double symmetryThreshold = 
 	    CholeskyDecompositionImpl.DEFAULT_RELATIVE_SYMMETRY_THRESHOLD;
-	private static final double POSITIVITY_THRESHOLD = 
-	    CholeskyDecompositionImpl.DEFAULT_ABSOLUTE_POSITIVITY_THRESHOLD;
+	private double positivityThreshold = 
+		CholeskyDecompositionImpl.DEFAULT_ABSOLUTE_POSITIVITY_THRESHOLD;
 	
 	protected long seed = 1234;
 	protected RealMatrix matrix;
 	protected RealMatrix sigma;
+	protected CholeskyDecompositionImpl cholesky = null;
+	protected RealMatrix sqrtMatrix = null;
 	protected Normal normalDist;
 
 	public RandomErrorMatrix(int rows, int cols, RealMatrix sigma)
@@ -32,6 +34,27 @@ public class RandomErrorMatrix
 	{
 		this.seed = seed;
 		normalDist.setSeed(seed);
+	}
+	
+    /**
+     * Set the positivity threshold for Cholesky decomposition.  This
+     * allows Cholesky decomposition for matrices with very small negative values.
+     */
+	public void setPositivityThreshold(double positivityThreshold)
+	{
+		this.positivityThreshold = positivityThreshold;
+		this.cholesky = null;
+	}
+	
+    /**
+     * Set the symmetric threshold for Cholesky decomposition.  This
+     * allows Cholesky decomposition for matrices with very small differences
+     * between symmetric cells.
+     */
+	public void setSymmetryThreshold(double symmetryThreshold)
+	{
+		this.symmetryThreshold = symmetryThreshold;
+		this.cholesky = null;
 	}
 	
     /**
@@ -61,10 +84,13 @@ public class RandomErrorMatrix
         // take the square root of the sigma matrix via cholesky decomposition
         try
         {            
-            RealMatrix sqrtMatrix = 
-                new CholeskyDecompositionImpl(sigma, 
-                        RELATIVE_SYMMETRY_THRESHOLD,
-                        POSITIVITY_THRESHOLD).getLT();
+        	if (this.cholesky == null)
+        	{
+        		this.cholesky = new CholeskyDecompositionImpl(sigma, 
+                        symmetryThreshold,
+                        positivityThreshold);
+                sqrtMatrix = cholesky.getLT();
+        	}
             return matrix.multiply(sqrtMatrix); 
         }
         catch (Exception e)
