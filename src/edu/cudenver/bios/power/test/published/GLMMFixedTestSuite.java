@@ -36,16 +36,17 @@ public class GLMMFixedTestSuite
 
         TestSuite suite = new TestSuite();
   
-        suite.addTestSuite(TestConditionalUnivariate.class);
         suite.addTestSuite(TestConditionalMultivariate.class);
-        suite.addTestSuite(TestHotellingLawleyApproximateQuantile.class);
-        suite.addTestSuite(TestHotellingLawleyApproximateUnconditional.class);
-        suite.addTestSuite(TestHotellingLawleyExactQuantile.class);
-        suite.addTestSuite(TestHotellingLawleyExactUnconditional.class);
-        suite.addTestSuite(TestUnirepApproximateQuantile.class);
-        suite.addTestSuite(TestUnirepApproximateUnconditional.class);
-        suite.addTestSuite(TestUnirepExactQuantile.class);
-        suite.addTestSuite(TestUnirepExactUnconditional.class);
+        suite.addTestSuite(TestConditionalMultivariateInteraction.class);
+        suite.addTestSuite(TestConditionalMultivariateWithConfidenceLimits.class);
+        suite.addTestSuite(TestConditionalOrthogonalPolynomial1Factor.class);
+        suite.addTestSuite(TestConditionalOrthogonalPolynomial2Factor.class);
+        suite.addTestSuite(TestConditionalOrthogonalPolynomial3Factor.class);
+        suite.addTestSuite(TestConditionalPairedTTest.class);
+        suite.addTestSuite(TestConditionalTwoSampleTTest.class);
+        suite.addTestSuite(TestConditionalTwoSampleTTest3DPlot.class);
+        suite.addTestSuite(TestConditionalUnivariate.class);
+        suite.addTestSuite(TestConditionalUnivariateWithConfidenceLimits.class);
 
         return suite;
     }
