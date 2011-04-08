@@ -30,6 +30,7 @@ import org.apache.commons.math.analysis.solvers.UnivariateRealSolver;
 import org.apache.commons.math.analysis.solvers.UnivariateRealSolverFactory;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 //import org.apache.commons.math.linear.MatrixUtils;
+import org.apache.commons.math.linear.CholeskyDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 import org.apache.commons.math.stat.StatUtils;
@@ -61,6 +62,16 @@ public class GLMMPowerCalculator implements PowerCalculator
     private static final int STARTING_SAMPLE_SIZE = 1000;
     private static final int STARTING_BETA_SCALE = 1;
     private static final int SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL = 1000;
+    
+    // accuracy thresholds
+    // minimum value still considered positive in Cholesky decomposition
+    protected double positivityThreshold = 
+    	CholeskyDecompositionImpl.DEFAULT_ABSOLUTE_POSITIVITY_THRESHOLD;
+    // minimum difference still considered symmetric in Cholesky decomposition
+    protected double symmetryThreshold = 
+    	CholeskyDecompositionImpl.DEFAULT_RELATIVE_SYMMETRY_THRESHOLD;
+    // eigen value decomposition tolerance
+    protected double eigenTolerance = 0.000000000001;
     
     /**
      * container class for simulation info
@@ -1079,7 +1090,8 @@ public class GLMMPowerCalculator implements PowerCalculator
     	RandomErrorMatrix randomErrors = 
     		new RandomErrorMatrix(MatrixUtils.getTotalSampleSize(params.getDesignEssence(), 
     				sampleSize), scaledBeta.getColumnDimension(), scaledSigmaError);
-    	
+    	randomErrors.setPositivityThreshold(positivityThreshold);
+    	randomErrors.setSymmetryThreshold(symmetryThreshold);
 		double[] powerValues = new double[iterations];
 
 		for(int gInstance = 0; gInstance < iterations; gInstance++)
@@ -1188,7 +1200,9 @@ public class GLMMPowerCalculator implements PowerCalculator
     	// get random errors
     	RandomErrorMatrix randomErrors = 
     		new RandomErrorMatrix(MatrixUtils.getTotalSampleSize(params.getDesignEssence(), 
-    				sampleSize), scaledBeta.getColumnDimension(), scaledSigmaError);
+    				sampleSize), scaledSigmaError.getColumnDimension(), scaledSigmaError);
+    	randomErrors.setPositivityThreshold(positivityThreshold);
+    	randomErrors.setSymmetryThreshold(symmetryThreshold);
     	
     	double power = Double.NaN;
 
@@ -1276,4 +1290,33 @@ public class GLMMPowerCalculator implements PowerCalculator
         }
         return power;
     }
+    
+    /**
+     * Set the positivity threshold for Cholesky decomposition during simulation.  This
+     * allows Cholesky decomposition for matrices with very small negative values.
+     */
+    public void setPositivityThreshold(double threshold)
+    {
+    	this.positivityThreshold = threshold;
+    }
+    
+    /**
+     * Set the symmetry threshold for Cholesky decomposition during simulation.  This
+     * allows Cholesky decomposition for matrices with very small differences between
+     * symmetric cells.
+     */
+    public void setSymmetryThreshold(double threshold)
+    {
+    	this.symmetryThreshold = threshold;
+    }
+    
+    /**
+     * Set threshold for eigen value decomposition
+     * @param tolerance tolerance for eigen decomposition
+     */
+    public void setEigenTolerance(double tolerance)
+    {
+    	this.eigenTolerance = tolerance;
+    }
+
 }
