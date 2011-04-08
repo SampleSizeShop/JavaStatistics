@@ -36,8 +36,6 @@ public class GLMMCovariateTestSuite
 
         TestSuite suite = new TestSuite();
   
-        suite.addTestSuite(TestConditionalUnivariate.class);
-        suite.addTestSuite(TestConditionalMultivariate.class);
         suite.addTestSuite(TestHotellingLawleyApproximateQuantile.class);
         suite.addTestSuite(TestHotellingLawleyApproximateUnconditional.class);
         suite.addTestSuite(TestHotellingLawleyExactQuantile.class);
