@@ -50,7 +50,7 @@ X={1 0 0 ,
 
 *ESSENCEF = X[*,1:3];
 ESSENCEF = X_WITH_COVARIATE[*,1:3];
-
+ESSENCEF = {1 0 0, 0 1 0, 0 0 1};
 * get number of observations;
 SIGMAYY={1 0,
 		 0 1};
@@ -78,24 +78,26 @@ B=NCOL(U);
 ALPHA={.05};
 
 *Assume pure treatment-gender interaction;
-ESSBETAF={0.1 0,
+ESSBETAF={1 0,
           0 0,
           0 0};
 THETA0 = J(A,B,0);
 
-H_OR_U="U";
+H_OR_U="H";
 VARG=SIGMAGG;
 SIGSTAR=U`*SIGMAE*U;
 
 MAXPDIFF=.001;
 MAXITER=50;
-PROBLIST={0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 };
+PROBLIST={0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0};
 
-DO REPN=1 TO 1 BY 1;
+DO REPN=5 TO 5 BY 1;
   N=REPN#NROW(ESSENCEF);
   BETA = (ESSBETAF)//BETAG;
   PRINT BETA;
   THETA = C*BETA*U;
+  PRINT C U;
+  PRINT THETA;
   THETAD=THETA-THETA0;
   DO IPROB=1 TO NCOL(PROBLIST);
     /* Inverse cdf of non-centrality distribution */
