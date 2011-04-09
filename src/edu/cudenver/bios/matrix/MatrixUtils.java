@@ -203,14 +203,14 @@ public class MatrixUtils
 	 * @return full design matrix
 	 */
 	public static RealMatrix getFullDesignMatrix(RealMatrix designEssence, 
-			RealMatrix sigmaGaussianRandom, int sampleSize)
+			RealMatrix sigmaGaussianRandom, int sampleSize, int seed)
 	{
 		RealMatrix fixed = MatrixUtils.KroneckerProduct(designEssence, 
 				MatrixUtils.createRealMatrixWithFilledValue(sampleSize, 1, 1));
 			// GLMM(F, g), so we need to append a random column
 			return MatrixUtils.horizontalAppend(fixed, 
-					MatrixUtils.createRandomColumn(sampleSize, 0, 
-							sigmaGaussianRandom.getEntry(0, 0), 1234));
+					MatrixUtils.createRandomColumn(fixed.getRowDimension(), 0, 
+							sigmaGaussianRandom.getEntry(0, 0), seed));
 	}
 	
     /**
