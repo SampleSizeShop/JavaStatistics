@@ -95,19 +95,20 @@ public class NonCentralityDistribution
      * otherwise a Satterthwaite style approximation is used.
      * @throws IllegalArgumentException
      */
-    public NonCentralityDistribution(Test test, RealMatrix F, RealMatrix FtFinverse, int N, 
+    public NonCentralityDistribution(Test test, RealMatrix FEssence, RealMatrix FtFinverse, int perGroupN, 
     		FixedRandomMatrix CFixedRand, RealMatrix U, 
     		RealMatrix thetaNull, RealMatrix beta, 
     		RealMatrix sigmaError, RealMatrix sigmaG, boolean exact)
     throws IllegalArgumentException
     {
+    	this.N = FEssence.getRowDimension() * perGroupN;
         this.exact = exact;
         try
         {                    
             // TODO: need to calculate H0, need to adjust H1 for Unirep
             // get design matrix for fixed parameters only
 //            RealMatrix F = params.getDesignEssence().getFullDesignMatrixFixed();
-            qF = F.getColumnDimension();
+            qF = FEssence.getColumnDimension();
             a = CFixedRand.getCombinedMatrix().getRowDimension();
 //            N = F.getRowDimension();
             // get fixed contrasts
@@ -116,10 +117,12 @@ public class NonCentralityDistribution
             // build intermediate terms h1, S
             if (FtFinverse == null)
             {
-            	FtFinverse = new LUDecompositionImpl(F.transpose().multiply(F)).getSolver().getInverse();
+            	FtFinverse = new LUDecompositionImpl(FEssence.transpose().multiply(FEssence)).getSolver().getInverse();
+            	FtFinverse = FtFinverse.scalarMultiply(1/(double) perGroupN);
             }
-            RealMatrix P = Cfixed.multiply(FtFinverse).multiply(F.transpose());
-            RealMatrix PPt = P.multiply(P.transpose());            
+            //CF*FPFINV*CF`
+            RealMatrix PPt = Cfixed.multiply(FtFinverse).multiply(Cfixed.transpose());
+           // RealMatrix PPt = Cfixed.multiply(FtFinverse).multiply(FEssence.transpose());
             T1 = new LUDecompositionImpl(PPt).getSolver().getInverse();
             FT1 = new CholeskyDecompositionImpl(T1).getL();
             // calculate theta difference
