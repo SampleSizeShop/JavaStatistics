@@ -28,6 +28,8 @@ import org.apache.commons.math.linear.InvalidMatrixException;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 import org.apache.commons.math.util.MathUtils;
+
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.GramSchmidtOrthonormalization;
 import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
@@ -107,7 +109,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     public GLMMTestUnivariateRepeatedMeasures(FApproximation fMethod, 
     		UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
-    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError, int nuEst)
     {
         super(fMethod, Xessence, XtXInverse, perGroupN, rank,

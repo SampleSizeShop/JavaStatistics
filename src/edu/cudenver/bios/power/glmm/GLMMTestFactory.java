@@ -22,6 +22,7 @@ package edu.cudenver.bios.power.glmm;
 
 import org.apache.commons.math.linear.RealMatrix;
 
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
@@ -86,7 +87,7 @@ public class GLMMTestFactory
     		FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
     		UnivariateEpsilonApproximation epsilonMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
-    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError, int nuForEstimatedSigma)
     throws IllegalArgumentException
     {

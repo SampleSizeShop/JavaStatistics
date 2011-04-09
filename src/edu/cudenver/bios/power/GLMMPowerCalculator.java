@@ -594,7 +594,8 @@ public class GLMMPowerCalculator implements PowerCalculator
             throw new IllegalArgumentException("Between subject contrast does not conform with beta matrix");
         if (beta.getColumnDimension() != U.getRowDimension())
             throw new IllegalArgumentException("Within subject contrast does not conform with beta matrix");
-        if (XEssence.getColumnDimension() != beta.getRowDimension())
+        if ((XEssence.getColumnDimension() != beta.getRowDimension() && numRandom == 0) ||
+        		(XEssence.getColumnDimension() + 1 != beta.getRowDimension() && numRandom > 0))
             throw new IllegalArgumentException("Design matrix does not conform with beta matrix");
         if (C.getRowDimension() > C.getColumnDimension())
             throw new IllegalArgumentException("Number of rows in between subject contrast must be less than or equal to the number of columns");
@@ -731,7 +732,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 				params.getXtXInverse(), 
 				STARTING_SAMPLE_SIZE,
 				params.getDesignRank(), 
-				params.getBetweenSubjectContrast().getCombinedMatrix(), 
+				params.getBetweenSubjectContrast(), 
 				params.getWithinSubjectContrast(), 
 				params.getTheta(), 
 				scaledBeta, scaledSigmaError,
@@ -825,7 +826,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 				params.getXtXInverse(), 
 				sampleSize,
 				params.getDesignRank(), 
-				params.getBetweenSubjectContrast().getCombinedMatrix(), 
+				params.getBetweenSubjectContrast(), 
 				params.getWithinSubjectContrast(), 
 				params.getTheta(), 
 				scaledBeta, scaledSigmaError,
@@ -1134,7 +1135,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 				params.getXtXInverse(), 
 				sampleSize,
 				params.getDesignRank(), 
-				params.getBetweenSubjectContrast().getCombinedMatrix(), 
+				params.getBetweenSubjectContrast(), 
 				params.getWithinSubjectContrast(), 
 				params.getTheta(), 
 				scaledBeta, scaledSigmaError,
@@ -1146,8 +1147,8 @@ public class GLMMPowerCalculator implements PowerCalculator
     	{
     		nonCentralityDist = new NonCentralityDistribution(test, 
     				params.getDesignEssence(), 
-    				params.getXtXInverse(), 
-    				MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize),
+    				params.getXtXInverse().scalarMultiply(1/(double) sampleSize), 
+    				sampleSize,
     				params.getBetweenSubjectContrast(),
     				params.getWithinSubjectContrast(),
     				params.getTheta(),

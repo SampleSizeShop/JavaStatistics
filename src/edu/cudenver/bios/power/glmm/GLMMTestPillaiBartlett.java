@@ -24,6 +24,7 @@ import org.apache.commons.math.linear.InvalidMatrixException;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
 
 /**
@@ -41,7 +42,7 @@ public class GLMMTestPillaiBartlett extends GLMMTest
 	 */
     public GLMMTestPillaiBartlett(FApproximation fMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
-    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError)
     {
         super(fMethod, Xessence, XtXInverse, perGroupN, rank,

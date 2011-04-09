@@ -22,6 +22,8 @@ package edu.cudenver.bios.power.glmm;
 
 import org.apache.commons.math.linear.RealMatrix;
 
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
+
 /**
  * Implementation of the univariate approach to repeated measures test 
  * with Box correction (UNIREP-Box) for the general linear multivariate model. 
@@ -41,7 +43,7 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
     public GLMMTestUnirepBox(FApproximation fMethod, 
     		UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
-    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError, int nuEst)
     {
         // unirep base class will calculate epsilon for box correction

@@ -25,6 +25,8 @@ import jsc.distributions.FishersF;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
+
 /**
  * Abstract base class for statistical tests for the GLMM
  * @author Sarah Kreidler
@@ -127,7 +129,7 @@ public abstract class GLMMTest
      */
     public GLMMTest(FApproximation fMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
-    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError)
     {
         this.fMethod = fMethod;
@@ -135,14 +137,15 @@ public abstract class GLMMTest
         this.XtXInverse =  XtXInverse;
         this.totalN =  Xessence.getRowDimension() * perGroupN; 
         this.rank = rank; 
-        this.C = C; 
+        this.C = C.getCombinedMatrix(); 
         this.U =  U; 
         this.thetaNull =  thetaNull; 
         this.beta =  beta;
         this.sigmaError = sigmaError;
         
         // cache the value of M
-        RealMatrix cxxcEssence = C.multiply((XtXInverse).multiply(C.transpose()));
+        RealMatrix CFixed = C.getFixedMatrix();
+        RealMatrix cxxcEssence = CFixed.multiply((XtXInverse).multiply(CFixed.transpose()));
         RealMatrix cxxcEssenceInverse = new LUDecompositionImpl(cxxcEssence).getSolver().getInverse();
         this.M = cxxcEssenceInverse.scalarMultiply(perGroupN);
     }
@@ -173,7 +176,7 @@ public abstract class GLMMTest
         }
         this.totalN =  X.getRowDimension(); 
         this.rank = rank; 
-        this.C = C; 
+        this.C = C;
         this.U =  U; 
         this.thetaNull =  thetaNull; 
         this.beta =  XtXInverse.multiply(X.transpose()).multiply(Y);

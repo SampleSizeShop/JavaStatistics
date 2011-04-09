@@ -22,6 +22,8 @@ package edu.cudenver.bios.power.glmm;
 
 import org.apache.commons.math.linear.RealMatrix;
 
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
+
 /**
  * Implementation of the univariate approach to repeated measures test 
  * with Huynh-Feldt correction (UNIREP-HF) for the general linear multivariate model. 
@@ -42,7 +44,7 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
     public GLMMTestUnirepHuynhFeldt(FApproximation fMethod, 
     		UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
-    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError, int nuForEstimatedSigma)
     {
         super(fMethod, cdfMethod, epsilonMethod, Xessence, XtXInverse, perGroupN, rank,

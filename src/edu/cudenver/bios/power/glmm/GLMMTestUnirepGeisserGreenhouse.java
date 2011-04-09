@@ -24,6 +24,7 @@ import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealMatrixChangingVisitor;
 
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
 
 /**
@@ -60,7 +61,7 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     public GLMMTestUnirepGeisserGreenhouse(FApproximation fMethod, 
     		UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
-    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError, int nuEst)
     {
         super(fMethod, cdfMethod, epsilonMethod, Xessence, XtXInverse, perGroupN, rank,

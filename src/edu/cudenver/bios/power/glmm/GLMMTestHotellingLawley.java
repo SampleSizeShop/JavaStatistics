@@ -24,6 +24,8 @@ import org.apache.commons.math.linear.InvalidMatrixException;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 
+import edu.cudenver.bios.matrix.FixedRandomMatrix;
+
 /**
  * Implementation of the Hotelling Lawley Trace (HLT) test for the
  * general linear multivariate model
@@ -39,7 +41,7 @@ public class GLMMTestHotellingLawley extends GLMMTest
 	 */
     public GLMMTestHotellingLawley(FApproximation fMethod,
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
-    		RealMatrix C, RealMatrix U, RealMatrix thetaNull, 
+    		FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError)
     {
         super(fMethod, Xessence, XtXInverse, perGroupN, rank,
