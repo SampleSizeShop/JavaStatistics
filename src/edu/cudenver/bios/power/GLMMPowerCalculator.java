@@ -62,7 +62,8 @@ public class GLMMPowerCalculator implements PowerCalculator
     private static final int STARTING_SAMPLE_SIZE = 1000;
     private static final int STARTING_BETA_SCALE = 1;
     private static final int SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL = 1000;
-    
+    // seed for random column generation
+    private int seed = 1234;
     // accuracy thresholds
     // minimum value still considered positive in Cholesky decomposition
     protected double positivityThreshold = 
@@ -1099,7 +1100,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 		{
 			// force a new realization of the design matrix (i.e. a new covariate column)
     		RealMatrix X = MatrixUtils.getFullDesignMatrix(params.getDesignEssence(), 
-    				params.getSigmaGaussianRandom(), sampleSize);
+    				params.getSigmaGaussianRandom(), sampleSize, seed);
     		int rejectionCount = 0;
 			for(int i = 0; i < SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL; i++)
 			{
@@ -1217,11 +1218,12 @@ public class GLMMPowerCalculator implements PowerCalculator
     	    	int rejectionCount = 0;
     			// force a new realization of the design matrix (i.e. a new covariate column)
         		RealMatrix X = MatrixUtils.getFullDesignMatrix(params.getDesignEssence(), 
-        				params.getSigmaGaussianRandom(), sampleSize);
+        				params.getSigmaGaussianRandom(), sampleSize, seed);
+        		RealMatrix XtXinverse = new LUDecompositionImpl(X.transpose().multiply(X)).getSolver().getInverse();
     			for(int i = 0; i < SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL; i++)
     			{
     				SimulationFit fit = 
-    					simulateAndFitModel(params, test, X, null, scaledBeta, randomErrors, 
+    					simulateAndFitModel(params, test, X, XtXinverse, scaledBeta, randomErrors, 
     						sampleSize, alpha);
     				if (fit.Pvalue <= alpha) rejectionCount++;
     			}
