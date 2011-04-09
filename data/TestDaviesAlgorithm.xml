@@ -1,0 +1,19 @@
+<testCase accuracy='    0.001'>
+<chiSquareList>
+<chiSquare lambda='        7' omega='       10' df='        1' />
+<chiSquare lambda='       -3' omega='        2' df='        2' />
+<chiSquare lambda='        5' omega='        1' df='        1' />
+</chiSquareList>
+<cdfResultList>
+<cdfResult quantile='       10' probability='0.0556394' />
+<cdfResult quantile='       20' probability='0.1051157' />
+<cdfResult quantile='       30' probability='0.1711652' />
+<cdfResult quantile='       40' probability='0.2498523' />
+<cdfResult quantile='       50' probability='0.3361797' />
+<cdfResult quantile='       60' probability='0.4249935' />
+<cdfResult quantile='       70' probability='0.5118275' />
+<cdfResult quantile='       80' probability='0.5932314' />
+<cdfResult quantile='       90' probability='0.6668913' />
+<cdfResult quantile='      100' probability=' 0.731574' />
+</cdfResultList>
+</testCase>
