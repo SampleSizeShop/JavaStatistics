@@ -55,7 +55,7 @@ public class TestNonCentralityDistribution extends TestCase
     private static final double[] SIGMA_SCALE_LIST = {1};
     private static final int[] SAMPLE_SIZE_LIST = {5};
     private Normal normalDist = new Normal();
-    private DecimalFormat Number = new DecimalFormat("#0.000000");
+    private DecimalFormat Number = new DecimalFormat("#0.0000000000");
     
     public void testApproximateNonCentralCDF()
     {
@@ -73,8 +73,8 @@ public class TestNonCentralityDistribution extends TestCase
         
         NonCentralityDistribution ncd = 
             new NonCentralityDistribution(test, params.getDesignEssence(),
-            		params.getXtXInverse(), 
-            		MatrixUtils.getTotalSampleSize(params.getDesignEssence(), perGroupN), 
+            		null, 
+            		perGroupN, 
             		params.getBetweenSubjectContrast(),
             		params.getWithinSubjectContrast(),
             		params.getTheta(),
@@ -101,8 +101,8 @@ public class TestNonCentralityDistribution extends TestCase
 
         NonCentralityDistribution ncd = 
             new NonCentralityDistribution(test, params.getDesignEssence(),
-            		params.getXtXInverse(), 
-            		MatrixUtils.getTotalSampleSize(params.getDesignEssence(), perGroupN), 
+            		null, 
+            		perGroupN, 
             		params.getBetweenSubjectContrast(),
             		params.getWithinSubjectContrast(),
             		params.getTheta(),
@@ -111,7 +111,7 @@ public class TestNonCentralityDistribution extends TestCase
             		params.getSigmaGaussianRandom(),
             		false);
 
-        for(double w = 0.10; w < 1; w += 0.1)
+        for(double w = 0.10; w < 1.05; w += 0.1)
         {
             double nonCentralityParam = ncd.inverseCDF(w);
             System.out.println("Quantile: " + Number.format(w) + 
@@ -145,7 +145,6 @@ public class TestNonCentralityDistribution extends TestCase
         int P = 3;
         int Q = 3;
         // create design matrix
-        double[][] essFixedData = {{1,0,0},{0,1,0},{0,0,1}};
         params.setDesignEssence(org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(Q));
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
