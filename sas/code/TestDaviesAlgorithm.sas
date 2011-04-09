@@ -32,7 +32,7 @@ PRINT HOLDPROB[COLNAME=NAMES];
 
 
 /* Write the input chi square information and probability results to an xml file */
-filename out "&DATA_DIRECTORY\TestDaviesAlgorithm.xml"; 
+filename out "&OUTPUT_DATA_DIRECTORY\TestDaviesAlgorithm.xml"; 
 file out;
 	put "<testCase accuracy='" @; 
 	put ACCURACY @;

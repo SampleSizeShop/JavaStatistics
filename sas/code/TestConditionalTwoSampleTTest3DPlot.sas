@@ -24,7 +24,6 @@
 TITLE "Conditional Power, Two Sample T-test with 3D plot";
 %INCLUDE "common.sas";
 
-LIBNAME DATA_DIR "&DATA_DIRECTORY";
 ***************************************************************;
 * Perform power calculations for a two sample T test,          ;
 * with a 3D plot showing trade-offs between                    ;
@@ -57,7 +56,7 @@ RUN POWER;
 
 /* write the data to an XML file */
 TEST_LIST = {"unirep"};
-filename out "&DATA_DIRECTORY\TestConditionalTwoSampleTTest3DPlot.xml"; 
+filename out "&OUTPUT_DATA_DIRECTORY\TestConditionalTwoSampleTTest3DPlot.xml"; 
 RUN powerResultsToXML(out, _HOLDPOWER, TEST_LIST, 1);
 
 QUIT;

@@ -25,7 +25,7 @@
 TITLE "Multivariate design with interaction hypothesis";
 %INCLUDE "common.sas";
 
-LIBNAME DATA_DIR "&DATA_DIRECTORY";
+LIBNAME DATA_DIR "&INPUT_DATA_DIRECTORY";
 
 PROC IML SYMSIZE=1000 WORKSIZE=2000;
 %INCLUDE "&POWERLIB_IML_FILE"/NOSOURCE2;
@@ -74,7 +74,7 @@ RUN POWER;
 
 /* write the data to an XML file */
 TEST_LIST = {'unirep' 'unirepBox' 'unirepGG' 'unirepHF' 'wl' 'pbt' 'hlt'};
-filename out "&DATA_DIRECTORY\TestConditionalMultivariateInteraction.xml";
+filename out "&OUTPUT_DATA_DIRECTORY\TestConditionalMultivariateInteraction.xml";
 RUN powerResultsToXML(out, _HOLDPOWER, TEST_LIST, 0);
 
 QUIT;

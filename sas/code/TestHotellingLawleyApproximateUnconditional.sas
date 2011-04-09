@@ -27,7 +27,7 @@
 TITLE "HLT approximate unconditional power";
 %INCLUDE "common.sas";
 
-LIBNAME DATA_DIR "&DATA_DIRECTORY";
+LIBNAME DATA_DIR "&INPUT_DATA_DIRECTORY";
 
 PROC IML SYMSIZE=2000 WORKSIZE=6000;
 RESET SPACES=4;
@@ -113,7 +113,7 @@ NAMES = {'Beta-Scale' 'Total N' 'HLT Power'};
 PRINT POWER[COLNAME=NAMES];
 
 /* write to XML file */
-filename out "&DATA_DIRECTORY\TestHotellingLawleyApproximateUnconditional.xml"; 
+filename out "&OUTPUT_DATA_DIRECTORY\TestHotellingLawleyApproximateUnconditional.xml"; 
 file out;
 	put "<powerList>";
 	do i=1 to NROW(POWER);

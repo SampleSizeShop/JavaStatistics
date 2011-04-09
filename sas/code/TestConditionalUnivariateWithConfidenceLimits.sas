@@ -21,7 +21,6 @@
 TITLE "Conditional Power, 2 group t-test with confidence limits";
 %INCLUDE "common.sas";
 
-LIBNAME DATA_DIR "&DATA_DIRECTORY";
 ***************************************************************;
 * Confidence limits for a univariate model test
 * based on example 4 from POWERLIB v21
@@ -79,7 +78,7 @@ PRINT HOLDALL[COLNAME=_HOLDPOWERLBL];
 
 /* write to XML file */
 TEST_LIST = {"unirep"};
-filename out "&DATA_DIRECTORY\TestConditionalUnivariateWithConfidenceLimits.xml"; 
+filename out "&OUTPUT_DATA_DIRECTORY\TestConditionalUnivariateWithConfidenceLimits.xml"; 
 RUN powerAndCIResultsToXML(out, HOLDALL, TEST_LIST, 1);
 
 

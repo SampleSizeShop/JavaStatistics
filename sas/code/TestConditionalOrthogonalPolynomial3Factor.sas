@@ -27,8 +27,6 @@ TITLE1 "Conditional Power, Illustrate use of the UPOLY3 module";
 TITLE2 "Factorial design, repeated measures: A, B, C between, D, E, F within";
 %INCLUDE "common.sas";
 
-LIBNAME DATA_DIR "&DATA_DIRECTORY";
-
 PROC IML SYMSIZE=1000 WORKSIZE=2000;
 %INCLUDE "&POWERLIB_IML_FILE"/NOSOURCE2;
 %INCLUDE "XMLUTILITIES.IML"/NOSOURCE2;
@@ -95,7 +93,7 @@ PRINT (NROW(HOLDALL));
 PRINT HOLDALL[COLNAME=_HOLDPOWERLBL];
 /* write the data to an XML file */
 TEST_LIST = {'unirep' 'unirepBox' 'unirepGG' 'unirepHF' 'wl' 'pbt' 'hlt'};
-filename out "&DATA_DIRECTORY\TestConditionalOrthogonalPolynomial3Factor.xml";
+filename out "&OUTPUT_DATA_DIRECTORY\TestConditionalOrthogonalPolynomial3Factor.xml";
 RUN powerResultsToXML(out, HOLDALL, TEST_LIST, 0);
 
 QUIT;

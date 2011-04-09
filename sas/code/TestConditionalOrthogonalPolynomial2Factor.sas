@@ -27,7 +27,7 @@ TITLE3 "internal pilots with the univariate approach to repeated measures";
 TITLE4 "Statistics in Medicine, 22(15)";
 %INCLUDE "common.sas";
 
-LIBNAME DATA_DIR "&DATA_DIRECTORY";
+LIBNAME DATA_DIR "&INPUT_DATA_DIRECTORY";
 
 PROC IML SYMSIZE=1000 WORKSIZE=2000;
 %INCLUDE "&POWERLIB_IML_FILE"/NOSOURCE2;
@@ -75,7 +75,7 @@ UMETHOD = J(2,1,1);
 PRINT HOLDALL[COLNAME=_HOLDPOWERLBL];
 /* write the data to an XML file */
 TEST_LIST = {'unirep' 'unirepBox' 'unirepGG' 'unirepHF'};
-filename out "&DATA_DIRECTORY\TestConditionalOrthogonalPolynomial2FactorMB.xml";
+filename out "&OUTPUT_DATA_DIRECTORY\TestConditionalOrthogonalPolynomial2FactorMB.xml";
 RUN powerResultsToXML(out, HOLDALL, TEST_LIST, 0);
 
 
@@ -94,7 +94,7 @@ UMETHOD = J(2,1,2);
 PRINT HOLDALL[COLNAME=_HOLDPOWERLBL];
 /* write the data to an XML file */
 TEST_LIST = {'unirep' 'unirepBox' 'unirepGG' 'unirepHF'};
-filename out "&DATA_DIRECTORY\TestConditionalOrthogonalPolynomial2FactorMEST.xml";
+filename out "&OUTPUT_DATA_DIRECTORY\TestConditionalOrthogonalPolynomial2FactorMEST.xml";
 RUN powerResultsToXML(out, HOLDALL, TEST_LIST, 0);
 
 

@@ -24,7 +24,6 @@
 TITLE "Conditional Power, Fixed Design";
 %INCLUDE "common.sas";
 
-LIBNAME DATA_DIR "&DATA_DIRECTORY";
 ***************************************************************;
 * Perform power calculations for a two sample T test,          ;
 * replicating the results in "Increasing scientific power with ;
@@ -58,7 +57,7 @@ RUN POWER;
 
 /* write the data to an XML file */
 TEST_LIST = {"unirep"};
-filename out "&DATA_DIRECTORY\TestConditionalTwoSampleTTest.xml"; 
+filename out "&OUTPUT_DATA_DIRECTORY\TestConditionalTwoSampleTTest.xml"; 
 RUN powerResultsToXML(out, _HOLDPOWER, TEST_LIST, 1);
 
 QUIT;

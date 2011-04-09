@@ -32,7 +32,7 @@
 TITLE "Conditional Power, Fixed Design, Multivariate with confidence limits";
 %INCLUDE "common.sas";
 
-LIBNAME IN V612 "&DATA_DIRECTORY\";
+LIBNAME IN V612 "&INPUT_DATA_DIRECTORY\";
 
 PROC DATASETS LIBRARY=WORK;
 DELETE powerCL;
@@ -115,7 +115,7 @@ PRINT HOLDALL[COLNAME=NAMES];
 * but only output GG 
 */
 TEST_LIST = {'unirepGG'};
-filename out "&DATA_DIRECTORY\TestConditionalMultivariateWithConfidenceLimits.xml";
+filename out "&OUTPUT_DATA_DIRECTORY\TestConditionalMultivariateWithConfidenceLimits.xml";
 RUN powerAndCIResultsToXML(out, holdall, TEST_LIST, 0);
 QUIT;
 

@@ -19,12 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 /* 
-* Conditional power for all tests with fixed design
+* Conditional power for multivariate tests with fixed design
 */
 TITLE "Conditional Power, Fixed Design, Multivariate";
 %INCLUDE "common.sas";
-
-LIBNAME DATA_DIR "&DATA_DIRECTORY";
 
 PROC IML SYMSIZE=1000 WORKSIZE=2000;
 %INCLUDE "&POWERLIB_IML_FILE"/NOSOURCE2;
@@ -65,7 +63,7 @@ RUN POWER;
 
 /* write the data to an XML file */
 TEST_LIST = {'unirep' 'unirepBox' 'unirepGG' 'unirepHF' 'wl' 'pbt' 'hlt'};
-filename out "&DATA_DIRECTORY\TestConditionalMultivariate.xml";
+filename out "&OUTPUT_DATA_DIRECTORY\TestConditionalMultivariate.xml";
 RUN powerResultsToXML(out, _HOLDPOWER, TEST_LIST, 0);
 
 QUIT;

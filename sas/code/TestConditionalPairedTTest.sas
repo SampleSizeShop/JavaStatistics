@@ -27,8 +27,6 @@
 TITLE "Conditional Power, Fixed Design, Paired T-Test";
 %INCLUDE "common.sas";
 
-LIBNAME DATA_DIR "&DATA_DIRECTORY";
-
 PROC IML SYMSIZE=1000 WORKSIZE=2000;
 %INCLUDE "&POWERLIB_IML_FILE"/NOSOURCE2;
 %INCLUDE "XMLUTILITIES.IML"/NOSOURCE2;
@@ -52,7 +50,7 @@ RUN POWER;
 
 /* write the data to an XML file */
 TEST_LIST = {"unirep"};
-filename out "&DATA_DIRECTORY\TestConditionalPairedTTest.xml"; 
+filename out "&OUTPUT_DATA_DIRECTORY\TestConditionalPairedTTest.xml"; 
 RUN powerResultsToXML(out, _HOLDPOWER, TEST_LIST, 1);
 
 QUIT;
