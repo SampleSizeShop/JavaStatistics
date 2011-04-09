@@ -399,6 +399,7 @@ public class GLMMPowerParameters extends PowerParameters
 	{
 		this.designEssence = designEssence;
 		designRank = new SingularValueDecompositionImpl(designEssence).getRank();
+		if (this.sigmaGaussianRandom != null) designRank++;
 		XtXInverse = 
         	new LUDecompositionImpl(this.designEssence.transpose().multiply(this.designEssence)).getSolver().getInverse();
 	}
@@ -556,6 +557,7 @@ public class GLMMPowerParameters extends PowerParameters
 	 */
 	public void setSigmaGaussianRandom(RealMatrix sigmaGaussianRandom)
 	{
+		if (this.sigmaGaussianRandom == null) designRank++;
 		this.sigmaGaussianRandom = sigmaGaussianRandom;
 	}
 
