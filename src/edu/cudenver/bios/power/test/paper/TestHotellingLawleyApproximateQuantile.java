@@ -152,7 +152,7 @@ public class TestHotellingLawleyApproximateQuantile extends TestCase
 		params.setTheta(new Array2DRowRealMatrix(theta0));
 
 		// build between subject contrast
-		double [][] between = {{1,-1,0}, {1,0,-1}};
+		double [][] between = {{-1,1,0}, {-1,0,1}};
 		double[][] betweenRandom = {{0}, {0}};
 		params.setBetweenSubjectContrast(new FixedRandomMatrix(between, betweenRandom, true));
 

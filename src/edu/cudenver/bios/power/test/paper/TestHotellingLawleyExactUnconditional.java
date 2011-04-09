@@ -48,7 +48,7 @@ public class TestHotellingLawleyExactUnconditional extends TestCase
 	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "HotellingLawleyExactUnconditionalOutput.html";
 	private static final String TITLE = "Power results for HLT, exact unconditional";
     private static final double MEAN = 9.75;
-    private static final double VARIANCE = 2.0;
+    private static final double VARIANCE = 1.0;
     private static final double[] ALPHA_LIST = {0.05};    
     private static final double[] SIGMA_SCALE_LIST = {1};	
 	    
@@ -151,7 +151,7 @@ public class TestHotellingLawleyExactUnconditional extends TestCase
         params.setTheta(new Array2DRowRealMatrix(theta0));
 
         // build between subject contrast
-        double [][] between = {{1,-1,0}, {1,0,-1}};
+        double [][] between = {{-1,1,0}, {-1,0,1}};
         double[][] betweenRandom = {{0}, {0}};
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, betweenRandom, true));
         
