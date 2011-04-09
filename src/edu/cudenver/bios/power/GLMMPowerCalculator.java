@@ -1235,8 +1235,10 @@ public class GLMMPowerCalculator implements PowerCalculator
     		{
     		case UNCONDITIONAL_POWER:
     			power = StatUtils.mean(powerValues);
+    			break;
     		case QUANTILE_POWER:
     			power= StatUtils.percentile(powerValues, quantile);
+    			break;
     		default:
     			throw new IllegalArgumentException("Unknown power method");
     		}
