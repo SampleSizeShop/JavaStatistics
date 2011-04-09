@@ -85,7 +85,7 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
      */
     public void testMultivariateWithConfidenceLimits()
     {
-    	Test[] testList = Test.values();
+    	Test[] testList = {Test.UNIREP_GEISSER_GREENHOUSE};
     	for(Test test: testList)
     	{
     		GLMMPowerParameters params = buildInputs(test);
