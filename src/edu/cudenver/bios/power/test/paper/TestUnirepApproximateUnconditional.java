@@ -29,6 +29,8 @@ import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.RandomColumnMetaData;
 import edu.cudenver.bios.matrix.RowMetaData;
+import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
+import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
@@ -44,8 +46,6 @@ import junit.framework.TestCase;
  */
 public class TestUnirepApproximateUnconditional extends TestCase 
 {
-    private static final double MEAN = 9.75;
-    private static final double VARIANCE = 2.0;
     private static final double[] ALPHA_LIST = {0.05};    
     private static final double[] SIGMA_SCALE_LIST = {1};	
 	    
@@ -59,7 +59,7 @@ public class TestUnirepApproximateUnconditional extends TestCase
 	{
 		try
 		{
-			checker = new PowerChecker(DATA_FILE, true);
+			checker = new PowerChecker(DATA_FILE, false);
 		}
 		catch (Exception e)
 		{
@@ -93,9 +93,20 @@ public class TestUnirepApproximateUnconditional extends TestCase
         GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
 
 		System.out.println(TITLE);
-		checker.checkPower(params5);
-		checker.checkPower(params25);
-		checker.checkPower(params50);
+		Test[] list = {Test.UNIREP,Test.UNIREP_BOX,
+				Test.UNIREP_GEISSER_GREENHOUSE,Test.UNIREP_HUYNH_FELDT};
+		for(Test test : list)
+		{
+			params5.clearTestList();
+			params5.addTest(test);
+			params25.clearTestList();
+			params25.addTest(test);
+			params50.clearTestList();
+			params50.addTest(test);
+			checker.checkPower(params5);
+			checker.checkPower(params25);
+			checker.checkPower(params50);
+		}
 		checker.outputResults();
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
@@ -114,11 +125,20 @@ public class TestUnirepApproximateUnconditional extends TestCase
         // add unconditional power method
         params.addPowerMethod(PowerMethod.UNCONDITIONAL_POWER);
         
-		// add UNIREP as the statistical test
-		params.addTest(Test.UNIREP);
-		params.addTest(Test.UNIREP_BOX);
-		params.addTest(Test.UNIREP_GEISSER_GREENHOUSE);
-		params.addTest(Test.UNIREP_HUYNH_FELDT);
+		// calculate power using Muller & Barton approximations
+		params.setUnivariateCdfMethod(Test.UNIREP, 
+				UnivariateCdfApproximation.MULLER_BARTON_APPROX);
+		params.setUnivariateCdfMethod(Test.UNIREP_BOX, 
+				UnivariateCdfApproximation.MULLER_BARTON_APPROX);
+		params.setUnivariateCdfMethod(Test.UNIREP_GEISSER_GREENHOUSE, 
+				UnivariateCdfApproximation.MULLER_BARTON_APPROX);
+		params.setUnivariateCdfMethod(Test.UNIREP_HUYNH_FELDT, 
+				UnivariateCdfApproximation.MULLER_BARTON_APPROX);
+		// set epsilon method to Muller Barton
+		params.setUnivariateEpsilonMethod(Test.UNIREP_GEISSER_GREENHOUSE, 
+				UnivariateEpsilonApproximation.MULLER_BARTON_APPROX);
+		params.setUnivariateEpsilonMethod(Test.UNIREP_HUYNH_FELDT, 
+				UnivariateEpsilonApproximation.MULLER_BARTON_APPROX);
 		
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
