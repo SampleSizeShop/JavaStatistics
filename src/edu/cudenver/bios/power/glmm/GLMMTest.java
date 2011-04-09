@@ -179,13 +179,13 @@ public abstract class GLMMTest
         this.C = C;
         this.U =  U; 
         this.thetaNull =  thetaNull; 
-        this.beta =  XtXInverse.multiply(X.transpose()).multiply(Y);
+        this.beta =  this.XtXInverse.multiply(X.transpose()).multiply(Y);
         RealMatrix YHat = X.multiply(this.beta);
         RealMatrix Ydiff = Y.subtract(YHat);
-        this.sigmaError = (Ydiff.transpose().multiply(Ydiff)).scalarMultiply(((double) 1/(totalN - rank)));
+        this.sigmaError = (Ydiff.transpose().multiply(Ydiff)).scalarMultiply(((double) 1/(double) (totalN - rank)));
            
         // cache the value of M
-        RealMatrix cxxcEssence = C.multiply((XtXInverse).multiply(C.transpose()));
+        RealMatrix cxxcEssence = C.multiply((this.XtXInverse).multiply(C.transpose()));
         M = new LUDecompositionImpl(cxxcEssence).getSolver().getInverse();
     }
     
