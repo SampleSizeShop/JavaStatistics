@@ -28,6 +28,7 @@ public class RandomErrorMatrix
 		this.matrix = new Array2DRowRealMatrix(rows, cols);
 		this.sigma = sigma;
 		this.normalDist = new Normal();
+		this.normalDist.setSeed(seed);
 	}
 
 	public void setSeed(long seed)
