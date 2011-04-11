@@ -126,21 +126,6 @@ public class TestUnirepExactUnconditional extends TestCase
         // add unconditional power methods and median unconditional
         params.addPowerMethod(PowerMethod.UNCONDITIONAL_POWER);
         
-		// calculate power using Muller & Barton approximations
-		params.setUnivariateCdfMethod(Test.UNIREP, 
-				UnivariateCdfApproximation.MULLER_BARTON_APPROX);
-		params.setUnivariateCdfMethod(Test.UNIREP_BOX, 
-				UnivariateCdfApproximation.MULLER_BARTON_APPROX);
-		params.setUnivariateCdfMethod(Test.UNIREP_GEISSER_GREENHOUSE, 
-				UnivariateCdfApproximation.MULLER_BARTON_APPROX);
-		params.setUnivariateCdfMethod(Test.UNIREP_HUYNH_FELDT, 
-				UnivariateCdfApproximation.MULLER_BARTON_APPROX);
-		// set epsilon method to Muller Barton
-		params.setUnivariateEpsilonMethod(Test.UNIREP_GEISSER_GREENHOUSE, 
-				UnivariateEpsilonApproximation.MULLER_BARTON_APPROX);
-		params.setUnivariateEpsilonMethod(Test.UNIREP_HUYNH_FELDT, 
-				UnivariateEpsilonApproximation.MULLER_BARTON_APPROX);
-        
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
