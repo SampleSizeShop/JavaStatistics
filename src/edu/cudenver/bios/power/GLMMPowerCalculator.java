@@ -30,6 +30,7 @@ import org.apache.commons.math.analysis.solvers.UnivariateRealSolver;
 import org.apache.commons.math.analysis.solvers.UnivariateRealSolverFactory;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 //import org.apache.commons.math.linear.MatrixUtils;
+import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.CholeskyDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
@@ -74,6 +75,33 @@ public class GLMMPowerCalculator implements PowerCalculator
     // eigen value decomposition tolerance
     protected double eigenTolerance = 0.000000000001;
     
+    public class SimulatedPower
+    {
+    	private double power;
+    	private RealMatrix averageBeta;
+    	private int iterations = 0;
+    	
+    	public SimulatedPower(int betaRow, int betaCol)
+    	{
+    		averageBeta = MatrixUtils.createRealMatrixWithFilledValue(betaRow, betaCol, 0);
+    	}
+
+		public double getPower() { return power; }
+
+		public void setPower(double power)	{this.power = power;}
+
+		public RealMatrix getAverageBeta()
+		{
+			return averageBeta.scalarMultiply((double) 1/(double)this.iterations);
+		}
+
+		public void accumulateBeta(RealMatrix averageBeta)
+		{
+			this.averageBeta = this.averageBeta.add(averageBeta);
+			iterations++;
+		}    	
+    }
+    
     /**
      * container class for simulation info
      */
@@ -109,21 +137,28 @@ public class GLMMPowerCalculator implements PowerCalculator
     private class SampleSizeFunction implements UnivariateRealFunction
     {
     	private GLMMTest glmmTest;
-    	private NonCentralityDistribution nonCentralityDist;
+    	private GLMMPowerParameters params;
+    	private Test test;
     	private PowerMethod method;
+    	private double targetPower;
     	private double alpha;
     	private double quantile;
-    	private double targetPower;
-    	
-        public SampleSizeFunction(GLMMTest glmmTest, NonCentralityDistribution nonCentralityDist,
-        		PowerMethod method, double targetPower, double alpha, double quantile)
+    	private RealMatrix scaledBeta;
+    	private RealMatrix scaledSigmaError;
+
+        public SampleSizeFunction(GLMMTest glmmTest, GLMMPowerParameters params,
+        		Test test, PowerMethod method, double targetPower, double alpha, double quantile,
+        		RealMatrix scaledBeta, RealMatrix scaledSigmaError)
         {
             this.glmmTest = glmmTest;
-            this.nonCentralityDist = nonCentralityDist;
+            this.params = params;
+            this.test = test;
             this.method = method;
             this.targetPower = targetPower;
             this.alpha = alpha;
-            this.quantile = quantile;            
+            this.quantile = quantile;          
+            this.scaledBeta = scaledBeta;
+            this.scaledSigmaError = scaledSigmaError;
         }
         
         public double value(double n)
@@ -131,6 +166,16 @@ public class GLMMPowerCalculator implements PowerCalculator
             try
             {
                 glmmTest.setPerGroupSampleSize((int) n); 
+            	NonCentralityDistribution nonCentralityDist = new NonCentralityDistribution(test, 
+            				params.getDesignEssence(), 
+            				params.getXtXInverse(), 
+            				MatrixUtils.getTotalSampleSize(params.getDesignEssence(), STARTING_SAMPLE_SIZE),
+            				params.getBetweenSubjectContrast(),
+            				params.getWithinSubjectContrast(),
+            				params.getTheta(),
+            				scaledBeta, scaledSigmaError,
+            				params.getSigmaGaussianRandom(),
+            				params.isNonCentralityCDFExact());
                 double calculatedPower = getPowerByType(glmmTest, nonCentralityDist, method,  alpha, quantile);
                 return targetPower - calculatedPower;
             }
@@ -756,12 +801,12 @@ public class GLMMPowerCalculator implements PowerCalculator
     	}
         
     	// create a bisection search function to find the best per group sample size
-        SampleSizeFunction sampleSizeFunc = new SampleSizeFunction(glmmTest, nonCentralityDist,
-        		method, targetPower, alpha, quantile);
+        SampleSizeFunction sampleSizeFunc = new SampleSizeFunction(glmmTest, params,
+        		test, method, targetPower, alpha, quantile, scaledBeta, scaledSigmaError);
         
         // find the per group sample size 
-        int upperBound = getSampleSizeUpperBound(glmmTest, nonCentralityDist,
-        		method, targetPower, alpha, quantile);
+        int upperBound = getSampleSizeUpperBound(glmmTest, params,
+        		test, method, targetPower, alpha, quantile, scaledBeta, scaledSigmaError);
         int perGroupSampleSize = (int) Math.ceil(solver.solve(sampleSizeFunc, 2, upperBound));
         if (perGroupSampleSize < 0) 
             throw new MathException("Failed to calculate sample size");
@@ -792,14 +837,29 @@ public class GLMMPowerCalculator implements PowerCalculator
      * @param params GLMM input parameters
      * @return upper bound on sample size to achieve desired power
      */
-    private int getSampleSizeUpperBound(GLMMTest glmmTest, NonCentralityDistribution nonCentralityDist,
-    		PowerMethod method, double targetPower, double alpha, double quantile)
+    private int getSampleSizeUpperBound(GLMMTest glmmTest, GLMMPowerParameters params,
+    		Test test, PowerMethod method, double targetPower, double alpha, double quantile,
+    		RealMatrix scaledBeta, RealMatrix scaledSigmaError)
     {
         int upperBound = STARTING_SAMPLE_SIZE;
         
         for(double currentPower = 0.0; currentPower < targetPower; upperBound *= 2)
         {
             glmmTest.setPerGroupSampleSize(upperBound); 
+        	NonCentralityDistribution nonCentralityDist = null;
+        	if (method != PowerMethod.CONDITIONAL_POWER)
+        	{
+        		nonCentralityDist = new NonCentralityDistribution(test, 
+        				params.getDesignEssence(), 
+        				params.getXtXInverse(), 
+        				upperBound,
+        				params.getBetweenSubjectContrast(),
+        				params.getWithinSubjectContrast(),
+        				params.getTheta(),
+        				scaledBeta, scaledSigmaError,
+        				params.getSigmaGaussianRandom(),
+        				params.isNonCentralityCDFExact());
+        	}
             currentPower = getPowerByType(glmmTest, nonCentralityDist, method, alpha, quantile);
         }
         return upperBound;
@@ -1023,7 +1083,7 @@ public class GLMMPowerCalculator implements PowerCalculator
      * @return list of power samples
      * @throws IllegalArgumentException
      */
-    public List<double[]> getSimulatedPowerSample(GLMMPowerParameters params, int size)
+    public List<SimulatedPower[]> getSimulatedPowerSample(GLMMPowerParameters params, int size)
     throws IllegalArgumentException
     {		    
         // make sure all of the matrix inputs are appropriate
@@ -1033,12 +1093,12 @@ public class GLMMPowerCalculator implements PowerCalculator
         // update the parameters as needed - used for random covariates
         initialize(params);
 
-    	if (params == null || params.getSigmaGaussianRandom() != null)
+    	if (params == null || params.getSigmaGaussianRandom() == null)
     		throw new IllegalArgumentException("Power samples can only be generated for designs with random predictors");
     	if (size <= 0) throw new IllegalArgumentException("Iterations must be positive");
     	
         // list of power results
-        ArrayList<double[]> results = new ArrayList<double[]>();
+        ArrayList<SimulatedPower[]> results = new ArrayList<SimulatedPower[]>();
         
 		for(GLMMTestFactory.Test test : params.getTestList())
 		{            
@@ -1059,6 +1119,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 										params.getQuantileList().get(qIdx) : Double.NaN);
 								for(Integer sampleSize : params.getSampleSizeList())
 								{       
+					
            							results.add(getSimulatedPowerSampleValue(params,
            						    		test, method, alpha, sigmaScale, betaScale, sampleSize, 
            						    		quantile, size));
@@ -1081,7 +1142,7 @@ public class GLMMPowerCalculator implements PowerCalculator
      * @param iterations size of the sample
      * @return
      */
-    private double[] getSimulatedPowerSampleValue(GLMMPowerParameters params,
+    private SimulatedPower[] getSimulatedPowerSampleValue(GLMMPowerParameters params,
     		Test test, PowerMethod method, double alpha, 
     		double sigmaScale, double betaScale, int sampleSize, double quantile, int iterations)
     {
@@ -1094,26 +1155,31 @@ public class GLMMPowerCalculator implements PowerCalculator
     				sampleSize), scaledBeta.getColumnDimension(), scaledSigmaError);
     	randomErrors.setPositivityThreshold(positivityThreshold);
     	randomErrors.setSymmetryThreshold(symmetryThreshold);
-		double[] powerValues = new double[iterations];
+		SimulatedPower[] simPower = new SimulatedPower[iterations];
 
 		for(int gInstance = 0; gInstance < iterations; gInstance++)
 		{
 			// force a new realization of the design matrix (i.e. a new covariate column)
     		RealMatrix X = MatrixUtils.getFullDesignMatrix(params.getDesignEssence(), 
     				params.getSigmaGaussianRandom(), sampleSize, seed);
+    		RealMatrix XtXinverse = new LUDecompositionImpl(X.transpose().multiply(X)).getSolver().getInverse();
+
     		int rejectionCount = 0;
+    		simPower[gInstance] = 
+    			new SimulatedPower(scaledBeta.getRowDimension(), scaledBeta.getColumnDimension());
 			for(int i = 0; i < SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL; i++)
 			{
 				SimulationFit fit = 
-					simulateAndFitModel(params, test, X, null, scaledBeta, randomErrors, 
+					simulateAndFitModel(params, test, X, XtXinverse, scaledBeta, randomErrors, 
 						sampleSize, alpha);
 				if (fit.Pvalue <= alpha) rejectionCount++;
+				simPower[gInstance].accumulateBeta(fit.beta);
 			}
-			powerValues[gInstance] = (((double) rejectionCount) / 
+			simPower[gInstance].setPower(((double) rejectionCount) / 
 					((double) SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL));
 		}
     	
-    	return powerValues;
+    	return simPower;
     }
 
 	/**

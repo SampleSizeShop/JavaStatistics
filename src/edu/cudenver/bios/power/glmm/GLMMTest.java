@@ -112,6 +112,9 @@ public abstract class GLMMTest
     protected double totalN; // total sample size 
     protected double rank; // rank of the design matrix
     // contrasts
+    // we hang onto to the fixed portion of the C matrix to allow updating the 
+    // per group N when we have a GLMM(F,g) design
+    protected RealMatrix CFixed; 
     protected RealMatrix C; // between subject
     protected RealMatrix U; // within subject
     // null hypothesis values
@@ -137,6 +140,7 @@ public abstract class GLMMTest
         this.XtXInverse =  XtXInverse;
         this.totalN =  Xessence.getRowDimension() * perGroupN; 
         this.rank = rank; 
+        this.CFixed = C.getFixedMatrix();
         this.C = C.getCombinedMatrix(); 
         this.U =  U; 
         this.thetaNull =  thetaNull; 
@@ -196,7 +200,11 @@ public abstract class GLMMTest
     public void setPerGroupSampleSize(int perGroupN)
     {
     	this.totalN = Xessence.getRowDimension() * perGroupN; 
-        RealMatrix cxxcEssence = C.multiply((XtXInverse).multiply(C.transpose()));
+    	RealMatrix cxxcEssence = null;
+    	if (CFixed != null)
+    		cxxcEssence = CFixed.multiply((XtXInverse).multiply(CFixed.transpose()));
+    	else
+    		cxxcEssence = C.multiply((XtXInverse).multiply(C.transpose()));
         RealMatrix cxxcEssenceInverse = new LUDecompositionImpl(cxxcEssence).getSolver().getInverse();
         this.M = cxxcEssenceInverse.scalarMultiply(perGroupN);
     }
