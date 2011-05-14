@@ -20,12 +20,12 @@
  *
  -->
 <project name="JavaStatistics" default="compress">
-	
+		
 	<property name="project" value="JavaStatistics" />
 	<property name="sourcedir" value="${basedir}/../src" />
-    <property name="targetdir"  value="${basedir}/../bin"/>
+    <property name="targetdir"  value="${basedir}/bin"/>
 	<property name="librarydir" value="${basedir}/../lib" />
-	<property name="javadocdir" value="${basedir}/../javadoc" />
+	<property name="javadocdir" value="${basedir}/javadoc/JavaStatistics-javadoc" />
 	<property name="thirdpartydir" value="${basedir}/../../thirdparty" />
 
 	<fileset id="thirdpartylibs" dir="${thirdpartydir}">
@@ -90,7 +90,7 @@
 	
 	<!-- Create the javadoc distribution  -->
 	<target name="javadoc-distribution" depends="javadoc">
-		<jar destfile="${librarydir}/${project}-javadoc.jar" basedir="${javadocdir}" >
+		<jar destfile="${librarydir}/${project}-javadoc.jar" basedir="${javadocdir}/.." >
 			<manifest>
 				<attribute name="Author" value="Sarah Kreidler"/>
 				<section name="Shared">
@@ -107,8 +107,32 @@
 	
 	<!-- Create the source distribution -->
 	<target name="source-distribution">
-		<jar destfile="${librarydir}/${project}-source.jar" basedir="${basedir}/.." 
-			includes="src/**,build/**,sas/**,text/**,.classpath,.project,LICENSE-gpl2.0.txt,README.txt">
+		<jar destfile="${librarydir}/${project}-source.jar" basedir="${basedir}/../.." 
+			includes="JavaStatistics/*,
+			JavaStatistics/build/build.xml,
+			JavaStatistics/data/**,
+			JavaStatistics/sas/**,
+			JavaStatistics/src/**,
+			JavaStatistics/text/results/**">
+			<manifest>
+				<attribute name="Author" value="Sarah Kreidler"/>
+				<section name="Shared">
+					<attribute name="Title" value="${project} Source Code"/>
+					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
+					<attribute name="Implementation-Version" 
+					                 value="1.0.0"/> 
+				</section>
+				<section name="Copyright">
+					<attribute name="Copy" value="(C) CU Denver Biostatistics Department"/>
+				</section>
+			</manifest>
+		</jar>
+		<copy file="${librarydir}/${project}-source.jar" todir="${targetdir}"/>
+	</target>
+	
+	<target name="results-distribution">
+		<jar destfile="${librarydir}/${project}-results.jar" basedir="${basedir}/../text/" 
+			includes="results/*">
 			<manifest>
 				<attribute name="Author" value="Sarah Kreidler"/>
 				<section name="Shared">
@@ -120,7 +144,7 @@
 				</section>
 			</manifest>
 		</jar>
-		<copy file="${librarydir}/${project}-source.jar" todir="${targetdir}"/>
+		<copy file="${librarydir}/${project}-results.jar" todir="${targetdir}"/>
 	</target>
 		
 </project>
