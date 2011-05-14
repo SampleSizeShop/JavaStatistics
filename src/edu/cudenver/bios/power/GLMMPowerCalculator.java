@@ -30,7 +30,6 @@ import org.apache.commons.math.analysis.solvers.UnivariateRealSolver;
 import org.apache.commons.math.analysis.solvers.UnivariateRealSolverFactory;
 import org.apache.commons.math.linear.LUDecompositionImpl;
 //import org.apache.commons.math.linear.MatrixUtils;
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.CholeskyDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.SingularValueDecompositionImpl;
@@ -137,28 +136,21 @@ public class GLMMPowerCalculator implements PowerCalculator
     private class SampleSizeFunction implements UnivariateRealFunction
     {
     	private GLMMTest glmmTest;
-    	private GLMMPowerParameters params;
-    	private Test test;
+    	private NonCentralityDistribution nonCentralityDist;
     	private PowerMethod method;
-    	private double targetPower;
     	private double alpha;
     	private double quantile;
-    	private RealMatrix scaledBeta;
-    	private RealMatrix scaledSigmaError;
-
-        public SampleSizeFunction(GLMMTest glmmTest, GLMMPowerParameters params,
-        		Test test, PowerMethod method, double targetPower, double alpha, double quantile,
-        		RealMatrix scaledBeta, RealMatrix scaledSigmaError)
+    	private double targetPower;
+    	
+        public SampleSizeFunction(GLMMTest glmmTest, NonCentralityDistribution nonCentralityDist,
+        		PowerMethod method, double targetPower, double alpha, double quantile)
         {
             this.glmmTest = glmmTest;
-            this.params = params;
-            this.test = test;
+            this.nonCentralityDist = nonCentralityDist;
             this.method = method;
             this.targetPower = targetPower;
             this.alpha = alpha;
-            this.quantile = quantile;          
-            this.scaledBeta = scaledBeta;
-            this.scaledSigmaError = scaledSigmaError;
+            this.quantile = quantile;            
         }
         
         public double value(double n)
@@ -166,18 +158,10 @@ public class GLMMPowerCalculator implements PowerCalculator
             try
             {
                 glmmTest.setPerGroupSampleSize((int) n); 
-            	NonCentralityDistribution nonCentralityDist = new NonCentralityDistribution(test, 
-            				params.getDesignEssence(), 
-            				params.getXtXInverse(), 
-            				MatrixUtils.getTotalSampleSize(params.getDesignEssence(), STARTING_SAMPLE_SIZE),
-            				params.getBetweenSubjectContrast(),
-            				params.getWithinSubjectContrast(),
-            				params.getTheta(),
-            				scaledBeta, scaledSigmaError,
-            				params.getSigmaGaussianRandom(),
-            				params.isNonCentralityCDFExact());
+                if (nonCentralityDist != null) nonCentralityDist.setPerGroupSampleSize((int) n);
                 double calculatedPower = getPowerByType(glmmTest, nonCentralityDist, method,  alpha, quantile);
-                return targetPower - calculatedPower;
+                double diff = targetPower - calculatedPower;
+                return diff;
             }
             catch (Exception e)
             {   
@@ -768,7 +752,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         UnivariateRealSolverFactory factory = UnivariateRealSolverFactory.newInstance();
         UnivariateRealSolver solver = factory.newBisectionSolver();
 
-    	RealMatrix scaledBeta = params.getBeta().scalarMultiply(betaScale, true);
+    	RealMatrix scaledBeta = params.getBeta().scalarMultiply(betaScale, true);    	
     	RealMatrix scaledSigmaError = params.getSigmaError().scalarMultiply(sigmaScale);
     	GLMMTest glmmTest = GLMMTestFactory.createGLMMTestForPower(test, 
 				params.getFApproximationMethod(test),
@@ -791,7 +775,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     		nonCentralityDist = new NonCentralityDistribution(test, 
     				params.getDesignEssence(), 
     				params.getXtXInverse(), 
-    				MatrixUtils.getTotalSampleSize(params.getDesignEssence(), STARTING_SAMPLE_SIZE),
+    				STARTING_SAMPLE_SIZE,
     				params.getBetweenSubjectContrast(),
     				params.getWithinSubjectContrast(),
     				params.getTheta(),
@@ -801,18 +785,27 @@ public class GLMMPowerCalculator implements PowerCalculator
     	}
         
     	// create a bisection search function to find the best per group sample size
-        SampleSizeFunction sampleSizeFunc = new SampleSizeFunction(glmmTest, params,
-        		test, method, targetPower, alpha, quantile, scaledBeta, scaledSigmaError);
+        SampleSizeFunction sampleSizeFunc = new SampleSizeFunction(glmmTest, nonCentralityDist,
+        		method, targetPower, alpha, quantile);
         
         // find the per group sample size 
-        int upperBound = getSampleSizeUpperBound(glmmTest, params,
-        		test, method, targetPower, alpha, quantile, scaledBeta, scaledSigmaError);
-        int perGroupSampleSize = (int) Math.ceil(solver.solve(sampleSizeFunc, 2, upperBound));
+        int upperBound = getSampleSizeUpperBound(glmmTest, nonCentralityDist,
+        		method, targetPower, alpha, quantile);
+        int lowerBound = 2;
+        if (nonCentralityDist != null) lowerBound = 3; // TODO: why can't we do nonCentrality with 3?
+
+        // use a bisection search to get the best power
+        int perGroupSampleSize = (int) Math.ceil(solver.solve(sampleSizeFunc, lowerBound, upperBound));
         if (perGroupSampleSize < 0) 
-            throw new MathException("Failed to calculate sample size");
+        {
+        	throw new MathException("Failed to calculate sample size");
+        }
+
         // get the actual power associated with this per group sample size
         glmmTest.setPerGroupSampleSize(perGroupSampleSize);
+        if (nonCentralityDist != null) nonCentralityDist.setPerGroupSampleSize(perGroupSampleSize);
         double calculatedPower = getPowerByType(glmmTest, nonCentralityDist, method, alpha, quantile);
+
 		GLMMPowerConfidenceInterval ci = null;
 		if (params.getConfidenceIntervalType() != 
 			ConfidenceIntervalType.NONE)
@@ -837,29 +830,15 @@ public class GLMMPowerCalculator implements PowerCalculator
      * @param params GLMM input parameters
      * @return upper bound on sample size to achieve desired power
      */
-    private int getSampleSizeUpperBound(GLMMTest glmmTest, GLMMPowerParameters params,
-    		Test test, PowerMethod method, double targetPower, double alpha, double quantile,
-    		RealMatrix scaledBeta, RealMatrix scaledSigmaError)
+    private int getSampleSizeUpperBound(GLMMTest glmmTest, NonCentralityDistribution nonCentralityDist,
+    		PowerMethod method, double targetPower, double alpha, double quantile)
     {
         int upperBound = STARTING_SAMPLE_SIZE;
         
         for(double currentPower = 0.0; currentPower < targetPower; upperBound *= 2)
         {
             glmmTest.setPerGroupSampleSize(upperBound); 
-        	NonCentralityDistribution nonCentralityDist = null;
-        	if (method != PowerMethod.CONDITIONAL_POWER)
-        	{
-        		nonCentralityDist = new NonCentralityDistribution(test, 
-        				params.getDesignEssence(), 
-        				params.getXtXInverse(), 
-        				upperBound,
-        				params.getBetweenSubjectContrast(),
-        				params.getWithinSubjectContrast(),
-        				params.getTheta(),
-        				scaledBeta, scaledSigmaError,
-        				params.getSigmaGaussianRandom(),
-        				params.isNonCentralityCDFExact());
-        	}
+            if (nonCentralityDist != null) nonCentralityDist.setPerGroupSampleSize(upperBound);
             currentPower = getPowerByType(glmmTest, nonCentralityDist, method, alpha, quantile);
         }
         return upperBound;
@@ -900,7 +879,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     		nonCentralityDist = new NonCentralityDistribution(test, 
     				params.getDesignEssence(), 
     				params.getXtXInverse(), 
-    				MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize),
+    				sampleSize,
     				params.getBetweenSubjectContrast(),
     				params.getWithinSubjectContrast(),
     				params.getTheta(),
@@ -1214,7 +1193,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     	{
     		nonCentralityDist = new NonCentralityDistribution(test, 
     				params.getDesignEssence(), 
-    				params.getXtXInverse().scalarMultiply(1/(double) sampleSize), 
+    				params.getXtXInverse(), 
     				sampleSize,
     				params.getBetweenSubjectContrast(),
     				params.getWithinSubjectContrast(),

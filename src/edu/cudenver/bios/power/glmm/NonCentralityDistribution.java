@@ -38,7 +38,6 @@ import edu.cudenver.bios.distribution.NonCentralFDistribution;
 import edu.cudenver.bios.distribution.WeightedSumOfNoncentralChiSquaresDistribution;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
-import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 
 /**
  * Class representing the distribution of the non-centrality parameter in
@@ -68,6 +67,19 @@ public class NonCentralityDistribution
     // with the Satterthwaite approximation from Glueck & Muller
     protected boolean exact;
 
+    // cache input parameters - needed for dynamic reset of sample size and beta matrix
+    protected Test test;
+    protected RealMatrix FEssence;
+    protected RealMatrix FtFinverse;
+    protected int perGroupN;
+    protected FixedRandomMatrix CFixedRand;
+    protected RealMatrix U;
+	protected RealMatrix thetaNull;
+	protected RealMatrix beta;
+	protected RealMatrix sigmaError;
+	protected RealMatrix sigmaG;
+    
+    
     /**
      * Function calculating the difference between the probability of a target quantile 
      * and the  (used by the bisection solver from Apache Commons Math)
@@ -101,6 +113,39 @@ public class NonCentralityDistribution
     		RealMatrix sigmaError, RealMatrix sigmaG, boolean exact)
     throws IllegalArgumentException
     {
+    	initialize(test, FEssence, FtFinverse, perGroupN, CFixedRand, U, thetaNull, beta, 
+    			sigmaError, sigmaG, exact);
+    }
+    
+    /**
+     * Pre-calculate intermediate matrices, perform setup, etc.
+     */
+    private void initialize(Test test, RealMatrix FEssence, RealMatrix FtFinverse, int perGroupN, 
+    		FixedRandomMatrix CFixedRand, RealMatrix U, 
+    		RealMatrix thetaNull, RealMatrix beta, 
+    		RealMatrix sigmaError, RealMatrix sigmaG, boolean exact)
+    {
+    	// reset member variables 
+        this.T1 = null;
+        this.FT1 = null;
+        this.S = null;
+        this.mzSq = null;
+        this.H0 = 0;
+        this.sStar = 0;  	
+    	
+    	// cache inputs
+        this.test = test;
+        this.FEssence = FEssence;
+        this.FtFinverse = FtFinverse;
+        this.perGroupN = perGroupN;
+        this.CFixedRand = CFixedRand;
+        this.U = U;
+    	this.thetaNull = thetaNull;
+    	this.beta = beta;
+    	this.sigmaError = sigmaError;
+    	this.sigmaG = sigmaG;
+    	
+    	// calculate intermediate matrices
     	this.N = FEssence.getRowDimension() * perGroupN;
         this.exact = exact;
         try
@@ -118,10 +163,9 @@ public class NonCentralityDistribution
             if (FtFinverse == null)
             {
             	FtFinverse = new LUDecompositionImpl(FEssence.transpose().multiply(FEssence)).getSolver().getInverse();
-            	FtFinverse = FtFinverse.scalarMultiply(1/(double) perGroupN);
             }
             //CF*FPFINV*CF`
-            RealMatrix PPt = Cfixed.multiply(FtFinverse).multiply(Cfixed.transpose());
+            RealMatrix PPt = Cfixed.multiply(FtFinverse.scalarMultiply(1/(double) perGroupN)).multiply(Cfixed.transpose());
            // RealMatrix PPt = Cfixed.multiply(FtFinverse).multiply(FEssence.transpose());
             T1 = new LUDecompositionImpl(PPt).getSolver().getInverse();
             FT1 = new CholeskyDecompositionImpl(T1).getL();
@@ -172,6 +216,16 @@ public class NonCentralityDistribution
         {
             throw new IllegalArgumentException(e.getMessage());
         }
+    }
+    
+    /**
+     * Reset the total sample size on an existing noncentrality distribution 
+     * 
+     */
+    public void setPerGroupSampleSize(int perGroupN)
+    {
+    	initialize(test, FEssence, FtFinverse, perGroupN, CFixedRand, U, thetaNull, beta, 
+    			sigmaError, sigmaG, exact);
     }
     
     /**
