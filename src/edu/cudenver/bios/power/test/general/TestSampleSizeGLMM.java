@@ -23,7 +23,6 @@ package edu.cudenver.bios.power.test.general;
 import java.text.DecimalFormat;
 import java.util.List;
 
-import jsc.distributions.Normal;
 import junit.framework.TestCase;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
@@ -48,7 +47,7 @@ public class TestSampleSizeGLMM extends TestCase
     private static final double[] ALPHA_LIST = {0.05};    
     private static final double[] BETA_SCALE_LIST = {0,1,2};
     private static final double[] SIGMA_SCALE_LIST = {1,2};
-    private static final double[] POWER_LIST = {0.05,0.7,0.8,0.9};
+    private static final double[] POWER_LIST = {0.01,0.7,0.8,0.9};
     private DecimalFormat Number = new DecimalFormat("#0.000");
     
     public void testValidUnivariateFixed()
@@ -77,7 +76,7 @@ public class TestSampleSizeGLMM extends TestCase
         }
         catch (Exception e)
         {
-            System.out.println("Exception: " + e.getMessage());
+            System.out.println("Correctly caught exception: " + e.getMessage());
         }
     }
 
@@ -108,7 +107,7 @@ public class TestSampleSizeGLMM extends TestCase
         }
         catch (Exception e)
         {
-            System.out.println("Exception: " + e.getMessage());
+            System.out.println("Correctly caught exception: " + e.getMessage());
         }
     }
 
@@ -357,7 +356,10 @@ public class TestSampleSizeGLMM extends TestCase
 	private GLMMPowerParameters buildValidMultivariateRandomInputs(double[] betaScaleList, int repn)
 	{
 		GLMMPowerParameters params = new GLMMPowerParameters();
-		params.addPower(0.9);
+
+        // add powers
+        for(double power: POWER_LIST) params.addPower(power);
+        
 		// add quantile power method
 		params.addPowerMethod(PowerMethod.QUANTILE_POWER);
 		params.addQuantile(0.5);
