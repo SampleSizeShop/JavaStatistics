@@ -60,7 +60,7 @@ import edu.cudenver.bios.power.glmm.NonCentralityDistribution;
 public class GLMMPowerCalculator implements PowerCalculator
 {	    
     private static final int STARTING_SAMPLE_SIZE = 1000;
-    private static final int STARTING_BETA_SCALE = 1;
+    private static final int STARTING_BETA_SCALE = 10;
     private static final int SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL = 1000;
     // seed for random column generation
     private int seed = 1234;
@@ -202,9 +202,12 @@ public class GLMMPowerCalculator implements PowerCalculator
         {
             try
             {
-                glmmTest.setBeta(beta.scalarMultiply(betaScale, true));
+            	RealMatrix scaledBeta = beta.scalarMultiply(betaScale, true);
+                glmmTest.setBeta(scaledBeta);
+                if (nonCentralityDist != null) nonCentralityDist.setBeta(scaledBeta);
                 double calculatedPower = getPowerByType(glmmTest, nonCentralityDist, method,  alpha, quantile);
-                return targetPower - calculatedPower;
+                double diff = targetPower - calculatedPower;
+                return diff;
             }
             catch (Exception e)
             {   
@@ -214,6 +217,7 @@ public class GLMMPowerCalculator implements PowerCalculator
             }
         }
     }
+    
     /**
      * Class passed into Apache's TrapezoidIntegrator function to compute
      * unconditional power
@@ -489,7 +493,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 								{    
         							try
         							{
-        								results.add(getDetectableDifference(params,
+        								results.add(getDetectableDifferenceValue(params,
         										test, method, alpha, sigmaScale, power, sampleSize, quantile));			
         							}
         							catch (Exception e)
@@ -858,7 +862,7 @@ public class GLMMPowerCalculator implements PowerCalculator
      * @throws IllegalArgumentException
      * @throws MathException
      */
-    private GLMMPower getDetectableDifference(GLMMPowerParameters params,
+    private GLMMPower getDetectableDifferenceValue(GLMMPowerParameters params,
     		Test test, PowerMethod method, double alpha, 
     		double sigmaScale, double targetPower, int sampleSize, double quantile)
     throws IllegalArgumentException, MathException
@@ -899,18 +903,30 @@ public class GLMMPowerCalculator implements PowerCalculator
         UnivariateRealSolver solver = factory.newBisectionSolver();
         
         DetectableDifferenceFunction ddFunc = new DetectableDifferenceFunction(glmmTest, 
-        		nonCentralityDist, method, targetPower, alpha, quantile, params.getBeta());
-
-        // find the detectable difference (i.e. beta scale)
-        int upperBound = (int) Math.ceil(getDetectableDifferenceUpperBound(glmmTest, 
-        		nonCentralityDist, params.getBeta(),method, targetPower, alpha, quantile));
-        double betaScale = solver.solve(ddFunc, 0, upperBound);
-        if (betaScale < 0) 
-            throw new MathException("Failed to calculate sample size");
-
-        // calculate actual power associated with this beta scale
-        glmmTest.setBeta(params.getBeta().scalarMultiply(betaScale, true));
+        		nonCentralityDist, method, targetPower, alpha, quantile, params.getBeta());       
+        
+        double lowerBound = 1.0E-10; // need non-zero lower bound or noncentrality dist malfunctions
+        
+        // check if the lower bound beta scale is already greater than the target power
+        scaledBeta = params.getBeta().scalarMultiply(lowerBound, true);
+        glmmTest.setBeta(scaledBeta);
+        if (nonCentralityDist != null) nonCentralityDist.setBeta(scaledBeta);
         double calculatedPower = getPowerByType(glmmTest, nonCentralityDist, method,  alpha, quantile);
+    	// find the detectable difference (i.e. beta scale) if the lower bound does not exceed the target power
+        double betaScale = lowerBound;
+        if (calculatedPower < targetPower)
+        {
+        	double upperBound = getDetectableDifferenceUpperBound(glmmTest, 
+        			nonCentralityDist, params.getBeta(),method, targetPower, alpha, quantile);       
+        	betaScale = solver.solve(ddFunc, lowerBound, upperBound); 
+        	if (betaScale < 0) 
+        		throw new MathException("Failed to calculate sample size");
+        }
+        // calculate actual power associated with this beta scale
+        scaledBeta = params.getBeta().scalarMultiply(betaScale, true);
+        glmmTest.setBeta(scaledBeta);
+        if (nonCentralityDist != null) nonCentralityDist.setBeta(scaledBeta);
+        calculatedPower = getPowerByType(glmmTest, nonCentralityDist, method,  alpha, quantile);
         
         // get a confidence interval if requested
 		GLMMPowerConfidenceInterval ci = null;
@@ -943,7 +959,9 @@ public class GLMMPowerCalculator implements PowerCalculator
 
         for(double currentPower = 0.0; currentPower < targetPower; upperBound *= 2)
         {
-            glmmTest.setBeta(beta.scalarMultiply(upperBound, true)); 
+        	RealMatrix scaledBeta = beta.scalarMultiply(upperBound, true);
+            glmmTest.setBeta(scaledBeta); 
+            if (nonCentralityDist != null) nonCentralityDist.setBeta(scaledBeta);
             currentPower = getPowerByType(glmmTest, nonCentralityDist, method, alpha, quantile);
         }
         return upperBound;
