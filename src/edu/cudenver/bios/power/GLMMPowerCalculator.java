@@ -794,18 +794,25 @@ public class GLMMPowerCalculator implements PowerCalculator
         int lowerBound = 2;
         if (nonCentralityDist != null) lowerBound = 3; // TODO: why can't we do nonCentrality with 3?
 
-        // use a bisection search to get the best power
-        int perGroupSampleSize = (int) Math.ceil(solver.solve(sampleSizeFunc, lowerBound, upperBound));
-        if (perGroupSampleSize < 0) 
-        {
-        	throw new MathException("Failed to calculate sample size");
-        }
-
-        // get the actual power associated with this per group sample size
-        glmmTest.setPerGroupSampleSize(perGroupSampleSize);
-        if (nonCentralityDist != null) nonCentralityDist.setPerGroupSampleSize(perGroupSampleSize);
+        // check if the lower bound is already greater than the target power
+        glmmTest.setPerGroupSampleSize(lowerBound);
+        if (nonCentralityDist != null) nonCentralityDist.setPerGroupSampleSize(lowerBound);
         double calculatedPower = getPowerByType(glmmTest, nonCentralityDist, method, alpha, quantile);
-
+        // if the sample size falls within [lowerBound, upperBound], then perform the bisection search
+        int perGroupSampleSize = lowerBound;
+        if (calculatedPower < targetPower)
+        {
+        	// use a bisection search to get the best power
+        	perGroupSampleSize = (int) Math.ceil(solver.solve(sampleSizeFunc, lowerBound, upperBound));
+        	if (perGroupSampleSize < 0) 
+        	{
+        		throw new MathException("Failed to calculate sample size");
+        	}
+        	// get the actual power associated with this per group sample size
+        	glmmTest.setPerGroupSampleSize(perGroupSampleSize);
+        	if (nonCentralityDist != null) nonCentralityDist.setPerGroupSampleSize(perGroupSampleSize);
+        	calculatedPower = getPowerByType(glmmTest, nonCentralityDist, method, alpha, quantile);
+        }
 		GLMMPowerConfidenceInterval ci = null;
 		if (params.getConfidenceIntervalType() != 
 			ConfidenceIntervalType.NONE)
