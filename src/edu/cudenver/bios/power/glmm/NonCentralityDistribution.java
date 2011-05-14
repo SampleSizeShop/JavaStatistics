@@ -220,9 +220,19 @@ public class NonCentralityDistribution
     
     /**
      * Reset the total sample size on an existing noncentrality distribution 
-     * 
+     * @param perGroupN new per group sample size
      */
     public void setPerGroupSampleSize(int perGroupN)
+    {
+    	initialize(test, FEssence, FtFinverse, perGroupN, CFixedRand, U, thetaNull, beta, 
+    			sigmaError, sigmaG, exact);
+    }
+    
+    /**
+     * Reset the beta matrix on an existing noncentrality distribution 
+     * @param beta the new beta matrix
+     */
+    public void setBeta(RealMatrix beta)
     {
     	initialize(test, FEssence, FtFinverse, perGroupN, CFixedRand, U, thetaNull, beta, 
     			sigmaError, sigmaG, exact);
