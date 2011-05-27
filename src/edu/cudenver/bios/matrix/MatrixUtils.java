@@ -25,6 +25,8 @@ import jsc.distributions.Normal;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
 
+import java.util.ArrayList;
+
 public class MatrixUtils
 {
 	/**
@@ -238,5 +240,139 @@ public class MatrixUtils
 			}
 		}
 		return sum;
+    }
+    
+    /**
+     * Returns the vec(matrix).
+     * @param RealMatrix matrix 
+     * @return RealMatrix representing vec(matrix).
+     */
+    public static RealMatrix getVecMatrix(RealMatrix matrix){
+    	int numRows = matrix.getRowDimension();
+    	int numCols = matrix.getColumnDimension();
+    	RealMatrix vec = new Array2DRowRealMatrix( numRows*numCols, 1 );
+    	int newRowNum = 0;
+    	
+    	//loop through each column
+    	for(int c = 0; c < numCols; c++){
+    	    //insert column values into new r x 1 matrix
+    		for( int r = 0; r < numRows && newRowNum < numRows*numCols; r++, newRowNum++){
+    			vec.setEntry(newRowNum, 0, new Double( matrix.getEntry(r, c) ));
+    	    }
+    	}
+    	return vec;
+    }
+    
+    /**
+     * In order to perform element-wise multiplication, the incoming
+     * matrices must have the same dimensions.
+     * @param matrixA
+     * @param matrixB
+     * @return RealMatrix which is the element-wise product of A and B.
+     */
+    public static RealMatrix getElementWiseProduct(RealMatrix matrixA, RealMatrix matrixB)
+    throws IllegalArgumentException{
+    	if(! areDimensionsEqual(matrixA, matrixB) ){
+    		throw new IllegalArgumentException("Matrix dimensions must be equal" +
+    				" for element-wise multiplication.");
+    	}
+    	
+    	int numRows = matrixA.getRowDimension();
+    	int numCols = matrixA.getColumnDimension();
+    	RealMatrix product = new Array2DRowRealMatrix( numRows, numCols );
+    	double aVal, bVal;
+    	
+    	//loop through each row
+    	for(int r = 0; r < numRows; r++){
+    	    //multiply each element of A by same element of B
+    		for( int c = 0; c < numCols; c++){
+    			aVal = matrixA.getEntry(r, c);
+    			bVal = matrixB.getEntry(r, c);	
+    			product.setEntry(r, c, new Double( aVal*bVal ));
+    	    }
+    	}
+    	return product;
+    }
+    
+
+    /**
+     * matrixA must be symmetrical in order to perform vech operation.
+     * @param RealMatrix matrixA
+     * @return vech(A)
+     */
+	public static RealMatrix getVechMatrix(RealMatrix matrixA)
+	throws IllegalArgumentException{
+    	if(! isSymmetrical( matrixA ) ){
+    		throw new IllegalArgumentException("Matrix must be symmetrical.");
+    	}
+    	
+		/*
+    	  You can't call setEntry() on a Array2DRowRealMatrix unless you 
+    	  have initialized the matrix with row and col dimensions
+    	  ahead of time. It throws a NullPointerException!  Since I don't 
+    	  know how many columns our vech matrix is going to have, I'm 
+    	  storing the values in an ArrayList (can be expanded dynamically.)
+    	  I will then take the size in order to initialize 
+    	  and fill my return matrix.
+    	 */
+		int newRow = 0;
+    	ArrayList<Double> tmpValues = new ArrayList<Double>();
+    	for( int c = 0; c < matrixA.getColumnDimension();c++){
+    		double[] colVals = matrixA.getColumn(c);
+    		for(int r = c; r < colVals.length; r++, newRow++){
+    			tmpValues.add(colVals[r]);
+    		}
+    	}
+    	
+    	//Now initialize the matrix and set its values.
+    	RealMatrix vech = new Array2DRowRealMatrix(tmpValues.size(), 1);
+    	for( int v = 0; v < tmpValues.size(); v++){
+//    		System.out.println("setting position (" +v+", 0) to "+tmpValues.get(v));
+			vech.setEntry(v, 0, tmpValues.get(v));
+//			System.out.println("vech="+vech);
+    	}
+    	return vech;
+    }
+    
+    /**
+     * Convenience method which will return a boolean which indicates whether
+     * or not the dimensions of the two matrices are equal.  i.e., the method
+     * will return true if the number of rows in matrixA is equal to the 
+     * number of rows in matrixB, and the number of columns in matrixA equals
+     * the number of columns in matrixB.
+     * @param matrixA
+     * @param matrixB
+     * @return boolean indicating whether or not the matrix dimensions are equal.
+     */
+    public static boolean areDimensionsEqual(RealMatrix matrixA, RealMatrix matrixB){
+    	int numRowsA = matrixA.getRowDimension();
+    	int numColsA = matrixA.getColumnDimension();
+    	int numRowsB = matrixB.getRowDimension();
+    	int numColsB = matrixB.getColumnDimension();
+    	return (numRowsA == numRowsB && numColsA == numColsB);
+    }
+    
+	/**
+	 * The method determines if the given matrix is symmetrical, i.e.,
+	 * if (r,c) == (c,r)
+	 * @param RealMatrix matrix
+	 * @return true if the matrix is symmetrical, false if not symmetrical.
+	 */
+    public static boolean isSymmetrical(RealMatrix matrix){
+    	int numRows = matrix.getRowDimension();
+    	int numCols = matrix.getColumnDimension();
+    	
+    	//if not square, can't be symmetrical
+    	if( numRows != numCols) return false;
+    	
+    	for( int r = 0; r < numRows; r++){
+    		for( int c = 0; c < numCols; c++){
+    			//test for symmetry
+    			if( matrix.getEntry(r, c) != matrix.getEntry(c, r)){
+    				return false;
+    			}
+    		}
+    	}
+    	return true;
     }
 }
