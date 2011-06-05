@@ -230,6 +230,10 @@ public class MatrixUtils
      */
     public static double getSumOfSquares(RealMatrix matrix)
     {
+    	if( matrix == null){
+    		throw new IllegalArgumentException("Null matrix not allowed for " +
+    				"getSumOfSquares()");
+    	}
     	double sum = 0.0;
 		for(int r = 0; r < matrix.getRowDimension(); r++)
 		{
@@ -248,6 +252,10 @@ public class MatrixUtils
      * @return RealMatrix representing vec(matrix).
      */
     public static RealMatrix getVecMatrix(RealMatrix matrix){
+    	if( matrix == null){
+    		throw new IllegalArgumentException("Null matrix not allowed for " +
+    				"getVecMatrix()");
+    	}
     	int numRows = matrix.getRowDimension();
     	int numCols = matrix.getColumnDimension();
     	RealMatrix vec = new Array2DRowRealMatrix( numRows*numCols, 1 );
