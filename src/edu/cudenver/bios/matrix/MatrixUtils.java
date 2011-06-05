@@ -36,7 +36,7 @@ public class MatrixUtils
 	 * @param matrix the matrix from which to extract the diagonal
 	 * @return diagonal matrix
 	 */
-	public static RealMatrix toDiagonalMatrix(RealMatrix matrix)
+	public static RealMatrix getDiagonalMatrix(RealMatrix matrix)
 	throws IllegalArgumentException
 	{
 		if (matrix == null)
@@ -63,7 +63,7 @@ public class MatrixUtils
 	 * @param matrix2 second matrix
 	 * @return horizontal direct product of matrix 1 and matrix 2
 	 */
-	public static RealMatrix horizontalDirectProduct(RealMatrix matrix1, RealMatrix matrix2)
+	public static RealMatrix getHorizontalDirectProduct(RealMatrix matrix1, RealMatrix matrix2)
 	throws IllegalArgumentException
 	{
 		if (matrix1 == null ||matrix2 == null)
@@ -96,7 +96,7 @@ public class MatrixUtils
 	 * @param matrix2 second matrix
 	 * @return Kronecker product of matrix 1 and matrix 2
 	 */
-	public static RealMatrix KroneckerProduct(RealMatrix matrix1, RealMatrix matrix2)
+	public static RealMatrix getKroneckerProduct(RealMatrix matrix1, RealMatrix matrix2)
 	{
 		if (matrix1 == null ||matrix2 == null)
 			throw new IllegalArgumentException("null input matrix");
@@ -128,7 +128,7 @@ public class MatrixUtils
 	 * @param value fill value
 	 * @return rows x cols matrix with all cells set to the specified value
 	 */
-	public static RealMatrix createRealMatrixWithFilledValue(int rows, int cols, double value)
+	public static RealMatrix getRealMatrixWithFilledValue(int rows, int cols, double value)
 	{
 		double[][] data = new double[rows][cols];
 		
@@ -150,7 +150,7 @@ public class MatrixUtils
 	 * @param value fill value
 	 * @return rows x cols matrix with all cells set to the specified value
 	 */
-	public static RealMatrix createRandomColumn(int rows, double mean, double variance, int seed)
+	public static RealMatrix getRandomColumnMatrix(int rows, double mean, double variance, int seed)
 	{
 		double[] data = new double[rows];
         Normal dist = new Normal(mean, Math.sqrt(variance));
@@ -170,7 +170,7 @@ public class MatrixUtils
 	 * @return the combined matrix
 	 * @throws IllegalArgumentException
 	 */
-	public static RealMatrix horizontalAppend(RealMatrix m1, RealMatrix m2)
+	public static RealMatrix getHorizontalAppend(RealMatrix m1, RealMatrix m2)
 	throws IllegalArgumentException
 	{
 		if (m1 == null || m2 == null)
@@ -194,8 +194,8 @@ public class MatrixUtils
 	 */
 	public static RealMatrix getFullDesignMatrix(RealMatrix designEssence, int sampleSize)
 	{
-		return MatrixUtils.KroneckerProduct(designEssence, 
-				MatrixUtils.createRealMatrixWithFilledValue(sampleSize, 1, 1));
+		return MatrixUtils.getKroneckerProduct(designEssence, 
+				MatrixUtils.getRealMatrixWithFilledValue(sampleSize, 1, 1));
 	}
 	
 	/**
@@ -207,11 +207,11 @@ public class MatrixUtils
 	public static RealMatrix getFullDesignMatrix(RealMatrix designEssence, 
 			RealMatrix sigmaGaussianRandom, int sampleSize, int seed)
 	{
-		RealMatrix fixed = MatrixUtils.KroneckerProduct(designEssence, 
-				MatrixUtils.createRealMatrixWithFilledValue(sampleSize, 1, 1));
+		RealMatrix fixed = MatrixUtils.getKroneckerProduct(designEssence, 
+				MatrixUtils.getRealMatrixWithFilledValue(sampleSize, 1, 1));
 			// GLMM(F, g), so we need to append a random column
-			return MatrixUtils.horizontalAppend(fixed, 
-					MatrixUtils.createRandomColumn(fixed.getRowDimension(), 0, 
+			return MatrixUtils.getHorizontalAppend(fixed, 
+					MatrixUtils.getRandomColumnMatrix(fixed.getRowDimension(), 0, 
 							sigmaGaussianRandom.getEntry(0, 0), seed));
 	}
 	
@@ -256,14 +256,16 @@ public class MatrixUtils
     	//loop through each column
     	for(int c = 0; c < numCols; c++){
     	    //insert column values into new r x 1 matrix
-    		for( int r = 0; r < numRows && newRowNum < numRows*numCols; r++, newRowNum++){
-    			vec.setEntry(newRowNum, 0, new Double( matrix.getEntry(r, c) ));
+    		for( int r = 0; r < numRows; r++, newRowNum++){
+    			vec.setEntry(newRowNum, 0, matrix.getEntry(r, c) );
     	    }
     	}
     	return vec;
     }
     
     /**
+     * This method will return the element-wise product of matrixA
+     * and matrixB.
      * In order to perform element-wise multiplication, the incoming
      * matrices must have the same dimensions.
      * @param matrixA
@@ -272,8 +274,11 @@ public class MatrixUtils
      */
     public static RealMatrix getElementWiseProduct(RealMatrix matrixA, RealMatrix matrixB)
     throws IllegalArgumentException{
-    	if(! areDimensionsEqual(matrixA, matrixB) ){
-    		throw new IllegalArgumentException("Matrix dimensions must be equal" +
+    	if( matrixA == null ||
+    		matrixB == null ||
+    		! areDimensionsEqual(matrixA, matrixB) ){
+    		throw new IllegalArgumentException("Both matrices must be non-null " +
+    				"and matrix dimensions must be equal" +
     				" for element-wise multiplication.");
     	}
     	
@@ -288,7 +293,7 @@ public class MatrixUtils
     		for( int c = 0; c < numCols; c++){
     			aVal = matrixA.getEntry(r, c);
     			bVal = matrixB.getEntry(r, c);	
-    			product.setEntry(r, c, new Double( aVal*bVal ));
+    			product.setEntry(r, c, aVal*bVal );
     	    }
     	}
     	return product;
@@ -296,40 +301,23 @@ public class MatrixUtils
     
 
     /**
-     * matrixA must be symmetrical in order to perform vech operation.
-     * @param RealMatrix matrixA
-     * @return vech(A)
+     * matrix must be symmetrical in order to perform vech operation.
+     * @param RealMatrix matrix
+     * @return vech(matrix)
      */
-	public static RealMatrix getVechMatrix(RealMatrix matrixA)
+	public static RealMatrix getVechMatrix(RealMatrix matrix)
 	throws IllegalArgumentException{
-    	if(! isSymmetrical( matrixA ) ){
-    		throw new IllegalArgumentException("Matrix must be symmetrical.");
+    	if( matrix == null ||! isSymmetric( matrix ) ){
+    		throw new IllegalArgumentException("Matrix must be non-null and " +
+    				"symmetrical.");
     	}
-    	
-		/*
-    	  You can't call setEntry() on a Array2DRowRealMatrix unless you 
-    	  have initialized the matrix with row and col dimensions
-    	  ahead of time. It throws a NullPointerException!  Since I don't 
-    	  know how many columns our vech matrix is going to have, I'm 
-    	  storing the values in an ArrayList (can be expanded dynamically.)
-    	  I will then take the size in order to initialize 
-    	  and fill my return matrix.
-    	 */
-		int newRow = 0;
-    	ArrayList<Double> tmpValues = new ArrayList<Double>();
-    	for( int c = 0; c < matrixA.getColumnDimension();c++){
-    		double[] colVals = matrixA.getColumn(c);
-    		for(int r = c; r < colVals.length; r++, newRow++){
-    			tmpValues.add(colVals[r]);
+    	int newRow = 0;
+		int numRows = matrix.getRowDimension();
+		RealMatrix vech = new Array2DRowRealMatrix(numRows*(numRows+1)/2, 1);
+    	for( int c = 0; c < matrix.getColumnDimension();c++){
+    		for(int r = c; r < matrix.getRowDimension(); r++, newRow++){
+    			vech.setEntry(newRow, 0, matrix.getEntry(r, c));
     		}
-    	}
-    	
-    	//Now initialize the matrix and set its values.
-    	RealMatrix vech = new Array2DRowRealMatrix(tmpValues.size(), 1);
-    	for( int v = 0; v < tmpValues.size(); v++){
-//    		System.out.println("setting position (" +v+", 0) to "+tmpValues.get(v));
-			vech.setEntry(v, 0, tmpValues.get(v));
-//			System.out.println("vech="+vech);
     	}
     	return vech;
     }
@@ -353,12 +341,12 @@ public class MatrixUtils
     }
     
 	/**
-	 * The method determines if the given matrix is symmetrical, i.e.,
-	 * if (r,c) == (c,r)
+	 * The method determines if the given matrix is symmetric, i.e.,
+	 * if (r,c) == (c,r) in every case.
 	 * @param RealMatrix matrix
-	 * @return true if the matrix is symmetrical, false if not symmetrical.
+	 * @return true if the matrix is symmetric, false if not symmetric.
 	 */
-    public static boolean isSymmetrical(RealMatrix matrix){
+    public static boolean isSymmetric(RealMatrix matrix){
     	int numRows = matrix.getRowDimension();
     	int numCols = matrix.getColumnDimension();
     	
