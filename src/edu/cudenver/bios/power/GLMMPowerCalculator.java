@@ -82,7 +82,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     	
     	public SimulatedPower(int betaRow, int betaCol)
     	{
-    		averageBeta = MatrixUtils.createRealMatrixWithFilledValue(betaRow, betaCol, 0);
+    		averageBeta = MatrixUtils.getRealMatrixWithFilledValue(betaRow, betaCol, 0);
     	}
 
 		public double getPower() { return power; }
