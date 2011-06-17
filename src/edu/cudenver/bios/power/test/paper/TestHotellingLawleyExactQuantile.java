@@ -46,7 +46,7 @@ public class TestHotellingLawleyExactQuantile extends TestCase
 {
 	private static final String DATA_FILE =  "data" + File.separator + "TestHotellingLawleyExactQuantile.xml";
 	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "HotellingLawleyExactQuantileOutput.html";
-	private static final String TITLE = "Power results for HLT, exact quantile";
+	private static final String TITLE = "GLMM(F, g) Example 2. Median power for the Hotelling-Lawley Trace, using Davies algorithm";
 	private static final double MEAN = 9.75;
 	private static final double VARIANCE = 2.0;
 	private static final double[] ALPHA_LIST = {0.05};    
@@ -91,11 +91,10 @@ public class TestHotellingLawleyExactQuantile extends TestCase
 		};
 		GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
 
-		System.out.println(TITLE);
 		checker.checkPower(params5);
 		checker.checkPower(params25);
 		checker.checkPower(params50);
-		checker.outputResults();
+		checker.outputResults(TITLE);
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		assertTrue(checker.isSimulationDeviationBelowTolerance());

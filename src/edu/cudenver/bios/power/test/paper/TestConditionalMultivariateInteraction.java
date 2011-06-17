@@ -44,7 +44,7 @@ public class TestConditionalMultivariateInteraction extends TestCase
 {
 	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalMultivariateInteraction.xml";
 	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalMultivariateInteraction.html";
-	private static final String TITLE = "Power results for multivariate interaction";
+	private static final String TITLE = "GLMM(F) Example 5. Power for a test of interaction in a multivariate model";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -111,9 +111,8 @@ public class TestConditionalMultivariateInteraction extends TestCase
         double [][] within = {{1,1},{-1,0},{0,-1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
         	
-        System.out.println(TITLE);
         checker.checkPower(params);
-		checker.outputResults();
+		checker.outputResults(TITLE);
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		assertTrue(checker.isSimulationDeviationBelowTolerance());

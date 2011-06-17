@@ -36,23 +36,23 @@ public class PaperResultsTestSuite
 
         TestSuite suite = new TestSuite();
         // GLMM(F) designs
+        suite.addTestSuite(TestConditionalTwoSampleTTest.class);
+        suite.addTestSuite(TestConditionalPairedTTest.class);
+        suite.addTestSuite(TestConditionalTwoSampleTTest3DPlot.class);
+        suite.addTestSuite(TestConditionalUnivariateWithConfidenceLimits.class);
         suite.addTestSuite(TestConditionalMultivariateInteraction.class);
         suite.addTestSuite(TestConditionalMultivariateWithConfidenceLimits.class);
         suite.addTestSuite(TestConditionalOrthogonalPolynomial1Factor.class);
-        suite.addTestSuite(TestConditionalOrthogonalPolynomial2Factor.class);
         suite.addTestSuite(TestConditionalOrthogonalPolynomial3Factor.class);
-        suite.addTestSuite(TestConditionalPairedTTest.class);
-        suite.addTestSuite(TestConditionalTwoSampleTTest.class);
-        suite.addTestSuite(TestConditionalTwoSampleTTest3DPlot.class);
-        suite.addTestSuite(TestConditionalUnivariateWithConfidenceLimits.class);
+        suite.addTestSuite(TestConditionalOrthogonalPolynomial2Factor.class);
         // GLMM(F,g) designs
         suite.addTestSuite(TestHotellingLawleyApproximateQuantile.class);
-        suite.addTestSuite(TestHotellingLawleyApproximateUnconditional.class);
         suite.addTestSuite(TestHotellingLawleyExactQuantile.class);
+        suite.addTestSuite(TestHotellingLawleyApproximateUnconditional.class);
         suite.addTestSuite(TestHotellingLawleyExactUnconditional.class);
         suite.addTestSuite(TestUnirepApproximateQuantile.class);
-        suite.addTestSuite(TestUnirepApproximateUnconditional.class);
         suite.addTestSuite(TestUnirepExactQuantile.class);
+        suite.addTestSuite(TestUnirepApproximateUnconditional.class);
         suite.addTestSuite(TestUnirepExactUnconditional.class);
 
         return suite;

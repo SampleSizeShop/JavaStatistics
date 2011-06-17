@@ -49,7 +49,9 @@ public class TestUnirepExactQuantile extends TestCase
 
 	private static final String DATA_FILE =  "data" + File.separator + "TestUnirepExactQuantile.xml";
 	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "UnirepExactQuantileOutput.html";
-	private static final String TITLE = "Power results for UNIREP, exact quantile";
+	private static final String TITLE = "GLMM(F, g) Example 6. Median power for the uncorrected " +
+			"univariate approach to repeated measures, Box, Geisser-Greenhouse," +
+			" and Huynh-Feldt tests, using Davies Algorithm";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -89,7 +91,6 @@ public class TestUnirepExactQuantile extends TestCase
 		};
 		GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
 
-		System.out.println(TITLE);
 		Test[] list = {Test.UNIREP,Test.UNIREP_BOX,
 				Test.UNIREP_GEISSER_GREENHOUSE,Test.UNIREP_HUYNH_FELDT};
 		for(Test test : list)
@@ -104,7 +105,7 @@ public class TestUnirepExactQuantile extends TestCase
 			checker.checkPower(params25);
 			checker.checkPower(params50);
 		}
-		checker.outputResults();
+		checker.outputResults(TITLE);
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		assertTrue(checker.isSimulationDeviationBelowTolerance());

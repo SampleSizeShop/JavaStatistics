@@ -49,7 +49,7 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
 {
 	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalMultivariateWithConfidenceLimits.xml";
 	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalMultivariateWithConfidenceLimits.html";
-	private static final String TITLE = "Power results for multivariate design, UNIREP-GG with confidence limits";
+	private static final String TITLE = "GLMM(F) Example 6. Power and confidence limits for the univariate approach to repeated measures in a multivariate model";
 	private PowerChecker checker;
 	
     // set beta matrix
@@ -100,8 +100,8 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
     			checker.checkPower(params);
     		}
     	}
-        System.out.println(TITLE);
-		checker.outputResults();
+
+		checker.outputResults(TITLE);
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		assertTrue(checker.isSimulationDeviationBelowTolerance());

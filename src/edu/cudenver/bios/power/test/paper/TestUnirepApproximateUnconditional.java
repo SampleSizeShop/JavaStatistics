@@ -52,7 +52,10 @@ public class TestUnirepApproximateUnconditional extends TestCase
 
 	private static final String DATA_FILE =  "data" + File.separator + "TestUnirepApproximateUnconditional.xml";
 	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "UnirepApproximateUnconditionalOutput.html";
-	private static final String TITLE = "Power results for UNIREP, approximate unconditional";
+	private static final String TITLE = "GLMM(F, g) Example 7. Unconditional " +
+			"power for the uncorrected univariate approach to repeated " +
+			"measures, Box, Geisser-Greenhouse, and Huynh-Feldt tests, " +
+			"using the Satterthwaite approximation";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -92,7 +95,6 @@ public class TestUnirepApproximateUnconditional extends TestCase
         };
         GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
 
-		System.out.println(TITLE);
 		Test[] list = {Test.UNIREP,Test.UNIREP_BOX,
 				Test.UNIREP_GEISSER_GREENHOUSE,Test.UNIREP_HUYNH_FELDT};
 		for(Test test : list)
@@ -107,7 +109,7 @@ public class TestUnirepApproximateUnconditional extends TestCase
 			checker.checkPower(params25);
 			checker.checkPower(params50);
 		}
-		checker.outputResults();
+		checker.outputResults(TITLE);
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		assertTrue(checker.isSimulationDeviationBelowTolerance());

@@ -22,18 +22,16 @@ package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.MatrixUtils;
 
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RowMetaData;
-import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
-import junit.framework.TestCase;
 
 /**
  * Unit test for fixed univariate design with confidence intervals (powerlib example 4). 
@@ -51,7 +49,7 @@ public class TestConditionalUnivariateWithConfidenceLimits extends TestCase
 {
 	private static final String DATA_FILE = "data" + File.separator + "TestConditionalUnivariateWithConfidenceLimits.xml";
 	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalUnivariateWithConfidenceLimits.html";
-	private static final String TITLE = "Power results for fixed univariate design with confidence limits";
+	private static final String TITLE = "GLMM(F) Example 4. Power and confidence limits for a univariate model";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -113,7 +111,6 @@ public class TestConditionalUnivariateWithConfidenceLimits extends TestCase
         params.setDesignMatrixRankForEstimates(2);
         
         // run the test
-        System.out.println(TITLE);
         // 2 sided CI
         params.setAlphaLowerConfidenceLimit(0.025);
         params.setAlphaUpperConfidenceLimit(0.025);
@@ -127,7 +124,7 @@ public class TestConditionalUnivariateWithConfidenceLimits extends TestCase
         params.setAlphaUpperConfidenceLimit(0.05);
         checker.checkPower(params);
         // output the results
-		checker.outputResults();
+		checker.outputResults(TITLE);
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		assertTrue(checker.isSimulationDeviationBelowTolerance());

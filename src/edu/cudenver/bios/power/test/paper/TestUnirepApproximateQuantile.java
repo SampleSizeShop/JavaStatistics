@@ -53,7 +53,9 @@ public class TestUnirepApproximateQuantile extends TestCase
 
 	private static final String DATA_FILE =  "data" + File.separator + "TestUnirepApproximateQuantile.xml";
 	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "UnirepApproximateQuantileOutput.html";
-	private static final String TITLE = "Power results for UNIREP, approximate quantile";
+	private static final String TITLE = "GLMM(F, g) Example 5. Median power for the " +
+			"uncorrected univariate approach to repeated measures, Box, Geisser-Greenhouse, " +
+			"and Huynh-Feldt tests, using the Satterthwaite approximation";
 	
 	private PowerChecker checker;
 	
@@ -95,7 +97,6 @@ public class TestUnirepApproximateQuantile extends TestCase
 		};
 		GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
 
-		System.out.println(TITLE);
 		Test[] list = {Test.UNIREP,Test.UNIREP_BOX,
 				Test.UNIREP_GEISSER_GREENHOUSE,Test.UNIREP_HUYNH_FELDT};
 		for(Test test : list)
@@ -111,7 +112,7 @@ public class TestUnirepApproximateQuantile extends TestCase
 			checker.checkPower(params25);
 			checker.checkPower(params50);
 		}
-		checker.outputResults();
+		checker.outputResults(TITLE);
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		assertTrue(checker.isSimulationDeviationBelowTolerance());
