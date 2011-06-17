@@ -101,7 +101,7 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 			// run power for 1 factor contrasts		
 			RealMatrix U = withinSubjectContrasts.getMainEffectContrast(nameD);
 			RealMatrix C = betweenSubjectContrasts.getMainEffectContrast(nameA).transpose();
-			RealMatrix thetaNull = MatrixUtils.createRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
+			RealMatrix thetaNull = MatrixUtils.getRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
 			params.setWithinSubjectContrast(U);
 			params.setBetweenSubjectContrast(new FixedRandomMatrix(C.getData(), null, true));
 			params.setTheta(thetaNull);
@@ -110,7 +110,7 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 			// run power for 2 factor contrasts
 			U = withinSubjectContrasts.getTwoFactorInteractionContrast(nameD, nameE);
 			C = betweenSubjectContrasts.getTwoFactorInteractionContrast(nameA, nameB).transpose();
-			thetaNull = MatrixUtils.createRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
+			thetaNull = MatrixUtils.getRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
 			params.setWithinSubjectContrast(U);
 			params.setBetweenSubjectContrast(new FixedRandomMatrix(C.getData(), null, true));
 			params.setTheta(thetaNull);
@@ -119,7 +119,7 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 			// run power for 3 factor contrasts
 			U = withinSubjectContrasts.getThreeFactorInteractionContrast(nameD, nameE, nameF);
 			C = betweenSubjectContrasts.getThreeFactorInteractionContrast(nameA, nameB, nameC).transpose();
-			thetaNull = MatrixUtils.createRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
+			thetaNull = MatrixUtils.getRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
 			params.setWithinSubjectContrast(U);
 			params.setBetweenSubjectContrast(new FixedRandomMatrix(C.getData(), null, true));
 			params.setTheta(thetaNull);
@@ -170,7 +170,7 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 		params.setDesignEssence(org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(Q));
 
 		// build beta matrix
-		RealMatrix beta = MatrixUtils.createRealMatrixWithFilledValue(Q, P, 0);
+		RealMatrix beta = MatrixUtils.getRealMatrixWithFilledValue(Q, P, 0);
 		beta.setEntry(0, 0, 1);
 		params.setBeta(new FixedRandomMatrix(beta.getData(), null, false));
 		// add beta scale values

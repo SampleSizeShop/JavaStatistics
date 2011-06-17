@@ -193,9 +193,9 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 				RealMatrix sigmaTemp = U.multiply(sigStar).multiply(U.transpose());
 				int dimension = sigmaTemp.getRowDimension();
 				RealMatrix Uother = 
-					MatrixUtils.createRealMatrixWithFilledValue(dimension, 1, 1/Math.sqrt(U.getColumnDimension()));
-				Uother = MatrixUtils.horizontalAppend(Uother, collection.getMainEffectContrast(nameA));
-				Uother = MatrixUtils.horizontalAppend(Uother, collection.getMainEffectContrast(nameB));
+					MatrixUtils.getRealMatrixWithFilledValue(dimension, 1, 1/Math.sqrt(U.getColumnDimension()));
+				Uother = MatrixUtils.getHorizontalAppend(Uother, collection.getMainEffectContrast(nameA));
+				Uother = MatrixUtils.getHorizontalAppend(Uother, collection.getMainEffectContrast(nameB));
 				double varianceMean = (double) sigStar.getTrace() / (double) sigStar.getColumnDimension();
 				RealMatrix sigmaError = sigmaTemp.add(Uother.multiply(Uother.transpose()).scalarMultiply(varianceMean));
 				
@@ -262,7 +262,7 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		params.addBetaScale(1);
 
 		// build theta null matrix
-		params.setTheta(MatrixUtils.createRealMatrixWithFilledValue(1, 4, 0));
+		params.setTheta(MatrixUtils.getRealMatrixWithFilledValue(1, 4, 0));
 
 		// add sigma scale values
 		// gamma in Coffey and Muller (2003) *;
