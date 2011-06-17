@@ -20,15 +20,51 @@
  */
 package edu.cudenver.bios.matrix;
 
-import jsc.distributions.Normal;
-
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
+import org.apache.commons.math.linear.CholeskyDecompositionImpl;
+import org.apache.commons.math.linear.EigenDecompositionImpl;
+import org.apache.commons.math.linear.NonSquareMatrixException;
+import org.apache.commons.math.linear.NotPositiveDefiniteMatrixException;
+import org.apache.commons.math.linear.NotSymmetricMatrixException;
 import org.apache.commons.math.linear.RealMatrix;
 
 import java.util.ArrayList;
 
+import jsc.distributions.Normal;
+
 public class MatrixUtils
 {
+	// This value is used in the Positive Definite calculation
+	private static Double EIGEN_TOLERANCE = 1.0E-15;
+	
+	/**
+	 * This method performs a Cholesky decomposition on the matrix argument.
+	 * @param matrix a RealMatrix
+	 * @return ArrayList<RealMatrix> containing (at index 0):the square root matrix,
+	 * (at index 1) the transpose.
+	 */
+	public static ArrayList<RealMatrix> getCholeskyDecomposition(RealMatrix matrix){
+		ArrayList<RealMatrix> list = new ArrayList<RealMatrix>();
+		
+		// perform Cholesky Decomposition
+        CholeskyDecompositionImpl cdImpl;
+		try {
+			cdImpl = new CholeskyDecompositionImpl(matrix);
+		} catch (NonSquareMatrixException e) {
+			throw new IllegalArgumentException("This operation requires a " +
+					"square matrix.");
+		} catch (NotSymmetricMatrixException e) {
+			throw new IllegalArgumentException("This operation requires a " +
+			"symmetrix matrix.");
+		} catch (NotPositiveDefiniteMatrixException e) {
+			throw new IllegalArgumentException("This operation requires a " +
+			"positive definite matrix.");
+		}
+        list.add( cdImpl.getL() );
+        list.add( cdImpl.getLT() );
+        return list;
+	}
+	
 	/**
 	 * Creates a matrix of equal dimension but with all non-diagonal 
 	 * elements set to 0
@@ -370,5 +406,30 @@ public class MatrixUtils
     		}
     	}
     	return true;
+    }
+    
+    /**
+     * The method determines if the given matrix is positive definite.
+     * The matrix must be square.
+     * @param matrix
+     * @return true if the matrix is positive definite.
+     */
+    public static boolean isPositiveDefinite(RealMatrix matrix){
+    	if( matrix == null || ! matrix.isSquare()){
+    		throw new IllegalArgumentException("Matrix must be non-null, " +
+    				"square. ");
+    	}
+    	double[] eigenValues = new EigenDecompositionImpl( matrix, EIGEN_TOLERANCE)
+    	.getRealEigenvalues();
+
+        // if all eigenValues are positive, we return true
+        boolean isPositiveDefinite = true;
+        for( int i = 0; i < eigenValues.length; i++){
+        	if( eigenValues[i] <= 0){
+        		isPositiveDefinite = false;
+        		break;
+        	}
+        }
+        return isPositiveDefinite;
     }
 }
