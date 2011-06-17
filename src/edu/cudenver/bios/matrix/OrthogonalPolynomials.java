@@ -81,7 +81,7 @@ public class OrthogonalPolynomials
 		RealMatrix outerVector = new Array2DRowRealMatrix(xOuter);
 		QRDecompositionImpl qrDecomp = new QRDecompositionImpl(outerVector);
 
-		RealMatrix z = MatrixUtils.toDiagonalMatrix(qrDecomp.getR());
+		RealMatrix z = MatrixUtils.getDiagonalMatrix(qrDecomp.getR());
 		RealMatrix raw = qrDecomp.getQ().multiply(z);
 		
 		// column sum of squared elements in raw
@@ -175,13 +175,13 @@ public class OrthogonalPolynomials
 				1, factor2OrthoPoly.getColumnDimension()-1);
 		
 		// build the grand mean
-		RealMatrix grandMean = MatrixUtils.KroneckerProduct(zeroTrendFactor1, zeroTrendFactor2);
+		RealMatrix grandMean = MatrixUtils.getKroneckerProduct(zeroTrendFactor1, zeroTrendFactor2);
 		
 		// build the main effects contrasts
-		RealMatrix mainEffectFactor1 = MatrixUtils.KroneckerProduct(trendsFactor1, zeroTrendFactor2);
-		RealMatrix mainEffectFactor2 = MatrixUtils.KroneckerProduct(zeroTrendFactor1, trendsFactor2);
+		RealMatrix mainEffectFactor1 = MatrixUtils.getKroneckerProduct(trendsFactor1, zeroTrendFactor2);
+		RealMatrix mainEffectFactor2 = MatrixUtils.getKroneckerProduct(zeroTrendFactor1, trendsFactor2);
 		// build the interaction contrast
-		RealMatrix interactionContrast =  MatrixUtils.KroneckerProduct(trendsFactor1, trendsFactor2);
+		RealMatrix interactionContrast =  MatrixUtils.getKroneckerProduct(trendsFactor1, trendsFactor2);
 		
 		// build the contrast collection
 		OrthogonalPolynomialContrastCollection results = new OrthogonalPolynomialContrastCollection();
@@ -238,34 +238,34 @@ public class OrthogonalPolynomials
 		
 		// build the grand mean
 		RealMatrix grandMean = 
-			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(zeroTrendFactor1, zeroTrendFactor2),
+			MatrixUtils.getKroneckerProduct(MatrixUtils.getKroneckerProduct(zeroTrendFactor1, zeroTrendFactor2),
 					zeroTrendFactor3);
 		
 		// build the main effects contrasts
 		RealMatrix mainEffectFactor1 = 
-			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(trendsFactor1, zeroTrendFactor2),
+			MatrixUtils.getKroneckerProduct(MatrixUtils.getKroneckerProduct(trendsFactor1, zeroTrendFactor2),
 					zeroTrendFactor3);
 		RealMatrix mainEffectFactor2 = 
-			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(zeroTrendFactor1, trendsFactor2),
+			MatrixUtils.getKroneckerProduct(MatrixUtils.getKroneckerProduct(zeroTrendFactor1, trendsFactor2),
 				zeroTrendFactor3);
 		RealMatrix mainEffectFactor3 =  
-			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(zeroTrendFactor1, zeroTrendFactor2),
+			MatrixUtils.getKroneckerProduct(MatrixUtils.getKroneckerProduct(zeroTrendFactor1, zeroTrendFactor2),
 					trendsFactor3);
 		
 		// build the pairwise interaction contrasts
 		RealMatrix interaction12 = 
-			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(trendsFactor1, trendsFactor2),
+			MatrixUtils.getKroneckerProduct(MatrixUtils.getKroneckerProduct(trendsFactor1, trendsFactor2),
 					zeroTrendFactor3);
 		RealMatrix interaction13 = 
-			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(trendsFactor1, zeroTrendFactor2),
+			MatrixUtils.getKroneckerProduct(MatrixUtils.getKroneckerProduct(trendsFactor1, zeroTrendFactor2),
 				trendsFactor3);
 		RealMatrix interaction23 = 
-			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(zeroTrendFactor1, trendsFactor2),
+			MatrixUtils.getKroneckerProduct(MatrixUtils.getKroneckerProduct(zeroTrendFactor1, trendsFactor2),
 					trendsFactor3);
 		
 		// build 3-factor interaction
 		RealMatrix interaction123 = 
-			MatrixUtils.KroneckerProduct(MatrixUtils.KroneckerProduct(trendsFactor1, trendsFactor2),
+			MatrixUtils.getKroneckerProduct(MatrixUtils.getKroneckerProduct(trendsFactor1, trendsFactor2),
 					trendsFactor3);
 		
 		// build the contrast collection
