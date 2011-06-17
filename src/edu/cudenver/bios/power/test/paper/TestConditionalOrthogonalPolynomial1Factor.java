@@ -45,8 +45,9 @@ public class TestConditionalOrthogonalPolynomial1Factor extends TestCase
 {
 	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalOrthogonalPolynomial1Factor.xml";
 	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalOrthogonalPolynomial1Factor.html";
-	private static final String TITLE = "Power results for time by treatment interaction using orthogonal polynomial contrast for time";
+	private static final String TITLE = "GLMM(F) Example 7. Power for a time by treatment interaction using orthogonal polynomial contrast for time";
 	private PowerChecker checker;
+	private boolean verbose = false;
 	
 	public void setUp()
 	{
@@ -117,12 +118,11 @@ public class TestConditionalOrthogonalPolynomial1Factor extends TestCase
         double[] times ={2, 4 ,6, 8, 10};
         String name = "times";
         RealMatrix U = OrthogonalPolynomials.withinSubjectContrast(times, name).getMainEffectContrast(name);
-        printMatrix("U Matrix", U);
+        if (verbose) printMatrix("U Matrix", U);
         params.setWithinSubjectContrast(U);
         
-        System.out.println(TITLE);
         checker.checkPower(params);
-		checker.outputResults();
+		checker.outputResults(TITLE);
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		assertTrue(checker.isSimulationDeviationBelowTolerance());

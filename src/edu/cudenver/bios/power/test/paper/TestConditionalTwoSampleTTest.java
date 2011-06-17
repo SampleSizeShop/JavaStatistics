@@ -56,7 +56,7 @@ public class TestConditionalTwoSampleTTest extends TestCase
 
 	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalTwoSampleTTest.xml";
 	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalTwoSampleTTest.html";
-	private static final String TITLE = "Power results for Two Sample TTest";
+	private static final String TITLE = "GLMM(F) Example 1. Power for a two sample t-test for several error variance values and mean differences";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -111,9 +111,8 @@ public class TestConditionalTwoSampleTTest extends TestCase
         double [][] between = {{1,-1}};
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
 
-        System.out.println(TITLE);
         checker.checkPower(params);
-		checker.outputResults();
+		checker.outputResults(TITLE);
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		assertTrue(checker.isSimulationDeviationBelowTolerance());

@@ -62,6 +62,7 @@ public class PowerChecker
 		}
 	}
 	
+	private boolean verbose = false;
 	private double positivityThreshold = CholeskyDecompositionImpl.DEFAULT_ABSOLUTE_POSITIVITY_THRESHOLD;
 	private double symmetryThreshold = CholeskyDecompositionImpl.DEFAULT_RELATIVE_SYMMETRY_THRESHOLD;
     private static final int SIMULATION_SIZE = 10000;
@@ -79,8 +80,8 @@ public class PowerChecker
     private ArrayList<Result> checkerResults = new ArrayList<Result>();
     private double maxSasDeviation = 0;
     private double maxSimDeviation = 0;
-    private double maxSaslowerCIDeviation = 0;
-    private double maxSasUpperCIDeviation = 0;
+    private double maxSaslowerCIDeviation = -1;
+    private double maxSasUpperCIDeviation = -1;
     private int sasResultsIndex = 0;
     
     private Timer timer = new Timer();
@@ -156,6 +157,7 @@ public class PowerChecker
     throws IllegalArgumentException
     {
     	this.simulate = compareAgainstSimulation;
+    	//this.simulate = false;
     	FileReader reader = null;
     	// parse the sas xml file
     	try
@@ -191,7 +193,7 @@ public class PowerChecker
     	calc.setPositivityThreshold(positivityThreshold);
     	calc.setSymmetryThreshold(symmetryThreshold);
     	// perform the calculations
-    	System.out.println("Calculating power...");
+    	if (verbose) System.out.println("Calculating power...");
     	long startTime = System.currentTimeMillis();
     	List<Power> results = null;
     	try
@@ -203,18 +205,18 @@ public class PowerChecker
     		System.err.println("Error in calculating power: " + e.getMessage());
     	}
     	long calcTime = System.currentTimeMillis() - startTime;
-    	System.out.println("Done.  Elapsed time: " +  ((double) calcTime / (double) 1000) + " seconds");
+    	if (verbose) System.out.println("Done.  Elapsed time: " +  ((double) calcTime / (double) 1000) + " seconds");
     	timer.addCalculationTime(calcTime);
     	
     	// perform the simulation if requested
     	List<Power> simResults = null;
     	if (simulate)
     	{
-    		System.out.println("Simulating power...");
+    		if (verbose) System.out.println("Simulating power...");
         	startTime = System.currentTimeMillis();
     		simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
     		long simTime = System.currentTimeMillis() - startTime;
-        	System.out.println("Done.  Elapsed time: " +  ((double) simTime / (double) 1000) + " seconds");
+    		if (verbose) System.out.println("Done.  Elapsed time: " +  ((double) simTime / (double) 1000) + " seconds");
         	timer.addSimulationTime(simTime);
     	}
     	
@@ -264,14 +266,22 @@ public class PowerChecker
     	}
     }
     
+    /**
+     * Enable/disable verbose output
+     */
+    public void setVerbose(boolean enabled)
+    {
+    	verbose = enabled;
+    }
+    
     public void reset()
     {
     	checkerResults.clear();
     	timer.reset();
     	maxSasDeviation = 0;
     	maxSimDeviation = 0;
-    	maxSaslowerCIDeviation = 0;
-    	maxSasUpperCIDeviation = 0;
+    	maxSaslowerCIDeviation = -1;
+    	maxSasUpperCIDeviation = -1;
     	sasResultsIndex = 0;
     }
     
@@ -410,32 +420,41 @@ public class PowerChecker
     /**
      * Write the current result set to stdout.
      */
-    public void outputResults()
+    public void outputResults(String title)
     {
-    	// output the results
-    	System.out.println("Calculation time: " + ((double) timer.calculationMilliseconds / 1000));
-    	System.out.println("Simulation time: " + ((double) timer.simulationMilliseconds / 1000));
-    	System.out.println("Calc Power (lower, upper)\tSAS Power (deviation)\tSim Power (deviation)\tTest\tSigmaScale\tBetaScale\tTotal N\tAlpha\tPowerMethod\tQuantile");
-    	
-    	for(Result result: checkerResults)
+    	if (verbose)
     	{
-    		System.out.println(Number.format(result.calculatedPower.getActualPower()) + "(" + 
-    				(result.calculatedPower.getConfidenceInterval() != null ? 
-    						Number.format(result.calculatedPower.getConfidenceInterval().getLowerLimit()) : "n/a") + ", " + 
-    				(result.calculatedPower.getConfidenceInterval() != null ? 
-    						Number.format(result.calculatedPower.getConfidenceInterval().getUpperLimit()) : "n/a") + ")\t" +  
-    	    		Number.format(result.sasPower) + " (" +  Number.format(result.sasDeviation) + ")\t" +
-    				Number.format(result.simulatedPower) + " (" + Number.format(result.simulationDeviation) + ")\t" +
-    				result.calculatedPower.getTest() + "\t" + 
-    				Number.format(result.calculatedPower.getSigmaScale()) + "\t" + 
-    				Number.format(result.calculatedPower.getBetaScale()) + "\t" + 
-    				result.calculatedPower.getTotalSampleSize() + "\t" + 
-    				Number.format(result.calculatedPower.getAlpha()) + "\t" + 
-    				result.calculatedPower.getPowerMethod() + "\t" + 
-    				result.calculatedPower.getQuantile() + "\t");
+    		// output the results
+    		System.out.println("Calc Power (lower, upper)\tSAS Power (deviation)\t" +
+    				"Sim Power (deviation)\tTest\tSigmaScale\tBetaScale\tTotal N\tAlpha\tPowerMethod\tQuantile");
+
+    		for(Result result: checkerResults)
+    		{
+    			System.out.println(Number.format(result.calculatedPower.getActualPower()) + "(" + 
+    					(result.calculatedPower.getConfidenceInterval() != null ? 
+    							Number.format(result.calculatedPower.getConfidenceInterval().getLowerLimit()) : "n/a") + ", " + 
+    							(result.calculatedPower.getConfidenceInterval() != null ? 
+    									Number.format(result.calculatedPower.getConfidenceInterval().getUpperLimit()) : "n/a") + ")\t" +  
+    									Number.format(result.sasPower) + " (" +  Number.format(result.sasDeviation) + ")\t" +
+    									Number.format(result.simulatedPower) + " (" + Number.format(result.simulationDeviation) + ")\t" +
+    									result.calculatedPower.getTest() + "\t" + 
+    									Number.format(result.calculatedPower.getSigmaScale()) + "\t" + 
+    									Number.format(result.calculatedPower.getBetaScale()) + "\t" + 
+    									result.calculatedPower.getTotalSampleSize() + "\t" + 
+    									Number.format(result.calculatedPower.getAlpha()) + "\t" + 
+    									result.calculatedPower.getPowerMethod() + "\t" + 
+    									result.calculatedPower.getQuantile() + "\t");
+    		}
     	}
-    	
-    	System.out.println("Max Deviation from SAS: " + LongNumber.format(maxSasDeviation));
+    	// output summary information
+		System.out.println("===========================================");
+		System.out.println("Summary statistics: " + title);
+		System.out.println("===========================================");
+    	System.out.println("Total Calculation Time: " + ((double) timer.calculationMilliseconds / 1000));
+    	System.out.println("Mean Calculation Time: " + (((double) timer.calculationMilliseconds / 1000)/checkerResults.size()));
+    	System.out.println("Total Simulation Time: " + ((double) timer.simulationMilliseconds / 1000));
+    	System.out.println("Mean Simulation Time: " + (((double) timer.simulationMilliseconds / 1000)/checkerResults.size()));
+    	System.out.println("Max Deviation from Published: " + LongNumber.format(maxSasDeviation));
     	System.out.println("Max Deviation from Simulation: " + LongNumber.format(maxSimDeviation));
     	if (maxSaslowerCIDeviation >= 0 || maxSasUpperCIDeviation >=0)
     	{

@@ -70,9 +70,8 @@ public class TestConditionalUnivariate extends TestCase
     {
         // build the inputs
         GLMMPowerParameters params = buildValidUnivariateInputs();
-        System.out.println(TITLE);
         checker.checkPower(params);
-		checker.outputResults();
+		checker.outputResults(TITLE);
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		assertTrue(checker.isSimulationDeviationBelowTolerance());

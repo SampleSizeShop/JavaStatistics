@@ -46,7 +46,7 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 {
 	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalOrthogonalPolynomial3Factor.xml";
 	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalOrthogonalPolynomial3Factor.html";
-	private static final String TITLE = "Power results for 3-way orthogonal polynomial contrasts";
+	private static final String TITLE = "GLMM(F) Example 8. Power for tests of polynomial trend for multiple between and within subject factors using 3-way orthogonal polynomial contrasts";
 	private PowerChecker checker;
 
 	// groups for factors A,B, and C
@@ -84,8 +84,6 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 	 */
 	public void testOneToThreeFactorPolynomialContrasts()
 	{
-		System.out.println(TITLE);
-
 		// add all tests
 		for(Test test: Test.values()) 
 		{
@@ -126,7 +124,7 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 			checker.checkPower(params);
 		}
 		// output and test the results
-		checker.outputResults();
+		checker.outputResults(TITLE);
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		assertTrue(checker.isSimulationDeviationBelowTolerance());

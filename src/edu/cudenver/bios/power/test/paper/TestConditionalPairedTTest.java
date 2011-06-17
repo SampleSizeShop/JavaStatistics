@@ -50,7 +50,7 @@ public class TestConditionalPairedTTest extends TestCase
 {
 	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalPairedTTest.xml";
 	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalPairedTTest.html";
-	private static final String TITLE = "Power results for Paired T-test";
+	private static final String TITLE = "GLMM(F) Example 2. Power results for Paired T-test";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -109,9 +109,8 @@ public class TestConditionalPairedTTest extends TestCase
         double [][] within = {{1},{-1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
         
-        System.out.println(TITLE);
         checker.checkPower(params);
-		checker.outputResults();
+		checker.outputResults(TITLE);
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		assertTrue(checker.isSimulationDeviationBelowTolerance());

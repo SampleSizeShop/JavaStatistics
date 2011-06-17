@@ -52,8 +52,10 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 	private static final String MB_OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMB.html";
 	private static final String MEST_OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMEST.html";
 
-	private static final String TITLE = "Power results for 2 within factor orthogonal polynomial contrasts";
-	
+	private static final String TITLE_MB = "GLMM(F) Example 9 MB: Power for a multivariate model with two within subject factors, using the Muller and Barton approximation";
+	private static final String TITLE_MEST = "GLMM(F) Example 9 MEST: Power for a multivariate model with two within subject factors, using the Muller, Edwards, Simpson, Taylor approximation";
+
+	private boolean verbose = false;
 	// groups for factors A,B, and C
 	double[] factorA = {1,2,4};
 	String nameA = "A";
@@ -111,7 +113,7 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		params.setUnivariateEpsilonMethod(Test.UNIREP_HUYNH_FELDT, 
 				UnivariateEpsilonApproximation.MULLER_BARTON_APPROX);
 
-		checkPower(checker, TITLE +  ": Muller Barton", MB_OUTPUT_FILE, params, false);
+		checkPower(checker, TITLE_MB, MB_OUTPUT_FILE, params, false);
 	}
 	
 	/**
@@ -150,7 +152,7 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		params.setUnivariateEpsilonMethod(Test.UNIREP_HUYNH_FELDT, 
 				UnivariateEpsilonApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
 
-		checkPower(checker, TITLE + ": Muller Edwards Simpson Taylor", MEST_OUTPUT_FILE, params, true);
+		checkPower(checker, TITLE_MEST, MEST_OUTPUT_FILE, params, true);
 	}
 
 	/**
@@ -162,7 +164,6 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 	private void checkPower(PowerChecker checker, String title, String outputFilename, 
 			GLMMPowerParameters params, boolean verifyAgainstSimulation)
 	{
-		System.out.println(title);
 		/* 
 		 * get orthogonal contrasts for within subject factors
 		 * Log base 2 spacing Clip (2,4,16) and Region(2,8,32) 
@@ -199,7 +200,7 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 				double varianceMean = (double) sigStar.getTrace() / (double) sigStar.getColumnDimension();
 				RealMatrix sigmaError = sigmaTemp.add(Uother.multiply(Uother.transpose()).scalarMultiply(varianceMean));
 				
-				printMatrix("Sigma Error",sigmaError);
+				if (verbose) printMatrix("Sigma Error",sigmaError);
 				// 1st paragraph in section 2.4, Coffey and Muller 2003 *; 
 				RealMatrix beta = thetaCr.multiply(U.transpose());       
 				params.setSigmaError(sigmaError);
@@ -210,7 +211,7 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 
 		}
 		// output and test the results
-		checker.outputResults();
+		checker.outputResults(title);
 		checker.outputResults(title, outputFilename);
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		if (verifyAgainstSimulation)
