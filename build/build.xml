@@ -164,7 +164,7 @@
 			  		thirdparty/jsc/**" />
 		</copy>
 		<copy file="../src/edu/cudenver/bios/power/test/paper/runPaperResults.bat" todir="${glimmpsepaperdir}" />
-		<copy file="../src/edu/cudenver/bios/power/test/paper/README" todir="${glimmpsepaperdir}" />
+		<copy file="../src/edu/cudenver/bios/power/test/paper/README.txt" todir="${glimmpsepaperdir}" />
 		<copy file="bin/JavaStatistics.jar" todir="${glimmpsepaperdir}/lib/" />
 		<zip destfile="${basedir}/GLIMMPSEresults.zip"
 		       basedir="${glimmpsepaperdir}">
