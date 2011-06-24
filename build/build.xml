@@ -27,6 +27,7 @@
 	<property name="librarydir" value="${basedir}/../lib" />
 	<property name="javadocdir" value="${basedir}/javadoc/JavaStatistics-javadoc" />
 	<property name="thirdpartydir" value="${basedir}/../../thirdparty" />
+    <property name="glimmpsepaperdir"  value="${basedir}/GLIMMPSEresults"/>
 
 	<fileset id="thirdpartylibs" dir="${thirdpartydir}">
 		<include name="ApacheCommonsMath/2.1/lib/commons-math-2.1.jar" />
@@ -43,6 +44,9 @@
         <mkdir dir="${targetdir}"/>
         <delete dir="${librarydir}"/>
         <mkdir dir="${librarydir}"/>
+        <delete dir="${glimmpsepaperdir}"/>
+        <mkdir dir="${glimmpsepaperdir}"/>
+    	<delete file="${basedir}/GLIMMPSEresults.zip"/>
     </target>
 
 	<target name="javadoc">
@@ -120,7 +124,7 @@
 					<attribute name="Title" value="${project} Source Code"/>
 					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
 					<attribute name="Implementation-Version" 
-					                 value="1.0.0"/> 
+					                 value="1.0.1"/> 
 				</section>
 				<section name="Copyright">
 					<attribute name="Copy" value="(C) CU Denver Biostatistics Department"/>
@@ -130,7 +134,7 @@
 		<copy file="${librarydir}/${project}-source.jar" todir="${targetdir}"/>
 	</target>
 	
-	<target name="results-distribution">
+	<target name="text-results-distribution">
 		<jar destfile="${librarydir}/${project}-results.jar" basedir="${basedir}/../text/" 
 			includes="results/*">
 			<manifest>
@@ -144,7 +148,26 @@
 				</section>
 			</manifest>
 		</jar>
-		<copy file="${librarydir}/${project}-results.jar" todir="${targetdir}"/>
+		<copy file="${librarydir}/${project}-text-results.jar" todir="${targetdir}"/>
+	</target>
+	
+	<target name="reproduce-glimmpse-paper-results-distribution" depends="compress"> 
+		<mkdir dir="${glimmpsepaperdir}/text/results" />
+		<mkdir dir="${glimmpsepaperdir}/lib" />
+		<copy todir="${glimmpsepaperdir}">
+		  <fileset dir="${basedir}/.." includes="data/**"/>
+		</copy>
+		<copy todir="${glimmpsepaperdir}">
+			  <fileset dir="${basedir}/../.."  
+			  		includes="thirdparty/ApacheCommonsMath/**,
+			  		thirdparty/junit/**,
+			  		thirdparty/jsc/**" />
+		</copy>
+		<copy file="../src/edu/cudenver/bios/power/test/paper/runPaperResults.bat" todir="${glimmpsepaperdir}" />
+		<copy file="bin/JavaStatistics.jar" todir="${glimmpsepaperdir}/lib/" />
+		<zip destfile="${basedir}/GLIMMPSEresults.zip"
+		       basedir="${glimmpsepaperdir}">
+		  </zip>
 	</target>
 		
 </project>
