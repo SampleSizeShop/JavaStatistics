@@ -124,7 +124,7 @@
 					<attribute name="Title" value="${project} Source Code"/>
 					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
 					<attribute name="Implementation-Version" 
-					                 value="1.0.0"/> 
+					                 value="1.0.1"/> 
 				</section>
 				<section name="Copyright">
 					<attribute name="Copy" value="(C) CU Denver Biostatistics Department"/>
@@ -164,6 +164,7 @@
 			  		thirdparty/jsc/**" />
 		</copy>
 		<copy file="../src/edu/cudenver/bios/power/test/paper/runPaperResults.bat" todir="${glimmpsepaperdir}" />
+		<copy file="../src/edu/cudenver/bios/power/test/paper/README" todir="${glimmpsepaperdir}" />
 		<copy file="bin/JavaStatistics.jar" todir="${glimmpsepaperdir}/lib/" />
 		<zip destfile="${basedir}/GLIMMPSEresults.zip"
 		       basedir="${glimmpsepaperdir}">
