@@ -104,7 +104,6 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
 		checker.outputResults(TITLE);
 		checker.outputResults(TITLE, OUTPUT_FILE);
 		assertTrue(checker.isSASDeviationBelowTolerance());
-		assertTrue(checker.isSimulationDeviationBelowTolerance());
 		checker.reset();
     }
 

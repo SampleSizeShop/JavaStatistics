@@ -41,7 +41,7 @@ produce 4 output files:
 - figure5.out : ANCOVA power results from Figure 5
 
 Please note that the simulations used for Tables 2 and 3 are time consuming,
-so the script will likely take anywhere from 6-24 hours to complete depending
+so the script will likely take anywhere from 12-24 hours to complete depending
 on processor speed.
 
 ------------------------------------------------------
@@ -49,7 +49,7 @@ Third party libraries
 
 All required thirdparty libraries are included in the GLIMMPSEresults.zip
 distribution.  License information for the supporting libraries is included
-with each library in thirdparty directory.
+with each library in the thirdparty directory.
 
 -----------------------------------------------------
 
