@@ -113,7 +113,7 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		params.setUnivariateEpsilonMethod(Test.UNIREP_HUYNH_FELDT, 
 				UnivariateEpsilonApproximation.MULLER_BARTON_APPROX);
 
-		checkPower(checker, TITLE_MB, MB_OUTPUT_FILE, params, false);
+		checkPower(checker, TITLE_MB, MB_OUTPUT_FILE, params);
 	}
 	
 	/**
@@ -152,7 +152,7 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		params.setUnivariateEpsilonMethod(Test.UNIREP_HUYNH_FELDT, 
 				UnivariateEpsilonApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
 
-		checkPower(checker, TITLE_MEST, MEST_OUTPUT_FILE, params, true);
+		checkPower(checker, TITLE_MEST, MEST_OUTPUT_FILE, params);
 	}
 
 	/**
@@ -162,7 +162,7 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 	 * @param params
 	 */
 	private void checkPower(PowerChecker checker, String title, String outputFilename, 
-			GLMMPowerParameters params, boolean verifyAgainstSimulation)
+			GLMMPowerParameters params)
 	{
 		/* 
 		 * get orthogonal contrasts for within subject factors
@@ -214,8 +214,6 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		checker.outputResults(title);
 		checker.outputResults(title, outputFilename);
 		assertTrue(checker.isSASDeviationBelowTolerance());
-		if (verifyAgainstSimulation)
-			assertTrue(checker.isSimulationDeviationBelowTolerance());
 		checker.reset();
 	}
 	
