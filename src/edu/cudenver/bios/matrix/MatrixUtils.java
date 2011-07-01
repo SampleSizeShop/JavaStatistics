@@ -312,7 +312,8 @@ public class MatrixUtils
     
 
     /**
-     * matrix must be symmetrical in order to perform vech operation.
+     * This method will return vech(matrix).
+     * matrix must be symmetric in order to perform vech operation.
      * @param RealMatrix matrix
      * @return vech(matrix)
      */
@@ -379,6 +380,7 @@ public class MatrixUtils
      * The method determines if the given matrix is positive definite.
      * The matrix must be square.
      * @param matrix
+     * @param eigenTolerance is a double.  @see MatrixConstants.EIGEN_TOLERANCE
      * @return true if the matrix is positive definite.
      */
     public static boolean isPositiveDefinite(RealMatrix matrix, double eigenTolerance){
