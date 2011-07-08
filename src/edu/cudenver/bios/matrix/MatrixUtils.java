@@ -20,6 +20,8 @@
  */
 package edu.cudenver.bios.matrix;
 
+import java.util.List;
+
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.EigenDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
@@ -87,6 +89,77 @@ public class MatrixUtils
 			}
 		}
 		return productMatrix;
+	}
+	
+	/**
+	 * Calculate the Kronecker product of a list of matrices.  Applies the
+	 * Kronecker product following the list order (i.e. from left to right).
+	 * 
+	 * @param matrixList list of matrices
+	 * @return Kronecker product of matrices
+	 */
+	public static RealMatrix getKroneckerProduct(List<RealMatrix> matrixList)
+	{
+		if (matrixList == null ||matrixList.size() < 2)
+			throw new IllegalArgumentException("must specify at least 2 matrices");
+		
+		// calculate the dimensions of the Kronecker product matrix
+		int totalRows = 1;
+		int totalCols = 1;
+		for(RealMatrix matrix: matrixList)
+		{
+			totalRows *= matrix.getRowDimension();
+			totalCols *= matrix.getColumnDimension();
+		}
+		
+		// create a matrix to hold the data
+		double[][] productData = new double[totalRows][totalCols]; 
+		// initialize to 1 (allows us to multiple the contents of each matrix 
+		// onto the result sequentially
+		for(int prodRow = 0; prodRow < totalRows; prodRow++)
+		{
+			for(int prodCol = 0; prodCol < totalCols; prodCol++)
+			{
+				productData[prodRow][prodCol] = 1;
+			}
+		}
+		
+		// multiply the contents of each matrix onto the result
+		int maxRow = totalRows;
+		int maxCol = totalCols;
+		for(RealMatrix matrix: matrixList)
+		{
+			maxRow /= matrix.getRowDimension();
+			maxCol /= matrix.getColumnDimension();
+			int matrixRow = 0;
+			int matrixCol = 0;
+			// multiply onto the result
+			for(int prodRow = 0, sectionRow = 0; prodRow < totalRows; prodRow++, sectionRow++)
+			{
+				matrixCol = 0;
+				double value = matrix.getEntry(matrixRow, matrixCol);
+				for(int prodCol = 0, sectionCol = 0; prodCol < totalCols; prodCol++, sectionCol++)
+				{
+					productData[prodRow][prodCol] *= value;
+					if (sectionCol >= maxCol - 1) 
+					{
+						matrixCol++;
+						if (matrixCol >= matrix.getColumnDimension()) matrixCol = 0;
+						sectionCol = -1;
+						value = matrix.getEntry(matrixRow, matrixCol);
+					}
+				}
+				if (sectionRow >= maxRow-1)
+				{
+					matrixRow++;
+					if (matrixRow >= matrix.getRowDimension()) matrixRow = 0;
+					sectionRow = -1;
+				}
+			}	
+		}
+		
+		// return a new matrix containing the Kronecker product
+		return new Array2DRowRealMatrix(productData);
 	}
 	
 	/**
