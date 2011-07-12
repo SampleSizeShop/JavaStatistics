@@ -22,6 +22,7 @@ package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
@@ -35,6 +36,7 @@ import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.utils.Factor;
 import junit.framework.TestCase;
 
 /**
@@ -168,9 +170,15 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		 * get orthogonal contrasts for within subject factors
 		 * Log base 2 spacing Clip (2,4,16) and Region(2,8,32) 
 		 */
+        ArrayList<Factor> factorList = new ArrayList<Factor>();
+        factorList.add(new Factor(nameA, factorA));
+        factorList.add(new Factor(nameB, factorB));
+        ArrayList<String> names = new ArrayList<String>();
+        names.add(nameA);
+        names.add(nameB);
 		OrthogonalPolynomialContrastCollection collection = 
-			OrthogonalPolynomials.withinSubjectContrast(factorA, nameA, factorB, nameB);
-		params.setWithinSubjectContrast(collection.getTwoFactorInteractionContrast(nameA, nameB));
+			OrthogonalPolynomials.withinSubjectContrast(factorList);
+		params.setWithinSubjectContrast(collection.getInteractionContrast(names));
 		
 		// theta critical matrix used to back-tranform beta from U
 		//	 THETA = {.25}#{.5 1 -1 .5}; * =Theta(cr) from 1st sentence *after* 

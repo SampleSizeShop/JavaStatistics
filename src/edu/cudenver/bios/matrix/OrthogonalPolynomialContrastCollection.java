@@ -37,8 +37,7 @@ public class OrthogonalPolynomialContrastCollection
 {
 	RealMatrix grandMean;
 	HashMap<String, RealMatrix> mainEffectContrasts = new HashMap<String, RealMatrix>();
-	HashMap<String, RealMatrix> twoFactorInteractionContrasts = new HashMap<String, RealMatrix>();
-	HashMap<String, RealMatrix> threeFactorInteractionContrasts = new HashMap<String, RealMatrix>();
+	HashMap<String, RealMatrix> interactionContrasts = new HashMap<String, RealMatrix>();
 	
 	/**
 	 * Create an empty contrast collection
@@ -60,15 +59,9 @@ public class OrthogonalPolynomialContrastCollection
 		mainEffectContrasts.put(factorName, contrast);
 	}
 	
-	public void addTwoFactorInteractionContrast(String factor1Name, String factor2Name, RealMatrix contrast)
+	public void addInteractionContrast(ArrayList<String> factorNames, RealMatrix contrast)
 	{
-		twoFactorInteractionContrasts.put(buildTwoFactorKey(factor1Name, factor2Name), contrast);
-	}
-	
-	public void addThreeFactorInteractionContrast(String factor1Name, String factor2Name, 
-			String factor3Name, RealMatrix contrast)
-	{
-		threeFactorInteractionContrasts.put(buildThreeFactorKey(factor1Name, factor2Name, factor3Name), contrast);
+		interactionContrasts.put(buildFactorKey(factorNames), contrast);
 	}
 	
 	public RealMatrix getMainEffectContrast(String factorName)
@@ -76,47 +69,29 @@ public class OrthogonalPolynomialContrastCollection
 		return mainEffectContrasts.get(factorName);
 	}
 	
-	public RealMatrix getTwoFactorInteractionContrast(String factor1Name, String factor2Name)
+	public RealMatrix getInteractionContrast(ArrayList<String> factorNames)
 	{
-		return twoFactorInteractionContrasts.get(buildTwoFactorKey(factor1Name, factor2Name));
-	}
-	
-	public RealMatrix getThreeFactorInteractionContrast(String factor1Name, String factor2Name, String factor3Name)
-	{
-		return threeFactorInteractionContrasts.get(buildThreeFactorKey(factor1Name, factor2Name, factor3Name));
+		return interactionContrasts.get(buildFactorKey(factorNames));
 	}
 	
 	/**
 	 * Combine the two factor names into a single hash map key
-	 * @param factor1Name name of first factor
-	 * @param factor2Name name of second factor
-	 * @return hashmap key for two factor interaction
+	 * @param factorNames list of factor names in order
+	 * @return hashmap key for interaction contrast
 	 */
-	private String buildTwoFactorKey(String factor1Name, String factor2Name)
+	private String buildFactorKey(ArrayList<String> factorNames)
 	{
 		StringBuffer buffer = new StringBuffer();
-		buffer.append("F1=");
-		buffer.append(factor1Name);
-		buffer.append("&F2=");
-		buffer.append(factor2Name);
+		int count = 0;
+		for(String name : factorNames)
+		{
+			buffer.append("&F");
+			buffer.append(count);
+			buffer.append("=");
+			buffer.append(name);
+			count++;
+		}
 		return buffer.toString();
 	}
-	
-	/**
-	 * Combine the three factor names into a single hash map key
-	 * @param factor1Name name of first factor
-	 * @param factor2Name name of second factor
-	 * @return hashmap key for three factor interaction
-	 */
-	private String buildThreeFactorKey(String factor1Name, String factor2Name, String factor3Name)
-	{
-		StringBuffer buffer = new StringBuffer();
-		buffer.append("F1=");
-		buffer.append(factor1Name);
-		buffer.append("&F2=");
-		buffer.append(factor2Name);
-		buffer.append("&F3=");
-		buffer.append(factor3Name);
-		return buffer.toString();
-	}
+
 }

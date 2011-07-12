@@ -22,6 +22,7 @@ package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.MatrixUtils;
@@ -32,6 +33,7 @@ import edu.cudenver.bios.matrix.OrthogonalPolynomials;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.utils.Factor;
 import junit.framework.TestCase;
 
 /**
@@ -117,7 +119,9 @@ public class TestConditionalOrthogonalPolynomial1Factor extends TestCase
         // build within subject contrast
         double[] times ={2, 4 ,6, 8, 10};
         String name = "times";
-        RealMatrix U = OrthogonalPolynomials.withinSubjectContrast(times, name).getMainEffectContrast(name);
+        ArrayList<Factor> factorList = new ArrayList<Factor>();
+        factorList.add(new Factor(name, times));
+        RealMatrix U = OrthogonalPolynomials.withinSubjectContrast(factorList).getMainEffectContrast(name);
         if (verbose) printMatrix("U Matrix", U);
         params.setWithinSubjectContrast(U);
         

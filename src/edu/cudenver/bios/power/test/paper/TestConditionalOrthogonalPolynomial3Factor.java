@@ -22,6 +22,7 @@ package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
@@ -33,6 +34,7 @@ import edu.cudenver.bios.matrix.OrthogonalPolynomials;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.utils.Factor;
 import junit.framework.TestCase;
 
 /**
@@ -91,10 +93,18 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 			GLMMPowerParameters params = buildInputsWithoutContrasts();
 			params.addTest(test);
 			// calculate all of the 3 factor polynomial contrasts
+	        ArrayList<Factor> withinFactorList = new ArrayList<Factor>();
+	        withinFactorList.add(new Factor(nameD, factorD));
+	        withinFactorList.add(new Factor(nameE, factorE));
+	        withinFactorList.add(new Factor(nameF, factorF));
+	        ArrayList<Factor> betweenFactorList = new ArrayList<Factor>();
+	        betweenFactorList.add(new Factor(nameA, factorA));
+	        betweenFactorList.add(new Factor(nameB, factorB));
+	        betweenFactorList.add(new Factor(nameC, factorC));
 			OrthogonalPolynomialContrastCollection withinSubjectContrasts = 
-				OrthogonalPolynomials.withinSubjectContrast(factorD, nameD, factorE, nameE, factorF, nameF);
+				OrthogonalPolynomials.withinSubjectContrast(withinFactorList);
 			OrthogonalPolynomialContrastCollection betweenSubjectContrasts = 
-				OrthogonalPolynomials.withinSubjectContrast(factorA, nameA, factorB, nameB, factorC, nameC);
+				OrthogonalPolynomials.withinSubjectContrast(betweenFactorList);
 
 			// run power for 1 factor contrasts		
 			RealMatrix U = withinSubjectContrasts.getMainEffectContrast(nameD);
@@ -104,10 +114,16 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 			params.setBetweenSubjectContrast(new FixedRandomMatrix(C.getData(), null, true));
 			params.setTheta(thetaNull);
 			checker.checkPower(params);
-
+	        
 			// run power for 2 factor contrasts
-			U = withinSubjectContrasts.getTwoFactorInteractionContrast(nameD, nameE);
-			C = betweenSubjectContrasts.getTwoFactorInteractionContrast(nameA, nameB).transpose();
+	        ArrayList<String> names = new ArrayList<String>();
+	        names.add(nameD);
+	        names.add(nameE);
+			U = withinSubjectContrasts.getInteractionContrast(names);
+			names.clear();
+			names.add(nameA);
+			names.add(nameB);
+			C = betweenSubjectContrasts.getInteractionContrast(names).transpose();
 			thetaNull = MatrixUtils.getRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
 			params.setWithinSubjectContrast(U);
 			params.setBetweenSubjectContrast(new FixedRandomMatrix(C.getData(), null, true));
@@ -115,8 +131,16 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 			checker.checkPower(params);
 
 			// run power for 3 factor contrasts
-			U = withinSubjectContrasts.getThreeFactorInteractionContrast(nameD, nameE, nameF);
-			C = betweenSubjectContrasts.getThreeFactorInteractionContrast(nameA, nameB, nameC).transpose();
+			names.clear();
+			names.add(nameD);
+			names.add(nameE);
+			names.add(nameF);
+			U = withinSubjectContrasts.getInteractionContrast(names);
+			names.clear();
+			names.add(nameA);
+			names.add(nameB);
+			names.add(nameC);
+			C = betweenSubjectContrasts.getInteractionContrast(names).transpose();
 			thetaNull = MatrixUtils.getRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
 			params.setWithinSubjectContrast(U);
 			params.setBetweenSubjectContrast(new FixedRandomMatrix(C.getData(), null, true));

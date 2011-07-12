@@ -100,8 +100,10 @@ public class MatrixUtils
 	 */
 	public static RealMatrix getKroneckerProduct(List<RealMatrix> matrixList)
 	{
-		if (matrixList == null ||matrixList.size() < 2)
-			throw new IllegalArgumentException("must specify at least 2 matrices");
+		if (matrixList == null || matrixList.size() <= 0)
+			throw new IllegalArgumentException("no input matrices");
+		if (matrixList.size() == 1)
+			return matrixList.get(0); // nothing to do, only one matrix
 		
 		// calculate the dimensions of the Kronecker product matrix
 		int totalRows = 1;

@@ -21,6 +21,7 @@
 package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
@@ -31,6 +32,7 @@ import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceInterv
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.utils.Factor;
 import junit.framework.TestCase;
 
 /**
@@ -149,7 +151,9 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
         
         double[] regions = {1,2,3,4};
         String name = "region";
-        params.setWithinSubjectContrast(OrthogonalPolynomials.withinSubjectContrast(regions, name).getMainEffectContrast(name));
+        ArrayList<Factor> factorList = new ArrayList<Factor>();
+        factorList.add(new Factor(name, regions));
+        params.setWithinSubjectContrast(OrthogonalPolynomials.withinSubjectContrast(factorList).getMainEffectContrast(name));
         
         // parameters for confidence limits
         params.setConfidenceIntervalType(ConfidenceIntervalType.BETA_KNOWN_SIGMA_ESTIMATED);
