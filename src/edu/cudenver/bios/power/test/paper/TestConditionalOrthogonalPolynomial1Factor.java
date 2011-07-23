@@ -120,8 +120,10 @@ public class TestConditionalOrthogonalPolynomial1Factor extends TestCase
         double[] times ={2, 4 ,6, 8, 10};
         String name = "times";
         ArrayList<Factor> factorList = new ArrayList<Factor>();
-        factorList.add(new Factor(name, times));
-        RealMatrix U = OrthogonalPolynomials.withinSubjectContrast(factorList).getMainEffectContrast(name);
+        Factor timeFactor = new Factor(name, times);
+        factorList.add(timeFactor);
+        RealMatrix U = 
+        	OrthogonalPolynomials.withinSubjectContrast(factorList).getMainEffectContrast(timeFactor).getContrastMatrix();
         if (verbose) printMatrix("U Matrix", U);
         params.setWithinSubjectContrast(U);
         

@@ -22,8 +22,12 @@ package edu.cudenver.bios.matrix;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.commons.math.linear.RealMatrix;
+
+import edu.cudenver.bios.matrix.OrthogonalPolynomialContrast.ContrastType;
+import edu.cudenver.bios.utils.Factor;
 
 /**
  * A collection of orthogonal polynomial contrasts for up to 3 factors
@@ -35,63 +39,83 @@ import org.apache.commons.math.linear.RealMatrix;
  */
 public class OrthogonalPolynomialContrastCollection
 {
-	RealMatrix grandMean;
-	HashMap<String, RealMatrix> mainEffectContrasts = new HashMap<String, RealMatrix>();
-	HashMap<String, RealMatrix> interactionContrasts = new HashMap<String, RealMatrix>();
+	ArrayList<OrthogonalPolynomialContrast> contrastList = new ArrayList<OrthogonalPolynomialContrast>();
 	
 	/**
 	 * Create an empty contrast collection
 	 */
 	public OrthogonalPolynomialContrastCollection() {}
 	
-	public void setGrandMean(RealMatrix grandMean)
+	/**
+	 * Add a contrast to the collection
+	 * @param contrast the contrast
+	 */
+	public void addContrast(OrthogonalPolynomialContrast contrast)
+	throws IllegalArgumentException
 	{
-		this.grandMean = grandMean;
-	}
-	
-	public RealMatrix getGrandMean()
-	{
-		return this.grandMean;
-	}
-	
-	public void addMainEffectContrast(String factorName, RealMatrix contrast)
-	{
-		mainEffectContrasts.put(factorName, contrast);
-	}
-	
-	public void addInteractionContrast(ArrayList<String> factorNames, RealMatrix contrast)
-	{
-		interactionContrasts.put(buildFactorKey(factorNames), contrast);
-	}
-	
-	public RealMatrix getMainEffectContrast(String factorName)
-	{
-		return mainEffectContrasts.get(factorName);
-	}
-	
-	public RealMatrix getInteractionContrast(ArrayList<String> factorNames)
-	{
-		return interactionContrasts.get(buildFactorKey(factorNames));
+		if (findContrast(contrast) != null)
+			throw new IllegalArgumentException("Contrast already in collection");
+		contrastList.add(contrast);
+		int foo = 1;
 	}
 	
 	/**
-	 * Combine the two factor names into a single hash map key
-	 * @param factorNames list of factor names in order
-	 * @return hashmap key for interaction contrast
+	 * Get the contrast to test the grand mean
+	 * @return grand mean contrast
 	 */
-	private String buildFactorKey(ArrayList<String> factorNames)
+	public OrthogonalPolynomialContrast getGrandMean()
 	{
-		StringBuffer buffer = new StringBuffer();
-		int count = 0;
-		for(String name : factorNames)
+		for(OrthogonalPolynomialContrast contrast: contrastList)
 		{
-			buffer.append("&F");
-			buffer.append(count);
-			buffer.append("=");
-			buffer.append(name);
-			count++;
+			if (ContrastType.GRAND_MEAN == contrast.getType())
+				return contrast;
 		}
-		return buffer.toString();
+		return null;
 	}
-
+	
+	/**
+	 * Check if a contrast already exists in the collection for the specified
+	 * type and list of factors
+	 * 
+	 * @param type contrast type
+	 * @param factorList list of factors for the contrast (null if grand mean)
+	 * @return if found, the matching contrast.  Null if not found.
+	 */
+	private OrthogonalPolynomialContrast findContrast(OrthogonalPolynomialContrast compContrast)
+	{
+		for(OrthogonalPolynomialContrast contrast: contrastList)
+		{
+			if (contrast.compareTo(compContrast) == 0) return contrast;
+		}
+		return null;
+	}
+	
+	public OrthogonalPolynomialContrast getMainEffectContrast(Factor factor)
+	{
+		ArrayList<Factor> factorList = new ArrayList<Factor>(1);
+		factorList.add(factor);
+		OrthogonalPolynomialContrast compContrast = 
+			new OrthogonalPolynomialContrast(ContrastType.MAIN_EFFECT, factorList, null);
+		for(OrthogonalPolynomialContrast contrast: contrastList)
+		{
+			if (contrast.compareTo(compContrast) == 0) return contrast;
+		}
+		return null;
+	}
+	
+	public OrthogonalPolynomialContrast getInteractionContrast(List<Factor> factorList)
+	{
+		OrthogonalPolynomialContrast compContrast = 
+			new OrthogonalPolynomialContrast(ContrastType.INTERACTION, factorList, null);
+		for(OrthogonalPolynomialContrast contrast: contrastList)
+		{
+			if (contrast.compareTo(compContrast) == 0) return contrast;
+		}
+		return null;
+	}
+	
+	public List<OrthogonalPolynomialContrast> getContrastList()
+	{
+		return contrastList;
+	}
 }

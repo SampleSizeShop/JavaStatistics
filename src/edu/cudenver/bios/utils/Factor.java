@@ -31,7 +31,7 @@ package edu.cudenver.bios.utils;
  * @author Sarah Kreidler
  *
  */
-public class Factor
+public class Factor implements Comparable<Factor>
 {
 	// factor name
 	String name;
@@ -65,6 +65,12 @@ public class Factor
 	public double[] getValues()
 	{
 		return values;
+	}
+
+	@Override
+	public int compareTo(Factor o)
+	{
+		return name.compareTo(o.getName());
 	}
 	
 	

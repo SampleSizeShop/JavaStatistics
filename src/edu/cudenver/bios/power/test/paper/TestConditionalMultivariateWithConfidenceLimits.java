@@ -152,8 +152,10 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
         double[] regions = {1,2,3,4};
         String name = "region";
         ArrayList<Factor> factorList = new ArrayList<Factor>();
-        factorList.add(new Factor(name, regions));
-        params.setWithinSubjectContrast(OrthogonalPolynomials.withinSubjectContrast(factorList).getMainEffectContrast(name));
+        Factor regionFactor = new Factor(name, regions);
+        factorList.add(regionFactor);
+        params.setWithinSubjectContrast(
+        		OrthogonalPolynomials.withinSubjectContrast(factorList).getMainEffectContrast(regionFactor).getContrastMatrix());
         
         // parameters for confidence limits
         params.setConfidenceIntervalType(ConfidenceIntervalType.BETA_KNOWN_SIGMA_ESTIMATED);

@@ -59,11 +59,13 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 
 	private boolean verbose = false;
 	// groups for factors A,B, and C
-	double[] factorA = {1,2,4};
+	double[] dataA = {1,2,4};
 	String nameA = "A";
-	double[] factorB = {1,3,5};
+	Factor factorA = new Factor(nameA, dataA);
+	double[] dataB = {1,3,5};
 	String nameB = "B";
-
+	Factor factorB = new Factor(nameB, dataB);
+	
 	// sigma* matrices
 	double[] varE = {.47960, .01000, .01000, .01000}; // epsilon ~ 0.28
 	RealMatrix sigStarE = 
@@ -171,14 +173,11 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		 * Log base 2 spacing Clip (2,4,16) and Region(2,8,32) 
 		 */
         ArrayList<Factor> factorList = new ArrayList<Factor>();
-        factorList.add(new Factor(nameA, factorA));
-        factorList.add(new Factor(nameB, factorB));
-        ArrayList<String> names = new ArrayList<String>();
-        names.add(nameA);
-        names.add(nameB);
+        factorList.add(factorA);
+        factorList.add(factorB);
 		OrthogonalPolynomialContrastCollection collection = 
 			OrthogonalPolynomials.withinSubjectContrast(factorList);
-		params.setWithinSubjectContrast(collection.getInteractionContrast(names));
+		params.setWithinSubjectContrast(collection.getInteractionContrast(factorList).getContrastMatrix());
 		
 		// theta critical matrix used to back-tranform beta from U
 		//	 THETA = {.25}#{.5 1 -1 .5}; * =Theta(cr) from 1st sentence *after* 
@@ -203,8 +202,8 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 				int dimension = sigmaTemp.getRowDimension();
 				RealMatrix Uother = 
 					MatrixUtils.getRealMatrixWithFilledValue(dimension, 1, 1/Math.sqrt(U.getColumnDimension()));
-				Uother = MatrixUtils.getHorizontalAppend(Uother, collection.getMainEffectContrast(nameA));
-				Uother = MatrixUtils.getHorizontalAppend(Uother, collection.getMainEffectContrast(nameB));
+				Uother = MatrixUtils.getHorizontalAppend(Uother, collection.getMainEffectContrast(factorA).getContrastMatrix());
+				Uother = MatrixUtils.getHorizontalAppend(Uother, collection.getMainEffectContrast(factorB).getContrastMatrix());
 				double varianceMean = (double) sigStar.getTrace() / (double) sigStar.getColumnDimension();
 				RealMatrix sigmaError = sigmaTemp.add(Uother.multiply(Uother.transpose()).scalarMultiply(varianceMean));
 				

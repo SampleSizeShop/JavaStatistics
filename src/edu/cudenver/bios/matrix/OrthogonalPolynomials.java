@@ -29,6 +29,7 @@ import org.apache.commons.math.linear.QRDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.stat.StatUtils;
 
+import edu.cudenver.bios.matrix.OrthogonalPolynomialContrast.ContrastType;
 import edu.cudenver.bios.utils.Factor;
 
 /**
@@ -147,40 +148,35 @@ public class OrthogonalPolynomials
 		 * factor trend contrast should be included in the Kronecker product.
 		 */
 		ArrayList<RealMatrix> kroneckerList = new ArrayList<RealMatrix>(factorList.size());
-		ArrayList<String> factorNameList = new ArrayList<String>(factorList.size());
+		ArrayList<Factor> activeFactorList = new ArrayList<Factor>(factorList.size());
 		// build the grand mean
 		for(RealMatrix zeroTrend : zeroTrendList) kroneckerList.add(zeroTrend);
-		results.setGrandMean(MatrixUtils.getKroneckerProduct(kroneckerList));
+		results.addContrast(new OrthogonalPolynomialContrast(MatrixUtils.getKroneckerProduct(kroneckerList)));
 		// loop over the remaining contrasts
 		int totalContrasts = (int) Math.pow(2.0, (double) factorList.size());
 		for(int i = 1; i < totalContrasts; i++)
 		{
 			kroneckerList.clear();
-			factorNameList.clear();
+			activeFactorList.clear();
 			int mask = 1;
 			for(int factorIdx = 0; factorIdx < factorList.size(); factorIdx++, mask *=2)
 			{
 				if ((i & mask) != 0)
 				{
 					kroneckerList.add(factorTrendList.get(factorIdx));
-					factorNameList.add(factorList.get(factorIdx).getName());
+					activeFactorList.add(factorList.get(factorIdx));
 				}
 				else
 				{
 					kroneckerList.add(zeroTrendList.get(factorIdx));
 				}
 			}
-			// add the appropriate 
-			if ((i & (i-1)) == 0)
-			{
-				// value is a power of 2 => main effect contrast
-				results.addMainEffectContrast(factorNameList.get(0), MatrixUtils.getKroneckerProduct(kroneckerList));
-			}
-			else
-			{
-				// value not a power of 2 => interaction contrast
-				results.addInteractionContrast(factorNameList, MatrixUtils.getKroneckerProduct(kroneckerList));
-			}
+			// add the appropriate contrast type
+			// note that if "i" is a power of 2 then we have a  main effect contrast, else interaction
+			results.addContrast(
+				new OrthogonalPolynomialContrast(((i & (i-1)) == 0 ? ContrastType.MAIN_EFFECT : 
+					ContrastType.INTERACTION),
+						activeFactorList, MatrixUtils.getKroneckerProduct(kroneckerList)));
 		}
 		
 		return results;
