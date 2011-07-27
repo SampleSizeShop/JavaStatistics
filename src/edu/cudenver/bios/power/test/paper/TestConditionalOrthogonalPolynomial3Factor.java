@@ -110,11 +110,11 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 			OrthogonalPolynomialContrastCollection withinSubjectContrasts = 
 				OrthogonalPolynomials.withinSubjectContrast(withinFactorList);
 			OrthogonalPolynomialContrastCollection betweenSubjectContrasts = 
-				OrthogonalPolynomials.withinSubjectContrast(betweenFactorList);
-
+				OrthogonalPolynomials.betweenSubjectContrast(betweenFactorList);
+			
 			// run power for 1 factor contrasts		
 			RealMatrix U = withinSubjectContrasts.getMainEffectContrast(factorD).getContrastMatrix();
-			RealMatrix C = betweenSubjectContrasts.getMainEffectContrast(factorA).getContrastMatrix().transpose();
+			RealMatrix C = betweenSubjectContrasts.getMainEffectContrast(factorA).getContrastMatrix();
 			RealMatrix thetaNull = MatrixUtils.getRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
 			params.setWithinSubjectContrast(U);
 			params.setBetweenSubjectContrast(new FixedRandomMatrix(C.getData(), null, true));
@@ -129,7 +129,7 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 			intFactors.clear();
 			intFactors.add(factorA);
 			intFactors.add(factorB);
-			C = betweenSubjectContrasts.getInteractionContrast(intFactors).getContrastMatrix().transpose();
+			C = betweenSubjectContrasts.getInteractionContrast(intFactors).getContrastMatrix();
 			thetaNull = MatrixUtils.getRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
 			params.setWithinSubjectContrast(U);
 			params.setBetweenSubjectContrast(new FixedRandomMatrix(C.getData(), null, true));
@@ -146,7 +146,7 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
 			intFactors.add(factorA);
 			intFactors.add(factorB);
 			intFactors.add(factorC);
-			C = betweenSubjectContrasts.getInteractionContrast(intFactors).getContrastMatrix().transpose();
+			C = betweenSubjectContrasts.getInteractionContrast(intFactors).getContrastMatrix();
 			thetaNull = MatrixUtils.getRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
 			params.setWithinSubjectContrast(U);
 			params.setBetweenSubjectContrast(new FixedRandomMatrix(C.getData(), null, true));
