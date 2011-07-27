@@ -124,6 +124,33 @@ public class TestOrthogonalPolynomials extends TestCase
 		printMatrix("Three factor contrast", contrastCollection.getInteractionContrast(intFactors).getContrastMatrix());		
 	}
 	
+	public void testBetweenTwoFactorContrast()
+	{
+		double[] x1 = {1,2,4};
+		Factor factorX1 = new Factor("x1", x1);
+		double[] x2 = {1,3,5};
+		Factor factorX2 = new Factor("x2", x2);
+		ArrayList<Factor> factorList = new ArrayList<Factor>();
+		factorList.add(factorX1);
+		factorList.add(factorX2);
+		OrthogonalPolynomialContrastCollection contrastCollection = 
+			OrthogonalPolynomials.withinSubjectContrast(factorList);
+		OrthogonalPolynomialContrastCollection contrastCollectionBtwn = 
+			OrthogonalPolynomials.betweenSubjectContrast(factorList);
+		printMatrix("Grand mean", contrastCollection.getGrandMean().getContrastMatrix());
+		printMatrix("Grand mean between", contrastCollectionBtwn.getGrandMean().getContrastMatrix());
+		
+		printMatrix("Main effect x1", contrastCollection.getMainEffectContrast(factorX1).getContrastMatrix());
+		printMatrix("Main effect x1 between", contrastCollectionBtwn.getMainEffectContrast(factorX1).getContrastMatrix());
+		printMatrix("Main effect x2", contrastCollection.getMainEffectContrast(factorX2).getContrastMatrix());
+		printMatrix("Main effect x2, between", contrastCollectionBtwn.getMainEffectContrast(factorX2).getContrastMatrix());
+		ArrayList<Factor> intFactors = new ArrayList<Factor>(2);
+		intFactors.add(factorX1);
+		intFactors.add(factorX2);
+		printMatrix("Two factor contrast", contrastCollection.getInteractionContrast(intFactors).getContrastMatrix());	
+		printMatrix("Two factor contrast, between", contrastCollectionBtwn.getInteractionContrast(intFactors).getContrastMatrix());	
+	}
+	
 	/**
 	 * Write the matrix to std out
 	 * @param m
