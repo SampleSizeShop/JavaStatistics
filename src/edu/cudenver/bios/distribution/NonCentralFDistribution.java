@@ -24,10 +24,8 @@ import jsc.distributions.Normal;
 
 import org.apache.commons.math.FunctionEvaluationException;
 import org.apache.commons.math.MaxIterationsExceededException;
-import org.apache.commons.math.analysis.DifferentiableUnivariateRealFunction;
 import org.apache.commons.math.analysis.UnivariateRealFunction;
 import org.apache.commons.math.analysis.solvers.BisectionSolver;
-import org.apache.commons.math.analysis.solvers.NewtonSolver;
 import org.apache.commons.math.analysis.solvers.UnivariateRealSolver;
 import org.apache.commons.math.analysis.solvers.UnivariateRealSolverFactory;
 
