@@ -125,7 +125,8 @@ public abstract class GLMMTest
     protected RealMatrix sigmaError;
     // the M matrix: [C(X'X)-1C']-1
     protected RealMatrix M = null;
-    
+    // flag indicating whether the design is multivariate or univariate
+    protected boolean multivariate = false;
     /**
      * Create a statistical test for to compute power
      * @param params GLMM input parameters
@@ -146,6 +147,9 @@ public abstract class GLMMTest
         this.thetaNull =  thetaNull; 
         this.beta =  beta;
         this.sigmaError = sigmaError;
+        
+        // check if uni/multivariate design
+        multivariate = (beta.getColumnDimension() > 1);
         
         // cache the value of M
         RealMatrix CFixed = C.getFixedMatrix();
@@ -188,6 +192,9 @@ public abstract class GLMMTest
         RealMatrix Ydiff = Y.subtract(YHat);
         this.sigmaError = (Ydiff.transpose().multiply(Ydiff)).scalarMultiply(((double) 1/(double) (totalN - rank)));
            
+        // check if uni/multivariate design
+        multivariate = (Y.getColumnDimension() > 1);
+        
         // cache the value of M
         RealMatrix cxxcEssence = C.multiply((this.XtXInverse).multiply(C.transpose()));
         M = new LUDecompositionImpl(cxxcEssence).getSolver().getInverse();
@@ -328,5 +335,15 @@ public abstract class GLMMTest
     public void setEigenTolerance(double tolerance)
     {
     	this.eigenTolerance = tolerance;
+    }
+    
+    /**
+     * Indicates if the test is a univariate or multivariate design 
+     * based on the columns of beta.  Only available for
+     * power analysis 
+     */
+    public boolean isMultivariate()
+    {
+    	return multivariate;
     }
 }
