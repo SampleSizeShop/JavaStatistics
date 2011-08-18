@@ -156,46 +156,7 @@ public class TestConfidenceIntervals extends TestCase
 			PowerChecker checker;
 			checker = new PowerChecker(MULTIVARIATE_BETA_KNOWN_DATA_FILE, false);
 
-			GLMMPowerParameters params = new GLMMPowerParameters();
-
-			// add alpha values
-			params.addAlpha(0.01);
-
-			// build beta matrix
-			double [][] beta = {{0,1}};
-			params.setBeta(new FixedRandomMatrix(beta, null, false));
-			// beta scale of 1 and 0
-			params.addBetaScale(0);
-			params.addBetaScale(0.25);
-			params.addBetaScale(0.5);
-			params.addBetaScale(0.75);
-
-			// build theta null matrix
-			double [][] theta0 = {{0}};
-			params.setTheta(new Array2DRowRealMatrix(theta0));
-
-			// build sigma matrix
-			double [][] sigma = {{2,1}, {1,2}};
-			params.setSigmaError(new Array2DRowRealMatrix(sigma));
-			// add sigma scale values
-			params.addSigmaScale(1);
-
-			// build design matrix
-			params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(1));
-			// add sample size multipliers
-			params.addSampleSize(12);
-
-			// build between subject contrast
-			double [][] between = {{1}};
-			params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
-
-			// build between subject contrast
-			double [][] within = {{1}, {-1}};
-			params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
-
-			// parameters for confidence limits
-			params.setSampleSizeForEstimates(24);
-			params.setDesignMatrixRankForEstimates(2);
+			GLMMPowerParameters params = buildMultivariateInputs();
 
 			// add all tests
 			for(Test test: Test.values()) 
@@ -246,46 +207,7 @@ public class TestConfidenceIntervals extends TestCase
 			PowerChecker checker;
 			checker = new PowerChecker(MULTIVARIATE_BETA_UNKNOWN_DATA_FILE, false);
 
-			GLMMPowerParameters params = new GLMMPowerParameters();
-
-			// add alpha values
-			params.addAlpha(0.01);
-
-			// build beta matrix
-			double [][] beta = {{0,1}};
-			params.setBeta(new FixedRandomMatrix(beta, null, false));
-			// beta scale of 1 and 0
-			params.addBetaScale(0);
-			params.addBetaScale(0.25);
-			params.addBetaScale(0.5);
-			params.addBetaScale(0.75);
-
-			// build theta null matrix
-			double [][] theta0 = {{0}};
-			params.setTheta(new Array2DRowRealMatrix(theta0));
-
-			// build sigma matrix
-			double [][] sigma = {{2,1}, {1,2}};
-			params.setSigmaError(new Array2DRowRealMatrix(sigma));
-			// add sigma scale values
-			params.addSigmaScale(1);
-
-			// build design matrix
-			params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(1));
-			// add sample size multipliers
-			params.addSampleSize(12);
-
-			// build between subject contrast
-			double [][] between = {{1}};
-			params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
-
-			// build between subject contrast
-			double [][] within = {{1}, {-1}};
-			params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
-
-			// parameters for confidence limits
-			params.setSampleSizeForEstimates(24);
-			params.setDesignMatrixRankForEstimates(2);
+			GLMMPowerParameters params = buildMultivariateInputs();
 
 			// add all tests
 			Test[] testList = {Test.WILKS_LAMBDA, Test.PILLAI_BARTLETT_TRACE, Test.HOTELLING_LAWLEY_TRACE};
@@ -325,4 +247,48 @@ public class TestConfidenceIntervals extends TestCase
 		}
 	}
 
+	private GLMMPowerParameters buildMultivariateInputs()
+	{
+		GLMMPowerParameters params = new GLMMPowerParameters();
+
+		// add alpha values
+		params.addAlpha(0.01);
+
+		// build design matrix
+		params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(3));
+		// add sample size multipliers
+		params.addSampleSize(12);
+		
+		// build beta matrix
+		double [][] beta = {{1,0,0},{0,0,0},{0,0,0}};
+		params.setBeta(new FixedRandomMatrix(beta, null, false));
+		// beta scales
+		double[] betaScale = {0.75, 1, 2};
+		for(double scale: betaScale) params.addBetaScale(scale);
+
+		// build theta null matrix
+		double [][] theta0 = {{0,0},{0,0}};
+		params.setTheta(new Array2DRowRealMatrix(theta0));
+
+		// build sigma matrix
+		double rho = 0.4;
+		double [][] sigma = {{1,rho,rho},{rho,1,rho},{rho,rho,1}};
+		params.setSigmaError(new Array2DRowRealMatrix(sigma));
+		// add sigma scale values
+		params.addSigmaScale(1);
+
+		// build between subject contrast
+		double [][] between = {{1,-1,0},{1,0,-1}};
+		params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
+
+		// build between subject contrast
+		double [][] within = {{1,1}, {-1,0},{0,-1}};
+		params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
+
+		// parameters for confidence limits
+		params.setSampleSizeForEstimates(24);
+		params.setDesignMatrixRankForEstimates(2);
+		
+		return params;
+	}
 }
