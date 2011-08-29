@@ -61,12 +61,12 @@ public class GLMMPowerConfidenceInterval extends ConfidenceInterval
 		double powerLower = alpha;
 		double powerUpper = 1;
 
-		if (test instanceof GLMMTestUnivariateRepeatedMeasures)
+		if (test instanceof GLMMTestUnivariateRepeatedMeasures && test.isMultivariate())
 		{
 			// special case for the unirep CI's 
 			// TODO: polymorphosize this somehow rather using a giant if/else
 			// I don't think the theory exists for estimated beta and sigma for power CI's
-			if (ciType == ConfidenceIntervalType.BETA_SIGMA_ESTIMATED)
+			if (ciType == ConfidenceIntervalType.BETA_SIGMA_ESTIMATED && test.isMultivariate())
 				throw new IllegalArgumentException("cannot compute confidence limits for both beta and " + 
 						"sigma estimated as the theory has not yet been derived");
 

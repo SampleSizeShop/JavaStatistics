@@ -25,7 +25,7 @@ import jsc.distributions.Normal;
 import org.apache.commons.math.FunctionEvaluationException;
 import org.apache.commons.math.MaxIterationsExceededException;
 import org.apache.commons.math.analysis.UnivariateRealFunction;
-import org.apache.commons.math.analysis.solvers.NewtonSolver;
+import org.apache.commons.math.analysis.solvers.BisectionSolver;
 import org.apache.commons.math.analysis.solvers.UnivariateRealSolver;
 import org.apache.commons.math.analysis.solvers.UnivariateRealSolverFactory;
 
@@ -93,28 +93,29 @@ public class NonCentralFDistribution
      * Class passed into Apache's NewtonSolver function to find a noncentrality of
      * an F-distribution with ndf numerator and ddf denominator degrees of freedom
      * such that Pr(X &lt; x) = p
+     * 
+     * Defines the function to be solved, i.e. the CDF of the F distribution
      */
-    private static class NoncentralityFinderFunction implements UnivariateRealFunction
+    private static class NoncentralityFinderCDF implements UnivariateRealFunction
     {
     	protected double x;
-    	protected double probability;
         protected double ndf;
         protected double ddf;
+        protected double probability;
 
-        public NoncentralityFinderFunction(double x, double probability,
-                double ndf, double ddf)
+        public NoncentralityFinderCDF(double x, double ndf, double ddf, double probability)
         {
             this.x = x;
-            this.probability = probability;
             this.ndf = ndf;
             this.ddf = ddf;
+            this.probability = probability;
         }
         
+		@Override
         public double value(double t)
         {
             NonCentralFDistribution fdist = new NonCentralFDistribution(ndf, ddf, t);
-            double calculatedProbability = fdist.cdf(x);
-            return (calculatedProbability - probability);
+            return fdist.cdf(x) - probability;
         }
     }
     
@@ -280,10 +281,10 @@ public class NonCentralFDistribution
     throws IllegalArgumentException, FunctionEvaluationException, 
     MaxIterationsExceededException
     {   	
-    	NewtonSolver solver = new NewtonSolver();
+    	BisectionSolver solver = new BisectionSolver();
     	double searchUpperBound = getNoncentralityUpperBound(f, probability, ndf, ddf, startValue);
-    	double noncentrality = solver.solve(new NoncentralityFinderFunction(f, probability,
-    			ndf, ddf), 0, 	searchUpperBound, startValue);
+    	double noncentrality = solver.solve(new NoncentralityFinderCDF(f, ndf, ddf, probability), 0, 	
+    			searchUpperBound);
     	
     	return noncentrality;
     }
@@ -304,7 +305,7 @@ public class NonCentralFDistribution
     {
         double noncentralityBound = startNoncentrality;
         
-        for(double currentProbability = 0.0; currentProbability < 1.0; noncentralityBound *= 2)
+        for(double currentProbability = 1.0; currentProbability >= probability; noncentralityBound *= 2)
         {
         	NonCentralFDistribution dist = new NonCentralFDistribution(ndf, ddf, noncentralityBound);
         	currentProbability = dist.cdf(f);
