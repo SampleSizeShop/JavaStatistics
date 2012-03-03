@@ -20,6 +20,8 @@
  */
 package edu.cudenver.bios.power;
 
+import java.io.Serializable;
+
 import edu.cudenver.bios.power.glmm.GLMMTestFactory;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.utils.ConfidenceInterval;
@@ -29,9 +31,10 @@ import edu.cudenver.bios.utils.ConfidenceInterval;
  * 
  * @author Sarah Kreidler
  */
-public class GLMMPower extends Power
+public class GLMMPower extends Power implements Serializable
 {
-	// scale factor for beta matrix
+    private static final long serialVersionUID = -6289570391909037726L;
+    // scale factor for beta matrix
 	double betaScale;
 	// scale factor for the sigma error matrix
 	double sigmaScale;
