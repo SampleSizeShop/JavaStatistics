@@ -22,7 +22,7 @@
 <project name="JavaStatistics" default="compress">
 		
 	<property name="module.name" value="edu.ucdenver.bios.javastatistics" />
-	<property name="version" value="2.0.0" />
+	<property name="version" value="1.1.0" />
 	<property name="source.dir" value="${basedir}/../src" />
     <property name="target.dir"  value="${basedir}/bin"/>
 	<property name="javadoc.dir" value="${target.dir}/javadoc/${module.name}-${version}-javadoc" />
