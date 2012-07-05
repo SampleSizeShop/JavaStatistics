@@ -68,7 +68,7 @@ public class MatrixUtils
 	public static RealMatrix getHorizontalDirectProduct(RealMatrix matrix1, RealMatrix matrix2)
 	throws IllegalArgumentException
 	{
-		if (matrix1 == null ||matrix2 == null)
+		if (matrix1 == null || matrix2 == null)
 			throw new IllegalArgumentException("null input matrix");
 		if (matrix1.getRowDimension() != matrix2.getRowDimension())
 			throw new IllegalArgumentException("input matrices must have equal row dimension");
@@ -77,7 +77,7 @@ public class MatrixUtils
 		int m1Cols = matrix1.getColumnDimension();
 		int m2Cols = matrix2.getColumnDimension();
 		
-		double[][] productData = new double[mRows][m2Cols * m2Cols]; 
+		double[][] productData = new double[mRows][m1Cols * m2Cols]; 
 		RealMatrix productMatrix = new Array2DRowRealMatrix(productData);
 		for(int col = 0; col < m1Cols; col++)
 		{
