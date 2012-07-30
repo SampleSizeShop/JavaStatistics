@@ -45,12 +45,12 @@ public class TestSampleSizeGLMM extends TestCase
 {
     private static final double VARIANCE = 2.0;
     private static final double[] ALPHA_LIST = {0.05};    
-    private static final double[] BETA_SCALE_LIST = {0,1,2};
-    private static final double[] SIGMA_SCALE_LIST = {1,2};
+    private static final double[] BETA_SCALE_LIST = {1}; //{0,1,2};
+    private static final double[] SIGMA_SCALE_LIST = {1}; //{1,2};
     private static final double[] POWER_LIST = {0.01,0.7,0.8,0.9};
     private DecimalFormat Number = new DecimalFormat("#0.000");
     
-    public void testValidUnivariateFixed()
+    private void testValidUnivariateFixed()
     {
         // build the inputs
         GLMMPowerParameters params = buildValidUnivariateInputs();
@@ -61,7 +61,7 @@ public class TestSampleSizeGLMM extends TestCase
         checkSampleSize(false, results);
     }
 
-    public void testInvalidUnivariateFixed()
+    private void testInvalidUnivariateFixed()
     {
         // build the inputs
         GLMMPowerParameters params = buildValidUnivariateInputs();
@@ -80,7 +80,7 @@ public class TestSampleSizeGLMM extends TestCase
         }
     }
 
-    public void testValidMultivariateFixed()
+    private void testValidMultivariateFixed()
     {
         // build the inputs
         GLMMPowerParameters params = buildValidMultivariateFixedInputs();
@@ -91,7 +91,7 @@ public class TestSampleSizeGLMM extends TestCase
         checkSampleSize(false, results);
     }
 
-    public void testInvalidMultivariateFixed()
+    private void testInvalidMultivariateFixed()
     {
         // build the inputs
         GLMMPowerParameters params = buildValidMultivariateFixedInputs();
@@ -111,7 +111,7 @@ public class TestSampleSizeGLMM extends TestCase
         }
     }
 
-    public void testValidMultivariateRandom()
+    private void testValidMultivariateRandom()
     {
 		// build the inputs
 		double[] beta5 = {
@@ -137,9 +137,29 @@ public class TestSampleSizeGLMM extends TestCase
         checkSampleSize(true, sampleSizeList);
     }
 
-    public void testInvalidMultivariateRandom()
+    private void testInvalidMultivariateRandom()
     {
 
+    }
+    
+    private void testOneSampleUnviariate() {
+        // build the inputs
+        GLMMPowerParameters params = buildOneSampleUnivariateInputs();
+        // create a power calculator
+        GLMMPowerCalculator calc = new GLMMPowerCalculator();
+        
+        List<Power> results = calc.getSampleSize(params);
+        checkSampleSize(false, results);
+    }
+    
+    public void testOneSampleMultiariate() {
+        // build the inputs
+        GLMMPowerParameters params = buildOneSampleMultivariateInputs();
+        // create a power calculator
+        GLMMPowerCalculator calc = new GLMMPowerCalculator();
+        
+        List<Power> results = calc.getSampleSize(params);
+        checkSampleSize(false, results);
     }
 
     private void checkSampleSize(boolean isGlmmFG, List<Power> results)
@@ -178,6 +198,100 @@ public class TestSampleSizeGLMM extends TestCase
     
     
     /********** helper functions to create the matrices ***********/
+    
+    /**
+     * Builds matrices for a univariate GLM with fixed predictors
+     */
+    private GLMMPowerParameters buildOneSampleUnivariateInputs()
+    {
+        GLMMPowerParameters params = new GLMMPowerParameters();
+       
+        // add tests
+//        for(Test test: Test.values()) 
+//        {
+//            params.addTest(test);
+//        }
+        params.addTest(Test.UNIREP_HUYNH_FELDT);
+        
+        // add alpha values
+        for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
+
+        // build beta matrix
+        double [][] beta = {{1}};
+        params.setBeta(new FixedRandomMatrix(beta, null, false));
+        // add beta scale values
+        for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
+        
+        // build theta null matrix
+        double [][] theta0 = {{0}};
+        params.setTheta(new Array2DRowRealMatrix(theta0));
+        
+        // build sigma matrix
+        double [][] sigma = {{1}};
+        params.setSigmaError(new Array2DRowRealMatrix(sigma));
+        // add sigma scale values
+        for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
+        
+        // build design matrix
+        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(1));
+        // add powers
+        for(double power: POWER_LIST) params.addPower(power);
+        
+        // build between subject contrast
+        double [][] between = {{1}};
+        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
+
+        return params;     
+    }   
+    
+    /**
+     * Builds matrices for a univariate GLM with fixed predictors
+     */
+    private GLMMPowerParameters buildOneSampleMultivariateInputs()
+    {
+        GLMMPowerParameters params = new GLMMPowerParameters();
+       
+        // add tests
+//        for(Test test: Test.values()) 
+//        {
+//            params.addTest(test);
+//        }
+        params.addTest(Test.UNIREP);
+        
+        // add alpha values
+        for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
+
+        // build beta matrix
+        double [][] beta = {{1,0,0}};
+        params.setBeta(new FixedRandomMatrix(beta, null, false));
+        // add beta scale values
+        params.addBetaScale(1);
+        
+        // build theta null matrix
+        double [][] theta0 = {{2.0,2.0}};
+        params.setTheta(new Array2DRowRealMatrix(theta0));
+        
+        // build sigma matrix
+        double [][] sigma = {{4,3.6,3.24},{3.6,4,3.6},{3.24,3.6,4}};
+        params.setSigmaError(new Array2DRowRealMatrix(sigma));
+        // add sigma scale values
+        params.addSigmaScale(1);
+        
+        // build design matrix
+        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(1));
+        // add powers
+        for(double power: POWER_LIST) params.addPower(power);
+        
+        // build between subject contrast
+        double [][] between = {{1}};
+        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
+
+        double[][] within = {{1.0,1.0},{-1.0,-0.0},{-0.0,-1.0}};
+        params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
+        
+        
+        return params;     
+    }   
     
     /**
      * Builds matrices for a univariate GLM with fixed predictors
