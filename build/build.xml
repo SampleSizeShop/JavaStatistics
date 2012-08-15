@@ -64,8 +64,8 @@
            author="true"
            version="true"
            use="true"
-        windowtitle="${owner}: Java Statistics Library API (${version}) Specification"
-        doctitle="${owner}: Java Statistics Library API (${version}) Specification"
+        windowtitle="${owner}: Java Statistics Library API (${module.version}) Specification"
+        doctitle="${owner}: Java Statistics Library API (${module.version}) Specification"
          >
         <fileset dir="${source.dir}" defaultexcludes="yes">
             <include name="**/*.java"/>
@@ -168,7 +168,7 @@
 	<!-- Create the binary distribution -->
 	<target name="distribution.binary">
 		<zip destfile="${artifacts.dir}/${module.name}-${module.version}-binary.zip" >
-			<zipfileset file="${artifacts.dir}/${svc.name}.war" />	
+			<zipfileset file="${artifacts.dir}/${module.name}-${module.version}.jar" />	
 			<zipfileset file="${basedir}/../LICENSE-gpl2.0.txt"/>
 		    <zipfileset file="${basedir}/../README.txt"/>
 		</zip>
