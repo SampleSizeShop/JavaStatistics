@@ -85,7 +85,7 @@ public class PowerChecker
     private int sasResultsIndex = 0;
     
     private Timer timer = new Timer();
-    private class Timer
+    public class Timer
     {
     	public long calculationMilliseconds;
     	public long simulationMilliseconds;
@@ -112,7 +112,7 @@ public class PowerChecker
     	}
     }
     
-    private class Result
+    public class Result
     {
     	GLMMPower calculatedPower;
     	double sasPower;
@@ -264,6 +264,22 @@ public class PowerChecker
     			(simPower != null ? simPower.getActualPower() : Double.NaN),
     			simDeviation));
     	}
+    }
+   
+    /**
+     * Get the timing results
+     * @return timer object
+     */
+    public Timer getTiming() {
+        return timer;
+    }
+    
+    /**
+     * Get the power comparison results
+     * @return list of results
+     */
+    public List<Result> getResults() {
+        return checkerResults;
     }
     
     /**
@@ -512,4 +528,22 @@ public class PowerChecker
     {
     	this.symmetryThreshold = threshold;
     }
+
+    public double getMaxSasDeviation() {
+        return maxSasDeviation;
+    }
+
+    public double getMaxSimDeviation() {
+        return maxSimDeviation;
+    }
+
+    public double getMaxSaslowerCIDeviation() {
+        return maxSaslowerCIDeviation;
+    }
+
+    public double getMaxSasUpperCIDeviation() {
+        return maxSasUpperCIDeviation;
+    }
+    
+    
 }
