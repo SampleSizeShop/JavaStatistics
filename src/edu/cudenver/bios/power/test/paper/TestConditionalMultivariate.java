@@ -31,6 +31,7 @@ import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 
 /**
  * Unit test for fixed multivariate design with comparison against
@@ -46,9 +47,14 @@ public class TestConditionalMultivariate extends TestCase
     private static final int[] SAMPLE_SIZE_LIST = {5,10};
 
 	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalMultivariate.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "FixedMultivariateOutput.html";
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + 
+	File.separator + "FixedMultivariateOutput.tex";
 	private static final String TITLE = "Power results for fixed multivariate";
-	
+    private static final String AUTHOR = "Sarah Kreidler";
+    private static final String STUDY_DESIGN_DESCRIPTION  = 
+            "This test case validates power calculations for a balanced four-sample design " +
+            "with three repeated measures.  The covariance is assumed to be compound " +
+            "symmetric.";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -72,8 +78,18 @@ public class TestConditionalMultivariate extends TestCase
         GLMMPowerParameters params = buildValidMultivariateFixedInputs();
 
         checker.checkPower(params);
-		checker.outputResults(TITLE);
-		checker.outputResults(TITLE, OUTPUT_FILE);
+
+        // output the results
+        try {
+            ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+            reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+            reportBuilder.createValidationReportAsLaTex(
+                    OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
+                    params, checker);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		checker.reset();
     }

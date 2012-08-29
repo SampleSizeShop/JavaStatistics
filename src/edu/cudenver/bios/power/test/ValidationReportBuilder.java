@@ -22,17 +22,13 @@ package edu.cudenver.bios.power.test;
 
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.math.linear.RealMatrix;
-
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.pdf.PdfWriter;
 
 import edu.cudenver.bios.power.glmm.GLMMTestFactory;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
@@ -50,7 +46,7 @@ import edu.cudenver.bios.utils.ConfidenceInterval;
 public class ValidationReportBuilder {
 
     // section headers and static text
-    private static final String TITLE_PREFIX = "Test Case Validation Report: ";
+    private static final String TITLE_PREFIX = "GLIMMPSE Validation Report: ";
     private static final String SECTION_INTRO = "Introduction";
     private static final String SECTION_DESIGN = "Study Design";
     private static final String SECTION_RESULTS = "Validation Results";   
@@ -62,13 +58,24 @@ public class ValidationReportBuilder {
             "for the JavaStatistics library, a component of the GLIMMPSE software system.  For " +
             "more information about GLIMMPSE and related publications, please visit ";
     private static final String TEXT_INTRO2 = "The automated validation tests shown below " +
-            "compare power values produced by the JavaStatistics library against published results" +
-            "and simulation.  Sources for published values include POWERLIB (Johnson 2007) and " +
+            "compare power values produced by the JavaStatistics library against published results " +
+            "and simulation.  Sources for published values include POWERLIB (Johnson \\emph{et al.} 2007) and " +
             "a SAS IML implementations of the methods described by Glueck and Muller (2003).";
-
+    private static final String REFERENCES = "\\section*{References}\n\n" +
+            "\\hangindent2em\n\\hangafter=1\n Glueck, D. H., \\& Muller, K. E. (2003). " +
+            "Adjusting power for a baseline covariate in linear models. \\emph{Statistics " +
+            "in Medicine}, \\emph{22}(16), 2535-2551.\n\n" +
+            "\\hangindent2em\n\\hangafter=1\n Johnson, J. L., Muller, K. E., Slaughter, " +
+            "J. C., Gurka, M. J., \\& Gribbin, M. J. (2009). POWERLIB: SAS/IML Software for Computing " +
+            "Power in Multivariate Linear Models. \\emph{Journal of Statistical Software}, " +
+            "\\emph{30}(5), 1-27.\n\n" +
+            "\\hangindent2em\n\\hangafter=1\n Muller, K. E., \\& Stewart, P. W. (2006). " +
+            "Linear model theory: univariate, multivariate, " +
+            "and mixed models. Hoboken, New Jersey: John Wiley and Sons.";
     private static DecimalFormat Number = new DecimalFormat("#0.0000000");
     private static DecimalFormat ShortNumber = new DecimalFormat("#0.0000");
     private static DecimalFormat LongNumber = new DecimalFormat("#0.00000000");
+    private static DecimalFormat ScientificNumber = new DecimalFormat("0.00E0");  
 
     // tolerance for comparison
     private double sasTolerance = 0.00001;
@@ -93,37 +100,11 @@ public class ValidationReportBuilder {
     }
 
     /**
-     * Open a new pdf document for writing.
-     * 
-     * @param filename path to pdf file
-     * @return pdf document object
-     * @throws DocumentException
-     * @throws FileNotFoundException
-     */
-    public Document openDocument(String filename) 
-            throws DocumentException, FileNotFoundException {
-        Document document = new Document();
-        PdfWriter.getInstance(document, new FileOutputStream(filename));
-        document.open();
-        return document;
-    }
-
-    /**
-     * Close the pdf document.
-     * @param document the pdf document object
-     */
-    public void closeDocument(Document document) {
-        if (document != null) {
-            document.close();
-        }
-    }
-
-    /**
      * Write the validation report to LaTex.
      * @param document the pdf document
      * @param timer timer object from the power check
      */
-    public void createValidationReport(String filename,
+    public void createValidationReportAsLaTex(String filename,
             String title, String author, String studyDesignDescription,
             GLMMPowerParameters params,
             PowerChecker checker) 
@@ -137,7 +118,8 @@ public class ValidationReportBuilder {
                 addPreamble(outFile);
                 addIntroduction(outFile, title, author);
                 addStudyDesignInfo(outFile, studyDesignDescription, params);
-                addResults(outFile, checker);
+                addResults(outFile, checker, (params.getSigmaGaussianRandom() != null));
+                outFile.write(REFERENCES);
                 addClosing(outFile);
             } catch (Exception e) {
                 throw new IOException(
@@ -160,7 +142,8 @@ public class ValidationReportBuilder {
      */
     private void addPreamble(BufferedWriter outFile) 
             throws IOException {
-        outFile.write("\\documentclass[english]{article}\n" +
+        outFile.write("\\documentclass[12pt,english]{article}\n" +
+                "\\renewcommand{\\familydefault}{\\sfdefault}" +
                 "\\usepackage{longtable,tabu}\n" +
                 "\\usepackage{savesym}\n" +
                 "\\usepackage{amsmath}\n" +
@@ -204,6 +187,8 @@ public class ValidationReportBuilder {
         // add title
         outFile.write("\\section*{"+TITLE_PREFIX + "}\n");
         outFile.write("\\subsection*{"+title + "}\n");
+        Date currentDate = new Date();
+        outFile.write("Date: " + currentDate + "\n\n");
         // add the introduction section shared across all validation reports
         outFile.write("\\section{"+SECTION_INTRO +"}\n");
         outFile.write(TEXT_INTRO1 + " \\href{http://samplesizeshop.com}{http://samplesizeshop.com}.\n\n" +
@@ -236,18 +221,20 @@ public class ValidationReportBuilder {
      * @throws IOException
      */
     private void addResults(BufferedWriter outFile,
-            PowerChecker checker) 
+            PowerChecker checker, boolean hasCovariate) 
                     throws IOException {
         outFile.write("\\section{"+SECTION_RESULTS +"}\n");
+        outFile.write("A total of "+ checker.getResults().size() +
+                " power values were computed for this experiment.\n\n");
         // add timing results
         outFile.write("\\subsection{"+SUBSECTION_TIMING +"}\n");
-        addTimingResults(outFile, checker.getTiming());
+        addTimingResults(outFile, checker.getTiming(), checker.getResults().size());
         // add the summary stats
         outFile.write("\\subsection{"+SUBSECTION_SUMMARY +"}\n");
         addSummaryStatistics(outFile, checker);
         // add the results table
         outFile.write("\\subsection{"+SUBSECTION_RESULTS +"}\n");
-        addResultsTable(outFile, checker);
+        addResultsTable(outFile, checker, hasCovariate);
     }
 
     /**
@@ -256,7 +243,7 @@ public class ValidationReportBuilder {
      */
     private void addListInputs(BufferedWriter outFile,
             GLMMPowerParameters params) 
-    throws IOException {
+                    throws IOException {
         outFile.write("\\subsubsection{List Inputs}\n\n");
         writeDoubleList(outFile, "Type I error rates", params.getAlphaList());
         writeDoubleList(outFile, "Beta scale values", params.getBetaScaleList());
@@ -265,7 +252,7 @@ public class ValidationReportBuilder {
         writeDoubleList(outFile, "Nominal power values", params.getPowerList());
         List<Test> testList = params.getTestList();
         if (testList != null && testList.size() > 0) {
-            outFile.write("\\underline{Statistical tests}\n\n");
+            outFile.write("{\\bf Statistical tests}\n\n");
             boolean first = true;
             for(Test value: testList) {
                 if (!first) {
@@ -280,7 +267,7 @@ public class ValidationReportBuilder {
         }
         List<PowerMethod> powerMethodList = params.getPowerMethodList();
         if (powerMethodList != null && powerMethodList.size() > 0) {
-            outFile.write("\\underline{Power methods}\n\n");
+            outFile.write("{\\bf Power methods}\n\n");
             boolean first = true;
             for(PowerMethod value: powerMethodList) {
                 if (!first) {
@@ -307,7 +294,7 @@ public class ValidationReportBuilder {
             String label, List<Integer> list) 
                     throws IOException {
         if (list != null && list.size() > 0) {
-            outFile.write("\\underline{" + label + "}\n\n");
+            outFile.write("{\\bf " + label + "}\n\n");
             boolean first = true;
             for(Integer value: list) {
                 if (!first) {
@@ -330,9 +317,9 @@ public class ValidationReportBuilder {
      */
     private void writeDoubleList(BufferedWriter outFile, 
             String label, List<Double> list) 
-    throws IOException {
+                    throws IOException {
         if (list != null && list.size() > 0) {
-            outFile.write("\\underline{" + label + "}\n\n");
+            outFile.write("{\\bf " + label + "}\n\n");
             boolean first = true;
             for(Double value: list) {
                 if (!first) {
@@ -353,9 +340,9 @@ public class ValidationReportBuilder {
      */
     private void addMatrixInputs(BufferedWriter outFile,
             GLMMPowerParameters params) 
-    throws IOException {
+                    throws IOException {
         outFile.write("\\subsubsection{Matrix Inputs}\n\n");
-        
+
         RealMatrix xEssence = params.getDesignEssence();
         RealMatrix beta = params.getBeta().getCombinedMatrix();
         RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
@@ -403,7 +390,7 @@ public class ValidationReportBuilder {
      */
     private void writeMatrix(BufferedWriter outFile, String name,
             RealMatrix matrix) throws IOException {
-               
+
         outFile.write("\\begin{eqnarray*}\n");
         // add name label
         outFile.write(name + " & = & \\begin{bmatrix}");
@@ -429,16 +416,24 @@ public class ValidationReportBuilder {
      * @param timer timer object from the power check
      */
     private void addTimingResults(BufferedWriter outFile,
-            PowerChecker.Timer timer) 
-    throws IOException {
-        outFile.write("\\begin{tabular}{|l|l|}\n");
+            PowerChecker.Timer timer, int totalCases) 
+                    throws IOException {
+
+        double calcTimeTotalSeconds = ((double) timer.calculationMilliseconds / 1000.0);
+        double calcTimeAvgSeconds = 
+                ((double) timer.calculationMilliseconds / (double) totalCases) / 1000.0;
+        double simTimeTotalSeconds = ((double) timer.simulationMilliseconds / 1000.0);
+        double simTimeAvgSeconds = 
+                ((double) timer.simulationMilliseconds / (double) totalCases) / 1000.0;
+
+        outFile.write("\\begin{tabular}{|l|l|l|}\n");
         outFile.write("\\hline\n");
-        outFile.write("Calculation time (seconds) & "+ 
-                Double.toString((double) timer.calculationMilliseconds / 1000.0)+ 
-                "\\tabularnewline\n\\hline\n");
-        outFile.write("Simulation time (seconds) & "+ 
-                Double.toString((double) timer.simulationMilliseconds / 1000.0)+ 
-                "\\tabularnewline\n");
+        outFile.write(" & Total Time (seconds) & Mean Time (seconds) \\\\ \n");
+        outFile.write("\\hline\n");
+        outFile.write("Calculation & "+ Number.format(calcTimeTotalSeconds) + " & " +
+                ScientificNumber.format(calcTimeAvgSeconds) + "\\tabularnewline\n\\hline\n");
+        outFile.write("Simulation & "+  Number.format(simTimeTotalSeconds) + " & " +
+                ScientificNumber.format(simTimeAvgSeconds) + "\\tabularnewline\n");
         outFile.write("\\hline\n");
         outFile.write("\\end{tabular}\n");
     }
@@ -450,7 +445,7 @@ public class ValidationReportBuilder {
      */
     private void addSummaryStatistics(BufferedWriter outFile,
             PowerChecker checker) 
-    throws IOException{
+                    throws IOException{
         outFile.write("\\begin{tabular}{|l|l|}\n");
         outFile.write("\\hline\n");
         outFile.write("Max deviation from SAS & "+ 
@@ -478,36 +473,47 @@ public class ValidationReportBuilder {
      * @param results result list from the power check
      */
     private void addResultsTable(BufferedWriter outFile,
-            PowerChecker checker) throws IOException {
+            PowerChecker checker, boolean hasCovariate) throws IOException {
         List<PowerChecker.Result> checkerResults = checker.getResults();
         if (checkerResults != null) {
             boolean hasCI = (checkerResults.size() > 0 && 
                     checkerResults.get(0).calculatedPower.getConfidenceInterval() != null);
-            outFile.write("\\scriptsize\n");
             if (hasCI) {
-                outFile.write("\\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}\n");
+                if (hasCovariate) {
+                    outFile.write("\\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}\n");
+                } else {
+                    outFile.write("\\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}\n");
+                }
             } else {
-                outFile.write("\\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}\n");
+                if (hasCovariate) {
+                    outFile.write("\\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}\n");
+                } else {
+                    outFile.write("\\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}\n");
+                }
             }
             outFile.write("\\hline\n");    
-            outFile.write("Power & ");
+            outFile.write("{\\bf Power} & ");
             if (hasCI) {
-                outFile.write("CI & ");
+                outFile.write("{\\bf CI} & ");
             }
-            outFile.write("SAS Power (deviation) & ");
+            outFile.write("{\\bf SAS Power (deviation)} & ");
             if (hasCI) {
-                outFile.write("SAS CI (deviation) & ");
+                outFile.write("{\\bf SAS CI (deviation)} & ");
             }
-            outFile.write("Sim Power (deviation) & ");
-            outFile.write("Test & ");
-            outFile.write("Sigma Scale & ");
-            outFile.write("Beta Scale & ");
-            outFile.write("Total N & ");
-            outFile.write("Alpha & ");
-            outFile.write("Method & ");
-            outFile.write("Quantile");
+            outFile.write("{\\bf Sim Power (deviation)} & ");
+            outFile.write("{\\bf Test} & ");
+            outFile.write("{\\bf Sigma Scale} & ");
+            outFile.write("{\\bf Beta Scale} & ");
+            outFile.write("{\\bf Total N} & ");
+            if (hasCovariate) {
+                outFile.write("{\\bf Alpha} & ");
+                outFile.write("{\\bf Method} & ");
+                outFile.write("{\\bf Quantile}");
+            } else {
+                outFile.write("{\\bf Alpha} ");
+            }
             outFile.write("\\\\ \\hline\n");
-             
+
 
             for(Result result: checkerResults)
             {
@@ -534,7 +540,7 @@ public class ValidationReportBuilder {
                 if (ci != null)
                 {
                     outFile.write("(" + Number.format(result.sasCILower) + ", " + 
-                                    Number.format(result.sasCIUpper) + ") ");
+                            Number.format(result.sasCIUpper) + ") ");
                     outFile.write("\\{");
                     // lower ci deviation
                     if (result.sasCILowerDeviation > sasTolerance) {
@@ -573,12 +579,18 @@ public class ValidationReportBuilder {
                 outFile.write(Number.format(result.calculatedPower.getSigmaScale()) + " & ");
                 outFile.write(Number.format(result.calculatedPower.getBetaScale()) + " & ");
                 outFile.write(Integer.toString(result.calculatedPower.getTotalSampleSize()) + " & ");
-                outFile.write(Number.format(result.calculatedPower.getAlpha()) + " & ");
-                outFile.write(powerMethodToString(result.calculatedPower.getPowerMethod()) + " & ");
-                outFile.write(Double.toString(result.calculatedPower.getQuantile()) + "\\\\ \\hline\n");
+                if (hasCovariate) {
+                    outFile.write(Number.format(result.calculatedPower.getAlpha()) + " & ");
+                    outFile.write(powerMethodToString(result.calculatedPower.getPowerMethod()) + " & ");
+                    outFile.write(Double.toString(result.calculatedPower.getQuantile()));
+                } else {
+                    outFile.write(Number.format(result.calculatedPower.getAlpha()));
+                }
+                outFile.write("\\\\ \\hline\n");
             }
-  
+
             outFile.write("\\end{longtabu}\n");    
+            outFile.write("\\normalsize\n");    
         }
 
     }
@@ -793,7 +805,7 @@ public class ValidationReportBuilder {
         }
         return value;
     }
-    
+
     /**
      * Pretty display of statistical test.
      * @param method power computation method

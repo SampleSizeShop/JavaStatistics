@@ -31,6 +31,7 @@ import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 import junit.framework.TestCase;
 
 /**
@@ -42,9 +43,20 @@ import junit.framework.TestCase;
  */
 public class TestConditionalMultivariateInteraction extends TestCase
 {
-	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalMultivariateInteraction.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalMultivariateInteraction.html";
-	private static final String TITLE = "GLMM(F) Example 5. Power for a test of interaction in a multivariate model";
+	private static final String DATA_FILE =  "data" + 
+File.separator + "TestConditionalMultivariateInteraction.xml";
+	private static final String OUTPUT_FILE = "text" + File.separator + 
+	        "results" + File.separator + "TestConditionalMultivariateInteraction.tex";
+	private static final String TITLE = 
+	        "GLMM(F) Example 5. Power for a test of interaction in a multivariate model";
+    private static final String AUTHOR = "Sarah Kreidler";
+    private static final String STUDY_DESIGN_DESCRIPTION  = 
+            "Example 5 calculates power for a balanced four-sample design" +
+            "with three repeated measures over time.  The primary hypothesis of interest " +
+            "is a test of the group by time interaction.  The unstructured covariance model " +
+            "is most appropriate for the design.  The example demonstrates the difference in " +
+            "power depending on the choice of statistical test when assumptions of sphericity " +
+            "are unlikely to hold.";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -112,8 +124,18 @@ public class TestConditionalMultivariateInteraction extends TestCase
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
         	
         checker.checkPower(params);
-		checker.outputResults(TITLE);
-		checker.outputResults(TITLE, OUTPUT_FILE);
+
+        // output the results
+        try {
+            ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+            reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+            reportBuilder.createValidationReportAsLaTex(
+                    OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
+                    params, checker);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		checker.reset();
     }

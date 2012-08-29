@@ -22,17 +22,16 @@ package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.MatrixUtils;
 
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RowMetaData;
-import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
-import junit.framework.TestCase;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 
 /**
 *
@@ -49,8 +48,15 @@ import junit.framework.TestCase;
 public class TestConditionalPairedTTest extends TestCase
 {
 	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalPairedTTest.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalPairedTTest.html";
-	private static final String TITLE = "GLMM(F) Example 2. Power results for Paired T-test";
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + 
+	File.separator + "TestConditionalPairedTTest.tex";
+	private static final String TITLE = "GLMM(F) Example 2. Power results for a Paired T-test";
+    private static final String AUTHOR = "Sarah Kreidler";
+	private static final String STUDY_DESIGN_DESCRIPTION  = 
+	        "Example 2 calculates power for a one sample design with " +
+	        "a pre and post measurement for each participant.  The primary hypothesis " +
+	        "of interest tests for a difference between the mean response at " +
+	        "the pre and post measurement.  The design would be analyzed using a paired t-test.";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -110,8 +116,17 @@ public class TestConditionalPairedTTest extends TestCase
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
         
         checker.checkPower(params);
-		checker.outputResults(TITLE);
-		checker.outputResults(TITLE, OUTPUT_FILE);
+        
+        // output the results
+        try {
+        ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+        reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+        reportBuilder.createValidationReportAsLaTex(
+                OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
+                params, checker);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		checker.reset();
 

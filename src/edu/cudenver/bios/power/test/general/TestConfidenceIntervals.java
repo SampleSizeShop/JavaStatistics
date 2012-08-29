@@ -27,14 +27,12 @@ import junit.framework.TestCase;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.MatrixUtils;
 
-import com.itextpdf.text.Document;
-
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import edu.cudenver.bios.power.test.ValidationReportBuilder;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 
 /**
  * General unit test for confidence intervals.  Covers univariate and multivariate
@@ -45,6 +43,7 @@ import edu.cudenver.bios.power.test.PowerChecker;
  */
 public class TestConfidenceIntervals extends TestCase
 {
+    private static final String AUTHOR = "Sarah Kreidler";
 	private static final String UNIVARIATE_DATA_FILE = "data" + 
 	File.separator + "TestUnivariateConfidenceIntervals.xml";
 	private static final String UNIVARIATE_OUTPUT_FILE = "text" + File.separator + "results" + 
@@ -135,15 +134,12 @@ public class TestConfidenceIntervals extends TestCase
 			}
 			// output the results
 			String title = "Univariate confidence intervals with beta known and unknown";
-			checker.outputResults(title);
-			
-			// write the pdf report
+			String descr = "Univariate confidence intervals with beta known and unknown";
 			ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
-			reportBuilder.createValidationReport(UNIVARIATE_OUTPUT_FILE, 
-			        "Power Confidence Intervals in a Univariate Design", null, 
-			        "univariate stuff", params, checker);
+			reportBuilder.createValidationReportAsStdout(checker, title, false);
+			reportBuilder.createValidationReportAsLaTex(UNIVARIATE_OUTPUT_FILE, 
+			        title, AUTHOR, descr, params, checker);
 
-//			checker.outputResults(title, UNIVARIATE_OUTPUT_FILE);
 			assertTrue(checker.isSASDeviationBelowTolerance());
 			checker.reset();
 		}
@@ -190,10 +186,15 @@ public class TestConfidenceIntervals extends TestCase
 				checker.checkPower(params);
 			}
 			
-			// output the results
-			String title = "Multivariate confidence intervals with beta known";
-			checker.outputResults(title);
-			checker.outputResults(title, MULTIVARIATE_BETA_KNOWN_OUTPUT_FILE);
+	         // output the results
+            String title = "Multivariate confidence intervals with beta known";
+            String descr = "Multivariate confidence intervals with beta known";
+            ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+            reportBuilder.createValidationReportAsStdout(checker, title, false);
+            reportBuilder.createValidationReportAsLaTex(
+                    MULTIVARIATE_BETA_KNOWN_OUTPUT_FILE, 
+                    title, AUTHOR, descr, params, checker);
+
 			assertTrue(checker.isSASDeviationBelowTolerance());
 			checker.reset();
 		}
@@ -243,9 +244,14 @@ public class TestConfidenceIntervals extends TestCase
 			}
 			
 			// output the results
-			String title = "Multivariate confidence intervals with beta unknown";
-			checker.outputResults(title);
-			checker.outputResults(title, MULTIVARIATE_BETA_KNOWN_OUTPUT_FILE);
+            String title = "Multivariate confidence intervals with beta unknown";
+            String descr = "Multivariate confidence intervals with beta unknown";
+            ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+            reportBuilder.createValidationReportAsStdout(checker, title, false);
+            reportBuilder.createValidationReportAsLaTex(
+                    MULTIVARIATE_BETA_UNKNOWN_OUTPUT_FILE, 
+                    title, AUTHOR, descr, params, checker);
+			
 			assertTrue(checker.isSASDeviationBelowTolerance());
 			checker.reset();
 		}

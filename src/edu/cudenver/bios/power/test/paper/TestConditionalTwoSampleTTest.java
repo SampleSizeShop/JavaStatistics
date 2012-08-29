@@ -61,6 +61,15 @@ public class TestConditionalTwoSampleTTest extends TestCase
 	        "results" + File.separator + "TestConditionalTwoSampleTTest.tex";
 	private static final String TITLE = "GLMM(F) Example 1. Power for a two " +
 			"sample t-test for several error variance values and mean differences";
+	private static final String AUTHOR = "Sarah Kreidler";
+	private static final String STUDY_DESIGN_DESCRIPTION  = 
+	        "Example 1 calculates power for a balanced, two sample design with" +
+	        "a single response variable. The primary hypothesis of interest tests for a difference" +
+	        " in the mean response between the groups.  The design would be analyzed using a " +
+	        "two-sample t-test.  The example is based on the " +
+	        "results in \"Increasing scientific power with  statistical power\", by K.E. Muller " +
+	        "and V.A. Benignus, Neurotoxicology and Teratology, vol 14, May-June, 1992.";
+	
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -117,14 +126,12 @@ public class TestConditionalTwoSampleTTest extends TestCase
 
         try {
             checker.checkPower(params);
-            checker.outputResults(TITLE);
-            checker.outputResults(TITLE, OUTPUT_FILE);
-
-            // write the pdf report
-
+            // output the results
             ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
-            reportBuilder.createValidationReport(OUTPUT_FILE, 
-                    TITLE, null, "2 sample t-test", params, checker);
+            reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+            reportBuilder.createValidationReportAsLaTex(
+                    OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
+                    params, checker);
 
             assertTrue(checker.isSASDeviationBelowTolerance());
             checker.reset();
