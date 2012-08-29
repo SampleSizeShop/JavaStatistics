@@ -20,26 +20,21 @@
  */
 package edu.cudenver.bios.power.test;
 
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.List;
 
 import org.apache.commons.math.linear.RealMatrix;
 
-import com.itextpdf.text.Anchor;
-import com.itextpdf.text.BaseColor;
-import com.itextpdf.text.Chapter;
-import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Font;
-import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.Section;
-import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 
+import edu.cudenver.bios.power.glmm.GLMMTestFactory;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
@@ -53,27 +48,9 @@ import edu.cudenver.bios.utils.ConfidenceInterval;
  *
  */
 public class ValidationReportBuilder {
-    private static int PARAGRAPH_SPACING = 12;
-    private static Font TITLE_FONT = new Font(Font.FontFamily.TIMES_ROMAN, 18,
-            Font.BOLD);
-    private static Font SECTION_FONT = new Font(Font.FontFamily.TIMES_ROMAN, 16,
-            Font.BOLD);
-    private static Font SUBSECTION_FONT = new Font(Font.FontFamily.TIMES_ROMAN, 14,
-            Font.BOLD);
-    private static Font URL_FONT= new Font(Font.FontFamily.TIMES_ROMAN, 12,
-            Font.NORMAL, BaseColor.BLUE);
-    private static Font UNDERLINE_FONT = new Font(Font.FontFamily.TIMES_ROMAN, 12,
-            Font.UNDERLINE);
-    private static Font RED_FONT= new Font(Font.FontFamily.TIMES_ROMAN, 8,
-            Font.NORMAL, BaseColor.RED);
-    private static Font BOLD_FONT = new Font(Font.FontFamily.TIMES_ROMAN, 8,
-            Font.BOLD);
-    private static Font TABLE_FONT = new Font(Font.FontFamily.TIMES_ROMAN, 8,
-            Font.NORMAL);
-    
+
     // section headers and static text
     private static final String TITLE_PREFIX = "Test Case Validation Report: ";
-    private static final String SAMPLESIZESHOP_URL = "http://samplesizeshop.com";
     private static final String SECTION_INTRO = "Introduction";
     private static final String SECTION_DESIGN = "Study Design";
     private static final String SECTION_RESULTS = "Validation Results";   
@@ -87,7 +64,7 @@ public class ValidationReportBuilder {
     private static final String TEXT_INTRO2 = "The automated validation tests shown below " +
             "compare power values produced by the JavaStatistics library against published results" +
             "and simulation.  Sources for published values include POWERLIB (Johnson 2007) and " +
-            "a SAS IML implementations of the methods described by Glueck & Muller (2003).";
+            "a SAS IML implementations of the methods described by Glueck and Muller (2003).";
 
     private static DecimalFormat Number = new DecimalFormat("#0.0000000");
     private static DecimalFormat ShortNumber = new DecimalFormat("#0.0000");
@@ -150,142 +127,173 @@ public class ValidationReportBuilder {
             String title, String author, String studyDesignDescription,
             GLMMPowerParameters params,
             PowerChecker checker) 
-                    throws DocumentException {
-        Document document = null;
-        try {
-            document = openDocument(filename);
-            addIntroduction(document, title, author);
-            addStudyDesignInfo(document, studyDesignDescription, params);
-            addResults(document, checker);
-        } catch (Exception e) {
-            throw new DocumentException(
-                    "Failed to create validation report: " + e.getMessage());
-        } finally {
-            if (document != null) {
-                document.close();
+                    throws FileNotFoundException, IOException {
+        if (filename != null) {
+            FileWriter fWriter = null;
+            BufferedWriter outFile = null;
+            try {
+                fWriter = new FileWriter(filename);
+                outFile = new BufferedWriter(fWriter);
+                addPreamble(outFile);
+                addIntroduction(outFile, title, author);
+                addStudyDesignInfo(outFile, studyDesignDescription, params);
+                addResults(outFile, checker);
+                addClosing(outFile);
+            } catch (Exception e) {
+                throw new IOException(
+                        "Failed to create validation report: " + e.getMessage());
+            } finally {
+                if (outFile != null) {
+                    outFile.close();
+                }
+                if (fWriter != null) {
+                    fWriter.close();
+                }
             }
         }
     }    
 
     /**
-     * Add document meta data and add the introduction chapter.
-     * @param document
+     * Write the latex preamble for a pdflatex document
+     * @param outFile output file stream
+     * @throws IOException
+     */
+    private void addPreamble(BufferedWriter outFile) 
+            throws IOException {
+        outFile.write("\\documentclass[english]{article}\n" +
+                "\\usepackage{longtable,tabu}\n" +
+                "\\usepackage{savesym}\n" +
+                "\\usepackage{amsmath}\n" +
+                "\\savesymbol{iint}\n" +
+                "\\usepackage[T1]{fontenc}\n" +
+                "\\usepackage[latin9]{inputenc}\n" +
+                "\\usepackage{esint}\n" +
+                "\\usepackage{babel}\n" +
+                "\\usepackage{hyperref}\n" +
+                "\\usepackage[landscape]{geometry}\n" +
+                "\\usepackage{geometry}\n" +
+                "\\geometry{verbose,tmargin=1in,bmargin=1in,lmargin=0.5in,rmargin=0.5in}\n" +
+                "\\setlength{\\parskip}{\\medskipamount}\n" +
+                "\\setlength{\\parindent}{0pt}\n" +
+                "\\PassOptionsToPackage{normalem}{ulem}\n" +
+                "\\usepackage{ulem}\n" +
+                "\\usepackage{tabularx}\n" +
+                "\\makeatletter\n\n" +
+                "\\begin{document}\n\n");
+    }
+
+    /**
+     * Write the latex document closure.
+     * @param outFile output file stream
+     * @throws IOException
+     */
+    private void addClosing(BufferedWriter outFile) 
+            throws IOException {
+        outFile.write("\n\\end{document}\n");
+    }
+
+    /**
+     * Add the introduction chapter.
+     * @param outFile
      * @param title
      * @param author
      */
-    private void addIntroduction(Document document,
+    private void addIntroduction(BufferedWriter outFile,
             String title, String author) 
-                    throws DocumentException {
-        // add meta data
-        document.addTitle(TITLE_PREFIX + title);
-        document.addSubject(
-                "Validation results for the JavaStatistics library in " +
-                "the GLIMMPSE software system");
-        document.addKeywords("GLIMMPSE, Java, statistics");
-        if (author != null) {
-            document.addAuthor(author);
-            document.addCreator(author);
-        }
+                    throws IOException {
         // add title
-        Paragraph preface = createParagraph(null, null);
-        preface.add(new Paragraph(TITLE_PREFIX, TITLE_FONT));
-        preface.add(new Paragraph(title, TITLE_FONT));
-
+        outFile.write("\\section*{"+TITLE_PREFIX + "}\n");
+        outFile.write("\\subsection*{"+title + "}\n");
         // add the introduction section shared across all validation reports
-        Chapter chapter = createChapter(SECTION_INTRO, 1);
-        Paragraph introP1 = createParagraph(null, null);
-        Anchor url = new Anchor(SAMPLESIZESHOP_URL + ".", URL_FONT);
-        url.setReference(SAMPLESIZESHOP_URL);
-        introP1.add(TEXT_INTRO1);
-        introP1.add(url);
-        chapter.add(introP1);
-        chapter.add(createParagraph(TEXT_INTRO2, null));
-
-        // add to the page
-        document.add(preface);
-        document.add(chapter);
+        outFile.write("\\section{"+SECTION_INTRO +"}\n");
+        outFile.write(TEXT_INTRO1 + " \\href{http://samplesizeshop.com}{http://samplesizeshop.com}.\n\n" +
+                TEXT_INTRO2);
     }
 
-
-    private void addStudyDesignInfo(Document document,
+    /**
+     * Add the study design info
+     * @param outFile
+     * @param title
+     * @param author
+     */
+    private void addStudyDesignInfo(BufferedWriter outFile,
             String studyDesignDescription, 
             GLMMPowerParameters params) 
-                    throws DocumentException {
-        Chapter chapter = createChapter(SECTION_DESIGN, 2);
-        // add the study design description
-        chapter.add(createParagraph(studyDesignDescription, null));
-        // add the inputs
-        Section inputsSection = createSection(chapter, SUBSECTION_INPUTS);
-        addListInputs(inputsSection, params);
-        addMatrixInputs(inputsSection, params);   
+                    throws IOException {
 
-        document.add(chapter);
+        outFile.write("\\section{"+SECTION_DESIGN +"}\n");
+        outFile.write(studyDesignDescription + "\n");
+        outFile.write("\\subsection{"+SUBSECTION_INPUTS +"}\n");
+        // add the inputs
+        addListInputs(outFile, params);
+        addMatrixInputs(outFile, params);   
     }
 
-    private void addResults(Document document,
+    /**
+     * Add the results section.
+     * @param outFile
+     * @param checker
+     * @throws IOException
+     */
+    private void addResults(BufferedWriter outFile,
             PowerChecker checker) 
-                    throws DocumentException {
-        Chapter chapter = createChapter(SECTION_RESULTS, 3);
-        // add the timing results
-        Section timingSection = createSection(chapter, SUBSECTION_TIMING);
-        addTimingResults(timingSection, checker.getTiming());
+                    throws IOException {
+        outFile.write("\\section{"+SECTION_RESULTS +"}\n");
+        // add timing results
+        outFile.write("\\subsection{"+SUBSECTION_TIMING +"}\n");
+        addTimingResults(outFile, checker.getTiming());
         // add the summary stats
-        Section summarySection = createSection(chapter, SUBSECTION_SUMMARY);
-        addSummaryStatistics(summarySection, checker);
+        outFile.write("\\subsection{"+SUBSECTION_SUMMARY +"}\n");
+        addSummaryStatistics(outFile, checker);
         // add the results table
-        Section resultsSection = createSection(chapter, SUBSECTION_RESULTS);
-        addResultsTable(resultsSection, checker);
-
-        document.add(chapter);
+        outFile.write("\\subsection{"+SUBSECTION_RESULTS +"}\n");
+        addResultsTable(outFile, checker);
     }
 
     /**
      * Display the list inputs used in the study design.
      * @param params input parameters to the power calculation
      */
-    private void addListInputs(Section section,
-            GLMMPowerParameters params) {
-
-        writeDoubleList(section, "Type I error rates", params.getAlphaList());
-        writeDoubleList(section, "Beta scale values", params.getBetaScaleList());
-        writeDoubleList(section, "Sigma scale values", params.getSigmaScaleList());
-        writeIntegerList(section, "Per group sample size values", params.getSampleSizeList());
-        writeDoubleList(section, "Nominal power values", params.getPowerList());
+    private void addListInputs(BufferedWriter outFile,
+            GLMMPowerParameters params) 
+    throws IOException {
+        outFile.write("\\subsubsection{List Inputs}\n\n");
+        writeDoubleList(outFile, "Type I error rates", params.getAlphaList());
+        writeDoubleList(outFile, "Beta scale values", params.getBetaScaleList());
+        writeDoubleList(outFile, "Sigma scale values", params.getSigmaScaleList());
+        writeIntegerList(outFile, "Per group sample size values", params.getSampleSizeList());
+        writeDoubleList(outFile, "Nominal power values", params.getPowerList());
         List<Test> testList = params.getTestList();
-        if (testList != null) {
-            Paragraph para = createParagraph(null,null);
-            para.add(new Chunk("Statistical tests", UNDERLINE_FONT));
-            para.add(Chunk.NEWLINE);
+        if (testList != null && testList.size() > 0) {
+            outFile.write("\\underline{Statistical tests}\n\n");
             boolean first = true;
             for(Test value: testList) {
                 if (!first) {
-                    para.add(", ");
+                    outFile.write(", ");
                 }
-                para.add(value.toString());
+                outFile.write(testToString(value));
                 if (first) {
                     first = false;
                 }
             }
-            section.add(para);
+            outFile.write("\n\n");
         }
         List<PowerMethod> powerMethodList = params.getPowerMethodList();
-        if (powerMethodList != null) {
-            Paragraph para = createParagraph(null,null);
-            para.add(new Chunk("Power methods", UNDERLINE_FONT));
-            para.add(Chunk.NEWLINE);
+        if (powerMethodList != null && powerMethodList.size() > 0) {
+            outFile.write("\\underline{Power methods}\n\n");
             boolean first = true;
             for(PowerMethod value: powerMethodList) {
                 if (!first) {
-                    para.add(", ");
+                    outFile.write(", ");
                 }
-                para.add(powerMethodToString(value));
+                outFile.write(powerMethodToString(value));
                 if (first) {
                     first = false;
                 }
             }
-            section.add(para);
+            outFile.write("\n\n");
         }
-        writeDoubleList(section, "Power quantile values:", params.getQuantileList());
+        writeDoubleList(outFile, "Power quantile values:", params.getQuantileList());
 
     }  
 
@@ -295,22 +303,22 @@ public class ValidationReportBuilder {
      * @param label
      * @param list
      */
-    private void writeIntegerList(Section section, String label, List<Integer> list) {
+    private void writeIntegerList(BufferedWriter outFile, 
+            String label, List<Integer> list) 
+                    throws IOException {
         if (list != null && list.size() > 0) {
-            Paragraph para = createParagraph(null,null);
-            para.add(new Chunk(label, UNDERLINE_FONT));
-            para.add(Chunk.NEWLINE);
+            outFile.write("\\underline{" + label + "}\n\n");
             boolean first = true;
             for(Integer value: list) {
                 if (!first) {
-                    para.add(", ");
+                    outFile.write(", ");
                 }
-                para.add(Integer.toString(value));
+                outFile.write(Integer.toString(value));
                 if (first) {
                     first = false;
                 }
             }
-            section.add(para);
+            outFile.write("\n\n");
         }
     }
 
@@ -320,22 +328,22 @@ public class ValidationReportBuilder {
      * @param label
      * @param list
      */
-    private void writeDoubleList(Section section, String label, List<Double> list) {
-        if (list != null & list.size() > 0) {
-            Paragraph para = createParagraph(null,null);
-            para.add(new Chunk(label, UNDERLINE_FONT));
-            para.add(Chunk.NEWLINE);
+    private void writeDoubleList(BufferedWriter outFile, 
+            String label, List<Double> list) 
+    throws IOException {
+        if (list != null && list.size() > 0) {
+            outFile.write("\\underline{" + label + "}\n\n");
             boolean first = true;
             for(Double value: list) {
                 if (!first) {
-                    para.add(", ");
+                    outFile.write(", ");
                 }
-                para.add(ShortNumber.format(value));
+                outFile.write(Number.format(value));
                 if (first) {
                     first = false;
                 }
             }
-            section.add(para);
+            outFile.write("\n\n");
         }
     }
 
@@ -343,8 +351,11 @@ public class ValidationReportBuilder {
      * Display the matrix inputs used in the study design.
      * @param params input parameters to the power calculation
      */
-    private void addMatrixInputs(Section section,
-            GLMMPowerParameters params) {
+    private void addMatrixInputs(BufferedWriter outFile,
+            GLMMPowerParameters params) 
+    throws IOException {
+        outFile.write("\\subsubsection{Matrix Inputs}\n\n");
+        
         RealMatrix xEssence = params.getDesignEssence();
         RealMatrix beta = params.getBeta().getCombinedMatrix();
         RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
@@ -355,114 +366,81 @@ public class ValidationReportBuilder {
         RealMatrix sigmaYG = params.getSigmaOutcomeGaussianRandom();
         RealMatrix sigmaY = params.getSigmaOutcome();
 
-        PdfPTable table = new PdfPTable(2);
-
         if (xEssence != null) {
-            writeMatrix(section, "Design essence", xEssence);
+            writeMatrix(outFile, "\\text{Es}\\left(\\mathbf{X}\\right)", xEssence);
         }
         if (beta != null) {
-            writeMatrix(section, "Beta", beta);
+            writeMatrix(outFile, "\\mathbf{B}", beta);
         }
         if (C != null) {
-            writeMatrix(section, "Between participant contrast", C);
+            writeMatrix(outFile, "\\mathbf{C}", C);
         }
         if (U != null) {
-            writeMatrix(section, "Within participant contrast", U);
+            writeMatrix(outFile, "\\mathbf{U}", U);
         }
         if (thetaNull != null) {
-            writeMatrix(section, "Null hypothesis", thetaNull);
+            writeMatrix(outFile, "\\mathbf{\\Theta}_0", thetaNull);
         }
         if (sigmaE != null) {
-            writeMatrix(section, "Covariance of errors", sigmaE);
+            writeMatrix(outFile, "\\mathbf{\\Sigma}_E", sigmaE);
         }
         if (sigmaY != null) {
-            writeMatrix(section, "Covariance of outcomes", sigmaY);
+            writeMatrix(outFile, "\\mathbf{\\Sigma}_Y", sigmaY);
         }
         if (sigmaG != null) {
-            writeMatrix(section, "Covariance of Gaussian covariate", sigmaG);
+            writeMatrix(outFile, "\\mathbf{\\Sigma}_g", sigmaG);
         }
         if (sigmaYG != null) {
-            writeMatrix(section, "Covariance of Gaussian covariate and outcomes", sigmaYG);
+            writeMatrix(outFile, "\\mathbf{\\Sigma}_Yg", sigmaYG);
         }
     }   
 
-    private void writeMatrix(Section section, String name,
-            RealMatrix matrix) {
+    /**
+     * Write a matrix in latex
+     * @param section
+     * @param name
+     * @param matrix
+     */
+    private void writeMatrix(BufferedWriter outFile, String name,
+            RealMatrix matrix) throws IOException {
+               
+        outFile.write("\\begin{eqnarray*}\n");
         // add name label
-        section.add(createParagraph(name, UNDERLINE_FONT));
-        // add matrix
-        PdfPTable matrixTable = new PdfPTable(matrix.getColumnDimension());
+        outFile.write(name + " & = & \\begin{bmatrix}");
         for(int r = 0; r < matrix.getRowDimension(); r++) {
+            boolean first = true;
             for(int c = 0; c < matrix.getColumnDimension(); c++) {
-                matrixTable.addCell(ShortNumber.format(matrix.getEntry(r, c)));
+                if (!first) {
+                    outFile.write(" & ");
+                }
+                outFile.write(ShortNumber.format(matrix.getEntry(r, c)));
+                if (first) {
+                    first = false;
+                }
             }
+            outFile.write("\\protect\\\\\n");
         }
-        section.add(matrixTable);
-    }
-
-    /**
-     * Create a new chapter with the specified label and number
-     * @param label the chapter name/label
-     * @param number the chapter number
-     * @return Chapter object
-     */
-    private Chapter createChapter(String label, int number) {
-        Paragraph paragraph = new Paragraph(label, 
-                SECTION_FONT);
-        paragraph.setSpacingAfter(PARAGRAPH_SPACING);
-        Chapter chapter = new Chapter(paragraph, number);
-        chapter.setTriggerNewPage(false);
-        return chapter;
-    }
-
-    /**
-     * Create a new section for the specified chapter
-     * @param label the chapter name/label
-     * @param number the chapter number
-     * @return Chapter object
-     */
-    private Section createSection(Chapter chapter, String label) {
-        Paragraph paragraph = new Paragraph(label, SUBSECTION_FONT);
-        paragraph.setSpacingAfter(PARAGRAPH_SPACING);
-        Section section = chapter.addSection(paragraph);
-        return section;
-    }
-
-    /**
-     * Create an empty paragraph with appropriate spacing.
-     * @param contents optional contents for the paragraph
-     * @param font optional font for the paragraph
-     * @return Paragraph object
-     */
-    private Paragraph createParagraph(String contents, Font font) {
-        Paragraph paragraph = new Paragraph();
-        if (font != null) {
-            paragraph.setFont(font);
-        }
-        paragraph.setSpacingAfter(PARAGRAPH_SPACING);
-        if (contents != null) {
-            paragraph.add(contents);
-        }
-        return paragraph;
+        outFile.write("\\end{bmatrix}\n");
+        outFile.write("\\end{eqnarray*}\n");
     }
 
     /**
      * Add a section with timing results.
      * @param timer timer object from the power check
      */
-    private void addTimingResults(Section section,
-            PowerChecker.Timer timer) {
-        PdfPTable table = new PdfPTable(2);
-        // t.setBorderColor(BaseColor.GRAY);
-        // t.setPadding(4);
-        // t.setSpacing(4);
-        // t.setBorderWidth(1);
-        table.addCell("Calculation time (seconds)");
-        table.addCell(Double.toString((double) timer.calculationMilliseconds / 1000.0));
-        table.addCell("Simulation time (seconds)");
-        table.addCell(Double.toString((double) timer.simulationMilliseconds / 1000.0));
-
-        section.add(table);
+    private void addTimingResults(BufferedWriter outFile,
+            PowerChecker.Timer timer) 
+    throws IOException {
+        outFile.write("\\begin{tabular}{|l|l|}\n");
+        outFile.write("\\hline\n");
+        outFile.write("Calculation time (seconds) & "+ 
+                Double.toString((double) timer.calculationMilliseconds / 1000.0)+ 
+                "\\tabularnewline\n\\hline\n");
+        outFile.write("Simulation time (seconds) & "+ 
+                Double.toString((double) timer.simulationMilliseconds / 1000.0)+ 
+                "\\tabularnewline\n");
+        outFile.write("\\hline\n");
+        outFile.write("\\end{tabular}\n");
     }
 
     /**
@@ -470,19 +448,27 @@ public class ValidationReportBuilder {
      * @param section document section object
      * @param checker power checker with summary information
      */
-    private void addSummaryStatistics(Section section,
-            PowerChecker checker) {
-
-        PdfPTable table = new PdfPTable(2);
-        table.addCell("Max deviation from SAS");
-        table.addCell(LongNumber.format(checker.getMaxSasDeviation()));
-        table.addCell("Max deviation from lower CI limit");
-        table.addCell(LongNumber.format(checker.getMaxSaslowerCIDeviation()));
-        table.addCell("Max deviation from upper CI limit");
-        table.addCell(LongNumber.format(checker.getMaxSasUpperCIDeviation()));
-        table.addCell("Max deviation from simulation");
-        table.addCell(LongNumber.format(checker.getMaxSimDeviation()));
-        section.add(table);        
+    private void addSummaryStatistics(BufferedWriter outFile,
+            PowerChecker checker) 
+    throws IOException{
+        outFile.write("\\begin{tabular}{|l|l|}\n");
+        outFile.write("\\hline\n");
+        outFile.write("Max deviation from SAS & "+ 
+                LongNumber.format(checker.getMaxSasDeviation())+
+                "\\tabularnewline\n\\hline\n\n");
+        if (checker.getMaxSaslowerCIDeviation() > -1 &&
+                checker.getMaxSasUpperCIDeviation() > -1) {
+            outFile.write("Max deviation from lower CI limit & "+ 
+                    LongNumber.format(checker.getMaxSaslowerCIDeviation())+
+                    "\\tabularnewline\n\\hline\n\n");
+            outFile.write("Max deviation from upper CI limit & "+ 
+                    LongNumber.format(checker.getMaxSasUpperCIDeviation())+
+                    "\\tabularnewline\n\\hline\n\n");
+        }
+        outFile.write("Max deviation from simulation & "+ 
+                LongNumber.format(checker.getMaxSimDeviation())+
+                "\\tabularnewline\n\\hline\n\n");
+        outFile.write("\\end{tabular}\n");     
     }
 
     /**
@@ -491,116 +477,108 @@ public class ValidationReportBuilder {
      * 
      * @param results result list from the power check
      */
-    private void addResultsTable(Section section,
-            PowerChecker checker) {
+    private void addResultsTable(BufferedWriter outFile,
+            PowerChecker checker) throws IOException {
         List<PowerChecker.Result> checkerResults = checker.getResults();
         if (checkerResults != null) {
-            PdfPTable table = null;
             boolean hasCI = (checkerResults.size() > 0 && 
                     checkerResults.get(0).calculatedPower.getConfidenceInterval() != null);
+            outFile.write("\\scriptsize\n");
             if (hasCI) {
-                table = new PdfPTable(12);
+                outFile.write("\\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}\n");
             } else {
-                table = new PdfPTable(10);
+                outFile.write("\\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}\n");
             }
-            table.setWidthPercentage(100);
-            table.addCell(createParagraph("Power", BOLD_FONT));
+            outFile.write("\\hline\n");    
+            outFile.write("Power & ");
             if (hasCI) {
-                table.addCell(createParagraph("CI", BOLD_FONT));
+                outFile.write("CI & ");
             }
-            table.addCell(createParagraph("SAS Power (deviation)", BOLD_FONT));
+            outFile.write("SAS Power (deviation) & ");
             if (hasCI) {
-                table.addCell(createParagraph("SAS CI (deviation)", BOLD_FONT));
+                outFile.write("SAS CI (deviation) & ");
             }
-            table.addCell(createParagraph("Sim Power (deviation)", BOLD_FONT));
-            table.addCell(createParagraph("Test", BOLD_FONT));
-            table.addCell(createParagraph("Sigma Scale", BOLD_FONT));
-            table.addCell(createParagraph("Beta Scale", BOLD_FONT));
-            table.addCell(createParagraph("Total N", BOLD_FONT));
-            table.addCell(createParagraph("Alpha", BOLD_FONT));
-            table.addCell(createParagraph("Method", BOLD_FONT));
-            table.addCell(createParagraph("Quantile", BOLD_FONT));
+            outFile.write("Sim Power (deviation) & ");
+            outFile.write("Test & ");
+            outFile.write("Sigma Scale & ");
+            outFile.write("Beta Scale & ");
+            outFile.write("Total N & ");
+            outFile.write("Alpha & ");
+            outFile.write("Method & ");
+            outFile.write("Quantile");
+            outFile.write("\\\\ \\hline\n");
+             
 
             for(Result result: checkerResults)
             {
                 // add calculated power
-                table.addCell(new Paragraph(
-                        Number.format(result.calculatedPower.getActualPower()),
-                        TABLE_FONT));
+                outFile.write(Number.format(result.calculatedPower.getActualPower()) + " & ");
                 // if applicable, add confidence interval
                 ConfidenceInterval ci = result.calculatedPower.getConfidenceInterval();
                 if (ci != null) {
-                    table.addCell(new Paragraph("(" + 
-                            Number.format(ci.getLowerLimit()) + ", " + 
-                            Number.format(ci.getUpperLimit()) + ")", TABLE_FONT));
-                }               
-                // add the SAS power and deviation
-                Paragraph sasCell = new Paragraph();
-                sasCell.setFont(TABLE_FONT);
-                sasCell.add(Number.format(result.sasPower));
-                sasCell.add(Chunk.NEWLINE);
-                Chunk sasDevChunk = new Chunk("(" + Number.format(result.sasDeviation) + ")");
+                    outFile.write("(" + Number.format(ci.getLowerLimit()) + ", " + 
+                            Number.format(ci.getUpperLimit()) + ")" + " & ");
+                }     
+                // add SAS power and deviation 
+                outFile.write(Number.format(result.sasPower) + " (");
                 if (result.sasDeviation > sasTolerance) {
-                    sasDevChunk.setFont(RED_FONT);
+                    outFile.write("\\textcolor{red}{");
                 }
-                sasCell.add(sasDevChunk);
-                table.addCell(sasCell);
+                outFile.write(Number.format(result.sasDeviation));
+                if (result.sasDeviation > sasTolerance) {
+                    outFile.write("}) & ");
+                } else {
+                    outFile.write(") & ");
+                }
                 // if applicable, add SAS CI and deviation
                 if (ci != null)
                 {
-                    Paragraph sasCICell = new Paragraph();
-                    sasCICell.setFont(TABLE_FONT);
-                    sasCICell.add(
-                            "(" + Number.format(result.sasCILower) + ", " + 
-                                    Number.format(result.sasCIUpper) + ")");
-                    sasCICell.add(Chunk.NEWLINE);
-                    sasCICell.add("{");
+                    outFile.write("(" + Number.format(result.sasCILower) + ", " + 
+                                    Number.format(result.sasCIUpper) + ") ");
+                    outFile.write("\\{");
                     // lower ci deviation
-                    Chunk sasCILowerDevChunk = new Chunk(
-                            Number.format(result.sasCILowerDeviation));
                     if (result.sasCILowerDeviation > sasTolerance) {
-                        sasCILowerDevChunk.setFont(RED_FONT);
+                        outFile.write("\\textcolor{red}{");
                     }
-                    sasCICell.add(sasCILowerDevChunk);
+                    outFile.write(Number.format(result.sasCILowerDeviation) + ", ");
+                    if (result.sasCILowerDeviation > sasTolerance) {
+                        outFile.write("}");
+                    }
                     // upper ci deviation
-                    Chunk sasCIUpperDevChunk = new Chunk(
-                            Number.format(result.sasCIUpperDeviation));
                     if (result.sasCIUpperDeviation > sasTolerance) {
-                        sasCIUpperDevChunk.setFont(RED_FONT);
+                        outFile.write("\\textcolor{red}{");
                     }
-                    sasCICell.add(sasCIUpperDevChunk);
-                    sasCICell.add("}");
+                    outFile.write(Number.format(result.sasCIUpperDeviation));
+                    if (result.sasCIUpperDeviation > sasTolerance) {
+                        outFile.write("\\}");
+                    }
+                    outFile.write("\\} & ");
                 }
-
                 // add simulation power
-                Paragraph simCell = new Paragraph();
-                simCell.setFont(TABLE_FONT);
-                simCell.add(Number.format(result.simulatedPower));
-                simCell.add(Chunk.NEWLINE);
-                Chunk simDevChunk = new Chunk("(" + Number.format(result.simulationDeviation) + ")");
+                outFile.write((Double.isNaN(result.simulatedPower) ? 
+                        "N/A" :  Number.format(result.simulatedPower)) + 
+                        " (");
                 if (result.simulationDeviation > simTolerance) {
-                    simDevChunk.setFont(RED_FONT);
+                    outFile.write("\\textcolor{red}{");
                 }
-                simCell.add(simDevChunk);
-                table.addCell(simCell);
+                outFile.write((Double.isNaN(result.simulatedPower) ? 
+                        "N/A" : Number.format(result.simulationDeviation)));
+                if (result.simulationDeviation > simTolerance) {
+                    outFile.write("}) & ");
+                } else {
+                    outFile.write(") & ");
+                }
 
-                // add test
-                table.addCell(new Paragraph(
-                        result.calculatedPower.getTest().toString(), TABLE_FONT));
-                table.addCell(new Paragraph(
-                        Number.format(result.calculatedPower.getSigmaScale()), TABLE_FONT));
-                table.addCell(new Paragraph(
-                        Number.format(result.calculatedPower.getBetaScale()), TABLE_FONT));
-                table.addCell(new Paragraph(
-                        Integer.toString(result.calculatedPower.getTotalSampleSize()), TABLE_FONT));
-                table.addCell(new Paragraph(
-                        Number.format(result.calculatedPower.getAlpha()), TABLE_FONT));
-                table.addCell(new Paragraph(
-                        powerMethodToString(result.calculatedPower.getPowerMethod()), TABLE_FONT));
-                table.addCell(new Paragraph(
-                        Double.toString(result.calculatedPower.getQuantile()), TABLE_FONT));
+                outFile.write(testToString(result.calculatedPower.getTest()) + " & ");
+                outFile.write(Number.format(result.calculatedPower.getSigmaScale()) + " & ");
+                outFile.write(Number.format(result.calculatedPower.getBetaScale()) + " & ");
+                outFile.write(Integer.toString(result.calculatedPower.getTotalSampleSize()) + " & ");
+                outFile.write(Number.format(result.calculatedPower.getAlpha()) + " & ");
+                outFile.write(powerMethodToString(result.calculatedPower.getPowerMethod()) + " & ");
+                outFile.write(Double.toString(result.calculatedPower.getQuantile()) + "\\\\ \\hline\n");
             }
-            section.add(table);
+  
+            outFile.write("\\end{longtabu}\n");    
         }
 
     }
@@ -613,7 +591,7 @@ public class ValidationReportBuilder {
     {
         createValidationReportAsHTML(checker, title, filename, null);
     }
-    
+
     /**
      * Write the results to an HTML file, optionally including a plot image
      * @param filename
@@ -625,7 +603,7 @@ public class ValidationReportBuilder {
         PowerChecker.Timer timer = checker.getTiming();
         // output the results
         StringBuffer buffer = new StringBuffer();
-        
+
         buffer.append("<html><head></head><body><h1>" + title + "</h1>");
         buffer.append("<h3>Timing Results</h3>");
         buffer.append("<table border='1' cellpadding='5'>");
@@ -633,7 +611,7 @@ public class ValidationReportBuilder {
                 + "</td></tr>");
         buffer.append("<tr><td>Simulation time</td><td>" + ((double) timer.simulationMilliseconds / 1000)
                 + "</td></tr></table><p></p>");
-        
+
         buffer.append("<h3>Max Absolute Deviation Summary</h3>");
         buffer.append("<table border='1' cellpadding='5'>");
         buffer.append("<tr><td>Max deviation from SAS</td><td>"+
@@ -648,7 +626,7 @@ public class ValidationReportBuilder {
         buffer.append("<tr><td>Max deviation from simulation</td><td>"+
                 LongNumber.format(checker.getMaxSimDeviation())+"</td></tr>");
         buffer.append("</table><p></p>");
-        
+
         buffer.append("<h3>Full Results</h3>");
         buffer.append("<table border='1' cellpadding='5'><tr><th>Calc Power</th>");
         if (checkerResults.size() > 0 && checkerResults.get(0).calculatedPower.getConfidenceInterval() != null)
@@ -715,14 +693,14 @@ public class ValidationReportBuilder {
                     powerMethodToString(result.calculatedPower.getPowerMethod()) + "</td><td>" + 
                     result.calculatedPower.getQuantile() + "</td></tr>");
         }
-        
+
         buffer.append("</table><p>");
-        
+
         if (imageFilename != null)
         {
             buffer.append("<p><img src='" + imageFilename + "' /></p>");
         }
-        
+
         buffer.append("</body></html>");
 
         FileWriter writer = null;
@@ -739,9 +717,9 @@ public class ValidationReportBuilder {
         {
             if (writer != null) try {writer.close(); } catch (Exception e) {};
         }
-        
+
     }
-    
+
     /**
      * Write the current result set to stdout.
      */
@@ -792,7 +770,7 @@ public class ValidationReportBuilder {
                     LongNumber.format(checker.getMaxSasUpperCIDeviation()));
         }
     }
-    
+
     /**
      * Pretty display of power method.
      * @param method power computation method
@@ -812,6 +790,41 @@ public class ValidationReportBuilder {
         case QUANTILE_POWER:
             value = "quantile";
             break;          
+        }
+        return value;
+    }
+    
+    /**
+     * Pretty display of statistical test.
+     * @param method power computation method
+     * @return display string
+     */
+    private String testToString(GLMMTestFactory.Test test)
+    {
+        String value = null;
+        switch (test)
+        {
+        case HOTELLING_LAWLEY_TRACE:
+            value = "HLT";
+            break;
+        case WILKS_LAMBDA:
+            value = "WL";
+            break;
+        case PILLAI_BARTLETT_TRACE:
+            value = "PBT";
+            break;          
+        case UNIREP:
+            value = "UNIREP";
+            break;   
+        case UNIREP_GEISSER_GREENHOUSE:
+            value = "UNIREP-GG";
+            break;   
+        case UNIREP_HUYNH_FELDT:
+            value = "UNIREP-HF";
+            break;   
+        case UNIREP_BOX:
+            value = "UNIREP-BOX";
+            break;   
         }
         return value;
     }

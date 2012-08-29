@@ -29,6 +29,7 @@ import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 import junit.framework.TestCase;
 
 /**
@@ -54,9 +55,12 @@ public class TestConditionalTwoSampleTTest extends TestCase
     private static final double[] SIGMA_SCALE_LIST = {0.32, 1.00, 2.05};
     private static final int[] SAMPLE_SIZE_LIST = {10};
 
-	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalTwoSampleTTest.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalTwoSampleTTest.html";
-	private static final String TITLE = "GLMM(F) Example 1. Power for a two sample t-test for several error variance values and mean differences";
+	private static final String DATA_FILE =  "data" + File.separator + 
+	        "TestConditionalTwoSampleTTest.xml";
+	private static final String OUTPUT_FILE = "text" + File.separator + 
+	        "results" + File.separator + "TestConditionalTwoSampleTTest.tex";
+	private static final String TITLE = "GLMM(F) Example 1. Power for a two " +
+			"sample t-test for several error variance values and mean differences";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -111,10 +115,21 @@ public class TestConditionalTwoSampleTTest extends TestCase
         double [][] between = {{1,-1}};
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
 
-        checker.checkPower(params);
-		checker.outputResults(TITLE);
-		checker.outputResults(TITLE, OUTPUT_FILE);
-		assertTrue(checker.isSASDeviationBelowTolerance());
-		checker.reset();
+        try {
+            checker.checkPower(params);
+            checker.outputResults(TITLE);
+            checker.outputResults(TITLE, OUTPUT_FILE);
+
+            // write the pdf report
+
+            ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+            reportBuilder.createValidationReport(OUTPUT_FILE, 
+                    TITLE, null, "2 sample t-test", params, checker);
+
+            assertTrue(checker.isSASDeviationBelowTolerance());
+            checker.reset();
+        } catch (Exception e) {
+
+        }
     }
 }

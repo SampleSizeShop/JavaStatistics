@@ -33,7 +33,7 @@ import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import edu.cudenver.bios.power.test.PDFUtils;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 import edu.cudenver.bios.power.test.PowerChecker;
 
 /**
@@ -48,15 +48,15 @@ public class TestConfidenceIntervals extends TestCase
 	private static final String UNIVARIATE_DATA_FILE = "data" + 
 	File.separator + "TestUnivariateConfidenceIntervals.xml";
 	private static final String UNIVARIATE_OUTPUT_FILE = "text" + File.separator + "results" + 
-	File.separator + "TestUnivariateConfidenceIntervals.pdf";
+	File.separator + "TestUnivariateConfidenceIntervals.tex";
 	private static final String MULTIVARIATE_BETA_KNOWN_DATA_FILE = "data" + 
 	File.separator + "TestMultivariateConfidenceIntervalsBetaKnown.xml";
 	private static final String MULTIVARIATE_BETA_KNOWN_OUTPUT_FILE = "text" + File.separator + "results" + 
-	File.separator + "TestMultivariateConfidenceIntervalsBetaKnown.pdf";
+	File.separator + "TestMultivariateConfidenceIntervalsBetaKnown.tex";
 	private static final String MULTIVARIATE_BETA_UNKNOWN_DATA_FILE = "data" + 
 	File.separator + "TestMultivariateConfidenceIntervalsBetaUnknown.xml";
 	private static final String MULTIVARIATE_BETA_UNKNOWN_OUTPUT_FILE = "text" + File.separator + "results" + 
-	File.separator + "TestMultivariateConfidenceIntervalsBetaUnknown.pdf";
+	File.separator + "TestMultivariateConfidenceIntervalsBetaUnknown.tex";
 
 	/**
 	 * Compare CI results between JavaStatistics 
@@ -138,7 +138,8 @@ public class TestConfidenceIntervals extends TestCase
 			checker.outputResults(title);
 			
 			// write the pdf report
-			PDFUtils.createValidationReport(UNIVARIATE_OUTPUT_FILE, 
+			ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+			reportBuilder.createValidationReport(UNIVARIATE_OUTPUT_FILE, 
 			        "Power Confidence Intervals in a Univariate Design", null, 
 			        "univariate stuff", params, checker);
 
