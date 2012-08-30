@@ -63,12 +63,12 @@ public class TestConditionalTwoSampleTTest extends TestCase
 			"sample t-test for several error variance values and mean differences";
 	private static final String AUTHOR = "Sarah Kreidler";
 	private static final String STUDY_DESIGN_DESCRIPTION  = 
-	        "Example 1 calculates power for a balanced, two sample design with" +
-	        "a single response variable. The primary hypothesis of interest tests for a difference" +
-	        " in the mean response between the groups.  The design would be analyzed using a " +
-	        "two-sample t-test.  The example is based on the " +
-	        "results in \"Increasing scientific power with  statistical power\", by K.E. Muller " +
-	        "and V.A. Benignus, Neurotoxicology and Teratology, vol 14, May-June, 1992.";
+	        "The study design for Example 1 is a balanced, two-group design.  We calculate " +
+	        "power for a two-sample t-test comparing the mean responses between the " +
+	        "two groups.  The example is based on the " +
+	        "results in \n\n\\hangindent2em\n\\hangafter=1\n" +
+	        "Muller, K. E., \\& Benignus, V. A. (1992). \\emph{Neurotoxicology and " +
+	        "teratology}, \\emph{14}(3), 211-219.";
 	
 	private PowerChecker checker;
 	
