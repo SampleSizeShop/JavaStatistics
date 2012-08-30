@@ -122,7 +122,7 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
 	{
 		try
 		{
-			checker = new PowerChecker(DATA_FILE, false);
+			checker = new PowerChecker(DATA_FILE, true);
 		}
 		catch (Exception e)
 		{
