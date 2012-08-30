@@ -22,17 +22,16 @@ package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.MatrixUtils;
 
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
 import edu.cudenver.bios.power.test.ValidationReportBuilder;
-import junit.framework.TestCase;
 
 /**
  * Unit test for fixed multvariate design with comparison against
@@ -51,9 +50,9 @@ File.separator + "TestConditionalMultivariateInteraction.xml";
 	        "GLMM(F) Example 5. Power for a test of interaction in a multivariate model";
     private static final String AUTHOR = "Sarah Kreidler";
     private static final String STUDY_DESIGN_DESCRIPTION  = 
-            "Example 5 calculates power for a balanced four-sample design" +
-            "with three repeated measures over time.  The primary hypothesis of interest " +
-            "is a test of the group by time interaction.  The unstructured covariance model " +
+            "The study design for Example 5 is a balanced four-sample design" +
+            "with three repeated measures over time.  We calculate power for a " +
+            "test of the group by time interaction.  The unstructured covariance model " +
             "is most appropriate for the design.  The example demonstrates the difference in " +
             "power depending on the choice of statistical test when assumptions of sphericity " +
             "are unlikely to hold.";
