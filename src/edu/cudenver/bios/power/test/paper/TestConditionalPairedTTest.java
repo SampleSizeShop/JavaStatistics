@@ -53,10 +53,10 @@ public class TestConditionalPairedTTest extends TestCase
 	private static final String TITLE = "GLMM(F) Example 2. Power results for a Paired T-test";
     private static final String AUTHOR = "Sarah Kreidler";
 	private static final String STUDY_DESIGN_DESCRIPTION  = 
-	        "Example 2 calculates power for a one sample design with " +
-	        "a pre and post measurement for each participant.  The primary hypothesis " +
-	        "of interest tests for a difference between the mean response at " +
-	        "the pre and post measurement.  The design would be analyzed using a paired t-test.";
+	        "The study design in Example 2 is a one sample design with " +
+	        "a pre and post measurement for each participant.  We calculate power for " +
+	        "a paired t-test comparing the mean responses at the pre and post measurements.  " +
+	        "We express the paired t-test as a general linear hypothesis in a multivariate linear model.";
 	private PowerChecker checker;
 	
 	public void setUp()
