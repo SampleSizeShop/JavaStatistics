@@ -55,10 +55,14 @@ public class TestConditionalUnivariateWithConfidenceLimits extends TestCase
 	private static final String TITLE = "GLMM(F) Example 4. Power and confidence limits for a univariate model";
 	   private static final String AUTHOR = "Sarah Kreidler";
 	    private static final String STUDY_DESIGN_DESCRIPTION  = 
-	            "Example 4 demonstrates confidence intervals for power in a balanced " +
-	            "two group design.  The primary hypothesis of interest tests for a difference " +
-	            "in the mean response between the groups.  The example is based on Figure 1 " +
-	            "from  Taylor and Muller, 1995, Amer Statistician, 49, p43-47.";
+	            "The study design for Example 4 is a balanced two group design. " +
+	            "We calculate power for a two-sample t-test comparing the mean response " +
+	            "between the groups.  We calculate confidence limits for the power values. " +
+	            "The example is based on Figure 1 " +
+	            "from\n\n\\hangindent2em\n\\hangafter=1\n Taylor, D. J., \\& Muller, K. E. (1995). " +
+	            "Computing Confidence Bounds for Power and Sample Size of the " +
+	            "General Linear Univariate Model. \\emph{The American Statistician}, " +
+	            "\\emph{49}(1), 43-47.";
 	private PowerChecker checker;
 	
 	public void setUp()
