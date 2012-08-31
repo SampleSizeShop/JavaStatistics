@@ -33,6 +33,7 @@ import edu.cudenver.bios.matrix.OrthogonalPolynomials;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 import edu.cudenver.bios.utils.Factor;
 import junit.framework.TestCase;
 
@@ -46,8 +47,16 @@ import junit.framework.TestCase;
 public class TestConditionalOrthogonalPolynomial1Factor extends TestCase
 {
 	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalOrthogonalPolynomial1Factor.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalOrthogonalPolynomial1Factor.html";
-	private static final String TITLE = "GLMM(F) Example 7. Power for a time by treatment interaction using orthogonal polynomial contrast for time";
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + 
+	File.separator + "TestConditionalOrthogonalPolynomial1Factor.tex";
+	private static final String TITLE = "GLMM(F) Example 7. Power for a time by " +
+			"treatment interaction using orthogonal polynomial contrast for time";
+    private static final String AUTHOR = "Sarah Kreidler";
+    private static final String STUDY_DESIGN_DESCRIPTION  = 
+            "The study design for Example 7 is a balanced two sample design with " +
+            "five repeated measures over time. We calculate power for a test of " +
+            "the time trend by treatment interaction.  The example demonstrates the " +
+            "use of an orthogonal polynomial contrast for the effect of time.";
 	private PowerChecker checker;
 	private boolean verbose = false;
 	
@@ -128,8 +137,18 @@ public class TestConditionalOrthogonalPolynomial1Factor extends TestCase
         params.setWithinSubjectContrast(U);
         
         checker.checkPower(params);
-		checker.outputResults(TITLE);
-		checker.outputResults(TITLE, OUTPUT_FILE);
+
+        // output the results
+        try {
+            ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+            reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+            reportBuilder.createValidationReportAsLaTex(
+                    OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
+                    params, checker);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		checker.reset();
     }
