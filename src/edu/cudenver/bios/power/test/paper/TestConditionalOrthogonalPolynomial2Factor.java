@@ -36,6 +36,7 @@ import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 import edu.cudenver.bios.utils.Factor;
 import junit.framework.TestCase;
 
@@ -48,15 +49,39 @@ import junit.framework.TestCase;
  */
 public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 {
-	private static final String MB_DATA_FILE =  "data" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMB.xml";
-	private static final String MEST_DATA_FILE =  "data" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMEST.xml";
+	private static final String MB_DATA_FILE =  "data" + File.separator 
+	        + "TestConditionalOrthogonalPolynomial2FactorMB.xml";
+	private static final String MEST_DATA_FILE =  "data" + File.separator 
+	        + "TestConditionalOrthogonalPolynomial2FactorMEST.xml";
 
-	private static final String MB_OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMB.html";
-	private static final String MEST_OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMEST.html";
+	private static final String MB_OUTPUT_FILE = "text" + File.separator + 
+	        "results" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMB.tex";
+	private static final String MEST_OUTPUT_FILE = "text" + File.separator + 
+	        "results" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMEST.tex";
 
-	private static final String TITLE_MB = "GLMM(F) Example 9 MB: Power for a multivariate model with two within subject factors, using the Muller and Barton approximation";
-	private static final String TITLE_MEST = "GLMM(F) Example 9 MEST: Power for a multivariate model with two within subject factors, using the Muller, Edwards, Simpson, Taylor approximation";
-
+    private static final String AUTHOR = "Sarah Kreidler";
+    private static final String STUDY_DESIGN_DESCRIPTION = 
+            "The study design in Example 9 is a one sample design with two within participant " +
+            "factors.  We calculate power for a test of the trend by trend interaction " +
+            "of the two within participant factors.  The design is based on an example from \n\n" +
+            "\\hangindent2em\n\\hangafter=1\nCoffey, C. S., \\& Muller, K. E. (2003). " +
+            "Properties of internal pilots with the univariate approach to repeated measures. " +
+            "\\emph{Statistics in Medicine}, \\emph{22}(15), 2469-2485.\n\n";
+	
+	private static final String TITLE_MB = "GLMM(F) Example 9 MB: Power for a multivariate model" +
+			" with two within subject factors, using the Muller and Barton approximation";
+	private static final String DESCRIPTION_MB = "The power calculations use the approximation " +
+			"method described in \n\n\\hangindent2em\n\\hangafter=1\n" +
+			"Muller, K. E., \\& Barton, C. N. (1989). Approximate Power for " +
+			"Repeated-Measures ANOVA Lacking Sphericity. " +
+			"\\emph{Journal of the American Statistical Association}, \\emph{84}(406), 549-555.";
+	private static final String TITLE_MEST = "GLMM(F) Example 9 MEST: Power for a multivariate " +
+			"model with two within subject factors, using the Muller, Edwards, Simpson, Taylor approximation";
+    private static final String DESCRIPTION_MEST = "The power calculations use the approximation " +
+            "method described in \n\n\\hangindent2em\n\\hangafter=1\n" +
+            "Muller, K. E., Edwards, L. J., Simpson, S. L., \\& Taylor, D. J. (2007). " +
+            "Statistical tests with accurate size and power for balanced linear mixed models. " +
+            "\\emph{Statistics in Medicine}, \\emph{26}(19), 3639-3660.";
 	private boolean verbose = false;
 	// groups for factors A,B, and C
 	double[] dataA = {1,2,4};
@@ -117,7 +142,9 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		params.setUnivariateEpsilonMethod(Test.UNIREP_HUYNH_FELDT, 
 				UnivariateEpsilonApproximation.MULLER_BARTON_APPROX);
 
-		checkPower(checker, TITLE_MB, MB_OUTPUT_FILE, params);
+		checkPower(checker, TITLE_MB, 
+		        STUDY_DESIGN_DESCRIPTION + DESCRIPTION_MB, 
+		        MB_OUTPUT_FILE, params);
 	}
 	
 	/**
@@ -156,7 +183,9 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		params.setUnivariateEpsilonMethod(Test.UNIREP_HUYNH_FELDT, 
 				UnivariateEpsilonApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
 
-		checkPower(checker, TITLE_MEST, MEST_OUTPUT_FILE, params);
+		checkPower(checker, TITLE_MEST, 
+		        STUDY_DESIGN_DESCRIPTION + DESCRIPTION_MEST,
+		        MEST_OUTPUT_FILE, params);
 	}
 
 	/**
@@ -165,7 +194,9 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 	 * @param outputFilename
 	 * @param params
 	 */
-	private void checkPower(PowerChecker checker, String title, String outputFilename, 
+	private void checkPower(PowerChecker checker, String title, 
+	        String description,
+	        String outputFilename, 
 			GLMMPowerParameters params)
 	{
 		/* 
@@ -217,9 +248,18 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 			}
 
 		}
-		// output and test the results
-		checker.outputResults(title);
-		checker.outputResults(title, outputFilename);
+
+        // output the results
+        try {
+            ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+            reportBuilder.createValidationReportAsStdout(checker, title, false);
+            reportBuilder.createValidationReportAsLaTex(
+                    outputFilename, title, AUTHOR, description, 
+                    params, checker);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		checker.reset();
 	}
