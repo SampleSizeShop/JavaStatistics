@@ -56,11 +56,17 @@ public class ValidationReportBuilder {
     private static final String SUBSECTION_RESULTS = "Full Validation Results";
     private static final String TEXT_INTRO1 = "The following report contains validation results " +
             "for the JavaStatistics library, a component of the GLIMMPSE software system.  For " +
-            "more information about GLIMMPSE and related publications, please visit ";
+            "more information about GLIMMPSE and related publications, please visit\n\n";
     private static final String TEXT_INTRO2 = "The automated validation tests shown below " +
-            "compare power values produced by the JavaStatistics library against published results " +
-            "and simulation.  Sources for published values include POWERLIB (Johnson \\emph{et al.} 2007) and " +
-            "a SAS IML implementations of the methods described by Glueck and Muller (2003).";
+            "compare power values produced by the JavaStatistics library to published results " +
+            "and also to simulation.  Sources for published values include POWERLIB (Johnson \\emph{et al.} 2007) and " +
+            "a SAS IML implementation of the methods described by Glueck and Muller (2003).\n\n" +
+    		"Validation results are listed in Section 3 of the report.  Timing results show the calculation " +
+    		"and simulation times for the overall experiment and the mean times per power calculation.  " +
+    		"Summary statistics show the maximum absolute deviation between the power value calculated " +
+    		"by the JavaStatistics library and the results obtained from SAS or via simulation.  The table in " +
+    		"Section 3.3 shows the deviation values for each individual power comparison.  Deviations larger " +
+    		"than $10^{-6}$ from SAS power values and $0.05$ for simulated power values are displayed in red.\n\n ";
     private static final String REFERENCES = "\\section*{References}\n\n" +
             "\\hangindent2em\n\\hangafter=1\n Glueck, D. H., \\& Muller, K. E. (2003). " +
             "Adjusting power for a baseline covariate in linear models. \\emph{Statistics " +
@@ -74,6 +80,7 @@ public class ValidationReportBuilder {
             "and mixed models. Hoboken, New Jersey: John Wiley and Sons.";
     private static DecimalFormat Number = new DecimalFormat("#0.0000000");
     private static DecimalFormat ShortNumber = new DecimalFormat("#0.0000");
+    private static DecimalFormat VeryShortNumber = new DecimalFormat("#0.00");
     private static DecimalFormat LongNumber = new DecimalFormat("#0.00000000");
     private static DecimalFormat ScientificNumber = new DecimalFormat("0.00E0");  
 
@@ -99,15 +106,50 @@ public class ValidationReportBuilder {
         this.simTolerance = simTolerance;
     }
 
+
     /**
      * Write the validation report to LaTex.
-     * @param document the pdf document
-     * @param timer timer object from the power check
      */
     public void createValidationReportAsLaTex(String filename,
             String title, String author, String studyDesignDescription,
             GLMMPowerParameters params,
             PowerChecker checker) 
+                    throws FileNotFoundException, IOException {
+        createValidationReportAsLaTex(filename, title, author, 
+                studyDesignDescription, params, null, checker, null);
+    }
+
+    /**
+     * Write the validation report to LaTex.
+     */
+    public void createValidationReportAsLaTex(String filename,
+            String title, String author, String studyDesignDescription,
+            GLMMPowerParameters params,
+            PowerChecker checker, String image) 
+                    throws FileNotFoundException, IOException {
+        createValidationReportAsLaTex(filename, title, author, 
+                studyDesignDescription, params, null, checker, image);
+    }
+
+    /**
+     * Write the validation report to LaTex.
+     */
+    public void createValidationReportAsLaTex(String filename,
+            String title, String author, String studyDesignDescription,
+            GLMMPowerParameters params, String matrixAltString,
+            PowerChecker checker) 
+                    throws FileNotFoundException, IOException {
+        createValidationReportAsLaTex(filename, title, author, 
+                studyDesignDescription, params, matrixAltString, checker, null);
+    }
+
+    /**
+     * Write the validation report to LaTex.
+     */
+    public void createValidationReportAsLaTex(String filename,
+            String title, String author, String studyDesignDescription,
+            GLMMPowerParameters params, String matrixAltString, 
+            PowerChecker checker, String image) 
                     throws FileNotFoundException, IOException {
         if (filename != null) {
             FileWriter fWriter = null;
@@ -117,8 +159,11 @@ public class ValidationReportBuilder {
                 outFile = new BufferedWriter(fWriter);
                 addPreamble(outFile);
                 addIntroduction(outFile, title, author);
-                addStudyDesignInfo(outFile, studyDesignDescription, params);
+                addStudyDesignInfo(outFile, studyDesignDescription, params, matrixAltString);
                 addResults(outFile, checker, (params.getSigmaGaussianRandom() != null));
+                if (image != null) {
+                    outFile.write("\n\n\\includegraphics[width=4in]{" + image + "}\n\n");
+                }
                 outFile.write(REFERENCES);
                 addClosing(outFile);
             } catch (Exception e) {
@@ -153,7 +198,6 @@ public class ValidationReportBuilder {
                 "\\usepackage{esint}\n" +
                 "\\usepackage{babel}\n" +
                 "\\usepackage{hyperref}\n" +
-                "\\usepackage[landscape]{geometry}\n" +
                 "\\usepackage{geometry}\n" +
                 "\\geometry{verbose,tmargin=1in,bmargin=1in,lmargin=0.5in,rmargin=0.5in}\n" +
                 "\\setlength{\\parskip}{\\medskipamount}\n" +
@@ -161,8 +205,11 @@ public class ValidationReportBuilder {
                 "\\PassOptionsToPackage{normalem}{ulem}\n" +
                 "\\usepackage{ulem}\n" +
                 "\\usepackage{tabularx}\n" +
+                "\\usepackage{graphicx}\n" +
+                "\\usepackage{color}\n" +
                 "\\makeatletter\n\n" +
-                "\\begin{document}\n\n");
+                "\\begin{document}\n\n" +
+                "\\setcounter{MaxMatrixCols}{100}");
     }
 
     /**
@@ -191,7 +238,7 @@ public class ValidationReportBuilder {
         outFile.write("Date: " + currentDate + "\n\n");
         // add the introduction section shared across all validation reports
         outFile.write("\\section{"+SECTION_INTRO +"}\n");
-        outFile.write(TEXT_INTRO1 + " \\href{http://samplesizeshop.com}{http://samplesizeshop.com}.\n\n" +
+        outFile.write(TEXT_INTRO1 + " \n\n\\href{http://samplesizeshop.com}{http://samplesizeshop.com}.\n\n" +
                 TEXT_INTRO2);
     }
 
@@ -203,7 +250,8 @@ public class ValidationReportBuilder {
      */
     private void addStudyDesignInfo(BufferedWriter outFile,
             String studyDesignDescription, 
-            GLMMPowerParameters params) 
+            GLMMPowerParameters params,
+            String matrixAltString) 
                     throws IOException {
 
         outFile.write("\\section{"+SECTION_DESIGN +"}\n");
@@ -211,7 +259,7 @@ public class ValidationReportBuilder {
         outFile.write("\\subsection{"+SUBSECTION_INPUTS +"}\n");
         // add the inputs
         addListInputs(outFile, params);
-        addMatrixInputs(outFile, params);   
+        addMatrixInputs(outFile, params, matrixAltString);   
     }
 
     /**
@@ -336,49 +384,57 @@ public class ValidationReportBuilder {
 
     /**
      * Display the matrix inputs used in the study design.
+     * @param outFile output LaTeX file
      * @param params input parameters to the power calculation
+     * @param matrixAltString alternative matrix latex for large or
+     * other difficult to typeset matrices 
      */
     private void addMatrixInputs(BufferedWriter outFile,
-            GLMMPowerParameters params) 
+            GLMMPowerParameters params,
+            String matrixAltString) 
                     throws IOException {
         outFile.write("\\subsubsection{Matrix Inputs}\n\n");
 
-        RealMatrix xEssence = params.getDesignEssence();
-        RealMatrix beta = params.getBeta().getCombinedMatrix();
-        RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
-        RealMatrix U = params.getWithinSubjectContrast();
-        RealMatrix thetaNull = params.getTheta();
-        RealMatrix sigmaE = params.getSigmaError();
-        RealMatrix sigmaG = params.getSigmaGaussianRandom();
-        RealMatrix sigmaYG = params.getSigmaOutcomeGaussianRandom();
-        RealMatrix sigmaY = params.getSigmaOutcome();
+        if (matrixAltString != null) {
+            outFile.write(matrixAltString + "\n\n");
+        } else {
+            RealMatrix xEssence = params.getDesignEssence();
+            RealMatrix beta = params.getBeta().getCombinedMatrix();
+            RealMatrix C = params.getBetweenSubjectContrast().getCombinedMatrix();
+            RealMatrix U = params.getWithinSubjectContrast();
+            RealMatrix thetaNull = params.getTheta();
+            RealMatrix sigmaE = params.getSigmaError();
+            RealMatrix sigmaG = params.getSigmaGaussianRandom();
+            RealMatrix sigmaYG = params.getSigmaOutcomeGaussianRandom();
+            RealMatrix sigmaY = params.getSigmaOutcome();
 
-        if (xEssence != null) {
-            writeMatrix(outFile, "\\text{Es}\\left(\\mathbf{X}\\right)", xEssence);
-        }
-        if (beta != null) {
-            writeMatrix(outFile, "\\mathbf{B}", beta);
-        }
-        if (C != null) {
-            writeMatrix(outFile, "\\mathbf{C}", C);
-        }
-        if (U != null) {
-            writeMatrix(outFile, "\\mathbf{U}", U);
-        }
-        if (thetaNull != null) {
-            writeMatrix(outFile, "\\mathbf{\\Theta}_0", thetaNull);
-        }
-        if (sigmaE != null) {
-            writeMatrix(outFile, "\\mathbf{\\Sigma}_E", sigmaE);
-        }
-        if (sigmaY != null) {
-            writeMatrix(outFile, "\\mathbf{\\Sigma}_Y", sigmaY);
-        }
-        if (sigmaG != null) {
-            writeMatrix(outFile, "\\mathbf{\\Sigma}_g", sigmaG);
-        }
-        if (sigmaYG != null) {
-            writeMatrix(outFile, "\\mathbf{\\Sigma}_Yg", sigmaYG);
+            if (xEssence != null) {
+                writeMatrix(outFile, "\\text{Es}\\left(\\mathbf{X}\\right)", xEssence);
+            }
+            if (beta != null) {
+                writeMatrix(outFile, "\\mathbf{B}", beta);
+            }
+            if (C != null) {
+                writeMatrix(outFile, "\\mathbf{C}", C);
+            }
+            if (U != null) {
+                writeMatrix(outFile, "\\mathbf{U}", U);
+            }
+            if (thetaNull != null) {
+                writeMatrix(outFile, "\\mathbf{\\Theta}_0", thetaNull);
+            }
+            if (sigmaE != null) {
+                writeMatrix(outFile, "\\mathbf{\\Sigma}_E", sigmaE);
+            }
+            if (sigmaY != null) {
+                writeMatrix(outFile, "\\mathbf{\\Sigma}_Y", sigmaY);
+            }
+            if (sigmaG != null) {
+                writeMatrix(outFile, "\\mathbf{\\Sigma}_g", sigmaG);
+            }
+            if (sigmaYG != null) {
+                writeMatrix(outFile, "\\mathbf{\\Sigma}_Yg", sigmaYG);
+            }
         }
     }   
 
@@ -391,16 +447,25 @@ public class ValidationReportBuilder {
     private void writeMatrix(BufferedWriter outFile, String name,
             RealMatrix matrix) throws IOException {
 
+        if (matrix.getColumnDimension() > 10) {
+            outFile.write("\\tiny\n");
+        }
         outFile.write("\\begin{eqnarray*}\n");
         // add name label
-        outFile.write(name + " & = & \\begin{bmatrix}");
+        outFile.write("\\underset{\\left("+ matrix.getRowDimension() + 
+                        "\\times" + matrix.getColumnDimension() + "\\right)}{" + name + 
+                        "} & = & \\begin{bmatrix}");
         for(int r = 0; r < matrix.getRowDimension(); r++) {
             boolean first = true;
             for(int c = 0; c < matrix.getColumnDimension(); c++) {
                 if (!first) {
                     outFile.write(" & ");
                 }
-                outFile.write(ShortNumber.format(matrix.getEntry(r, c)));
+                if (matrix.getColumnDimension() > 10) {
+                    outFile.write(VeryShortNumber.format(matrix.getEntry(r, c)));
+                } else {
+                    outFile.write(ShortNumber.format(matrix.getEntry(r, c)));
+                }
                 if (first) {
                     first = false;
                 }
@@ -409,6 +474,9 @@ public class ValidationReportBuilder {
         }
         outFile.write("\\end{bmatrix}\n");
         outFile.write("\\end{eqnarray*}\n");
+        if (matrix.getColumnDimension() > 10) {
+            outFile.write("\\normalsize\n");
+        }
     }
 
     /**
@@ -479,6 +547,7 @@ public class ValidationReportBuilder {
             boolean hasCI = (checkerResults.size() > 0 && 
                     checkerResults.get(0).calculatedPower.getConfidenceInterval() != null);
             if (hasCI) {
+                outFile.write("\\scriptsize");
                 if (hasCovariate) {
                     outFile.write("\\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}\n");
                 } else {
@@ -486,6 +555,7 @@ public class ValidationReportBuilder {
                 }
             } else {
                 if (hasCovariate) {
+                    outFile.write("\\scriptsize");
                     outFile.write("\\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}\n");
                 } else {
                     outFile.write("\\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}\n");
