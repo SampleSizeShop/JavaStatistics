@@ -292,6 +292,13 @@ public class GLMMPowerParameters extends PowerParameters
     	quantileList.clear();
     }
     
+    /**
+     * Clear the list of per group sample size values
+     */
+    public void clearSampleSizeList()
+    {
+        sampleSizeList.clear();
+    }
     
 	/**** Functions for setting approximation and cdf methods ****/
     
