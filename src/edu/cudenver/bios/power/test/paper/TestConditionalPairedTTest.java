@@ -54,8 +54,8 @@ public class TestConditionalPairedTTest extends TestCase
     private static final String AUTHOR = "Sarah Kreidler";
 	private static final String STUDY_DESIGN_DESCRIPTION  = 
 	        "The study design in Example 2 is a one sample design with " +
-	        "a pre and post measurement for each participant.  We calculate power for " +
-	        "a paired t-test comparing the mean responses at the pre and post measurements.  " +
+	        "a pre- and post-measurement for each participant.  We calculate power for " +
+	        "a paired t-test comparing the mean responses at the pre- and post-measurements.  " +
 	        "We express the paired t-test as a general linear hypothesis in a multivariate linear model.";
 	private PowerChecker checker;
 	

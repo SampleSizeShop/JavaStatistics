@@ -54,10 +54,10 @@ public class TestConditionalTwoSampleTTest3DPlot extends TestCase
 	private static final String IMAGE_FILE = "TestConditionalTwoSampleTTest3DPlot.png";
 	private static final String AUTHOR = "Sarah Kreidler";
 	private static final String STUDY_DESIGN_DESCRIPTION  = 
-	        "Example 3 calculates power for a balanced, two sample design with" +
-            "a single response variable. The primary hypothesis of interest tests for a difference" +
-            " in the mean response between the two groups. The design would be analyzed using a " +
-            "two-sample t-test.  The example demonstrates changes in power with different " +
+	        "The study design for Example 3 is a balanced, two sample design with" +
+            "a single response variable. We calculate power for a two-sample t-test comparing " +
+            "the mean responses between the two independent groups.  " +
+            "The example demonstrates changes in power with different " +
             "sample sizes and mean differences.";
 	private PowerChecker checker;
 	
@@ -120,7 +120,7 @@ public class TestConditionalTwoSampleTTest3DPlot extends TestCase
             reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
             reportBuilder.createValidationReportAsLaTex(
                     OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
-                    params, checker);
+                    params, checker, IMAGE_FILE);
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
