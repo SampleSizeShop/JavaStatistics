@@ -31,6 +31,7 @@
     <property name="artifacts.dir" value="${basedir}/artifacts" />
 	<property name="javadoc.dir" value="${tmp.dir}/${module.name}-${module.version}-javadoc" />
     <property name="journal.dir"  value="${tmp.dir}/GLIMMPSEresults"/>
+    <property name="validation.dir"  value="${tmp.dir}/results"/>
 	<property name="thirdparty.dir" value="${basedir}/../../thirdparty" />
 	
 	<fileset id="thirdparty.libs" dir="${thirdparty.dir}">
@@ -54,6 +55,7 @@
         <mkdir dir="${artifacts.dir}"/>
     	<mkdir dir="${javadoc.dir}" />
         <mkdir dir="${journal.dir}"/>
+        <mkdir dir="${validation.dir}"/>
     </target>
 
 	<!-- Run javadoc -->
@@ -110,13 +112,28 @@
 	<!-- Extra Distribution targets: the following targets create sourve, javadoc
 		and GLIMMPSE testing results distribution -->
 	
-	<!-- Create the distribution containing validation results -->
+	<!-- Create the distribution containing validation results 
+		This target assumes you have run the validation experiment
+		previously and produced the *.tex files.  The target will 
+		copy the *.tex files to a temp directory and compile into PDF.
+		You must have a valida MikTex install to run this target -->
 	<target name="distribution.validation">
+		<copy todir="${validation.dir}">
+			  <fileset dir="${basedir}/../text/results" includes="**.tex,**.png" />
+		</copy>
+		<!-- run pdflatex -->
+		<apply executable="pdflatex">
+		    <arg value="-interaction=batchmode"/>
+		    <arg value="-output-directory" />
+		    <arg value="${validation.dir}" />
+			<fileset dir="${validation.dir}" includes="**.tex" />
+		</apply>
+		<!-- Create a archive file -->
 		<zip destfile="${artifacts.dir}/${module.name}-${module.version}-results.zip" >
-			<zipfileset dir="${basedir}/../text/"  includes="results/*"/>	
+			<zipfileset dir="${validation.dir}"  includes="*.pdf"/>	
 			<zipfileset file="${basedir}/../LICENSE-gpl2.0.txt"/>
 		    <zipfileset file="${basedir}/../README.txt"/>
-		</zip>
+		</zip> 
 	</target>
 	
 	<!-- Distribution submitted for validation by a journal -->
