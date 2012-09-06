@@ -29,6 +29,7 @@ import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 import junit.framework.TestCase;
 
 /**
@@ -46,10 +47,18 @@ import junit.framework.TestCase;
 public class TestConditionalTwoSampleTTest3DPlot extends TestCase
 {
 	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalTwoSampleTTest3DPlot.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalTwoSampleTTest3DPlot.html";
-	private static final String TITLE = "GLMM(F) Example 3. Power for a two sample t-test for various sample sizes and mean differences";
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + 
+	        File.separator + "TestConditionalTwoSampleTTest3DPlot.tex";
+	private static final String TITLE = "GLMM(F) Example 3. Power for a two sample " +
+			"t-test for various sample sizes and mean differences";
 	private static final String IMAGE_FILE = "TestConditionalTwoSampleTTest3DPlot.png";
-	
+	private static final String AUTHOR = "Sarah Kreidler";
+	private static final String STUDY_DESIGN_DESCRIPTION  = 
+	        "The study design for Example 3 is a balanced, two sample design with" +
+            "a single response variable. We calculate power for a two-sample t-test comparing " +
+            "the mean responses between the two independent groups.  " +
+            "The example demonstrates changes in power with different " +
+            "sample sizes and mean differences.";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -105,8 +114,17 @@ public class TestConditionalTwoSampleTTest3DPlot extends TestCase
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
 
         checker.checkPower(params);
-		checker.outputResults(TITLE);
-		checker.outputResults(TITLE, OUTPUT_FILE, IMAGE_FILE);
+        // output the results
+        try {
+            ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+            reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+            reportBuilder.createValidationReportAsLaTex(
+                    OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
+                    params, checker, IMAGE_FILE);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		checker.reset();
     }
