@@ -35,7 +35,7 @@
 	<property name="thirdparty.dir" value="${basedir}/../../thirdparty" />
 	
 	<fileset id="thirdparty.libs" dir="${thirdparty.dir}">
-		<include name="ApacheCommonsMath/2.1/lib/commons-math-2.1.jar" />
+		<include name="ApacheCommonsMath/3.0/lib/commons-math3-3.0.jar" />
 		<include name="jsc/1.0/lib/jsc.jar" />
 		<include name="junit/4.7/lib/junit-4.7.jar" />
 	</fileset>
