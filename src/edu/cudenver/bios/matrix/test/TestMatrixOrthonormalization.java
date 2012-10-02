@@ -22,9 +22,9 @@ package edu.cudenver.bios.matrix.test;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.util.MathUtils;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.util.Precision;
 
 import edu.cudenver.bios.matrix.GramSchmidtOrthonormalization;
 
@@ -71,7 +71,7 @@ public class TestMatrixOrthonormalization extends TestCase
         {
             for(int c = 0; c < shouldBeOriginalMatrix.getColumnDimension(); c++)
             {
-                if (MathUtils.compareTo(shouldBeOriginalMatrix.getEntry(r, c), data[r][c], TOLERANCE) != 0) 
+                if (Precision.compareTo(shouldBeOriginalMatrix.getEntry(r, c), data[r][c], TOLERANCE) != 0) 
                     fail();
             }
         }
@@ -101,7 +101,7 @@ public class TestMatrixOrthonormalization extends TestCase
             for(int c = 0; c < shouldBeIdentityMatrix.getColumnDimension(); c++)
             {
                 double shouldBeValue = (r == c) ? 1 : 0;
-                if (MathUtils.compareTo(shouldBeIdentityMatrix.getEntry(r, c), shouldBeValue, TOLERANCE) != 0) 
+                if (Precision.compareTo(shouldBeIdentityMatrix.getEntry(r, c), shouldBeValue, TOLERANCE) != 0) 
                     fail();
             }
         }

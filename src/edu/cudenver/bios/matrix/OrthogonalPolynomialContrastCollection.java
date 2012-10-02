@@ -21,10 +21,7 @@
 package edu.cudenver.bios.matrix;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-
-import org.apache.commons.math.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.OrthogonalPolynomialContrast.ContrastType;
 import edu.cudenver.bios.utils.Factor;
