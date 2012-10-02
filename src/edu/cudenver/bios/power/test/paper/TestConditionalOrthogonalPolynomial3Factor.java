@@ -26,8 +26,8 @@ import java.util.ArrayList;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.MatrixUtils;
@@ -220,7 +220,7 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
         params.addAlpha(0.05);
 
         // build the design matrix 
-        params.setDesignEssence(org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(Q));
+        params.setDesignEssence(org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(Q));
         // add a concise representation of the design matrix to the alt matrix string
         matrixAltStringBuffer.append("\\begin{eqnarray*}\n");
         matrixAltStringBuffer.append("\\underset{\\left("+ Q + 
@@ -256,7 +256,7 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
                 "\\end{bmatrix}\n");
         matrixAltStringBuffer.append("\\end{eqnarray*}\n");
         // build sigma matrix
-        RealMatrix sigma =org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(P);
+        RealMatrix sigma =org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(P);
         for(int i = 0; i < P; i++) sigma.setEntry(i, i, i+1);
         params.setSigmaError(sigma);
         // add sigma scale values
