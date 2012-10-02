@@ -22,9 +22,9 @@ package edu.cudenver.bios.power.test.general;
 
 import java.text.DecimalFormat;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.LUDecompositionImpl;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
@@ -145,7 +145,7 @@ public class TestNonCentralityDistribution extends TestCase
         int P = 3;
         int Q = 3;
         // create design matrix
-        params.setDesignEssence(org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(Q));
+        params.setDesignEssence(org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(Q));
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         
@@ -188,7 +188,7 @@ public class TestNonCentralityDistribution extends TestCase
 
         // set the sigma error matrix to [sigmaY - sigmaYG * sigmaG-1 * sigmaGY] 
         RealMatrix sigmaGY = params.getSigmaOutcomeGaussianRandom().transpose();
-        RealMatrix sigmaGInverse = new LUDecompositionImpl(params.getSigmaGaussianRandom()).getSolver().getInverse();
+        RealMatrix sigmaGInverse = new LUDecomposition(params.getSigmaGaussianRandom()).getSolver().getInverse();
         params.setSigmaError(params.getSigmaOutcome().subtract(params.getSigmaOutcomeGaussianRandom().multiply(sigmaGInverse.multiply(sigmaGY))));
         
         return params;     
