@@ -23,11 +23,11 @@ package edu.cudenver.bios.power.glmm;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import org.apache.commons.math.linear.EigenDecompositionImpl;
-import org.apache.commons.math.linear.InvalidMatrixException;
-import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.linear.SingularValueDecompositionImpl;
-import org.apache.commons.math.util.MathUtils;
+import org.apache.commons.math3.linear.EigenDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
+import org.apache.commons.math3.util.MathUtils;
+import org.apache.commons.math3.util.Precision;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.GramSchmidtOrthonormalization;
@@ -304,7 +304,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     protected double getUnirep(RealMatrix H, RealMatrix E)
     {
         if (!H.isSquare() || !E.isSquare() || H.getColumnDimension() != E.getRowDimension())
-            throw new InvalidMatrixException("Failed to compute Unirep statistic: hypothesis and error matrices must be square and same dimensions");
+            throw new IllegalArgumentException("Failed to compute Unirep statistic: hypothesis and error matrices must be square and same dimensions");
 
         return H.getTrace() / E.getTrace();
     }
@@ -314,8 +314,8 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
      */
     protected void calculateEpsilon()
     {          
-    	rankC = new SingularValueDecompositionImpl(C).getRank();
-        rankU = new SingularValueDecompositionImpl(U).getRank();
+    	rankC = new SingularValueDecomposition(C).getRank();
+        rankU = new SingularValueDecomposition(U).getRank();
         
         // get the sigmaStar matrix: U' *sigmaError * U
        RealMatrix  sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
@@ -325,7 +325,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         
         // get the eigen values of the normalized sigmaStar matrix
         sigmaStarEigenValues = 
-        	new EigenDecompositionImpl(sigmaStar.scalarMultiply(1/sigmaStar.getTrace()), eigenTolerance).getRealEigenvalues();
+        	new EigenDecomposition(sigmaStar.scalarMultiply(1/sigmaStar.getTrace()), eigenTolerance).getRealEigenvalues();
         if (sigmaStarEigenValues.length <= 0) throw new IllegalArgumentException("Failed to compute eigenvalues for sigma* matrix");
         Arrays.sort(sigmaStarEigenValues);
         // get the trace of sigma* and sigma* squared    
@@ -408,7 +408,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         if (upperLeft != 0) UtU = UtU.scalarMultiply(1/upperLeft);
         
         RealMatrix diffFromIdentity = 
-        	UtU.subtract(org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(UtU.getRowDimension()));
+        	UtU.subtract(org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(UtU.getRowDimension()));
         
         // get maximum value in U'U
         double maxValue = Double.NEGATIVE_INFINITY;
@@ -421,7 +421,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
             }
         }
         
-        if (maxValue > MathUtils.SAFE_MIN)
+        if (maxValue > Precision.SAFE_MIN)
         {
             // U matrix deviates from Identity, so create one that is orthonormal
             RealMatrix Utmp = new GramSchmidtOrthonormalization(U).getQ();

@@ -20,7 +20,7 @@
  */
 package edu.cudenver.bios.power.glmm;
 
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
