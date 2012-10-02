@@ -22,10 +22,9 @@ package edu.cudenver.bios.power.glmm;
 
 import java.util.ArrayList;
 
-import jsc.distributions.FishersF;
-
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.solvers.BisectionSolver;
+import org.apache.commons.math3.distribution.FDistribution;
 import org.apache.commons.math3.linear.CholeskyDecomposition;
 import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.linear.LUDecomposition;
@@ -371,9 +370,10 @@ public class NonCentralityDistribution
             	double lambdaStarNegative =  m2Negative / (2 * m1Negative);
 
             	// create a central F to approximate the distribution of the non-centrality parameter
-            	FishersF centralFDist = new FishersF(nuStarPositive, nuStarNegative);
+            	FDistribution centralFDist = new FDistribution(nuStarPositive, nuStarNegative);
             	// return power based on the non-central F
-            	return centralFDist.cdf((nuStarNegative*lambdaStarNegative)/(nuStarPositive*lambdaStarPositive));
+            	return centralFDist.cumulativeProbability(
+            	        (nuStarNegative*lambdaStarNegative)/(nuStarPositive*lambdaStarPositive));
             }
         }
         catch (Exception e)
