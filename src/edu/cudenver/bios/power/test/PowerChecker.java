@@ -27,7 +27,7 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.commons.math.linear.CholeskyDecompositionImpl;
+import org.apache.commons.math3.linear.CholeskyDecomposition;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -61,8 +61,8 @@ public class PowerChecker
 	}
 	
 	private boolean verbose = false;
-	private double positivityThreshold = CholeskyDecompositionImpl.DEFAULT_ABSOLUTE_POSITIVITY_THRESHOLD;
-	private double symmetryThreshold = CholeskyDecompositionImpl.DEFAULT_RELATIVE_SYMMETRY_THRESHOLD;
+	private double positivityThreshold = CholeskyDecomposition.DEFAULT_ABSOLUTE_POSITIVITY_THRESHOLD;
+	private double symmetryThreshold = CholeskyDecomposition.DEFAULT_RELATIVE_SYMMETRY_THRESHOLD;
     private static final int SIMULATION_SIZE = 10000;
 
     private boolean simulate = true;
