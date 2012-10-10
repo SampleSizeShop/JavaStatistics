@@ -35,6 +35,8 @@ import edu.cudenver.bios.distribution.ChiSquareTerm;
 import edu.cudenver.bios.distribution.NonCentralFDistribution;
 import edu.cudenver.bios.distribution.WeightedSumOfNoncentralChiSquaresDistribution;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.power.PowerErrorEnum;
+import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 
 /**
@@ -95,7 +97,11 @@ public class NonCentralityDistribution
         
         public double value(double n)
         {
-            return cdf(n) - quantile;
+            try {
+                return cdf(n) - quantile;
+            } catch (PowerException pe) {
+                return Double.NaN;
+            }
         }
     }
     
@@ -110,7 +116,7 @@ public class NonCentralityDistribution
     		FixedRandomMatrix CFixedRand, RealMatrix U, 
     		RealMatrix thetaNull, RealMatrix beta, 
     		RealMatrix sigmaError, RealMatrix sigmaG, boolean exact)
-    throws IllegalArgumentException
+    throws PowerException
     {
     	initialize(test, FEssence, FtFinverse, perGroupN, CFixedRand, U, thetaNull, beta, 
     			sigmaError, sigmaG, exact);
@@ -123,7 +129,7 @@ public class NonCentralityDistribution
     		FixedRandomMatrix CFixedRand, RealMatrix U, 
     		RealMatrix thetaNull, RealMatrix beta, 
     		RealMatrix sigmaError, RealMatrix sigmaG, boolean exact)
-    {
+    throws PowerException {
     	// reset member variables 
         this.T1 = null;
         this.FT1 = null;
@@ -213,7 +219,8 @@ public class NonCentralityDistribution
         }
         catch (Exception e)
         {
-            throw new IllegalArgumentException(e.getMessage());
+            throw new PowerException(e.getMessage(),
+                    PowerErrorEnum.INVALID_DISTRIBUTION_NONCENTRALITY_PARAMETER);
         }
     }
     
@@ -222,7 +229,7 @@ public class NonCentralityDistribution
      * @param perGroupN new per group sample size
      */
     public void setPerGroupSampleSize(int perGroupN)
-    {
+    throws PowerException {
     	initialize(test, FEssence, FtFinverse, perGroupN, CFixedRand, U, thetaNull, beta, 
     			sigmaError, sigmaG, exact);
     }
@@ -232,7 +239,7 @@ public class NonCentralityDistribution
      * @param beta the new beta matrix
      */
     public void setBeta(RealMatrix beta)
-    {
+    throws PowerException {
     	initialize(test, FEssence, FtFinverse, perGroupN, CFixedRand, U, thetaNull, beta, 
     			sigmaError, sigmaG, exact);
     }
@@ -244,7 +251,7 @@ public class NonCentralityDistribution
      * @param w critical point for which to calculate cumulative probability
      * @return P(W < w)
      */
-    public double cdf(double w)
+    public double cdf(double w) throws PowerException
     {
         if (H1 <= 0 || w <= H0) return 0;
         if (H1 - w <= 0) return 1;
@@ -378,7 +385,8 @@ public class NonCentralityDistribution
         }
         catch (Exception e)
         {
-            throw new IllegalArgumentException(e);
+            throw new PowerException(e.getMessage(), 
+                    PowerErrorEnum.DISTRIBUTION_NONCENTRALITY_PARAMETER_CDF_FAILED);
         }
     }
     
