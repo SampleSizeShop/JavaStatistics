@@ -33,6 +33,7 @@ import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
+import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
@@ -59,9 +60,13 @@ public class TestDetectableDifferenceGLMM extends TestCase
         GLMMPowerParameters params = buildValidUnivariateInputs();
         // create a power calculator
         GLMMPowerCalculator calc = new GLMMPowerCalculator();
-                
-        List<Power> results = calc.getDetectableDifference(params);
-        checkDetectableDifference(false, results);
+        try {
+            List<Power> results = calc.getDetectableDifference(params);
+            checkDetectableDifference(false, results);
+        } catch (PowerException e) {
+            System.err.println("Detectable difference failed: ["+ 
+                    e.getErrorCode() +"]" + e.getMessage());
+        }
     }
 
     public void testInvalidUnivariateFixed()
@@ -91,8 +96,13 @@ public class TestDetectableDifferenceGLMM extends TestCase
         // create a power calculator
         GLMMPowerCalculator calc = new GLMMPowerCalculator();
         
-        List<Power> results = calc.getDetectableDifference(params);
-        checkDetectableDifference(false, results);
+        try {
+            List<Power> results = calc.getDetectableDifference(params);
+            checkDetectableDifference(false, results);
+        } catch (PowerException e) {
+            System.err.println("Detectable difference failed: ["+ 
+                    e.getErrorCode() +"]" + e.getMessage());
+        }
 
     }
 
@@ -124,8 +134,14 @@ public class TestDetectableDifferenceGLMM extends TestCase
         // create a power calculator
         GLMMPowerCalculator calc = new GLMMPowerCalculator();
         
-        List<Power> results = calc.getDetectableDifference(params);
-        checkDetectableDifference(true, results);
+        try {
+            List<Power> results = calc.getDetectableDifference(params);
+            checkDetectableDifference(false, results);
+        } catch (PowerException e) {
+            System.err.println("Detectable difference failed: ["+ 
+                    e.getErrorCode() +"]" + e.getMessage());
+        }
+
     }
 
     

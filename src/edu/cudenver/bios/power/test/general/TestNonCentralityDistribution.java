@@ -31,6 +31,7 @@ import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.matrix.RandomColumnMetaData;
 import edu.cudenver.bios.matrix.RowMetaData;
+import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.glmm.NonCentralityDistribution;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
@@ -56,7 +57,7 @@ public class TestNonCentralityDistribution extends TestCase
     private static final int[] SAMPLE_SIZE_LIST = {5};
     private Normal normalDist = new Normal();
     private DecimalFormat Number = new DecimalFormat("#0.0000000000");
-    
+
     public void testApproximateNonCentralCDF()
     {
         GLMMPowerParameters params = buildValidMultivariateRandomInputs();
@@ -65,32 +66,35 @@ public class TestNonCentralityDistribution extends TestCase
         int perGroupN = params.getSampleSizeList().get(0);
         Test test = params.getTestList().get(0);
 
-//        Test test, RealMatrix F, RealMatrix FtFinverse, int N, 
-//		FixedRandomMatrix CFixedRand, RealMatrix U, 
-//		RealMatrix thetaNull, RealMatrix beta, 
-//		RealMatrix sigmaError, RealMatrix sigmaG, boolean exact
-        
-        
-        NonCentralityDistribution ncd = 
-            new NonCentralityDistribution(test, params.getDesignEssence(),
-            		null, 
-            		perGroupN, 
-            		params.getBetweenSubjectContrast(),
-            		params.getWithinSubjectContrast(),
-            		params.getTheta(),
-            		params.getBeta().scalarMultiply(betaScale, true),
-            		params.getSigmaError().scalarMultiply(sigmaScale),
-            		params.getSigmaGaussianRandom(),
-            		false);
+        //        Test test, RealMatrix F, RealMatrix FtFinverse, int N, 
+        //		FixedRandomMatrix CFixedRand, RealMatrix U, 
+        //		RealMatrix thetaNull, RealMatrix beta, 
+        //		RealMatrix sigmaError, RealMatrix sigmaG, boolean exact
 
-        for(double crit = 1; crit < 15; crit++)
-        {
-            double prob = ncd.cdf(crit);
-            System.out.println("Critical Value: " + crit + " prob: " + Number.format(prob));
+        try {
+            NonCentralityDistribution ncd = 
+                    new NonCentralityDistribution(test, params.getDesignEssence(),
+                            null, 
+                            perGroupN, 
+                            params.getBetweenSubjectContrast(),
+                            params.getWithinSubjectContrast(),
+                            params.getTheta(),
+                            params.getBeta().scalarMultiply(betaScale, true),
+                            params.getSigmaError().scalarMultiply(sigmaScale),
+                            params.getSigmaGaussianRandom(),
+                            false);
+
+            for(double crit = 1; crit < 15; crit++)
+            {
+                double prob = ncd.cdf(crit);
+                System.out.println("Critical Value: " + crit + " prob: " + Number.format(prob));
+            }
+        } catch (PowerException e) {
+            System.err.println("CDF failed: [" + e.getErrorCode() +
+                    "]" + e.getMessage());
         }
-        
     }
-    
+
     public void testApproximateNonCentralInverseCDF()
     {
         GLMMPowerParameters params = buildValidMultivariateRandomInputs();
@@ -98,35 +102,38 @@ public class TestNonCentralityDistribution extends TestCase
         double sigmaScale = params.getSigmaScaleList().get(0);
         int perGroupN = params.getSampleSizeList().get(0);
         Test test = params.getTestList().get(0);
+        try {
+            NonCentralityDistribution ncd = 
+                    new NonCentralityDistribution(test, params.getDesignEssence(),
+                            null, 
+                            perGroupN, 
+                            params.getBetweenSubjectContrast(),
+                            params.getWithinSubjectContrast(),
+                            params.getTheta(),
+                            params.getBeta().scalarMultiply(betaScale, true),
+                            params.getSigmaError().scalarMultiply(sigmaScale),
+                            params.getSigmaGaussianRandom(),
+                            false);
 
-        NonCentralityDistribution ncd = 
-            new NonCentralityDistribution(test, params.getDesignEssence(),
-            		null, 
-            		perGroupN, 
-            		params.getBetweenSubjectContrast(),
-            		params.getWithinSubjectContrast(),
-            		params.getTheta(),
-            		params.getBeta().scalarMultiply(betaScale, true),
-            		params.getSigmaError().scalarMultiply(sigmaScale),
-            		params.getSigmaGaussianRandom(),
-            		false);
-
-        for(double w = 0.10; w < 1.05; w += 0.1)
-        {
-            double nonCentralityParam = ncd.inverseCDF(w);
-            System.out.println("Quantile: " + Number.format(w) + 
-            		" inverseCDF: " + Number.format(nonCentralityParam));
+            for(double w = 0.10; w < 1.05; w += 0.1)
+            {
+                double nonCentralityParam = ncd.inverseCDF(w);
+                System.out.println("Quantile: " + Number.format(w) + 
+                        " inverseCDF: " + Number.format(nonCentralityParam));
+            }
+        } catch (PowerException e) {
+            System.err.println("Simulation failed: [" + e.getErrorCode() +
+                    "]" + e.getMessage());
         }
-        
     }
-    
+
     /**
      * Builds matrices for a multivariate GLM with a baseline covariate
      */
     private GLMMPowerParameters buildValidMultivariateRandomInputs()
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
-        
+
         // add power methods
         //for(PowerMethod method: PowerMethod.values()) params.addPowerMethod(method);
         params.addPowerMethod(PowerMethod.CONDITIONAL_POWER);
@@ -134,11 +141,11 @@ public class TestNonCentralityDistribution extends TestCase
         params.addQuantile(0.25);
         params.addQuantile(0.5);
         params.addQuantile(0.75);
-        
+
         // add tests - only HL andUNIREP value for random case
         params.addTest(Test.HOTELLING_LAWLEY_TRACE);
         //params.addTest(GLMMPowerParameters.Test.UNIREP);
-        
+
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
@@ -148,7 +155,7 @@ public class TestNonCentralityDistribution extends TestCase
         params.setDesignEssence(org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(Q));
         // add sample size multipliers
         for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
-        
+
         // build sigma G matrix
         double[][] sigmaG = {{1}};
         params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
@@ -165,14 +172,14 @@ public class TestNonCentralityDistribution extends TestCase
 
         // add sigma scale values
         for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
-        
+
         // build beta matrix
         double [][] beta = {{1,0},{0,0},{0,0}};
         double [][] betaRandom = {{0.9,0}};
         params.setBeta(new FixedRandomMatrix(beta, betaRandom, false));
         // add beta scale values
         for(double betaScale: BETA_SCALE_LIST) params.addBetaScale(betaScale);
-        
+
         // build theta null matrix
         double [][] theta0 = {{0,0},{0,0}};
         params.setTheta(new Array2DRowRealMatrix(theta0));
@@ -181,7 +188,7 @@ public class TestNonCentralityDistribution extends TestCase
         double [][] between = {{1,-1,0},{1,0,-1}};
         double[][] betweenRandom = {{1},{1}};
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, betweenRandom, true));
-        
+
         // build within subject contrast
         double [][] within = {{1,0},{0,1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
@@ -190,8 +197,8 @@ public class TestNonCentralityDistribution extends TestCase
         RealMatrix sigmaGY = params.getSigmaOutcomeGaussianRandom().transpose();
         RealMatrix sigmaGInverse = new LUDecomposition(params.getSigmaGaussianRandom()).getSolver().getInverse();
         params.setSigmaError(params.getSigmaOutcome().subtract(params.getSigmaOutcomeGaussianRandom().multiply(sigmaGInverse.multiply(sigmaGY))));
-        
+
         return params;     
     }
-    
+
 }
