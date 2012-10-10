@@ -22,18 +22,17 @@ package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.MatrixUtils;
+import junit.framework.TestCase;
 
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.MatrixUtils;
+
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RowMetaData;
-import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
-import junit.framework.TestCase;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 
 /**
  * Unit test for fixed univariate design with confidence intervals (powerlib example 4). 
@@ -49,9 +48,21 @@ import junit.framework.TestCase;
  */
 public class TestConditionalUnivariateWithConfidenceLimits extends TestCase
 {
-	private static final String DATA_FILE = "data" + File.separator + "TestConditionalUnivariateWithConfidenceLimits.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalUnivariateWithConfidenceLimits.html";
-	private static final String TITLE = "Power results for fixed univariate design with confidence limits";
+	private static final String DATA_FILE = "data" + File.separator + 
+	        "TestConditionalUnivariateWithConfidenceLimits.xml";
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + 
+	        File.separator + "TestConditionalUnivariateWithConfidenceLimits.tex";
+	private static final String TITLE = "GLMM(F) Example 4. Power and confidence limits for a univariate model";
+	   private static final String AUTHOR = "Sarah Kreidler";
+	    private static final String STUDY_DESIGN_DESCRIPTION  = 
+	            "The study design for Example 4 is a balanced two group design. " +
+	            "We calculate power for a two-sample t-test comparing the mean response " +
+	            "between the groups.  We calculate confidence limits for the power values. " +
+	            "The example is based on Figure 1 " +
+	            "from\n\n\\hangindent2em\n\\hangafter=1\n Taylor, D. J., \\& Muller, K. E. (1995). " +
+	            "Computing Confidence Bounds for Power and Sample Size of the " +
+	            "General Linear Univariate Model. \\emph{The American Statistician}, " +
+	            "\\emph{49}(1), 43-47.";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -113,7 +124,6 @@ public class TestConditionalUnivariateWithConfidenceLimits extends TestCase
         params.setDesignMatrixRankForEstimates(2);
         
         // run the test
-        System.out.println(TITLE);
         // 2 sided CI
         params.setAlphaLowerConfidenceLimit(0.025);
         params.setAlphaUpperConfidenceLimit(0.025);
@@ -127,10 +137,17 @@ public class TestConditionalUnivariateWithConfidenceLimits extends TestCase
         params.setAlphaUpperConfidenceLimit(0.05);
         checker.checkPower(params);
         // output the results
-		checker.outputResults();
-		checker.outputResults(TITLE, OUTPUT_FILE);
+        try {
+            ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+            reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+            reportBuilder.createValidationReportAsLaTex(
+                    OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
+                    params, checker);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+
 		assertTrue(checker.isSASDeviationBelowTolerance());
-		assertTrue(checker.isSimulationDeviationBelowTolerance());
 		checker.reset();
     }
 

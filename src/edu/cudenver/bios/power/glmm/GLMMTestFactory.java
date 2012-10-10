@@ -20,9 +20,11 @@
  */
 package edu.cudenver.bios.power.glmm;
 
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.power.PowerErrorEnum;
+import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
@@ -89,7 +91,7 @@ public class GLMMTestFactory
     		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
     		FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull, 
     		RealMatrix beta, RealMatrix sigmaError, int nuForEstimatedSigma)
-    throws IllegalArgumentException
+    throws PowerException
     {
         switch (test)
         {
@@ -122,7 +124,8 @@ public class GLMMTestFactory
             		Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull, 
             		beta, sigmaError);
         default:
-            throw new IllegalArgumentException("Unknown GLMM test statistic");
+            throw new PowerException("Unknown GLMM test statistic", 
+                    PowerErrorEnum.UNKNOWN_TEST_REQUESTED);
         }
     }
     

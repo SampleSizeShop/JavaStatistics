@@ -22,10 +22,10 @@ package edu.cudenver.bios.power.test.general;
 
 import java.text.DecimalFormat;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.LUDecompositionImpl;
-import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.linear.SingularValueDecompositionImpl;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
 
 import edu.cudenver.bios.matrix.DesignEssenceMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
@@ -75,33 +75,33 @@ public class TestDataAnalysis extends TestCase
     
     // design matrix for multivariate tests
     private RealMatrix essenceMultivariate = 
-    	org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(4);
-    private RealMatrix XMultivariate = MatrixUtils.KroneckerProduct(essenceMultivariate, 
-    		MatrixUtils.createRealMatrixWithFilledValue(5, 1, 1));
-	private int rankXMultivariate = new SingularValueDecompositionImpl(essenceMultivariate).getRank();
+    	org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(4);
+    private RealMatrix XMultivariate = MatrixUtils.getKroneckerProduct(essenceMultivariate, 
+    		MatrixUtils.getRealMatrixWithFilledValue(5, 1, 1));
+	private int rankXMultivariate = new SingularValueDecomposition(essenceMultivariate).getRank();
 	private RealMatrix XtXInverseMultivariate = 
-    	new LUDecompositionImpl(XMultivariate.transpose().multiply(XMultivariate)).getSolver().getInverse();
+    	new LUDecomposition(XMultivariate.transpose().multiply(XMultivariate)).getSolver().getInverse();
     	
 	// design matrix for univariate tests
     private RealMatrix essenceUnivariate = 
-    	org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(2);
-    private RealMatrix XUnivariate = MatrixUtils.KroneckerProduct(essenceUnivariate, 
-    		MatrixUtils.createRealMatrixWithFilledValue(10, 1, 1));
-	private int rankXUnivariate = new SingularValueDecompositionImpl(essenceUnivariate).getRank();
+    	org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(2);
+    private RealMatrix XUnivariate = MatrixUtils.getKroneckerProduct(essenceUnivariate, 
+    		MatrixUtils.getRealMatrixWithFilledValue(10, 1, 1));
+	private int rankXUnivariate = new SingularValueDecomposition(essenceUnivariate).getRank();
 	private RealMatrix XtXInverseUnivariate = 
-    	new LUDecompositionImpl(XUnivariate.transpose().multiply(XUnivariate)).getSolver().getInverse();
+    	new LUDecomposition(XUnivariate.transpose().multiply(XUnivariate)).getSolver().getInverse();
 
 	// contrasts - univariate
     double [][] betweenUnivariate = {{1,-1}};
     RealMatrix CUnivariate = new Array2DRowRealMatrix(betweenUnivariate);
-    RealMatrix UUnivariate = MatrixUtils.createRealMatrixWithFilledValue(1, 1, 1);
-    RealMatrix ThetaNullUnivariate = MatrixUtils.createRealMatrixWithFilledValue(1, 1, 0);
+    RealMatrix UUnivariate = MatrixUtils.getRealMatrixWithFilledValue(1, 1, 1);
+    RealMatrix ThetaNullUnivariate = MatrixUtils.getRealMatrixWithFilledValue(1, 1, 0);
 	// contrasts - multivariate
     double [][] betweenMultivariate = {{1,-1,0,0},{1,0,-1,0},{1,0,0,-1}};
     RealMatrix CMultivariate = new Array2DRowRealMatrix(betweenMultivariate);
     double [][] withinMultivariate = {{1,1},{-1,0},{0,-1}};
     RealMatrix UMultivariate = new Array2DRowRealMatrix(withinMultivariate);
-    RealMatrix ThetaNullMultivariate = MatrixUtils.createRealMatrixWithFilledValue(3, 2, 0);
+    RealMatrix ThetaNullMultivariate = MatrixUtils.getRealMatrixWithFilledValue(3, 2, 0);
     
     // univariate Y data
     double[] YUnivariateData =

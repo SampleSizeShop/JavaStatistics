@@ -22,18 +22,17 @@ package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.MatrixUtils;
+import junit.framework.TestCase;
 
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.MatrixUtils;
+
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RandomColumnMetaData;
-import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.test.PowerChecker;
-import junit.framework.TestCase;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 
 /**
  * Test case for approximate unconditional power for the HLT.  Values should match
@@ -45,13 +44,35 @@ import junit.framework.TestCase;
 public class TestHotellingLawleyApproximateUnconditional extends TestCase 
 {
 	private static final String DATA_FILE =  "data" + File.separator + "TestHotellingLawleyApproximateUnconditional.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "HotellingLawleyApproximateUnconditionalOutput.html";
-	private static final String TITLE = "Power results for HLT, appoximate unconditional";
-    private static final double MEAN = 9.75;
-    private static final double VARIANCE = 2.0;
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + 
+	        File.separator + "HotellingLawleyApproximateUnconditionalOutput.tex";
+	private static final String TITLE = "GLMM(F, g) Example 3. Unconditional power for the " +
+			"Hotelling-Lawley Trace, using the Satterthwaite approximation";
     private static final double[] ALPHA_LIST = {0.05};    
     private static final double[] SIGMA_SCALE_LIST = {1};	
-	    
+    private static final String AUTHOR = "Sarah Kreidler";
+    private static final String STUDY_DESIGN_DESCRIPTION  = 
+            "The study design in Example 3 is a three sample design with " +
+            "a baseline covariate and four repeated measurements.  We calculate " +
+            "the unconditional power for a test of no difference between groups at each " +
+            "time point, using the Hotelling-Lawley Trace test.  " +
+            "A Satterthwaite approximation is used to obtain the approximate " +
+            "distribution of the test statistic under the alternative hypothesis.  " +
+            "Unconditional power is calculated for the following combinations " +
+            "of mean differences and per group sample sizes.\n\n" +
+            "\\begin{enumerate}" +
+            "\\item Per group sample size of 5, with beta scale values " +
+            "0.4997025, 0.8075886, and 1.097641" +
+            "\\item Per group sample size of 25, with beta scale values " +
+            "0.1651525, 0.2623301, and 0.3508015" +
+            "\\item Per group sample size of 50, with beta scale values " +
+            "0.1141548,  0.1812892, and  0.2423835\n" +
+            "\\end{enumerate}\n\n" +
+            "The example is based on Table II from\n\n" +
+            "\\hangindent2em\n\\hangafter=1\n Glueck, D. H., \\& Muller, K. E. (2003). " +
+            "Adjusting power for a baseline covariate in linear models. \\emph{Statistics " +
+            "in Medicine}, \\emph{22}(16), 2535-2551.\n\n";
+    
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -91,14 +112,25 @@ public class TestHotellingLawleyApproximateUnconditional extends TestCase
         };
         GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
 
-		System.out.println(TITLE);
 		checker.checkPower(params5);
 		checker.checkPower(params25);
 		checker.checkPower(params50);
-		checker.outputResults();
-		checker.outputResults(TITLE, OUTPUT_FILE);
+        // output the results
+		try {
+		    // clear the beta scale list and per group N since this is described in the
+            // study design section and may be confusing if we list all the beta scales
+            // twice.
+		    params50.clearBetaScaleList();
+		    params50.clearSampleSizeList();
+		    ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+		    reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+		    reportBuilder.createValidationReportAsLaTex(
+		            OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
+		            params50, checker);
+		} catch (Exception e) {
+		    System.err.println(e.getMessage());
+		}
 		assertTrue(checker.isSASDeviationBelowTolerance());
-		assertTrue(checker.isSimulationDeviationBelowTolerance());
 		checker.reset();	
     }
     

@@ -25,16 +25,16 @@ This library provides power and sample size calculations for the
 general linear multivariate model.  It is a component of the
 Glimmpse software system (http://www.glimmpse.com/)
 
-The power calculations are based on the publication:
+The power calculations are based on the work of Professor Keith E. Muller
+and colleagues.  A full list of related publications are available at:
 
-Glueck DH and Muller KE.  Adjusting power for a baseline covariate in linear models.
-Statist. Med. 2003; 22:2535–2551.
+http://samplesizeshop.com/education/related-publications/
 
 ------------------------------
 2.  LATEST VERSION
 ------------------------------
 
-Version 1.0.0
+Version 1.1.0
 
 ------------------------------
 3.  DOCUMENTATION

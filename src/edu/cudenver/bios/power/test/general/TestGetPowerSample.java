@@ -6,21 +6,18 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.MatrixUtils;
-import org.apache.commons.math.linear.RealMatrix;
+import junit.framework.TestCase;
 
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
+
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RandomColumnMetaData;
-import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.GLMMPowerCalculator.SimulatedPower;
+import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
-
-import junit.framework.TestCase;
 
 public class TestGetPowerSample extends TestCase
 {
@@ -35,12 +32,12 @@ public class TestGetPowerSample extends TestCase
         System.out.println(TITLE);
         // get the power sample
     	GLMMPowerCalculator calc = new GLMMPowerCalculator();
-		List<SimulatedPower[]> powerSamples = calc.getSimulatedPowerSample(params, 1000);
 		
 		FileWriter writer = null;
 		BufferedWriter out = null;
     	try
     	{
+    	    List<SimulatedPower[]> powerSamples = calc.getSimulatedPowerSample(params, 1000);
     		SimulatedPower[] powerValues = powerSamples.get(0);
     		System.out.println("Writing Output file with " + powerValues.length + " power values");
     		writer = new FileWriter(OUTPUT_FILE);
@@ -64,6 +61,11 @@ public class TestGetPowerSample extends TestCase
     			out.write("\n");
     		}
     	} 
+        catch (PowerException e) 
+        {
+            System.err.println("Simulation failed: [" + e.getErrorCode() +
+                    "]" + e.getMessage());
+        }
     	catch (IOException e) 
     	{
     		System.err.println("Failed to write output file");

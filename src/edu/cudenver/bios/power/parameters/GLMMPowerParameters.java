@@ -23,9 +23,9 @@ package edu.cudenver.bios.power.parameters;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.apache.commons.math.linear.LUDecompositionImpl;
-import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.linear.SingularValueDecompositionImpl;
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceIntervalType;
 import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
@@ -292,6 +292,13 @@ public class GLMMPowerParameters extends PowerParameters
     	quantileList.clear();
     }
     
+    /**
+     * Clear the list of per group sample size values
+     */
+    public void clearSampleSizeList()
+    {
+        sampleSizeList.clear();
+    }
     
 	/**** Functions for setting approximation and cdf methods ****/
     
@@ -398,10 +405,10 @@ public class GLMMPowerParameters extends PowerParameters
 	public void setDesignEssence(RealMatrix designEssence)
 	{
 		this.designEssence = designEssence;
-		designRank = new SingularValueDecompositionImpl(designEssence).getRank();
+		designRank = new SingularValueDecomposition(designEssence).getRank();
 		if (this.sigmaGaussianRandom != null) designRank++;
 		XtXInverse = 
-        	new LUDecompositionImpl(this.designEssence.transpose().multiply(this.designEssence)).getSolver().getInverse();
+        	new LUDecomposition(this.designEssence.transpose().multiply(this.designEssence)).getSolver().getInverse();
 	}
 
 	/**
@@ -413,7 +420,7 @@ public class GLMMPowerParameters extends PowerParameters
 	{
 		if (designRank < 0)
 		{
-			designRank = new SingularValueDecompositionImpl(designEssence).getRank();
+			designRank = new SingularValueDecomposition(designEssence).getRank();
 		}
 		return designRank;
 	}
@@ -429,7 +436,7 @@ public class GLMMPowerParameters extends PowerParameters
 		if (XtXInverse == null)
 		{
 	        XtXInverse = 
-	        	new LUDecompositionImpl(designEssence.transpose().multiply(designEssence)).getSolver().getInverse();
+	        	new LUDecomposition(designEssence.transpose().multiply(designEssence)).getSolver().getInverse();
 		}
 		return XtXInverse;
 	}

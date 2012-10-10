@@ -22,16 +22,16 @@ package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.MatrixUtils;
+import junit.framework.TestCase;
 
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.MatrixUtils;
+
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
-import junit.framework.TestCase;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 
 /**
  * Unit test for fixed multvariate design with comparison against
@@ -42,9 +42,20 @@ import junit.framework.TestCase;
  */
 public class TestConditionalMultivariateInteraction extends TestCase
 {
-	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalMultivariateInteraction.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalMultivariateInteraction.html";
-	private static final String TITLE = "Power results for multivariate interaction";
+	private static final String DATA_FILE =  "data" + 
+File.separator + "TestConditionalMultivariateInteraction.xml";
+	private static final String OUTPUT_FILE = "text" + File.separator + 
+	        "results" + File.separator + "TestConditionalMultivariateInteraction.tex";
+	private static final String TITLE = 
+	        "GLMM(F) Example 5. Power for a test of interaction in a multivariate model";
+    private static final String AUTHOR = "Sarah Kreidler";
+    private static final String STUDY_DESIGN_DESCRIPTION  = 
+            "The study design for Example 5 is a balanced four-sample design" +
+            "with three repeated measures over time.  We calculate power for a " +
+            "test of the group by time interaction.  The unstructured covariance model " +
+            "is most appropriate for the design.  The example demonstrates the difference in " +
+            "power depending on the choice of statistical test when assumptions of sphericity " +
+            "are unlikely to hold.";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -111,12 +122,20 @@ public class TestConditionalMultivariateInteraction extends TestCase
         double [][] within = {{1,1},{-1,0},{0,-1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
         	
-        System.out.println(TITLE);
         checker.checkPower(params);
-		checker.outputResults();
-		checker.outputResults(TITLE, OUTPUT_FILE);
+
+        // output the results
+        try {
+            ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+            reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+            reportBuilder.createValidationReportAsLaTex(
+                    OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
+                    params, checker);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        
 		assertTrue(checker.isSASDeviationBelowTolerance());
-		assertTrue(checker.isSimulationDeviationBelowTolerance());
 		checker.reset();
     }
 

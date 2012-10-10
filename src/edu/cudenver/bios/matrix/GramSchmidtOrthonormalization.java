@@ -20,8 +20,8 @@
  */
 package edu.cudenver.bios.matrix;
 
-import org.apache.commons.math.linear.MatrixUtils;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 
 /**
  * Perform column-wise Gram Schmidt orthonormalization on a

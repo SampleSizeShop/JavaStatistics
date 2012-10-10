@@ -19,132 +19,186 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  -->
-<project name="JavaStatistics" default="compress">
+<project name="JavaStatistics Library" default="distributions">
 		
-	<property name="project" value="JavaStatistics" />
-	<property name="sourcedir" value="${basedir}/../src" />
-    <property name="targetdir"  value="${basedir}/bin"/>
-	<property name="librarydir" value="${basedir}/../lib" />
-	<property name="javadocdir" value="${basedir}/javadoc/JavaStatistics-javadoc" />
-	<property name="thirdpartydir" value="${basedir}/../../thirdparty" />
-
-	<fileset id="thirdpartylibs" dir="${thirdpartydir}">
-		<include name="ApacheCommonsMath/2.1/lib/commons-math-2.1.jar" />
+	<property name="module.name" value="edu.ucdenver.bios.javastatistics" />
+	<property name="owner" value="University of Colorado Denver, 
+		Department of Biostatistics and Informatics" />
+	<property name="author" value="Sarah Kreidler" />
+	<property name="module.version" value="dev" />
+	<property name="source.dir" value="${basedir}/../src" />
+    <property name="tmp.dir" value="${basedir}/tmp" />
+    <property name="artifacts.dir" value="${basedir}/artifacts" />
+	<property name="javadoc.dir" value="${tmp.dir}/${module.name}-${module.version}-javadoc" />
+    <property name="journal.dir"  value="${tmp.dir}/GLIMMPSEresults"/>
+    <property name="validation.dir"  value="${tmp.dir}/results"/>
+	<property name="thirdparty.dir" value="${basedir}/../../thirdparty" />
+	
+	<fileset id="thirdparty.libs" dir="${thirdparty.dir}">
+		<include name="ApacheCommonsMath/3.0/lib/commons-math3-3.0.jar" />
 		<include name="jsc/1.0/lib/jsc.jar" />
 		<include name="junit/4.7/lib/junit-4.7.jar" />
 	</fileset>
 	
-	<path id="librariespath">
-		<fileset refid="thirdpartylibs"/>
+	<path id="library.path">
+		<fileset refid="thirdparty.libs"/>
 	</path>
 		
     <target name="clean">
-    	<delete dir="${targetdir}"/>
-        <mkdir dir="${targetdir}"/>
-        <delete dir="${librarydir}"/>
-        <mkdir dir="${librarydir}"/>
+    	<delete dir="${tmp.dir}"/>
+        <delete dir="${artifacts.dir}"/>
+    </target>
+	
+    <target name="setup" depends="clean">
+        <mkdir dir="${tmp.dir}"/>
+        <mkdir dir="${tmp.dir}/classes"/>
+        <mkdir dir="${artifacts.dir}"/>
+    	<mkdir dir="${javadoc.dir}" />
+        <mkdir dir="${journal.dir}"/>
+        <mkdir dir="${validation.dir}"/>
     </target>
 
+	<!-- Run javadoc -->
 	<target name="javadoc">
       <javadoc
            access="public"
-           destdir="${javadocdir}"
+           destdir="${javadoc.dir}"
            author="true"
            version="true"
            use="true"
-           windowtitle="UC Denver Biostatistics - Java Statistics Package API Specification"
+        windowtitle="${owner}: Java Statistics Library API (${module.version}) Specification"
+        doctitle="${owner}: Java Statistics Library API (${module.version}) Specification"
          >
-        <fileset dir="${sourcedir}" defaultexcludes="yes">
+        <fileset dir="${source.dir}" defaultexcludes="yes">
             <include name="**/*.java"/>
         </fileset>
+        <classpath>
+            <path refid="library.path" />
+        </classpath>
       </javadoc>
 	</target>
 	
-    <target name="compile" depends="clean">
+	<!-- Compilation targets: this module produces a java library -->
+	
+	<!-- Java library compile -->
+    <target name="compile" depends="setup">
       <javac debug="true"
              deprecation="on"
 			 listfiles="true"
 			 debuglevel="lines,vars,source"
-			 srcdir="${sourcedir}"
-             destdir="${targetdir}"
-             classpathref="librariespath"
+			 srcdir="${source.dir}"
+             destdir="${tmp.dir}/classes"
+             classpathref="library.path"
       />
     </target>
 
-	<!-- compile the library file -->
+	<!-- Jar file creation -->
 	<target name="compress" depends="compile,javadoc">
-		<jar destfile="${librarydir}/${project}.jar" basedir="${targetdir}" includes="**/*.class">
+		<jar destfile="${artifacts.dir}/${module.name}-${module.version}.jar" 
+			basedir="${tmp.dir}/classes" includes="**/*.class">
 			<manifest>
-				<attribute name="Author" value="Sarah Kreidler"/>
+				<attribute name="Author" value="${author}"/>
 				<section name="Shared">
 					<attribute name="Title" value="${project}"/>
-					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
+					<attribute name="Vendor" value="${owner}"/>
 				</section>
 				<section name="Copyright">
-					<attribute name="Copy" value="(C) CU Denver Biostatistics Department"/>
+					<attribute name="Copy" value="(C) ${owner}"/>
 				</section>
 			</manifest>
 		</jar>
-		<copy file="${librarydir}/${project}.jar" todir="${targetdir}"/>
 	</target>	
 	
-	<!-- Create the javadoc distribution  -->
-	<target name="javadoc-distribution" depends="javadoc">
-		<jar destfile="${librarydir}/${project}-javadoc.jar" basedir="${javadocdir}/.." >
-			<manifest>
-				<attribute name="Author" value="Sarah Kreidler"/>
-				<section name="Shared">
-					<attribute name="Title" value="${project} Javadoc"/>
-					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
-				</section>
-				<section name="Copyright">
-					<attribute name="Copy" value="(C) CU Denver Biostatistics Department"/>
-				</section>
-			</manifest>
-		</jar>
-		<copy file="${librarydir}/${project}-javadoc.jar" todir="${targetdir}"/>
+	<!-- Extra Distribution targets: the following targets create sourve, javadoc
+		and GLIMMPSE testing results distribution -->
+	
+	<!-- Create the distribution containing validation results 
+		This target assumes you have run the validation experiment
+		previously and produced the *.tex files.  The target will 
+		copy the *.tex files to a temp directory and compile into PDF.
+		You must have a valida MikTex install to run this target -->
+	<target name="distribution.validation">
+		<copy todir="${validation.dir}">
+			  <fileset dir="${basedir}/../text/results" includes="**.tex,**.png" />
+		</copy>
+		<!-- run pdflatex -->
+		<apply executable="pdflatex">
+		    <arg value="-interaction=batchmode"/>
+		    <arg value="-output-directory" />
+		    <arg value="${validation.dir}" />
+			<fileset dir="${validation.dir}" includes="**.tex" />
+		</apply>
+		<!-- Create a archive file -->
+		<zip destfile="${artifacts.dir}/${module.name}-${module.version}-results.zip" >
+			<zipfileset dir="${validation.dir}"  includes="*.pdf"/>	
+			<zipfileset file="${basedir}/../LICENSE-gpl2.0.txt"/>
+		    <zipfileset file="${basedir}/../README.txt"/>
+		</zip> 
+	</target>
+	
+	<!-- Distribution submitted for validation by a journal -->
+	<target name="distribution.journal" depends="compress"> 
+		<mkdir dir="${journal.dir}/text/results" />
+		<mkdir dir="${journal.dir}/lib" />
+		<copy todir="${journal.dir}">
+		  <fileset dir="${basedir}/.." includes="data/**"/>
+		</copy>
+		<copy todir="${journal.dir}">
+			  <fileset dir="${basedir}/../.."  
+			  		includes="thirdparty/ApacheCommonsMath/**,
+			  		thirdparty/junit/**,
+			  		thirdparty/jsc/**" />
+		</copy>
+		<copy file="../src/edu/cudenver/bios/power/test/paper/runPaperResults.bat" todir="${journal.dir}" />
+		<copy file="../src/edu/cudenver/bios/power/test/paper/README.txt" todir="${journal.dir}" />
+		<copy file="${artifacts.dir}/${module.name}-${module.version}.jar" todir="${journal.dir}/lib/" />
+		<zip destfile="${artifacts.dir}/GLIMMPSEresults.zip"
+		       basedir="${journal.dir}">
+		</zip>
+	</target>
+		
+	
+	<!-- Create the javadoc distribution  -->	
+	<target name="distribution.javadoc" >
+		<zip destfile="${artifacts.dir}/${module.name}-${module.version}-javadoc.zip" basedir="${javadoc.dir}/.." >
+			<zipfileset dir="${javadoc.dir}" />
+			<zipfileset file="${basedir}/../LICENSE-gpl2.0.txt"/>
+		    <zipfileset file="${basedir}/../README.txt"/>
+		</zip>
 	</target>
 	
 	<!-- Create the source distribution -->
-	<target name="source-distribution">
-		<jar destfile="${librarydir}/${project}-source.jar" basedir="${basedir}/../.." 
-			includes="JavaStatistics/*,
-			JavaStatistics/build/build.xml,
-			JavaStatistics/data/**,
-			JavaStatistics/sas/**,
-			JavaStatistics/src/**,
-			JavaStatistics/text/results/**">
-			<manifest>
-				<attribute name="Author" value="Sarah Kreidler"/>
-				<section name="Shared">
-					<attribute name="Title" value="${project} Source Code"/>
-					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
-					<attribute name="Implementation-Version" 
-					                 value="1.0.0"/> 
-				</section>
-				<section name="Copyright">
-					<attribute name="Copy" value="(C) CU Denver Biostatistics Department"/>
-				</section>
-			</manifest>
-		</jar>
-		<copy file="${librarydir}/${project}-source.jar" todir="${targetdir}"/>
+	<target name="distribution.source">
+		<zip destfile="${artifacts.dir}/${module.name}-${module.version}-source.zip"  >
+			<zipfileset dir="${basedir}/../.."  
+				includes="JavaStatistics/*,
+							JavaStatistics/build/build.xml,
+							JavaStatistics/data/**,
+							JavaStatistics/sas/**,
+							JavaStatistics/src/**,
+							JavaStatistics/text/results/**"/>	
+			<zipfileset file="${basedir}/../LICENSE-gpl2.0.txt"/>
+		    <zipfileset file="${basedir}/../README.txt"/>
+		</zip>
 	</target>
 	
-	<target name="results-distribution">
-		<jar destfile="${librarydir}/${project}-results.jar" basedir="${basedir}/../text/" 
-			includes="results/*">
-			<manifest>
-				<attribute name="Author" value="Sarah Kreidler"/>
-				<section name="Shared">
-					<attribute name="Title" value="${project} Source Code"/>
-					<attribute name="Vendor" value="CU Denver Biostatistics Department"/>
-				</section>
-				<section name="Copyright">
-					<attribute name="Copy" value="(C) CU Denver Biostatistics Department"/>
-				</section>
-			</manifest>
-		</jar>
-		<copy file="${librarydir}/${project}-results.jar" todir="${targetdir}"/>
+	<!-- Create the binary distribution -->
+	<target name="distribution.binary">
+		<zip destfile="${artifacts.dir}/${module.name}-${module.version}-binary.zip" >
+			<zipfileset file="${artifacts.dir}/${module.name}-${module.version}.jar" />	
+			<zipfileset file="${basedir}/../LICENSE-gpl2.0.txt"/>
+		    <zipfileset file="${basedir}/../README.txt"/>
+		</zip>
 	</target>
-		
+	
+	<!-- build all distributions -->
+	<target name="distributions" 
+		depends="compress,
+		distribution.binary,
+		distribution.javadoc,
+		distribution.source,
+		distribution.validation,
+		distribution.journal"/>
+	
+	
 </project>

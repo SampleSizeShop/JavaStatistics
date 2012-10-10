@@ -20,12 +20,11 @@
  */
 package edu.cudenver.bios.power.glmm;
 
-import org.apache.commons.math.linear.ArrayRealVector;
-import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.linear.RealMatrixChangingVisitor;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealMatrixChangingVisitor;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
 
 /**
  * Implementation of the univariate approach to repeated measures test 

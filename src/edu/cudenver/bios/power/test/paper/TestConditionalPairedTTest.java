@@ -22,17 +22,16 @@ package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.MatrixUtils;
+import junit.framework.TestCase;
 
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.MatrixUtils;
+
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RowMetaData;
-import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
-import junit.framework.TestCase;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 
 /**
 *
@@ -49,8 +48,15 @@ import junit.framework.TestCase;
 public class TestConditionalPairedTTest extends TestCase
 {
 	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalPairedTTest.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalPairedTTest.html";
-	private static final String TITLE = "Power results for Paired T-test";
+	private static final String OUTPUT_FILE = "text" + File.separator + "results" + 
+	File.separator + "TestConditionalPairedTTest.tex";
+	private static final String TITLE = "GLMM(F) Example 2. Power results for a Paired T-test";
+    private static final String AUTHOR = "Sarah Kreidler";
+	private static final String STUDY_DESIGN_DESCRIPTION  = 
+	        "The study design in Example 2 is a one sample design with " +
+	        "a pre- and post-measurement for each participant.  We calculate power for " +
+	        "a paired t-test comparing the mean responses at the pre- and post-measurements.  " +
+	        "We express the paired t-test as a general linear hypothesis in a multivariate linear model.";
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -109,12 +115,19 @@ public class TestConditionalPairedTTest extends TestCase
         double [][] within = {{1},{-1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
         
-        System.out.println(TITLE);
         checker.checkPower(params);
-		checker.outputResults();
-		checker.outputResults(TITLE, OUTPUT_FILE);
+        
+        // output the results
+        try {
+        ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+        reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+        reportBuilder.createValidationReportAsLaTex(
+                OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
+                params, checker);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
 		assertTrue(checker.isSASDeviationBelowTolerance());
-		assertTrue(checker.isSimulationDeviationBelowTolerance());
 		checker.reset();
 
     }

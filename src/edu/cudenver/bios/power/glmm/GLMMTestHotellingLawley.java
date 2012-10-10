@@ -20,9 +20,8 @@
  */
 package edu.cudenver.bios.power.glmm;
 
-import org.apache.commons.math.linear.InvalidMatrixException;
-import org.apache.commons.math.linear.LUDecompositionImpl;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 
@@ -185,11 +184,12 @@ public class GLMMTestHotellingLawley extends GLMMTest
      * @returns F statistic
      */
     private double getHotellingLawleyTrace(RealMatrix H, RealMatrix E)
+    throws IllegalArgumentException
     {
         if (!H.isSquare() || !E.isSquare() || H.getColumnDimension() != E.getRowDimension())
-            throw new InvalidMatrixException("Failed to compute Hotelling Lawley Trace: hypothesis and error matrices must be square and same dimensions");
+            throw new IllegalArgumentException("Failed to compute Hotelling Lawley Trace: hypothesis and error matrices must be square and same dimensions");
         
-        RealMatrix inverseE = new LUDecompositionImpl(E).getSolver().getInverse();
+        RealMatrix inverseE = new LUDecomposition(E).getSolver().getInverse();
         RealMatrix HinverseE = H.multiply(inverseE);
         
         return HinverseE.getTrace();

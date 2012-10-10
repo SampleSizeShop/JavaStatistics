@@ -20,10 +20,9 @@
  */
 package edu.cudenver.bios.power.glmm;
 
-import jsc.distributions.FishersF;
-
-import org.apache.commons.math.linear.LUDecompositionImpl;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.distribution.FDistribution;
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 
@@ -125,7 +124,8 @@ public abstract class GLMMTest
     protected RealMatrix sigmaError;
     // the M matrix: [C(X'X)-1C']-1
     protected RealMatrix M = null;
-    
+    // flag indicating whether the design is multivariate or univariate
+    protected boolean multivariate = false;
     /**
      * Create a statistical test for to compute power
      * @param params GLMM input parameters
@@ -147,10 +147,13 @@ public abstract class GLMMTest
         this.beta =  beta;
         this.sigmaError = sigmaError;
         
+        // check if uni/multivariate design
+        multivariate = (beta.getColumnDimension() > 1);
+        
         // cache the value of M
         RealMatrix CFixed = C.getFixedMatrix();
         RealMatrix cxxcEssence = CFixed.multiply((XtXInverse).multiply(CFixed.transpose()));
-        RealMatrix cxxcEssenceInverse = new LUDecompositionImpl(cxxcEssence).getSolver().getInverse();
+        RealMatrix cxxcEssenceInverse = new LUDecomposition(cxxcEssence).getSolver().getInverse();
         this.M = cxxcEssenceInverse.scalarMultiply(perGroupN);
     }
         
@@ -176,7 +179,7 @@ public abstract class GLMMTest
         if (this.XtXInverse == null)
         {
         	this.XtXInverse = 
-            	new LUDecompositionImpl(X.transpose().multiply(X)).getSolver().getInverse();
+            	new LUDecomposition(X.transpose().multiply(X)).getSolver().getInverse();
         }
         this.totalN =  X.getRowDimension(); 
         this.rank = rank; 
@@ -188,9 +191,12 @@ public abstract class GLMMTest
         RealMatrix Ydiff = Y.subtract(YHat);
         this.sigmaError = (Ydiff.transpose().multiply(Ydiff)).scalarMultiply(((double) 1/(double) (totalN - rank)));
            
+        // check if uni/multivariate design
+        multivariate = (Y.getColumnDimension() > 1);
+        
         // cache the value of M
         RealMatrix cxxcEssence = C.multiply((this.XtXInverse).multiply(C.transpose()));
-        M = new LUDecompositionImpl(cxxcEssence).getSolver().getInverse();
+        M = new LUDecomposition(cxxcEssence).getSolver().getInverse();
     }
     
     /**
@@ -205,7 +211,7 @@ public abstract class GLMMTest
     		cxxcEssence = CFixed.multiply((XtXInverse).multiply(CFixed.transpose()));
     	else
     		cxxcEssence = C.multiply((XtXInverse).multiply(C.transpose()));
-        RealMatrix cxxcEssenceInverse = new LUDecompositionImpl(cxxcEssence).getSolver().getInverse();
+        RealMatrix cxxcEssenceInverse = new LUDecomposition(cxxcEssence).getSolver().getInverse();
         this.M = cxxcEssenceInverse.scalarMultiply(perGroupN);
     }
     
@@ -230,8 +236,8 @@ public abstract class GLMMTest
         double ndf = getNumeratorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
         double ddf = getDenominatorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
         
-        FishersF fdist = new FishersF(ndf, ddf);
-        double pvalue = 1 - fdist.cdf(fobs);
+        FDistribution fdist = new FDistribution(ndf, ddf);
+        double pvalue = 1 - fdist.cumulativeProbability(fobs);
         
        	return new ModelFit(pvalue, fobs, ndf, ddf,
     			sigmaError, beta);
@@ -251,8 +257,9 @@ public abstract class GLMMTest
         double ndf = getNumeratorDF(type);
         double ddf = getDenominatorDF(type);
 
-        FishersF centralFDist = new FishersF(ndf, ddf);
-        return centralFDist.inverseCdf(1 - alpha);
+        FDistribution centralFDist = new FDistribution(ndf, ddf);
+        double fcrit = centralFDist.inverseCumulativeProbability(1 - alpha);
+        return fcrit;
     }
     
     /**
@@ -328,5 +335,23 @@ public abstract class GLMMTest
     public void setEigenTolerance(double tolerance)
     {
     	this.eigenTolerance = tolerance;
+    }
+    
+    /**
+     * Indicates if the test is a univariate or multivariate design 
+     * based on the columns of beta.  Only available for
+     * power analysis 
+     */
+    public boolean isMultivariate()
+    {
+    	return multivariate;
+    }
+    
+    /**
+     * Get the beta matrix
+     * @return beta matrix
+     */
+    public RealMatrix getBeta() {
+        return beta;
     }
 }

@@ -27,10 +27,8 @@ import java.util.List;
 import jsc.distributions.NoncentralStudentsT;
 import jsc.distributions.StudentsT;
 
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.analysis.UnivariateRealFunction;
-import org.apache.commons.math.analysis.solvers.UnivariateRealSolver;
-import org.apache.commons.math.analysis.solvers.UnivariateRealSolverFactory;
+import org.apache.commons.math3.analysis.UnivariateFunction;
+import org.apache.commons.math3.analysis.solvers.BisectionSolver;
 
 import edu.cudenver.bios.power.parameters.OneSampleStudentsTPowerParameters;
 import edu.cudenver.bios.power.parameters.PowerParameters;
@@ -43,11 +41,12 @@ import edu.cudenver.bios.power.parameters.OneSampleStudentsTPowerParameters.Mean
  */
 public class OneSampleStudentsTPowerCalculator implements PowerCalculator
 {
+    private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
     private static final int MAX_SAMPLE_SIZE = 100000;
     private static final int MIN_SAMPLE_SIZE =  2; // need df > 0
     
     // function to be used with apache's built-in bisection solver
-    private class SampleSizeFunction implements UnivariateRealFunction
+    private class SampleSizeFunction implements UnivariateFunction
     {
         double mu0;
         double muA;
@@ -146,7 +145,7 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
                             results.add(calculatePower(alpha.doubleValue(), means.mu0, means.muA, 
                                     sigma.doubleValue(), sampleSize.intValue(), studentsTParams.isTwoTailed()));
                         }
-                        catch (MathException me)
+                        catch (Exception me)
                         {
                             // TODO: what to do?
                         }
@@ -222,7 +221,7 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
         					results.add(simulatePower(alpha.doubleValue(), means.mu0, means.muA,
         							sigma.doubleValue(), sampleSize.intValue(), studentsTParams.isTwoTailed(), iterations));
         				}
-        				catch (MathException me)
+        				catch (Exception me)
         				{
         					// TODO: how to handle this?
         				}
@@ -248,7 +247,7 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
 	 * @throws MathException
 	 */
 	protected OneSampleStudentsTPower calculatePower(double alpha, double mu0, double muA, 
-			double sigma, int sampleSize, boolean isTwoTail) throws MathException
+			double sigma, int sampleSize, boolean isTwoTail)
 	{
         // calculate the degrees of freedom 
         int df = sampleSize - 1;
@@ -304,14 +303,13 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
         if (alpha <= 0 || alpha >= 1)
             throw new IllegalArgumentException("Invalid alpha level: " + alpha);
         
-        UnivariateRealSolverFactory factory = UnivariateRealSolverFactory.newInstance();
-        UnivariateRealSolver solver = factory.newBisectionSolver();
-
+        BisectionSolver solver = new BisectionSolver();
         SampleSizeFunction sampleSizeFunc = new SampleSizeFunction(mu0, muA, sigma, alpha, power, isTwoTailed);
         
         try
         {
-            int sampleSize = (int) Math.ceil(solver.solve(sampleSizeFunc, MIN_SAMPLE_SIZE, MAX_SAMPLE_SIZE));
+            int sampleSize = (int) Math.ceil(solver.solve(MAX_ITERATIONS,
+                    sampleSizeFunc, MIN_SAMPLE_SIZE, MAX_SAMPLE_SIZE));
             OneSampleStudentsTPower actualPower = calculatePower(alpha, mu0, muA, sigma, sampleSize, isTwoTailed);
             actualPower.setNominalPower(power);
             return actualPower;
@@ -337,7 +335,7 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
      * @throws InvalidAlgorithmParameterException
      */
 	protected OneSampleStudentsTPower simulatePower(double alpha, double mu0, double muA, 
-    		double sigma, int sampleSize, boolean isTwoTailed, int simulationIterations) throws MathException
+    		double sigma, int sampleSize, boolean isTwoTailed, int simulationIterations)
 	{
         // calculate degrees of freedom
         int df = sampleSize-1;

@@ -28,6 +28,7 @@ package edu.cudenver.bios.power;
 public class PowerException extends Exception
 {
 	static final long serialVersionUID = -1L;
+	protected PowerErrorEnum errorCode = null;
 	
 	/**
 	 * Constructor taking an error message
@@ -39,6 +40,16 @@ public class PowerException extends Exception
 	}
 	
 	/**
+	 * Constructor taking an error message and error code
+	 * @param msg
+	 */
+	public PowerException(String msg, PowerErrorEnum errorCode)
+	{
+	    super(msg);
+	    this.errorCode = errorCode;
+	}
+	
+	/**
 	 * Constructor taking a Throwable object
 	 * @param e
 	 */
@@ -46,4 +57,13 @@ public class PowerException extends Exception
 	{
 		super(e);
 	}
+
+	/**
+	 * Get the error code for this exception
+	 * @return error code
+	 */
+    public PowerErrorEnum getErrorCode() {
+        return errorCode;
+    }	
+	
 }

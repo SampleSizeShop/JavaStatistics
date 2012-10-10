@@ -22,9 +22,10 @@ package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.MatrixUtils;
@@ -35,6 +36,8 @@ import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
+import edu.cudenver.bios.utils.Factor;
 import junit.framework.TestCase;
 
 /**
@@ -46,33 +49,61 @@ import junit.framework.TestCase;
  */
 public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 {
-	private static final String MB_DATA_FILE =  "data" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMB.xml";
-	private static final String MEST_DATA_FILE =  "data" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMEST.xml";
+	private static final String MB_DATA_FILE =  "data" + File.separator 
+	        + "TestConditionalOrthogonalPolynomial2FactorMB.xml";
+	private static final String MEST_DATA_FILE =  "data" + File.separator 
+	        + "TestConditionalOrthogonalPolynomial2FactorMEST.xml";
 
-	private static final String MB_OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMB.html";
-	private static final String MEST_OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMEST.html";
+	private static final String MB_OUTPUT_FILE = "text" + File.separator + 
+	        "results" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMB.tex";
+	private static final String MEST_OUTPUT_FILE = "text" + File.separator + 
+	        "results" + File.separator + "TestConditionalOrthogonalPolynomial2FactorMEST.tex";
 
-	private static final String TITLE = "Power results for 2 within factor orthogonal polynomial contrasts";
+    private static final String AUTHOR = "Sarah Kreidler";
+    private static final String STUDY_DESIGN_DESCRIPTION = 
+            "The study design in Example 9 is a one sample design with two within participant " +
+            "factors.  We calculate power for a test of the trend by trend interaction " +
+            "of the two within participant factors.  The design is based on an example from \n\n" +
+            "\\hangindent2em\n\\hangafter=1\nCoffey, C. S., \\& Muller, K. E. (2003). " +
+            "Properties of internal pilots with the univariate approach to repeated measures. " +
+            "\\emph{Statistics in Medicine}, \\emph{22}(15), 2469-2485.\n\n";
 	
+	private static final String TITLE_MB = "GLMM(F) Example 9 MB: Power for a multivariate model" +
+			" with two within subject factors, using the Muller and Barton approximation";
+	private static final String DESCRIPTION_MB = "The power calculations use the approximation " +
+			"method described in \n\n\\hangindent2em\n\\hangafter=1\n" +
+			"Muller, K. E., \\& Barton, C. N. (1989). Approximate Power for " +
+			"Repeated-Measures ANOVA Lacking Sphericity. " +
+			"\\emph{Journal of the American Statistical Association}, \\emph{84}(406), 549-555.";
+	private static final String TITLE_MEST = "GLMM(F) Example 9 MEST: Power for a multivariate " +
+			"model with two within subject factors, using the Muller, Edwards, Simpson, Taylor approximation";
+    private static final String DESCRIPTION_MEST = "The power calculations use the approximation " +
+            "method described in \n\n\\hangindent2em\n\\hangafter=1\n" +
+            "Muller, K. E., Edwards, L. J., Simpson, S. L., \\& Taylor, D. J. (2007). " +
+            "Statistical tests with accurate size and power for balanced linear mixed models. " +
+            "\\emph{Statistics in Medicine}, \\emph{26}(19), 3639-3660.";
+	private boolean verbose = false;
 	// groups for factors A,B, and C
-	double[] factorA = {1,2,4};
+	double[] dataA = {1,2,4};
 	String nameA = "A";
-	double[] factorB = {1,3,5};
+	Factor factorA = new Factor(nameA, dataA);
+	double[] dataB = {1,3,5};
 	String nameB = "B";
-
+	Factor factorB = new Factor(nameB, dataB);
+	
 	// sigma* matrices
 	double[] varE = {.47960, .01000, .01000, .01000}; // epsilon ~ 0.28
 	RealMatrix sigStarE = 
-		org.apache.commons.math.linear.MatrixUtils.createRealDiagonalMatrix(varE);
+		org.apache.commons.math3.linear.MatrixUtils.createRealDiagonalMatrix(varE);
 	double[] varF = {.34555, .06123, .05561, .04721}; // epsilon ~ 0.5
 	RealMatrix sigStarF = 
-		org.apache.commons.math.linear.MatrixUtils.createRealDiagonalMatrix(varF);
+		org.apache.commons.math3.linear.MatrixUtils.createRealDiagonalMatrix(varF);
 	double[] varG =  {.23555, .17123, .05561, .04721}; // epsilon ~ .72 
 	RealMatrix sigStarG = 
-		org.apache.commons.math.linear.MatrixUtils.createRealDiagonalMatrix(varG);
+		org.apache.commons.math3.linear.MatrixUtils.createRealDiagonalMatrix(varG);
 	double[] varH = {.12740, .12740, .12740, .12740}; // epsilon = 1 
 	RealMatrix sigStarH = 
-		org.apache.commons.math.linear.MatrixUtils.createRealDiagonalMatrix(varH);
+		org.apache.commons.math3.linear.MatrixUtils.createRealDiagonalMatrix(varH);
 	RealMatrix[] sigmaStars = {sigStarE, sigStarF, sigStarG, sigStarH};
 
 	/**
@@ -111,7 +142,9 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		params.setUnivariateEpsilonMethod(Test.UNIREP_HUYNH_FELDT, 
 				UnivariateEpsilonApproximation.MULLER_BARTON_APPROX);
 
-		checkPower(checker, TITLE +  ": Muller Barton", MB_OUTPUT_FILE, params, false);
+		checkPower(checker, TITLE_MB, 
+		        STUDY_DESIGN_DESCRIPTION + DESCRIPTION_MB, 
+		        MB_OUTPUT_FILE, params);
 	}
 	
 	/**
@@ -150,7 +183,9 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		params.setUnivariateEpsilonMethod(Test.UNIREP_HUYNH_FELDT, 
 				UnivariateEpsilonApproximation.MULLER_EDWARDS_TAYLOR_APPROX);
 
-		checkPower(checker, TITLE + ": Muller Edwards Simpson Taylor", MEST_OUTPUT_FILE, params, true);
+		checkPower(checker, TITLE_MEST, 
+		        STUDY_DESIGN_DESCRIPTION + DESCRIPTION_MEST,
+		        MEST_OUTPUT_FILE, params);
 	}
 
 	/**
@@ -159,17 +194,21 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 	 * @param outputFilename
 	 * @param params
 	 */
-	private void checkPower(PowerChecker checker, String title, String outputFilename, 
-			GLMMPowerParameters params, boolean verifyAgainstSimulation)
+	private void checkPower(PowerChecker checker, String title, 
+	        String description,
+	        String outputFilename, 
+			GLMMPowerParameters params)
 	{
-		System.out.println(title);
 		/* 
 		 * get orthogonal contrasts for within subject factors
 		 * Log base 2 spacing Clip (2,4,16) and Region(2,8,32) 
 		 */
+        ArrayList<Factor> factorList = new ArrayList<Factor>();
+        factorList.add(factorA);
+        factorList.add(factorB);
 		OrthogonalPolynomialContrastCollection collection = 
-			OrthogonalPolynomials.withinSubjectContrast(factorA, nameA, factorB, nameB);
-		params.setWithinSubjectContrast(collection.getTwoFactorInteractionContrast(nameA, nameB));
+			OrthogonalPolynomials.withinSubjectContrast(factorList);
+		params.setWithinSubjectContrast(collection.getInteractionContrast(factorList).getContrastMatrix());
 		
 		// theta critical matrix used to back-tranform beta from U
 		//	 THETA = {.25}#{.5 1 -1 .5}; * =Theta(cr) from 1st sentence *after* 
@@ -193,13 +232,13 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 				RealMatrix sigmaTemp = U.multiply(sigStar).multiply(U.transpose());
 				int dimension = sigmaTemp.getRowDimension();
 				RealMatrix Uother = 
-					MatrixUtils.createRealMatrixWithFilledValue(dimension, 1, 1/Math.sqrt(U.getColumnDimension()));
-				Uother = MatrixUtils.horizontalAppend(Uother, collection.getMainEffectContrast(nameA));
-				Uother = MatrixUtils.horizontalAppend(Uother, collection.getMainEffectContrast(nameB));
+					MatrixUtils.getRealMatrixWithFilledValue(dimension, 1, 1/Math.sqrt(U.getColumnDimension()));
+				Uother = MatrixUtils.getHorizontalAppend(Uother, collection.getMainEffectContrast(factorA).getContrastMatrix());
+				Uother = MatrixUtils.getHorizontalAppend(Uother, collection.getMainEffectContrast(factorB).getContrastMatrix());
 				double varianceMean = (double) sigStar.getTrace() / (double) sigStar.getColumnDimension();
 				RealMatrix sigmaError = sigmaTemp.add(Uother.multiply(Uother.transpose()).scalarMultiply(varianceMean));
 				
-				printMatrix("Sigma Error",sigmaError);
+				if (verbose) printMatrix("Sigma Error",sigmaError);
 				// 1st paragraph in section 2.4, Coffey and Muller 2003 *; 
 				RealMatrix beta = thetaCr.multiply(U.transpose());       
 				params.setSigmaError(sigmaError);
@@ -209,12 +248,19 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 			}
 
 		}
-		// output and test the results
-		checker.outputResults();
-		checker.outputResults(title, outputFilename);
+
+        // output the results
+        try {
+            ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+            reportBuilder.createValidationReportAsStdout(checker, title, false);
+            reportBuilder.createValidationReportAsLaTex(
+                    outputFilename, title, AUTHOR, description, 
+                    params, checker);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        
 		assertTrue(checker.isSASDeviationBelowTolerance());
-		if (verifyAgainstSimulation)
-			assertTrue(checker.isSimulationDeviationBelowTolerance());
 		checker.reset();
 	}
 	
@@ -252,7 +298,7 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		params.addAlpha(0.04);
 
 		// build the design matrix 
-		params.setDesignEssence(org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1));
+		params.setDesignEssence(org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(1));
 
 		// set between subject contrast
 		double[][] cData = {{1}};
@@ -262,7 +308,7 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		params.addBetaScale(1);
 
 		// build theta null matrix
-		params.setTheta(MatrixUtils.createRealMatrixWithFilledValue(1, 4, 0));
+		params.setTheta(MatrixUtils.getRealMatrixWithFilledValue(1, 4, 0));
 
 		// add sigma scale values
 		// gamma in Coffey and Muller (2003) *;

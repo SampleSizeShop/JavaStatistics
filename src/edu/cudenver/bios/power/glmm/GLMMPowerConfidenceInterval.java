@@ -23,6 +23,8 @@ package edu.cudenver.bios.power.glmm;
 import jsc.distributions.ChiSquared;
 import jsc.distributions.FishersF;
 import edu.cudenver.bios.distribution.NonCentralFDistribution;
+import edu.cudenver.bios.power.PowerErrorEnum;
+import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.utils.ConfidenceInterval;
 
 public class GLMMPowerConfidenceInterval extends ConfidenceInterval
@@ -51,24 +53,26 @@ public class GLMMPowerConfidenceInterval extends ConfidenceInterval
 			ConfidenceIntervalType ciType, double alphaLower, double alphaUpper, 
 			int sampleSizeForEstimates, int designRankForEstimates, double alpha,
 			GLMMTest test)
-	throws IllegalArgumentException
+	throws PowerException
 	{	
 		// bail if no confidence limits are requested
 		if (ciType == ConfidenceIntervalType.NONE)
-			throw new IllegalArgumentException("invalid confidence interval type");
+			throw new PowerException("invalid confidence interval type",
+			        PowerErrorEnum.POWER_CI_UNKNOWN_TYPE);
 		// TODO: error checking
 		
 		double powerLower = alpha;
 		double powerUpper = 1;
 
-		if (test instanceof GLMMTestUnivariateRepeatedMeasures)
+		if (test instanceof GLMMTestUnivariateRepeatedMeasures && test.isMultivariate())
 		{
 			// special case for the unirep CI's 
 			// TODO: polymorphosize this somehow rather using a giant if/else
 			// I don't think the theory exists for estimated beta and sigma for power CI's
-			if (ciType == ConfidenceIntervalType.BETA_SIGMA_ESTIMATED)
-				throw new IllegalArgumentException("cannot compute confidence limits for both beta and " + 
-						"sigma estimated as the theory has not yet been derived");
+			if (ciType == ConfidenceIntervalType.BETA_SIGMA_ESTIMATED && test.isMultivariate())
+				throw new PowerException("cannot compute confidence limits for both beta and " + 
+						"sigma estimated as the theory has not yet been derived",
+						PowerErrorEnum.POWER_CI_MULTIVARIATE_BETA_SIGMA_ESTIMATED);
 
 			/*
 			 * Based on theoretical results for UNIREP from:

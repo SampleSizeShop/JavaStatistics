@@ -22,13 +22,14 @@ package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.MatrixUtils;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.MatrixUtils;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 import junit.framework.TestCase;
 
 /**
@@ -54,9 +55,21 @@ public class TestConditionalTwoSampleTTest extends TestCase
     private static final double[] SIGMA_SCALE_LIST = {0.32, 1.00, 2.05};
     private static final int[] SAMPLE_SIZE_LIST = {10};
 
-	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalTwoSampleTTest.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalTwoSampleTTest.html";
-	private static final String TITLE = "Power results for Two Sample TTest";
+	private static final String DATA_FILE =  "data" + File.separator + 
+	        "TestConditionalTwoSampleTTest.xml";
+	private static final String OUTPUT_FILE = "text" + File.separator + 
+	        "results" + File.separator + "TestConditionalTwoSampleTTest.tex";
+	private static final String TITLE = "GLMM(F) Example 1. Power for a two " +
+			"sample t-test for several error variance values and mean differences";
+	private static final String AUTHOR = "Sarah Kreidler";
+	private static final String STUDY_DESIGN_DESCRIPTION  = 
+	        "The study design for Example 1 is a balanced, two-group design.  We calculate " +
+	        "power for a two-sample t-test comparing the mean responses between the " +
+	        "two groups.  The example is based on the " +
+	        "results in \n\n\\hangindent2em\n\\hangafter=1\n" +
+	        "Muller, K. E., \\& Benignus, V. A. (1992). \\emph{Neurotoxicology and " +
+	        "teratology}, \\emph{14}(3), 211-219.";
+	
 	private PowerChecker checker;
 	
 	public void setUp()
@@ -111,12 +124,19 @@ public class TestConditionalTwoSampleTTest extends TestCase
         double [][] between = {{1,-1}};
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
 
-        System.out.println(TITLE);
-        checker.checkPower(params);
-		checker.outputResults();
-		checker.outputResults(TITLE, OUTPUT_FILE);
-		assertTrue(checker.isSASDeviationBelowTolerance());
-		assertTrue(checker.isSimulationDeviationBelowTolerance());
-		checker.reset();
+        try {
+            checker.checkPower(params);
+            // output the results
+            ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+            reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+            reportBuilder.createValidationReportAsLaTex(
+                    OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
+                    params, checker);
+
+            assertTrue(checker.isSASDeviationBelowTolerance());
+            checker.reset();
+        } catch (Exception e) {
+
+        }
     }
 }

@@ -22,20 +22,17 @@ package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.MatrixUtils;
+import junit.framework.TestCase;
 
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.MatrixUtils;
+
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RandomColumnMetaData;
-import edu.cudenver.bios.matrix.RowMetaData;
-import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
-import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.test.PowerChecker;
-import junit.framework.TestCase;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
 
 /**
  * Test case for approximate unconditional power for the UNIREP.  Values should match
@@ -48,72 +45,112 @@ public class TestUnirepApproximateUnconditional extends TestCase
 {
     private static final double[] ALPHA_LIST = {0.05};    
     private static final double[] SIGMA_SCALE_LIST = {1};	
-	    
 
-	private static final String DATA_FILE =  "data" + File.separator + "TestUnirepApproximateUnconditional.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "UnirepApproximateUnconditionalOutput.html";
-	private static final String TITLE = "Power results for UNIREP, approximate unconditional";
-	private PowerChecker checker;
-	
-	public void setUp()
-	{
-		try
-		{
-			checker = new PowerChecker(DATA_FILE, true);
-		}
-		catch (Exception e)
-		{
-			System.err.println("Setup failed: " + e.getMessage());
-			fail();
-		}
-	}
-	
+
+    private static final String DATA_FILE =  "data" + File.separator + "TestUnirepApproximateUnconditional.xml";
+    private static final String OUTPUT_FILE = "text" + File.separator + "results" + 
+            File.separator + "UnirepApproximateUnconditionalOutput.tex";
+    private static final String TITLE = "GLMM(F, g) Example 7. Unconditional " +
+            "power for the uncorrected univariate approach to repeated " +
+            "measures, Box, Geisser-Greenhouse, and Huynh-Feldt tests, " +
+            "using the Satterthwaite approximation";
+    private static final String AUTHOR = "Sarah Kreidler";
+    private static final String STUDY_DESIGN_DESCRIPTION  = 
+            "The study design in Example 7 is a three sample design with " +
+                    "a baseline covariate and four repeated measurements.  We calculate " +
+                    "the unconditional power for a test of no difference between groups at each " +
+                    "time point.  We calculate unconditional power for the " +
+                    "uncorrected univariate approach to repeated measures, " +
+                    "Box, Geisser-Greenhouse, and Huynh-Feldt tests." +
+                    "A Satterthwaite approximation is used to obtain the approximate " +
+                    "distribution of the test statistic under the alternative hypothesis.  " +
+                    "Unconditional power is calculated for the following combinations " +
+                    "of mean differences and per group sample sizes.\n\n" +
+                    "\\begin{enumerate}" +
+                    "\\item Per group sample size of 5, with beta scale values " +
+                    "0.4997025, 0.8075886, and 1.097641" +
+                    "\\item Per group sample size of 25, with beta scale values " +
+                    "0.1651525, 0.2623301, and 0.3508015" +
+                    "\\item Per group sample size of 50, with beta scale values " +
+                    "0.1141548,  0.1812892, and  0.2423835\n" +
+                    "\\end{enumerate}\n\n" +
+                    "The example is based on Table II from\n\n" +
+                    "\\hangindent2em\n\\hangafter=1\n Glueck, D. H., \\& Muller, K. E. (2003). " +
+                    "Adjusting power for a baseline covariate in linear models. \\emph{Statistics " +
+                    "in Medicine}, \\emph{22}(16), 2535-2551.\n\n";
+
+    private PowerChecker checker;
+
+    public void setUp()
+    {
+        try
+        {
+            checker = new PowerChecker(DATA_FILE, true);
+        }
+        catch (Exception e)
+        {
+            System.err.println("Setup failed: " + e.getMessage());
+            fail();
+        }
+    }
+
     /**
      * Compare the calculated UNIREP approximate unconditional powers against simulation
      */
     public void testPower()
     {
         // build the inputs
-    	double[] beta5 = {
-    			0.4997025,
-    	    	0.8075886,
-    	    	1.097641};
+        double[] beta5 = {
+                0.4997025,
+                0.8075886,
+                1.097641};
         GLMMPowerParameters params5 = buildValidMultivariateRandomInputs(beta5, 5);
         double[] beta25 = {
-            	0.1651525,
-            	0.2623301, 
-            	0.3508015
+                0.1651525,
+                0.2623301, 
+                0.3508015
         };
         GLMMPowerParameters params25 = buildValidMultivariateRandomInputs(beta25, 25);
         double[] beta50 = {
-        		0.1141548,
-            	0.1812892,
-            	0.2423835
+                0.1141548,
+                0.1812892,
+                0.2423835
         };
         GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
 
-		System.out.println(TITLE);
-		Test[] list = {Test.UNIREP,Test.UNIREP_BOX,
-				Test.UNIREP_GEISSER_GREENHOUSE,Test.UNIREP_HUYNH_FELDT};
-		for(Test test : list)
-		{
-			params5.clearTestList();
-			params5.addTest(test);
-			params25.clearTestList();
-			params25.addTest(test);
-			params50.clearTestList();
-			params50.addTest(test);
-			checker.checkPower(params5);
-			checker.checkPower(params25);
-			checker.checkPower(params50);
-		}
-		checker.outputResults();
-		checker.outputResults(TITLE, OUTPUT_FILE);
-		assertTrue(checker.isSASDeviationBelowTolerance());
-		assertTrue(checker.isSimulationDeviationBelowTolerance());
-		checker.reset();	
+        Test[] list = {Test.UNIREP,Test.UNIREP_BOX,
+                Test.UNIREP_GEISSER_GREENHOUSE,Test.UNIREP_HUYNH_FELDT};
+        for(Test test : list)
+        {
+            params5.clearTestList();
+            params5.addTest(test);
+            params25.clearTestList();
+            params25.addTest(test);
+            params50.clearTestList();
+            params50.addTest(test);
+            checker.checkPower(params5);
+            checker.checkPower(params25);
+            checker.checkPower(params50);
+        }
+        // output the results
+        try {
+            // clear the beta scale list and per group N since this is described in the
+            // study design section and may be confusing if we list all the beta scales
+            // twice.
+            params50.clearBetaScaleList();
+            params50.clearSampleSizeList();
+            ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+            reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+            reportBuilder.createValidationReportAsLaTex(
+                    OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
+                    params50, checker);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        assertTrue(checker.isSASDeviationBelowTolerance());
+        checker.reset();	
     }
-    
+
     /**
      * Builds matrices for a multivariate GLM with a baseline covariate
      * This matrix set matches the values produced in Table II from Glueck&Muller
@@ -121,10 +158,10 @@ public class TestUnirepApproximateUnconditional extends TestCase
     private GLMMPowerParameters buildValidMultivariateRandomInputs(double[] betaScaleList, int repn)
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
-        
+
         // add unconditional power method
         params.addPowerMethod(PowerMethod.UNCONDITIONAL_POWER);
-		
+
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
@@ -133,7 +170,7 @@ public class TestUnirepApproximateUnconditional extends TestCase
         // create design matrix
         params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(Q));
         // add sample size multipliers
-      //  for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
+        //  for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         params.addSampleSize(repn);
         // build sigma G matrix
         double[][] sigmaG = {{1}};
@@ -150,14 +187,14 @@ public class TestUnirepApproximateUnconditional extends TestCase
 
         // add sigma scale values
         for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
-        
+
         // build beta matrix
         double [][] beta = {{1,0,0,0},{0,2,0,0},{0,0,0,0}};
         double [][] betaRandom = {{1,1,1,1}};
         params.setBeta(new FixedRandomMatrix(beta, betaRandom, false));
         // add beta scale values
         for(double betaScale: betaScaleList) params.addBetaScale(betaScale);
-        
+
         // build theta null matrix
         double [][] theta0 = {{0,0,0,0},{0,0,0,0}};
         params.setTheta(new Array2DRowRealMatrix(theta0));
@@ -166,7 +203,7 @@ public class TestUnirepApproximateUnconditional extends TestCase
         double [][] between = {{1,-1,0}, {1,0,-1}};
         double[][] betweenRandom = {{0}, {0}};
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, betweenRandom, true));
-        
+
         // build within subject contrast
         double [][] within = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));

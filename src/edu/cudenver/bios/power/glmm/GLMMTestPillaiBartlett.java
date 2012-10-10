@@ -20,9 +20,8 @@
  */
 package edu.cudenver.bios.power.glmm;
 
-import org.apache.commons.math.linear.InvalidMatrixException;
-import org.apache.commons.math.linear.LUDecompositionImpl;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
@@ -219,7 +218,7 @@ public class GLMMTestPillaiBartlett extends GLMMTest
     private double getPillaiBartlettTrace(RealMatrix H, RealMatrix E)
     {
         if (!H.isSquare() || !E.isSquare() || H.getColumnDimension() != E.getRowDimension())
-            throw new InvalidMatrixException("Failed to compute Pillai-Bartlett Trace: hypothesis and error matrices must be square and same dimensions");
+            throw new IllegalArgumentException("Failed to compute Pillai-Bartlett Trace: hypothesis and error matrices must be square and same dimensions");
         
         double a = C.getRowDimension();
         double b = U.getColumnDimension();
@@ -235,7 +234,7 @@ public class GLMMTestPillaiBartlett extends GLMMTest
         }
             
         RealMatrix T = adjustedH.add(E);
-        RealMatrix inverseT = new LUDecompositionImpl(T).getSolver().getInverse();
+        RealMatrix inverseT = new LUDecomposition(T).getSolver().getInverse();
 
         RealMatrix HinverseT = adjustedH.multiply(inverseT);
         
