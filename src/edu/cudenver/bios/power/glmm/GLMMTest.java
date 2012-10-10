@@ -346,4 +346,12 @@ public abstract class GLMMTest
     {
     	return multivariate;
     }
+    
+    /**
+     * Get the beta matrix
+     * @return beta matrix
+     */
+    public RealMatrix getBeta() {
+        return beta;
+    }
 }
