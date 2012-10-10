@@ -476,4 +476,27 @@ public class MatrixUtils
         }
         return isPositiveDefinite;
     }
+    
+
+    /**
+     * Find the maximum value in the matrix
+     * @param matrix
+     */
+    public static double getMaxValue(RealMatrix matrix) {
+        double max;
+        if (matrix == null) {
+            max = Double.NaN;
+        } else {
+            max = Double.NEGATIVE_INFINITY;
+            for(int r = 0; r < matrix.getRowDimension(); r++) {
+                for(int c = 0; c < matrix.getColumnDimension(); c++) {
+                    double value = matrix.getEntry(r, c);
+                    if (value > max) {
+                        max = value;
+                    }
+                }
+            }
+        }
+        return max;
+    }
 }
