@@ -34,6 +34,7 @@ import org.xml.sax.InputSource;
 import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
+import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.utils.ConfidenceInterval;
@@ -232,12 +233,17 @@ public class PowerChecker
     	List<Power> simResults = null;
     	if (simulate)
     	{
-    		if (verbose) System.out.println("Simulating power...");
-        	startTime = System.currentTimeMillis();
-    		simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
-    		long simTime = System.currentTimeMillis() - startTime;
-    		if (verbose) System.out.println("Done.  Elapsed time: " +  ((double) simTime / (double) 1000) + " seconds");
-        	timer.addSimulationTime(simTime);
+    	    try {
+    	        if (verbose) System.out.println("Simulating power...");
+    	        startTime = System.currentTimeMillis();
+
+    	        simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
+    	        long simTime = System.currentTimeMillis() - startTime;
+    	        if (verbose) System.out.println("Done.  Elapsed time: " +  ((double) simTime / (double) 1000) + " seconds");
+    	        timer.addSimulationTime(simTime);
+    	    } catch (PowerException e) {
+    	        System.out.println("Simulation failed: " + e.getMessage());
+    	    }
     	}
     	
     	// accumulate results and calculate maximum absolute deviation
