@@ -47,7 +47,7 @@ import edu.cudenver.bios.utils.ConfidenceInterval;
  */
 public class ValidationReportBuilder {
     // version of the library.  Updated during the build
-    private static final String LIBRARY_VERSION = "dev";
+    private static final String LIBRARY_VERSION = "UNKNOWN";
     // section headers and static text
     private static final String TITLE_PREFIX = "GLIMMPSE Validation Report: ";
     private static final String SECTION_INTRO = "Introduction";
