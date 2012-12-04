@@ -24,7 +24,9 @@ import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -44,7 +46,8 @@ import edu.cudenver.bios.utils.ConfidenceInterval;
  *
  */
 public class ValidationReportBuilder {
-
+    // version of the library.  Updated during the build
+    private static final String LIBRARY_VERSION = "dev";
     // section headers and static text
     private static final String TITLE_PREFIX = "GLIMMPSE Validation Report: ";
     private static final String SECTION_INTRO = "Introduction";
@@ -157,7 +160,7 @@ public class ValidationReportBuilder {
             try {
                 fWriter = new FileWriter(filename);
                 outFile = new BufferedWriter(fWriter);
-                addPreamble(outFile);
+                addPreamble(outFile, title, author);
                 addIntroduction(outFile, title, author);
                 addStudyDesignInfo(outFile, studyDesignDescription, params, matrixAltString);
                 addResults(outFile, checker, (params.getSigmaGaussianRandom() != null));
@@ -185,31 +188,41 @@ public class ValidationReportBuilder {
      * @param outFile output file stream
      * @throws IOException
      */
-    private void addPreamble(BufferedWriter outFile) 
+    private void addPreamble(BufferedWriter outFile,
+            String title, String author) 
             throws IOException {
-        outFile.write("\\documentclass[12pt,english]{article}\n" +
-                "\\renewcommand{\\familydefault}{\\sfdefault}" +
-                "\\usepackage{longtable,tabu}\n" +
-                "\\usepackage{savesym}\n" +
-                "\\usepackage{amsmath}\n" +
-                "\\savesymbol{iint}\n" +
-                "\\usepackage[T1]{fontenc}\n" +
-                "\\usepackage[latin9]{inputenc}\n" +
-                "\\usepackage{esint}\n" +
-                "\\usepackage{babel}\n" +
-                "\\usepackage{hyperref}\n" +
-                "\\usepackage{geometry}\n" +
-                "\\geometry{verbose,tmargin=1in,bmargin=1in,lmargin=0.5in,rmargin=0.5in}\n" +
-                "\\setlength{\\parskip}{\\medskipamount}\n" +
-                "\\setlength{\\parindent}{0pt}\n" +
-                "\\PassOptionsToPackage{normalem}{ulem}\n" +
-                "\\usepackage{ulem}\n" +
-                "\\usepackage{tabularx}\n" +
-                "\\usepackage{graphicx}\n" +
-                "\\usepackage{color}\n" +
-                "\\makeatletter\n\n" +
-                "\\begin{document}\n\n" +
-                "\\setcounter{MaxMatrixCols}{100}");
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date date = new Date();
+        
+        outFile.write("\\documentclass{glimmpse-report}\n" +
+                "\\JavaStatisticsVersion{" + LIBRARY_VERSION +"}\n" +
+                "\\doctitle{" + title + "}\n" + 
+                "\\docauthor{" + author + "}\n" + 
+                "\\docdate{" + dateFormat.format(date) + "}\n");
+        
+//        outFile.write("\\documentclass[12pt,english]{article}\n" +
+//                "\\renewcommand{\\familydefault}{\\sfdefault}" +
+//                "\\usepackage{longtable,tabu}\n" +
+//                "\\usepackage{savesym}\n" +
+//                "\\usepackage{amsmath}\n" +
+//                "\\savesymbol{iint}\n" +
+//                "\\usepackage[T1]{fontenc}\n" +
+//                "\\usepackage[latin9]{inputenc}\n" +
+//                "\\usepackage{esint}\n" +
+//                "\\usepackage{babel}\n" +
+//                "\\usepackage{hyperref}\n" +
+//                "\\usepackage{geometry}\n" +
+//                "\\geometry{verbose,tmargin=1in,bmargin=1in,lmargin=0.5in,rmargin=0.5in}\n" +
+//                "\\setlength{\\parskip}{\\medskipamount}\n" +
+//                "\\setlength{\\parindent}{0pt}\n" +
+//                "\\PassOptionsToPackage{normalem}{ulem}\n" +
+//                "\\usepackage{ulem}\n" +
+//                "\\usepackage{tabularx}\n" +
+//                "\\usepackage{graphicx}\n" +
+//                "\\usepackage{color}\n" +
+//                "\\makeatletter\n\n" +
+//                "\\begin{document}\n\n" +
+//                "\\setcounter{MaxMatrixCols}{100}");
     }
 
     /**
@@ -231,14 +244,12 @@ public class ValidationReportBuilder {
     private void addIntroduction(BufferedWriter outFile,
             String title, String author) 
                     throws IOException {
-        // add title
-        outFile.write("\\section*{"+TITLE_PREFIX + "}\n");
-        outFile.write("\\subsection*{"+title + "}\n");
-        Date currentDate = new Date();
-        outFile.write("Date: " + currentDate + "\n\n");
+        // start document
+        outFile.write("\\begin{document}\n");
         // add the introduction section shared across all validation reports
         outFile.write("\\section{"+SECTION_INTRO +"}\n");
-        outFile.write(TEXT_INTRO1 + " \n\n\\href{http://samplesizeshop.com}{http://samplesizeshop.com}.\n\n" +
+        outFile.write(TEXT_INTRO1 + 
+                " \n\n\\href{http://samplesizeshop.org}{http://samplesizeshop.org}.\n\n" +
                 TEXT_INTRO2);
     }
 
