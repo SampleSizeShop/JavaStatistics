@@ -56,6 +56,9 @@
     	<mkdir dir="${javadoc.dir}" />
         <mkdir dir="${journal.dir}"/>
         <mkdir dir="${validation.dir}"/>
+    	<!-- replace version for the validation reports -->
+    	<replace file="${source.dir}/edu/cudenver/bios/power/test/ValidationReportBuilder.java" 
+    		token="UNKNOWN" value="${module.version}"/>
     </target>
 
 	<!-- Run javadoc -->
@@ -139,13 +142,17 @@
 	<!-- Distribution submitted for validation by a journal -->
 	<target name="distribution.journal" depends="compress"> 
 		<mkdir dir="${journal.dir}/text/results" />
+		<copy todir="${journal.dir}/text/results">
+		  <fileset dir="${basedir}/../resources/" includes="*.cls"/>
+		</copy>
 		<mkdir dir="${journal.dir}/lib" />
 		<copy todir="${journal.dir}">
 		  <fileset dir="${basedir}/.." includes="data/**"/>
 		</copy>
 		<copy todir="${journal.dir}">
 			  <fileset dir="${basedir}/../.."  
-			  		includes="thirdparty/ApacheCommonsMath/**,
+			  		includes="thirdparty/ApacheCommonsMath/3.0/*.txt,
+			  		thirdparty/ApacheCommonsMath/3.0/lib/**,
 			  		thirdparty/junit/**,
 			  		thirdparty/jsc/**" />
 		</copy>
