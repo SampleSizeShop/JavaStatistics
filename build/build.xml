@@ -59,6 +59,8 @@
     	<!-- replace version for the validation reports -->
     	<replace file="${source.dir}/edu/cudenver/bios/power/test/ValidationReportBuilder.java" 
     		token="UNKNOWN" value="${module.version}"/>
+    	<replace file="${source.dir}/edu/cudenver/bios/power/test/paper/runPaperResults.bat" 
+    		token="UNKNOWN" value="${module.version}"/>
     </target>
 
 	<!-- Run javadoc -->
