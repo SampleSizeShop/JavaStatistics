@@ -970,12 +970,16 @@ public class GLMMPowerCalculator implements PowerCalculator
      * @param beta beta matrix
      * @return true if no mean difference, false otherwise
      */
-    private boolean noMeanDifference(RealMatrix beta) {
-        double value = beta.getEntry(0, 0);
-        for(int r = 0; r < beta.getRowDimension(); r++) {
-            for(int c = 0; c < beta.getColumnDimension(); c++) {
-                if (value != beta.getEntry(r, c)) {
-                    return false;
+    private boolean noMeanDifference(GLMMTest test) {
+        // get the difference between theta null and the alternative
+        RealMatrix sumSqHypothesis = test.getHypothesisSumOfSquares();
+        // check if there is at least one non-zero value
+        if (sumSqHypothesis != null) {
+            for(int r = 0; r < sumSqHypothesis.getRowDimension(); r++) {
+                for(int c = 0; c < sumSqHypothesis.getColumnDimension(); c++) {
+                    if (Double.compare(sumSqHypothesis.getEntry(r, c), 0.0) != 0) {
+                        return false;
+                    }
                 }
             }
         }
@@ -995,7 +999,7 @@ public class GLMMPowerCalculator implements PowerCalculator
             double alpha, double quantile, int maxPerGroupN) {
         // check if no mean difference.  In this case, sample size is undefined and
         // power is always alpha
-        if (noMeanDifference(glmmTest.getBeta())) {
+        if (noMeanDifference(glmmTest)) {
             return new SampleSizeBound(-1, alpha, 
                     SampleSizeError.SAMPLE_SIZE_UNDEFINED);
         }
