@@ -1,0 +1,189 @@
+\documentclass{glimmpse-report}
+\JavaStatisticsVersion{1.2.0}
+\doctitle{GLMM(F) Example 9 MEST: Power for a multivariate model with two within subject factors, using the Muller, Edwards, Simpson, Taylor approximation}
+\docauthor{Sarah Kreidler}
+\docdate{2012/12/05 14:54:57}
+\begin{document}
+\section{Introduction}
+The following report contains validation results for the JavaStatistics library, a component of the GLIMMPSE software system.  For more information about GLIMMPSE and related publications, please visit
+
+ 
+
+\href{http://samplesizeshop.org}{http://samplesizeshop.org}.
+
+The automated validation tests shown below compare power values produced by the JavaStatistics library to published results and also to simulation.  Sources for published values include POWERLIB (Johnson \emph{et al.} 2007) and a SAS IML implementation of the methods described by Glueck and Muller (2003).
+
+Validation results are listed in Section 3 of the report.  Timing results show the calculation and simulation times for the overall experiment and the mean times per power calculation.  Summary statistics show the maximum absolute deviation between the power value calculated by the JavaStatistics library and the results obtained from SAS or via simulation.  The table in Section 3.3 shows the deviation values for each individual power comparison.  Deviations larger than $10^{-6}$ from SAS power values and $0.05$ for simulated power values are displayed in red.
+
+ \section{Study Design}
+The study design in Example 9 is a one sample design with two within participant factors.  We calculate power for a test of the trend by trend interaction of the two within participant factors.  The design is based on an example from 
+
+\hangindent2em
+\hangafter=1
+Coffey, C. S., \& Muller, K. E. (2003). Properties of internal pilots with the univariate approach to repeated measures. \emph{Statistics in Medicine}, \emph{22}(15), 2469-2485.
+
+The power calculations use the approximation method described in 
+
+\hangindent2em
+\hangafter=1
+Muller, K. E., Edwards, L. J., Simpson, S. L., \& Taylor, D. J. (2007). Statistical tests with accurate size and power for balanced linear mixed models. \emph{Statistics in Medicine}, \emph{26}(19), 3639-3660.
+\subsection{Inputs to the Power Calculation}
+\subsubsection{List Inputs}
+
+{\bf Type I error rates}
+
+0.0400000
+
+{\bf Beta scale values}
+
+1.0000000
+
+{\bf Sigma scale values}
+
+0.5000000, 1.0000000, 2.0000000
+
+{\bf Per group sample size values}
+
+20
+
+{\bf Statistical tests}
+
+UNIREP-HF
+
+{\bf Power methods}
+
+cond
+
+\subsubsection{Matrix Inputs}
+
+\begin{eqnarray*}
+\underset{\left(1\times1\right)}{\text{Es}\left(\mathbf{X}\right)} & = & \begin{bmatrix}1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(1\times9\right)}{\mathbf{B}} & = & \begin{bmatrix}0.1133 & 0.0714 & -0.1848 & -0.1848 & 0.1133 & 0.0714 & 0.0714 & -0.1848 & 0.1133\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(1\times1\right)}{\mathbf{C}} & = & \begin{bmatrix}1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(9\times4\right)}{\mathbf{U}} & = & \begin{bmatrix}0.4364 & -0.2520 & -0.3780 & 0.2182\protect\\
+-0.0000 & 0.5040 & 0.0000 & -0.4364\protect\\
+-0.4364 & -0.2520 & 0.3780 & 0.2182\protect\\
+0.1091 & -0.0630 & 0.5669 & -0.3273\protect\\
+-0.0000 & 0.1260 & -0.0000 & 0.6547\protect\\
+-0.1091 & -0.0630 & -0.5669 & -0.3273\protect\\
+-0.5455 & 0.3150 & -0.1890 & 0.1091\protect\\
+0.0000 & -0.6299 & 0.0000 & -0.2182\protect\\
+0.5455 & 0.3150 & 0.1890 & 0.1091\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(1\times4\right)}{\mathbf{\Theta}_0} & = & \begin{bmatrix}0.0000 & 0.0000 & 0.0000 & 0.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(9\times9\right)}{\mathbf{\Sigma}_E} & = & \begin{bmatrix}0.1451 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177\protect\\
+0.0177 & 0.1451 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177\protect\\
+0.0177 & 0.0177 & 0.1451 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177\protect\\
+0.0177 & 0.0177 & 0.0177 & 0.1451 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177\protect\\
+0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.1451 & 0.0177 & 0.0177 & 0.0177 & 0.0177\protect\\
+0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.1451 & 0.0177 & 0.0177 & 0.0177\protect\\
+0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.1451 & 0.0177 & 0.0177\protect\\
+0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.1451 & 0.0177\protect\\
+0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.1451\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\section{Validation Results}
+A total of 48 power values were computed for this experiment.
+
+\subsection{Timing}
+\begin{tabular}{|l|l|l|}
+\hline
+ & Total Time (seconds) & Mean Time (seconds) \\ 
+\hline
+Calculation & 0.0000000 & 0.00E0\tabularnewline
+\hline
+Simulation & 29.2970000 & 6.10E-1\tabularnewline
+\hline
+\end{tabular}
+\subsection{Summary Statistics}
+\begin{tabular}{|l|l|}
+\hline
+Max deviation from SAS & 0.00000085\tabularnewline
+\hline
+
+Max deviation from simulation & 0.04492111\tabularnewline
+\hline
+
+\end{tabular}
+\subsection{Full Validation Results}
+\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}
+\hline
+{\bf Power} & {\bf SAS Power (deviation)} & {\bf Sim Power (deviation)} & {\bf Test} & {\bf Sigma Scale} & {\bf Beta Scale} & {\bf Total N} & {\bf Alpha} \\ \hline
+0.9999960 & 0.9999960 (0.0000000) & 1.0000000 (0.0000040) & UNIREP & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9859422 & 0.9859418 (0.0000003) & 0.9986000 (0.0126578) & UNIREP & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7606789 & 0.7606784 (0.0000005) & 0.8056000 (0.0449211) & UNIREP & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9999939 & 0.9999939 (0.0000000) & 1.0000000 (0.0000061) & UNIREP & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9863242 & 0.9863240 (0.0000002) & 0.9903000 (0.0039758) & UNIREP & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7707967 & 0.7707964 (0.0000003) & 0.7849000 (0.0141033) & UNIREP & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9999636 & 0.9999635 (0.0000001) & 1.0000000 (0.0000364) & UNIREP & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9783656 & 0.9783654 (0.0000002) & 0.9821000 (0.0037344) & UNIREP & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7529189 & 0.7529185 (0.0000003) & 0.7551000 (0.0021811) & UNIREP & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9999568 & 0.9999568 (0.0000001) & 0.9999000 (0.0000568) & UNIREP & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9778899 & 0.9778897 (0.0000003) & 0.9751000 (0.0027899) & UNIREP & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7541645 & 0.7541643 (0.0000002) & 0.7531000 (0.0010645) & UNIREP & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9977499 & 0.9977495 (0.0000004) & 0.9995000 (0.0017501) & UNIREP-BOX & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.8122317 & 0.8122311 (0.0000005) & 0.8388000 (0.0265683) & UNIREP-BOX & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.3518206 & 0.3518197 (0.0000008) & 0.3255000 (0.0263206) & UNIREP-BOX & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9981945 & 0.9981943 (0.0000002) & 0.9986000 (0.0004055) & UNIREP-BOX & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.8164318 & 0.8164316 (0.0000002) & 0.8246000 (0.0081682) & UNIREP-BOX & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.3290063 & 0.3290055 (0.0000007) & 0.3195000 (0.0095063) & UNIREP-BOX & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9965467 & 0.9965464 (0.0000002) & 0.9968000 (0.0002533) & UNIREP-BOX & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7963893 & 0.7963891 (0.0000002) & 0.7992000 (0.0028107) & UNIREP-BOX & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.3236838 & 0.3236832 (0.0000006) & 0.3218000 (0.0018838) & UNIREP-BOX & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9965295 & 0.9965293 (0.0000002) & 0.9958000 (0.0007295) & UNIREP-BOX & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7960583 & 0.7960581 (0.0000002) & 0.7942000 (0.0018583) & UNIREP-BOX & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.3176937 & 0.3176933 (0.0000004) & 0.3182000 (0.0005063) & UNIREP-BOX & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9985650 & 0.9985647 (0.0000003) & 0.9997000 (0.0011350) & UNIREP-GG & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.8414061 & 0.8414058 (0.0000003) & 0.8691000 (0.0276939) & UNIREP-GG & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.3879024 & 0.3879018 (0.0000006) & 0.3681000 (0.0198024) & UNIREP-GG & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9998623 & 0.9998622 (0.0000001) & 0.9999000 (0.0000377) & UNIREP-GG & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9391247 & 0.9391241 (0.0000005) & 0.9416000 (0.0024753) & UNIREP-GG & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.5565755 & 0.5565752 (0.0000003) & 0.5727000 (0.0161245) & UNIREP-GG & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9998433 & 0.9998432 (0.0000001) & 1.0000000 (0.0001567) & UNIREP-GG & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9532632 & 0.9532631 (0.0000002) & 0.9574000 (0.0041368) & UNIREP-GG & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.6380260 & 0.6380256 (0.0000004) & 0.6379000 (0.0001260) & UNIREP-GG & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9999225 & 0.9999224 (0.0000001) & 0.9998000 (0.0001225) & UNIREP-GG & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9694533 & 0.9694531 (0.0000002) & 0.9681000 (0.0013533) & UNIREP-GG & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7089472 & 0.7089468 (0.0000005) & 0.7101000 (0.0011528) & UNIREP-GG & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9986681 & 0.9986678 (0.0000003) & 0.9997000 (0.0010319) & UNIREP-HF & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.8458311 & 0.8458303 (0.0000007) & 0.8691000 (0.0232689) & UNIREP-HF & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.3938356 & 0.3938351 (0.0000006) & 0.3681000 (0.0257356) & UNIREP-HF & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9999083 & 0.9999083 (0.0000001) & 0.9999000 (0.0000083) & UNIREP-HF & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9494657 & 0.9494654 (0.0000003) & 0.9416000 (0.0078657) & UNIREP-HF & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.5893961 & 0.5893959 (0.0000002) & 0.5727000 (0.0166961) & UNIREP-HF & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9999026 & 0.9999025 (0.0000001) & 1.0000000 (0.0000974) & UNIREP-HF & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9634689 & 0.9634686 (0.0000003) & 0.9574000 (0.0060689) & UNIREP-HF & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.6785638 & 0.6785636 (0.0000002) & 0.6379000 (0.0406638) & UNIREP-HF & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9999568 & 0.9999568 (0.0000001) & 0.9998000 (0.0001568) & UNIREP-HF & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9778899 & 0.9778897 (0.0000003) & 0.9681000 (0.0097899) & UNIREP-HF & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7541645 & 0.7541643 (0.0000002) & 0.7101000 (0.0440645) & UNIREP-HF & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+\end{longtabu}
+\normalsize
+\section*{References}
+
+\hangindent2em
+\hangafter=1
+ Glueck, D. H., \& Muller, K. E. (2003). Adjusting power for a baseline covariate in linear models. \emph{Statistics in Medicine}, \emph{22}(16), 2535-2551.
+
+\hangindent2em
+\hangafter=1
+ Johnson, J. L., Muller, K. E., Slaughter, J. C., Gurka, M. J., \& Gribbin, M. J. (2009). POWERLIB: SAS/IML Software for Computing Power in Multivariate Linear Models. \emph{Journal of Statistical Software}, \emph{30}(5), 1-27.
+
+\hangindent2em
+\hangafter=1
+ Muller, K. E., \& Stewart, P. W. (2006). Linear model theory: univariate, multivariate, and mixed models. Hoboken, New Jersey: John Wiley and Sons.
+\end{document}
