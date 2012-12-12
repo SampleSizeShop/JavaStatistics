@@ -1,0 +1,185 @@
+\documentclass{glimmpse-report}
+\JavaStatisticsVersion{1.2.0}
+\doctitle{GLMM(F, g) Example 7. Unconditional power for the uncorrected univariate approach to repeated measures, Box, Geisser-Greenhouse, and Huynh-Feldt tests, using the Satterthwaite approximation}
+\docauthor{Sarah Kreidler}
+\docdate{2012/12/05 18:33:11}
+\begin{document}
+\section{Introduction}
+The following report contains validation results for the JavaStatistics library, a component of the GLIMMPSE software system.  For more information about GLIMMPSE and related publications, please visit
+
+ 
+
+\href{http://samplesizeshop.org}{http://samplesizeshop.org}.
+
+The automated validation tests shown below compare power values produced by the JavaStatistics library to published results and also to simulation.  Sources for published values include POWERLIB (Johnson \emph{et al.} 2007) and a SAS IML implementation of the methods described by Glueck and Muller (2003).
+
+Validation results are listed in Section 3 of the report.  Timing results show the calculation and simulation times for the overall experiment and the mean times per power calculation.  Summary statistics show the maximum absolute deviation between the power value calculated by the JavaStatistics library and the results obtained from SAS or via simulation.  The table in Section 3.3 shows the deviation values for each individual power comparison.  Deviations larger than $10^{-6}$ from SAS power values and $0.05$ for simulated power values are displayed in red.
+
+ \section{Study Design}
+The study design in Example 7 is a three sample design with a baseline covariate and four repeated measurements.  We calculate the unconditional power for a test of no difference between groups at each time point.  We calculate unconditional power for the uncorrected univariate approach to repeated measures, Box, Geisser-Greenhouse, and Huynh-Feldt tests.A Satterthwaite approximation is used to obtain the approximate distribution of the test statistic under the alternative hypothesis.  Unconditional power is calculated for the following combinations of mean differences and per group sample sizes.
+
+\begin{enumerate}\item Per group sample size of 5, with beta scale values 0.4997025, 0.8075886, and 1.097641\item Per group sample size of 25, with beta scale values 0.1651525, 0.2623301, and 0.3508015\item Per group sample size of 50, with beta scale values 0.1141548,  0.1812892, and  0.2423835
+\end{enumerate}
+
+The example is based on Table II from
+
+\hangindent2em
+\hangafter=1
+ Glueck, D. H., \& Muller, K. E. (2003). Adjusting power for a baseline covariate in linear models. \emph{Statistics in Medicine}, \emph{22}(16), 2535-2551.
+
+
+\subsection{Inputs to the Power Calculation}
+\subsubsection{List Inputs}
+
+{\bf Type I error rates}
+
+0.0500000
+
+{\bf Sigma scale values}
+
+1.0000000
+
+{\bf Statistical tests}
+
+UNIREP-HF
+
+{\bf Power methods}
+
+uncond
+
+\subsubsection{Matrix Inputs}
+
+\begin{eqnarray*}
+\underset{\left(3\times3\right)}{\text{Es}\left(\mathbf{X}\right)} & = & \begin{bmatrix}1.0000 & 0.0000 & 0.0000\protect\\
+0.0000 & 1.0000 & 0.0000\protect\\
+0.0000 & 0.0000 & 1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(4\times4\right)}{\mathbf{B}} & = & \begin{bmatrix}0.2424 & 0.0000 & 0.0000 & 0.0000\protect\\
+0.0000 & 0.4848 & 0.0000 & 0.0000\protect\\
+0.0000 & 0.0000 & 0.0000 & 0.0000\protect\\
+0.5000 & 0.5000 & 0.5000 & 0.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(2\times4\right)}{\mathbf{C}} & = & \begin{bmatrix}1.0000 & -1.0000 & 0.0000 & 0.0000\protect\\
+1.0000 & 0.0000 & -1.0000 & 0.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(4\times4\right)}{\mathbf{U}} & = & \begin{bmatrix}1.0000 & 0.0000 & 0.0000 & 0.0000\protect\\
+0.0000 & 1.0000 & 0.0000 & 0.0000\protect\\
+0.0000 & 0.0000 & 1.0000 & 0.0000\protect\\
+0.0000 & 0.0000 & 0.0000 & 1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(2\times4\right)}{\mathbf{\Theta}_0} & = & \begin{bmatrix}0.0000 & 0.0000 & 0.0000 & 0.0000\protect\\
+0.0000 & 0.0000 & 0.0000 & 0.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(4\times4\right)}{\mathbf{\Sigma}_E} & = & \begin{bmatrix}0.7500 & -0.2500 & -0.2500 & 0.0000\protect\\
+-0.2500 & 0.7500 & -0.2500 & 0.0000\protect\\
+-0.2500 & -0.2500 & 0.7500 & 0.0000\protect\\
+0.0000 & 0.0000 & 0.0000 & 1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(4\times4\right)}{\mathbf{\Sigma}_Y} & = & \begin{bmatrix}1.0000 & 0.0000 & 0.0000 & 0.0000\protect\\
+0.0000 & 1.0000 & 0.0000 & 0.0000\protect\\
+0.0000 & 0.0000 & 1.0000 & 0.0000\protect\\
+0.0000 & 0.0000 & 0.0000 & 1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(1\times1\right)}{\mathbf{\Sigma}_g} & = & \begin{bmatrix}1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(4\times1\right)}{\mathbf{\Sigma}_Yg} & = & \begin{bmatrix}0.5000\protect\\
+0.5000\protect\\
+0.5000\protect\\
+0.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\section{Validation Results}
+A total of 36 power values were computed for this experiment.
+
+\subsection{Timing}
+\begin{tabular}{|l|l|l|}
+\hline
+ & Total Time (seconds) & Mean Time (seconds) \\ 
+\hline
+Calculation & 24.8980000 & 6.92E-1\tabularnewline
+\hline
+Simulation & 3371.6380000 & 9.37E1\tabularnewline
+\hline
+\end{tabular}
+\subsection{Summary Statistics}
+\begin{tabular}{|l|l|}
+\hline
+Max deviation from SAS & 0.07290796\tabularnewline
+\hline
+
+Max deviation from simulation & 0.07143802\tabularnewline
+\hline
+
+\end{tabular}
+\subsection{Full Validation Results}
+\scriptsize\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}
+\hline
+{\bf Power} & {\bf SAS Power (deviation)} & {\bf Sim Power (deviation)} & {\bf Test} & {\bf Sigma Scale} & {\bf Beta Scale} & {\bf Total N} & {\bf Alpha} & {\bf Method} & {\bf Quantile}\\ \hline
+0.2364823 & 0.2507838 (\textcolor{red}{0.0143015}) & 0.2499250 (0.0134427) & UNIREP & 1.0000000 & 0.4997025 & 15 & 0.0500000 & uncond & NaN\\ \hline
+0.5677537 & 0.6000983 (\textcolor{red}{0.0323446}) & 0.6161050 (0.0483513) & UNIREP & 1.0000000 & 0.8075886 & 15 & 0.0500000 & uncond & NaN\\ \hline
+0.8597902 & 0.8821666 (\textcolor{red}{0.0223764}) & 0.9048930 (0.0451028) & UNIREP & 1.0000000 & 1.0976410 & 15 & 0.0500000 & uncond & NaN\\ \hline
+0.1690866 & 0.1772190 (\textcolor{red}{0.0081324}) & 0.1745740 (0.0054874) & UNIREP & 1.0000000 & 0.1651525 & 75 & 0.0500000 & uncond & NaN\\ \hline
+0.3792411 & 0.4029275 (\textcolor{red}{0.0236864}) & 0.4038810 (0.0246399) & UNIREP & 1.0000000 & 0.2623301 & 75 & 0.0500000 & uncond & NaN\\ \hline
+0.6404948 & 0.6704971 (\textcolor{red}{0.0300023}) & 0.6844220 (0.0439272) & UNIREP & 1.0000000 & 0.3508015 & 75 & 0.0500000 & uncond & NaN\\ \hline
+0.1658898 & 0.1737069 (\textcolor{red}{0.0078171}) & 0.1691040 (0.0032142) & UNIREP & 1.0000000 & 0.1141548 & 150 & 0.0500000 & uncond & NaN\\ \hline
+0.3701930 & 0.3932084 (\textcolor{red}{0.0230154}) & 0.3903980 (0.0202050) & UNIREP & 1.0000000 & 0.1812892 & 150 & 0.0500000 & uncond & NaN\\ \hline
+0.6275706 & 0.6573367 (\textcolor{red}{0.0297661}) & 0.6666280 (0.0390574) & UNIREP & 1.0000000 & 0.2423835 & 150 & 0.0500000 & uncond & NaN\\ \hline
+0.0231619 & 0.0271015 (\textcolor{red}{0.0039396}) & 0.0259960 (0.0028341) & UNIREP-BOX & 1.0000000 & 0.4997025 & 15 & 0.0500000 & uncond & NaN\\ \hline
+0.1278896 & 0.1539469 (\textcolor{red}{0.0260573}) & 0.1520860 (0.0241964) & UNIREP-BOX & 1.0000000 & 0.8075886 & 15 & 0.0500000 & uncond & NaN\\ \hline
+0.3958810 & 0.4541014 (\textcolor{red}{0.0582204}) & 0.4673190 (\textcolor{red}{0.0714380}) & UNIREP-BOX & 1.0000000 & 1.0976410 & 15 & 0.0500000 & uncond & NaN\\ \hline
+0.0202174 & 0.0227879 (\textcolor{red}{0.0025705}) & 0.0225720 (0.0023546) & UNIREP-BOX & 1.0000000 & 0.1651525 & 75 & 0.0500000 & uncond & NaN\\ \hline
+0.0828161 & 0.0983133 (\textcolor{red}{0.0154972}) & 0.0949160 (0.0120999) & UNIREP-BOX & 1.0000000 & 0.2623301 & 75 & 0.0500000 & uncond & NaN\\ \hline
+0.2379227 & 0.2775332 (\textcolor{red}{0.0396105}) & 0.2764920 (0.0385693) & UNIREP-BOX & 1.0000000 & 0.3508015 & 75 & 0.0500000 & uncond & NaN\\ \hline
+0.0204401 & 0.0229665 (\textcolor{red}{0.0025264}) & 0.0222500 (0.0018099) & UNIREP-BOX & 1.0000000 & 0.1141548 & 150 & 0.0500000 & uncond & NaN\\ \hline
+0.0822848 & 0.0974507 (\textcolor{red}{0.0151659}) & 0.0924690 (0.0101842) & UNIREP-BOX & 1.0000000 & 0.1812892 & 150 & 0.0500000 & uncond & NaN\\ \hline
+0.2345593 & 0.2732848 (\textcolor{red}{0.0387255}) & 0.2677950 (0.0332357) & UNIREP-BOX & 1.0000000 & 0.2423835 & 150 & 0.0500000 & uncond & NaN\\ \hline
+0.1502204 & 0.1849678 (\textcolor{red}{0.0347474}) & 0.1651860 (0.0149656) & UNIREP-GG & 1.0000000 & 0.4997025 & 15 & 0.0500000 & uncond & NaN\\ \hline
+0.4392418 & 0.5106322 (\textcolor{red}{0.0713904}) & 0.4899170 (\textcolor{red}{0.0506752}) & UNIREP-GG & 1.0000000 & 0.8075886 & 15 & 0.0500000 & uncond & NaN\\ \hline
+0.7731039 & 0.8306204 (\textcolor{red}{0.0575165}) & 0.8314810 (\textcolor{red}{0.0583771}) & UNIREP-GG & 1.0000000 & 1.0976410 & 15 & 0.0500000 & uncond & NaN\\ \hline
+0.1393048 & 0.1511189 (\textcolor{red}{0.0118141}) & 0.1449090 (0.0056042) & UNIREP-GG & 1.0000000 & 0.1651525 & 75 & 0.0500000 & uncond & NaN\\ \hline
+0.3331833 & 0.3634395 (\textcolor{red}{0.0302562}) & 0.3578880 (0.0247047) & UNIREP-GG & 1.0000000 & 0.2623301 & 75 & 0.0500000 & uncond & NaN\\ \hline
+0.5937547 & 0.6331895 (\textcolor{red}{0.0394348}) & 0.6390190 (0.0452643) & UNIREP-GG & 1.0000000 & 0.3508015 & 75 & 0.0500000 & uncond & NaN\\ \hline
+0.1405254 & 0.1500716 (\textcolor{red}{0.0095462}) & 0.1440080 (0.0034826) & UNIREP-GG & 1.0000000 & 0.1141548 & 150 & 0.0500000 & uncond & NaN\\ \hline
+0.3311429 & 0.3577574 (\textcolor{red}{0.0266145}) & 0.3509850 (0.0198421) & UNIREP-GG & 1.0000000 & 0.1812892 & 150 & 0.0500000 & uncond & NaN\\ \hline
+0.5875447 & 0.6230531 (\textcolor{red}{0.0355084}) & 0.6274390 (0.0398943) & UNIREP-GG & 1.0000000 & 0.2423835 & 150 & 0.0500000 & uncond & NaN\\ \hline
+0.2065391 & 0.2507838 (\textcolor{red}{0.0442447}) & 0.1651860 (0.0413531) & UNIREP-HF & 1.0000000 & 0.4997025 & 15 & 0.0500000 & uncond & NaN\\ \hline
+0.5271903 & 0.6000983 (\textcolor{red}{0.0729080}) & 0.4899170 (0.0372733) & UNIREP-HF & 1.0000000 & 0.8075886 & 15 & 0.0500000 & uncond & NaN\\ \hline
+0.8352167 & 0.8821666 (\textcolor{red}{0.0469499}) & 0.8314810 (0.0037357) & UNIREP-HF & 1.0000000 & 1.0976410 & 15 & 0.0500000 & uncond & NaN\\ \hline
+0.1469673 & 0.1653589 (\textcolor{red}{0.0183916}) & 0.1449090 (0.0020583) & UNIREP-HF & 1.0000000 & 0.1651525 & 75 & 0.0500000 & uncond & NaN\\ \hline
+0.3454088 & 0.3854879 (\textcolor{red}{0.0400791}) & 0.3578880 (0.0124792) & UNIREP-HF & 1.0000000 & 0.2623301 & 75 & 0.0500000 & uncond & NaN\\ \hline
+0.6065442 & 0.6542117 (\textcolor{red}{0.0476675}) & 0.6390190 (0.0324748) & UNIREP-HF & 1.0000000 & 0.3508015 & 75 & 0.0500000 & uncond & NaN\\ \hline
+0.1442476 & 0.1568753 (\textcolor{red}{0.0126277}) & 0.1440080 (0.0002396) & UNIREP-HF & 1.0000000 & 0.1141548 & 150 & 0.0500000 & uncond & NaN\\ \hline
+0.3370498 & 0.3682074 (\textcolor{red}{0.0311576}) & 0.3509850 (0.0139352) & UNIREP-HF & 1.0000000 & 0.1812892 & 150 & 0.0500000 & uncond & NaN\\ \hline
+0.5937805 & 0.6333866 (\textcolor{red}{0.0396061}) & 0.6274390 (0.0336585) & UNIREP-HF & 1.0000000 & 0.2423835 & 150 & 0.0500000 & uncond & NaN\\ \hline
+\end{longtabu}
+\normalsize
+\section*{References}
+
+\hangindent2em
+\hangafter=1
+ Glueck, D. H., \& Muller, K. E. (2003). Adjusting power for a baseline covariate in linear models. \emph{Statistics in Medicine}, \emph{22}(16), 2535-2551.
+
+\hangindent2em
+\hangafter=1
+ Johnson, J. L., Muller, K. E., Slaughter, J. C., Gurka, M. J., \& Gribbin, M. J. (2009). POWERLIB: SAS/IML Software for Computing Power in Multivariate Linear Models. \emph{Journal of Statistical Software}, \emph{30}(5), 1-27.
+
+\hangindent2em
+\hangafter=1
+ Muller, K. E., \& Stewart, P. W. (2006). Linear model theory: univariate, multivariate, and mixed models. Hoboken, New Jersey: John Wiley and Sons.
+\end{document}

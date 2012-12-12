@@ -1,0 +1,189 @@
+\documentclass{glimmpse-report}
+\JavaStatisticsVersion{1.2.0}
+\doctitle{GLMM(F) Example 9 MB: Power for a multivariate model with two within subject factors, using the Muller and Barton approximation}
+\docauthor{Sarah Kreidler}
+\docdate{2012/12/05 14:55:26}
+\begin{document}
+\section{Introduction}
+The following report contains validation results for the JavaStatistics library, a component of the GLIMMPSE software system.  For more information about GLIMMPSE and related publications, please visit
+
+ 
+
+\href{http://samplesizeshop.org}{http://samplesizeshop.org}.
+
+The automated validation tests shown below compare power values produced by the JavaStatistics library to published results and also to simulation.  Sources for published values include POWERLIB (Johnson \emph{et al.} 2007) and a SAS IML implementation of the methods described by Glueck and Muller (2003).
+
+Validation results are listed in Section 3 of the report.  Timing results show the calculation and simulation times for the overall experiment and the mean times per power calculation.  Summary statistics show the maximum absolute deviation between the power value calculated by the JavaStatistics library and the results obtained from SAS or via simulation.  The table in Section 3.3 shows the deviation values for each individual power comparison.  Deviations larger than $10^{-6}$ from SAS power values and $0.05$ for simulated power values are displayed in red.
+
+ \section{Study Design}
+The study design in Example 9 is a one sample design with two within participant factors.  We calculate power for a test of the trend by trend interaction of the two within participant factors.  The design is based on an example from 
+
+\hangindent2em
+\hangafter=1
+Coffey, C. S., \& Muller, K. E. (2003). Properties of internal pilots with the univariate approach to repeated measures. \emph{Statistics in Medicine}, \emph{22}(15), 2469-2485.
+
+The power calculations use the approximation method described in 
+
+\hangindent2em
+\hangafter=1
+Muller, K. E., \& Barton, C. N. (1989). Approximate Power for Repeated-Measures ANOVA Lacking Sphericity. \emph{Journal of the American Statistical Association}, \emph{84}(406), 549-555.
+\subsection{Inputs to the Power Calculation}
+\subsubsection{List Inputs}
+
+{\bf Type I error rates}
+
+0.0400000
+
+{\bf Beta scale values}
+
+1.0000000
+
+{\bf Sigma scale values}
+
+0.5000000, 1.0000000, 2.0000000
+
+{\bf Per group sample size values}
+
+20
+
+{\bf Statistical tests}
+
+UNIREP-HF
+
+{\bf Power methods}
+
+cond
+
+\subsubsection{Matrix Inputs}
+
+\begin{eqnarray*}
+\underset{\left(1\times1\right)}{\text{Es}\left(\mathbf{X}\right)} & = & \begin{bmatrix}1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(1\times9\right)}{\mathbf{B}} & = & \begin{bmatrix}0.1133 & 0.0714 & -0.1848 & -0.1848 & 0.1133 & 0.0714 & 0.0714 & -0.1848 & 0.1133\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(1\times1\right)}{\mathbf{C}} & = & \begin{bmatrix}1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(9\times4\right)}{\mathbf{U}} & = & \begin{bmatrix}0.4364 & -0.2520 & -0.3780 & 0.2182\protect\\
+-0.0000 & 0.5040 & 0.0000 & -0.4364\protect\\
+-0.4364 & -0.2520 & 0.3780 & 0.2182\protect\\
+0.1091 & -0.0630 & 0.5669 & -0.3273\protect\\
+-0.0000 & 0.1260 & -0.0000 & 0.6547\protect\\
+-0.1091 & -0.0630 & -0.5669 & -0.3273\protect\\
+-0.5455 & 0.3150 & -0.1890 & 0.1091\protect\\
+0.0000 & -0.6299 & 0.0000 & -0.2182\protect\\
+0.5455 & 0.3150 & 0.1890 & 0.1091\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(1\times4\right)}{\mathbf{\Theta}_0} & = & \begin{bmatrix}0.0000 & 0.0000 & 0.0000 & 0.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(9\times9\right)}{\mathbf{\Sigma}_E} & = & \begin{bmatrix}0.1451 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177\protect\\
+0.0177 & 0.1451 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177\protect\\
+0.0177 & 0.0177 & 0.1451 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177\protect\\
+0.0177 & 0.0177 & 0.0177 & 0.1451 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177\protect\\
+0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.1451 & 0.0177 & 0.0177 & 0.0177 & 0.0177\protect\\
+0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.1451 & 0.0177 & 0.0177 & 0.0177\protect\\
+0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.1451 & 0.0177 & 0.0177\protect\\
+0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.1451 & 0.0177\protect\\
+0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.0177 & 0.1451\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\section{Validation Results}
+A total of 48 power values were computed for this experiment.
+
+\subsection{Timing}
+\begin{tabular}{|l|l|l|}
+\hline
+ & Total Time (seconds) & Mean Time (seconds) \\ 
+\hline
+Calculation & 0.0000000 & 0.00E0\tabularnewline
+\hline
+Simulation & 29.2660000 & 6.10E-1\tabularnewline
+\hline
+\end{tabular}
+\subsection{Summary Statistics}
+\begin{tabular}{|l|l|}
+\hline
+Max deviation from SAS & 0.00000066\tabularnewline
+\hline
+
+Max deviation from simulation & 0.23161151\tabularnewline
+\hline
+
+\end{tabular}
+\subsection{Full Validation Results}
+\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}
+\hline
+{\bf Power} & {\bf SAS Power (deviation)} & {\bf Sim Power (deviation)} & {\bf Test} & {\bf Sigma Scale} & {\bf Beta Scale} & {\bf Total N} & {\bf Alpha} \\ \hline
+0.9755461 & 0.9755459 (0.0000002) & 1.0000000 (0.0244539) & UNIREP & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.8220355 & 0.8220351 (0.0000004) & 0.9986000 (\textcolor{red}{0.1765645}) & UNIREP & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.5739885 & 0.5739884 (0.0000001) & 0.8056000 (\textcolor{red}{0.2316115}) & UNIREP & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9968596 & 0.9968593 (0.0000003) & 1.0000000 (0.0031404) & UNIREP & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9127127 & 0.9127121 (0.0000005) & 0.9903000 (\textcolor{red}{0.0775873}) & UNIREP & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.6554971 & 0.6554966 (0.0000004) & 0.7849000 (\textcolor{red}{0.1294029}) & UNIREP & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9995247 & 0.9995246 (0.0000001) & 1.0000000 (0.0004753) & UNIREP & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9528973 & 0.9528971 (0.0000002) & 0.9821000 (0.0292027) & UNIREP & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7061649 & 0.7061644 (0.0000005) & 0.7551000 (0.0489351) & UNIREP & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9999568 & 0.9999568 (0.0000001) & 0.9999000 (0.0000568) & UNIREP & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9778899 & 0.9778897 (0.0000003) & 0.9751000 (0.0027899) & UNIREP & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7541645 & 0.7541643 (0.0000002) & 0.7531000 (0.0010645) & UNIREP & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9103656 & 0.9103654 (0.0000002) & 0.9995000 (\textcolor{red}{0.0891344}) & UNIREP-BOX & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.6267811 & 0.6267807 (0.0000004) & 0.8388000 (\textcolor{red}{0.2120189}) & UNIREP-BOX & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.3458915 & 0.3458912 (0.0000003) & 0.3255000 (0.0203915) & UNIREP-BOX & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9695016 & 0.9695013 (0.0000003) & 0.9986000 (0.0290984) & UNIREP-BOX & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7019812 & 0.7019806 (0.0000007) & 0.8246000 (\textcolor{red}{0.1226188}) & UNIREP-BOX & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.3412523 & 0.3412518 (0.0000005) & 0.3195000 (0.0217523) & UNIREP-BOX & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9883927 & 0.9883926 (0.0000002) & 0.9968000 (0.0084073) & UNIREP-BOX & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7502004 & 0.7502001 (0.0000004) & 0.7992000 (0.0489996) & UNIREP-BOX & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.3313736 & 0.3313734 (0.0000003) & 0.3218000 (0.0095736) & UNIREP-BOX & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9965295 & 0.9965293 (0.0000002) & 0.9958000 (0.0007295) & UNIREP-BOX & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7960583 & 0.7960581 (0.0000002) & 0.7942000 (0.0018583) & UNIREP-BOX & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.3176937 & 0.3176933 (0.0000004) & 0.3182000 (0.0005063) & UNIREP-BOX & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9213799 & 0.9213793 (0.0000006) & 0.9997000 (\textcolor{red}{0.0783201}) & UNIREP-GG & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.6522377 & 0.6522375 (0.0000002) & 0.8691000 (\textcolor{red}{0.2168623}) & UNIREP-GG & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.3704682 & 0.3704680 (0.0000002) & 0.3681000 (0.0023682) & UNIREP-GG & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9908842 & 0.9908841 (0.0000001) & 0.9999000 (0.0090158) & UNIREP-GG & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.8408832 & 0.8408831 (0.0000002) & 0.9416000 (\textcolor{red}{0.1007168}) & UNIREP-GG & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.5188983 & 0.5188980 (0.0000004) & 0.5727000 (\textcolor{red}{0.0538017}) & UNIREP-GG & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9987207 & 0.9987205 (0.0000001) & 1.0000000 (0.0012793) & UNIREP-GG & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9183204 & 0.9183200 (0.0000004) & 0.9574000 (0.0390796) & UNIREP-GG & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.6051993 & 0.6051989 (0.0000004) & 0.6379000 (0.0327007) & UNIREP-GG & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9999457 & 0.9999457 (0.0000000) & 0.9998000 (0.0001457) & UNIREP-GG & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9749046 & 0.9749042 (0.0000004) & 0.9681000 (0.0068046) & UNIREP-GG & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7371767 & 0.7371765 (0.0000003) & 0.7101000 (0.0270767) & UNIREP-GG & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9230438 & 0.9230432 (0.0000005) & 0.9997000 (\textcolor{red}{0.0766562}) & UNIREP-HF & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.6562571 & 0.6562568 (0.0000002) & 0.8691000 (\textcolor{red}{0.2128429}) & UNIREP-HF & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.3744612 & 0.3744611 (0.0000002) & 0.3681000 (0.0063612) & UNIREP-HF & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9924676 & 0.9924674 (0.0000002) & 0.9999000 (0.0074324) & UNIREP-HF & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.8566829 & 0.8566828 (0.0000001) & 0.9416000 (\textcolor{red}{0.0849171}) & UNIREP-HF & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.5451475 & 0.5451473 (0.0000003) & 0.5727000 (0.0275525) & UNIREP-HF & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9990824 & 0.9990822 (0.0000002) & 1.0000000 (0.0009176) & UNIREP-HF & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9318978 & 0.9318976 (0.0000002) & 0.9574000 (0.0255022) & UNIREP-HF & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.6411050 & 0.6411047 (0.0000002) & 0.6379000 (0.0032050) & UNIREP-HF & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9999568 & 0.9999568 (0.0000001) & 0.9998000 (0.0001568) & UNIREP-HF & 0.5000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.9778899 & 0.9778897 (0.0000003) & 0.9681000 (0.0097899) & UNIREP-HF & 1.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+0.7541645 & 0.7541643 (0.0000002) & 0.7101000 (0.0440645) & UNIREP-HF & 2.0000000 & 1.0000000 & 20 & 0.0400000\\ \hline
+\end{longtabu}
+\normalsize
+\section*{References}
+
+\hangindent2em
+\hangafter=1
+ Glueck, D. H., \& Muller, K. E. (2003). Adjusting power for a baseline covariate in linear models. \emph{Statistics in Medicine}, \emph{22}(16), 2535-2551.
+
+\hangindent2em
+\hangafter=1
+ Johnson, J. L., Muller, K. E., Slaughter, J. C., Gurka, M. J., \& Gribbin, M. J. (2009). POWERLIB: SAS/IML Software for Computing Power in Multivariate Linear Models. \emph{Journal of Statistical Software}, \emph{30}(5), 1-27.
+
+\hangindent2em
+\hangafter=1
+ Muller, K. E., \& Stewart, P. W. (2006). Linear model theory: univariate, multivariate, and mixed models. Hoboken, New Jersey: John Wiley and Sons.
+\end{document}
