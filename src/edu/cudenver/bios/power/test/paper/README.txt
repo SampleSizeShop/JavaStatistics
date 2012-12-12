@@ -4,8 +4,6 @@
 #
 # - GLMM(F) accuracy results from Table 2
 # - GLMM(F,g) accuracy results from Table 3
-# - ANOVA sample size results from Figure 4
-# - ANCOVA power results from Figure 5
 #
 # Note that simulation values and CPU times may vary depending 
 # on the processor and operating system.
@@ -14,7 +12,7 @@
 -------------------------------------------------------
 System requirements
 
-- Java Runtime Environment 1.6.0_x
+- Java Runtime Environment 1.7.0_x
 - Windows 7
 
 Note, the examples may run on other OS platforms, but have only been tested in Windows 7.
@@ -24,7 +22,7 @@ Instructions for running examples
 
 1. Download the GLIMMPSEresults.zip from 
 
-http://www.glimmpse.com/downloads/GLIMMPSEresults.zip
+http://samplesizeshop.org/files/2012/12/GLIMMPSEresults.zip
 
 2. Unzip the package.  By default, this should create a GLIMMPSEresults directory
 in the same location as the GLIMMPSEresults.zip file.
@@ -37,8 +35,6 @@ On Windows 7, this will open a DOS window to run the script.  It will
 produce 4 output files:
 - table2.out  : statistics displayed in Table 2
 - table3.out  : statistics displayed in Table 3
-- figure4.out : ANOVA sample size results from Figure 4
-- figure5.out : ANCOVA power results from Figure 5
 
 Please note that the simulations used for Tables 2 and 3 are time consuming,
 so the script will likely take anywhere from 12-24 hours to complete depending

@@ -23,18 +23,18 @@
 
 This library provides power and sample size calculations for the
 general linear multivariate model.  It is a component of the
-Glimmpse software system (http://www.glimmpse.com/)
+Glimmpse software system (http://glimmpse.samplesizeshop.org/)
 
 The power calculations are based on the work of Professor Keith E. Muller
 and colleagues.  A full list of related publications are available at:
 
-http://samplesizeshop.com/education/related-publications/
+http://samplesizeshop.org/education/related-publications/
 
 ------------------------------
 2.  LATEST VERSION
 ------------------------------
 
-Version 1.1.0
+Version 2.0.0
 
 ------------------------------
 3.  DOCUMENTATION
@@ -42,15 +42,15 @@ Version 1.1.0
 
 Documentation is available from the project web site:
 
-http://www.glimmpse.com/
+http://samplesizeshop.org/documentation/glimmpse/
 
 ------------------------------
 4. DEPENDENCIES
 ------------------------------
 
-Java Runtime Environment 1.6.0 or higher
+Java Runtime Environment 1.7.0 or higher
 JUnit 4.7
-Apache Commons Math 2.1 or higher
+Apache Commons Math 3.0 or higher
 JSC Statistics Package (http://www.jsc.nildram.co.uk/)
 Apache Ant 1.8.1
 
@@ -75,12 +75,10 @@ ant
 
 The resulting jar file is called
 
-${JAVASTATISTICS_HOME}/lib/JavaStatistics.jar
+${JAVASTATISTICS_HOME}/lib/edu.ucdenver.bios.javastatistics-${version}.jar
 
 The build script assumes that the a directory called thirdparty is
 installed at the same directory level as ${JAVASTATISTICS_HOME}.
-A thirdparty distribution in the appropriate format is available from 
-http://www.glimmpse.com/
 
 ------------------------------
 7. TEST / DEMO PROGRAMS

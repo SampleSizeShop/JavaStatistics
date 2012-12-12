@@ -145,7 +145,7 @@
 	<target name="distribution.journal" depends="compress"> 
 		<mkdir dir="${journal.dir}/text/results" />
 		<copy todir="${journal.dir}/text/results">
-		  <fileset dir="${basedir}/../resources/" includes="*.cls"/>
+		  <fileset dir="${basedir}/../resources/" includes="*"/>
 		</copy>
 		<mkdir dir="${journal.dir}/lib" />
 		<copy todir="${journal.dir}">
