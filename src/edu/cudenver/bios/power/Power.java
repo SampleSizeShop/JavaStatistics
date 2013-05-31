@@ -20,15 +20,19 @@
  */
 package edu.cudenver.bios.power;
 
+import java.io.Serializable;
+
 /**
  * Abstract base class for power calculation results.
  * 
  * @author Sarah Kreidler
  *
  */
-public abstract class Power
+public abstract class Power implements Serializable
 {	
-	String errMsg = null;
+    private static final long serialVersionUID = 7966872951224771875L;
+
+    String errMsg = null;
 	
 	double nominalPower;
 	

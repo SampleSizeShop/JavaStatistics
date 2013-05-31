@@ -21,6 +21,7 @@
 package edu.cudenver.bios.power.test.paper;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.RealMatrix;
@@ -31,6 +32,8 @@ import edu.cudenver.bios.power.glmm.GLMMPowerConfidenceInterval.ConfidenceInterv
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.test.PowerChecker;
+import edu.cudenver.bios.power.test.ValidationReportBuilder;
+import edu.cudenver.bios.utils.Factor;
 import junit.framework.TestCase;
 
 /**
@@ -42,14 +45,62 @@ import junit.framework.TestCase;
 *   (2009) POWERLIB: SAS/IML software for computing power in multivariate linear models, 
 *   Journal of Statistical Software, 30(5), 1-27.
 *   
+*   !WARNING! - you will need to increase the main_memory size in your
+*   LaTeX install to typeset this report.  To do so:
+*   1. Open a terminal window
+*   2. At the prompt enter
+*      initexmf --edit-config-file=latex
+*   3. In the editor window, type
+*   main_memory=10000000
+*   Save the file then quit the editor
+*   4. Rebuild the format by running
+*   initexmf --dump=latex
+*   5. Repeat steps 2-4 with config files 'pdflatex' and 'xelatex' 
+*   
  * @author Sarah Kreidler
  *
  */
 public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
 {
 	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalMultivariateWithConfidenceLimits.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + File.separator + "TestConditionalMultivariateWithConfidenceLimits.html";
-	private static final String TITLE = "GLMM(F) Example 6. Power and confidence limits for the univariate approach to repeated measures in a multivariate model";
+	private static final String OUTPUT_FILE = "text" + File.separator + 
+	        "results" + File.separator + "TestConditionalMultivariateWithConfidenceLimits.tex";
+	private static final String TITLE = "GLMM(F) Example 6. Power and confidence " +
+			"limits for the univariate approach to repeated measures in a multivariate model";
+    private static final String AUTHOR = "Sarah Kreidler";
+    private static final String STUDY_DESIGN_DESCRIPTION  = 
+            "The study design for Example 6 is a factorial design with two between participant " +
+            "factors and one within participant factor.  Participants were categorized by " +
+            "gender and classified into five age groups.  For each participant, cerebral vessel tortuosity " +
+            "was measured in four regions of the brain.  " +
+            "We calculate power for a test of the gender by region interaction. " +
+            "Confidence limits are computed for the power values.\n\n" +
+            "The matrix inputs below show the starting point for the $\\mathbf{B}$ matrix. " +
+            "The third column of the matrix (i.e. vessel tortuosity in the third region the brain) " +
+            "is modified throughout the validation experiment to progressively increase " +
+            "the effect of gender.  Mean values for males are increased by 0.0008 at each iteration, " +
+            "while corresponding values for females are decremented by 0.0008.  The process " +
+            "is restarted for each statistical test.  For example, the last power calculated for a given test " +
+            "would use the following $\\mathbf{B}$ matrix\n\n" +
+            "\\[\n" +
+            "\\mathbf{B}=\\begin{bmatrix}\n" +
+            "2.9 & 3.2 & 3.7 & 3.2\\\\\n" +
+            "2.9 & 3.2 & 3.7 & 3.2\\\\\n" +
+            "2.9 & 3.2 & 3.7 & 3.2\\\\\n" +
+            "2.9 & 3.2 & 3.7 & 3.2\\\\\n" +
+            "2.9 & 3.2 & 3.7 & 3.2\\\\\n" +
+            "2.9 & 3.2 & 3.3 & 3.2\\\\\n" +
+            "2.9 & 3.2 & 3.3 & 3.2\\\\\n" +
+            "2.9 & 3.2 & 3.3 & 3.2\\\\\n" +
+            "2.9 & 3.2 & 3.3 & 3.2\\\\\n" +
+            "2.9 & 3.2 & 3.3 & 3.2\n" +
+            "\\end{bmatrix}" +
+            "\\]\n\n" +
+            "The design is based on an example presented in\n\n " +
+            "\\hangindent2em\n\\hangafter=1\nGurka, M. J., Coffey, C. S., " +
+            "\\& Muller, K. E. (2007). Internal pilots for a class " +
+            "of linear mixed models with Gaussian and compound symmetric data. " +
+            "\\emph{Statistics in Medicine}, \\emph{26}(22), 4083-4099.\n\n";
 	private PowerChecker checker;
 	
     // set beta matrix
@@ -88,7 +139,7 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
     	Test[] testList = {Test.UNIREP_GEISSER_GREENHOUSE};
     	for(Test test: testList)
     	{
-    		GLMMPowerParameters params = buildInputs(test);
+    	    GLMMPowerParameters params = buildInputs(test);
 
     		for(double delta = 0.0; delta < 0.2001; delta += 0.0008)
     		{
@@ -101,8 +152,24 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
     		}
     	}
 
-		checker.outputResults(TITLE);
-		checker.outputResults(TITLE, OUTPUT_FILE);
+    	// we add all of the tests back into the params to ensure the report lists them all
+    	// we do this to ensure the order of results in the SAS output matches the order
+    	// in the JavaStatistics calls.
+    	GLMMPowerParameters params = buildInputs(Test.UNIREP);
+    	params.clearTestList();
+    	for(Test test: testList) {
+    	    params.addTest(test);
+    	}
+    	// output the results
+    	try {
+    	    ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+    	    reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+    	    reportBuilder.createValidationReportAsLaTex(
+    	            OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
+    	            params, checker);
+    	} catch (Exception e) {
+    	    System.err.println(e.getMessage());
+    	}
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		checker.reset();
     }
@@ -149,7 +216,11 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
         
         double[] regions = {1,2,3,4};
         String name = "region";
-        params.setWithinSubjectContrast(OrthogonalPolynomials.withinSubjectContrast(regions, name).getMainEffectContrast(name));
+        ArrayList<Factor> factorList = new ArrayList<Factor>();
+        Factor regionFactor = new Factor(name, regions);
+        factorList.add(regionFactor);
+        params.setWithinSubjectContrast(
+        		OrthogonalPolynomials.withinSubjectContrast(factorList).getMainEffectContrast(regionFactor).getContrastMatrix());
         
         // parameters for confidence limits
         params.setConfidenceIntervalType(ConfidenceIntervalType.BETA_KNOWN_SIGMA_ESTIMATED);

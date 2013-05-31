@@ -36,6 +36,7 @@ public class TestNonCentralFDistribution extends TestCase
     
     public void testCDF()
     {
+    	System.out.println("Testing CDF:");
         int numTests = ndfList.length * ddfList.length * ncList.length;
         int successes = 0;
         for(double ndf: ndfList)
@@ -57,6 +58,7 @@ public class TestNonCentralFDistribution extends TestCase
     
     public void testInverseCDF()
     {
+    	System.out.println("Testing Inverse CDF:");
         int numTests = ndfList.length * ddfList.length * ncList.length;
         int successes = 0;
         for(double ndf: ndfList)
@@ -74,5 +76,35 @@ public class TestNonCentralFDistribution extends TestCase
         }
         
         assertEquals(numTests, successes);
+    }
+    
+    public void testNoncentrality()
+    {
+    	System.out.println("Testing noncentrality:");
+    	int failures = 0;
+    	double[] fList = {1,2,3,4};
+    	double ndf = 4;
+    	double ddf = 5;
+
+    	for(double f : fList)
+    	{
+    		for(double nc = 1; nc <= 5; nc += 0.5)
+    		{
+    			NonCentralFDistribution dist = new NonCentralFDistribution(ndf, ddf, nc);
+    			double prob = dist.cdf(f);
+    			try
+    			{
+    				double newNC = NonCentralFDistribution.noncentrality(f, prob, ndf, ddf, 1);
+    				System.out.println("Ndf=" + ndf + " ddf=" + ddf + " f=" + f + " prob=" + prob + " true nc=" + nc + " calc nc = " + newNC);
+    				if (Math.abs(nc - newNC) > 1.0E-6) failures++;
+    			}
+    			catch (Exception e)
+    			{
+    				System.err.println("Noncentrality Failed: " + e.getMessage());
+    				failures++;
+    			}
+    		}
+    	}
+    	assertEquals(0, failures);	
     }
 }
