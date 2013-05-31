@@ -20,10 +20,9 @@
  */
 package edu.cudenver.bios.matrix;
 
-import jsc.distributions.Normal;
-
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 
 /**
  * Class describing an essence design matrix, which is an abbreviated representation
@@ -249,17 +248,17 @@ public class DesignEssenceMatrix extends FixedRandomMatrix
     {
         // if the column represents a random predictor, build a normal distribution
         // from which to pull random values
-        Normal dist = null;
+        NormalDistribution dist = null;
         // note, the jsc library takes a standard deviation, not a variance so
         // we take the square root
-        dist = new Normal(randomColMetaData[randomColumn].getMean(), 
+        dist = new NormalDistribution(randomColMetaData[randomColumn].getMean(), 
         		Math.sqrt(randomColMetaData[randomColumn].getVariance()));
-        dist.setSeed(randomSeed);
+        dist.reseedRandomGenerator(randomSeed);
 
         for(int row = 0; row < fullDesign.getRowDimension(); row++)
         {                
             // fill in the data
-                fullDesign.setEntry(row, fullColumn, dist.random());
+                fullDesign.setEntry(row, fullColumn, dist.sample());
         }
     }
     

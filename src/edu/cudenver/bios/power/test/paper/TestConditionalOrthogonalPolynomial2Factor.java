@@ -24,8 +24,8 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.MatrixUtils;
@@ -94,16 +94,16 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 	// sigma* matrices
 	double[] varE = {.47960, .01000, .01000, .01000}; // epsilon ~ 0.28
 	RealMatrix sigStarE = 
-		org.apache.commons.math.linear.MatrixUtils.createRealDiagonalMatrix(varE);
+		org.apache.commons.math3.linear.MatrixUtils.createRealDiagonalMatrix(varE);
 	double[] varF = {.34555, .06123, .05561, .04721}; // epsilon ~ 0.5
 	RealMatrix sigStarF = 
-		org.apache.commons.math.linear.MatrixUtils.createRealDiagonalMatrix(varF);
+		org.apache.commons.math3.linear.MatrixUtils.createRealDiagonalMatrix(varF);
 	double[] varG =  {.23555, .17123, .05561, .04721}; // epsilon ~ .72 
 	RealMatrix sigStarG = 
-		org.apache.commons.math.linear.MatrixUtils.createRealDiagonalMatrix(varG);
+		org.apache.commons.math3.linear.MatrixUtils.createRealDiagonalMatrix(varG);
 	double[] varH = {.12740, .12740, .12740, .12740}; // epsilon = 1 
 	RealMatrix sigStarH = 
-		org.apache.commons.math.linear.MatrixUtils.createRealDiagonalMatrix(varH);
+		org.apache.commons.math3.linear.MatrixUtils.createRealDiagonalMatrix(varH);
 	RealMatrix[] sigmaStars = {sigStarE, sigStarF, sigStarG, sigStarH};
 
 	/**
@@ -298,7 +298,7 @@ public class TestConditionalOrthogonalPolynomial2Factor extends TestCase
 		params.addAlpha(0.04);
 
 		// build the design matrix 
-		params.setDesignEssence(org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(1));
+		params.setDesignEssence(org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(1));
 
 		// set between subject contrast
 		double[][] cData = {{1}};

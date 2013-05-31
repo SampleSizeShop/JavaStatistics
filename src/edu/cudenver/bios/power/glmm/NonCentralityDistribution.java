@@ -22,21 +22,21 @@ package edu.cudenver.bios.power.glmm;
 
 import java.util.ArrayList;
 
-import jsc.distributions.FishersF;
-
-import org.apache.commons.math.analysis.UnivariateRealFunction;
-import org.apache.commons.math.analysis.solvers.UnivariateRealSolver;
-import org.apache.commons.math.analysis.solvers.UnivariateRealSolverFactory;
-import org.apache.commons.math.linear.CholeskyDecompositionImpl;
-import org.apache.commons.math.linear.EigenDecompositionImpl;
-import org.apache.commons.math.linear.LUDecompositionImpl;
-import org.apache.commons.math.linear.MatrixUtils;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.analysis.UnivariateFunction;
+import org.apache.commons.math3.analysis.solvers.BisectionSolver;
+import org.apache.commons.math3.distribution.FDistribution;
+import org.apache.commons.math3.linear.CholeskyDecomposition;
+import org.apache.commons.math3.linear.EigenDecomposition;
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.distribution.ChiSquareTerm;
 import edu.cudenver.bios.distribution.NonCentralFDistribution;
 import edu.cudenver.bios.distribution.WeightedSumOfNoncentralChiSquaresDistribution;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.power.PowerErrorEnum;
+import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 
 /**
@@ -49,6 +49,7 @@ import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
  */
 public class NonCentralityDistribution
 {
+    private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
     private static final double TOLERANCE = 0.000000000001;
     private static final double ACCURACY = 0.001;
     // intermediate forms 
@@ -85,7 +86,7 @@ public class NonCentralityDistribution
      * and the  (used by the bisection solver from Apache Commons Math)
      * @see org.apache.commons.math.analysis.UnivariateRealFunction
      */
-    private class NonCentralityQuantileFunction implements UnivariateRealFunction
+    private class NonCentralityQuantileFunction implements UnivariateFunction
     {
         protected double quantile;
         
@@ -96,7 +97,11 @@ public class NonCentralityDistribution
         
         public double value(double n)
         {
-            return cdf(n) - quantile;
+            try {
+                return cdf(n) - quantile;
+            } catch (PowerException pe) {
+                return Double.NaN;
+            }
         }
     }
     
@@ -111,7 +116,7 @@ public class NonCentralityDistribution
     		FixedRandomMatrix CFixedRand, RealMatrix U, 
     		RealMatrix thetaNull, RealMatrix beta, 
     		RealMatrix sigmaError, RealMatrix sigmaG, boolean exact)
-    throws IllegalArgumentException
+    throws PowerException
     {
     	initialize(test, FEssence, FtFinverse, perGroupN, CFixedRand, U, thetaNull, beta, 
     			sigmaError, sigmaG, exact);
@@ -124,7 +129,7 @@ public class NonCentralityDistribution
     		FixedRandomMatrix CFixedRand, RealMatrix U, 
     		RealMatrix thetaNull, RealMatrix beta, 
     		RealMatrix sigmaError, RealMatrix sigmaG, boolean exact)
-    {
+    throws PowerException {
     	// reset member variables 
         this.T1 = null;
         this.FT1 = null;
@@ -162,13 +167,13 @@ public class NonCentralityDistribution
             // build intermediate terms h1, S
             if (FtFinverse == null)
             {
-            	FtFinverse = new LUDecompositionImpl(FEssence.transpose().multiply(FEssence)).getSolver().getInverse();
+            	FtFinverse = new LUDecomposition(FEssence.transpose().multiply(FEssence)).getSolver().getInverse();
             }
             //CF*FPFINV*CF`
             RealMatrix PPt = Cfixed.multiply(FtFinverse.scalarMultiply(1/(double) perGroupN)).multiply(Cfixed.transpose());
            // RealMatrix PPt = Cfixed.multiply(FtFinverse).multiply(FEssence.transpose());
-            T1 = new LUDecompositionImpl(PPt).getSolver().getInverse();
-            FT1 = new CholeskyDecompositionImpl(T1).getL();
+            T1 = new LUDecomposition(PPt).getSolver().getInverse();
+            FT1 = new CholeskyDecomposition(T1).getL();
             // calculate theta difference
 //            RealMatrix theta0 = params.getTheta();
             RealMatrix C = CFixedRand.getCombinedMatrix();
@@ -188,7 +193,7 @@ public class NonCentralityDistribution
             // for a central F distribution.  The resulting F distribution is used as an approximation
             // for the distribution of the non-centrality parameter
             // See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details
-            EigenDecompositionImpl sEigenDecomp = new EigenDecompositionImpl(S, TOLERANCE);
+            EigenDecomposition sEigenDecomp = new EigenDecomposition(S, TOLERANCE);
             sEigenValues = sEigenDecomp.getRealEigenvalues();
             // calculate H0
             if (sEigenValues.length > 0) H0 = H1 * (1 - sEigenValues[0]);
@@ -214,7 +219,8 @@ public class NonCentralityDistribution
         }
         catch (Exception e)
         {
-            throw new IllegalArgumentException(e.getMessage());
+            throw new PowerException(e.getMessage(),
+                    PowerErrorEnum.INVALID_DISTRIBUTION_NONCENTRALITY_PARAMETER);
         }
     }
     
@@ -223,7 +229,7 @@ public class NonCentralityDistribution
      * @param perGroupN new per group sample size
      */
     public void setPerGroupSampleSize(int perGroupN)
-    {
+    throws PowerException {
     	initialize(test, FEssence, FtFinverse, perGroupN, CFixedRand, U, thetaNull, beta, 
     			sigmaError, sigmaG, exact);
     }
@@ -233,7 +239,7 @@ public class NonCentralityDistribution
      * @param beta the new beta matrix
      */
     public void setBeta(RealMatrix beta)
-    {
+    throws PowerException {
     	initialize(test, FEssence, FtFinverse, perGroupN, CFixedRand, U, thetaNull, beta, 
     			sigmaError, sigmaG, exact);
     }
@@ -245,7 +251,7 @@ public class NonCentralityDistribution
      * @param w critical point for which to calculate cumulative probability
      * @return P(W < w)
      */
-    public double cdf(double w)
+    public double cdf(double w) throws PowerException
     {
         if (H1 <= 0 || w <= H0) return 0;
         if (H1 - w <= 0) return 1;
@@ -371,14 +377,16 @@ public class NonCentralityDistribution
             	double lambdaStarNegative =  m2Negative / (2 * m1Negative);
 
             	// create a central F to approximate the distribution of the non-centrality parameter
-            	FishersF centralFDist = new FishersF(nuStarPositive, nuStarNegative);
+            	FDistribution centralFDist = new FDistribution(nuStarPositive, nuStarNegative);
             	// return power based on the non-central F
-            	return centralFDist.cdf((nuStarNegative*lambdaStarNegative)/(nuStarPositive*lambdaStarPositive));
+            	return centralFDist.cumulativeProbability(
+            	        (nuStarNegative*lambdaStarNegative)/(nuStarPositive*lambdaStarPositive));
             }
         }
         catch (Exception e)
         {
-            throw new IllegalArgumentException(e);
+            throw new PowerException(e.getMessage(), 
+                    PowerErrorEnum.DISTRIBUTION_NONCENTRALITY_PARAMETER_CDF_FAILED);
         }
     }
     
@@ -393,14 +401,12 @@ public class NonCentralityDistribution
     {
         if (H1 <= 0) return 0;
 
-        UnivariateRealSolverFactory factory = UnivariateRealSolverFactory.newInstance();
-        UnivariateRealSolver solver = factory.newBisectionSolver();
-
+        BisectionSolver solver = new BisectionSolver();
         NonCentralityQuantileFunction quantFunc = new NonCentralityQuantileFunction(probability);
         
         try
         {
-            return solver.solve(quantFunc, H0, H1);
+            return solver.solve(MAX_ITERATIONS, quantFunc, H0, H1);
         }
         catch (Exception e)
         {
@@ -420,7 +426,7 @@ public class NonCentralityDistribution
         
         if (test == Test.HOTELLING_LAWLEY_TRACE)
         {
-            return new LUDecompositionImpl(sigmaStar).getSolver().getInverse();
+            return new LUDecomposition(sigmaStar).getSolver().getInverse();
         }
         else
         {

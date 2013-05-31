@@ -22,12 +22,11 @@ package edu.cudenver.bios.distribution;
 import jsc.distributions.NoncentralFishersF;
 import jsc.distributions.Normal;
 
-import org.apache.commons.math.FunctionEvaluationException;
-import org.apache.commons.math.MaxIterationsExceededException;
-import org.apache.commons.math.analysis.UnivariateRealFunction;
-import org.apache.commons.math.analysis.solvers.BisectionSolver;
-import org.apache.commons.math.analysis.solvers.UnivariateRealSolver;
-import org.apache.commons.math.analysis.solvers.UnivariateRealSolverFactory;
+import org.apache.commons.math3.analysis.UnivariateFunction;
+import org.apache.commons.math3.analysis.solvers.BisectionSolver;
+import org.apache.commons.math3.analysis.solvers.UnivariateSolver;
+import org.apache.commons.math3.exception.MathIllegalArgumentException;
+import org.apache.commons.math3.exception.TooManyEvaluationsException;
 
 /**
  * 
@@ -42,6 +41,7 @@ import org.apache.commons.math.analysis.solvers.UnivariateRealSolverFactory;
  */
 public class NonCentralFDistribution
 {     
+    private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
     private static final int STARTING_F = 10;
     
     // supported approximation methods for the F distribution
@@ -74,7 +74,7 @@ public class NonCentralFDistribution
      * and the  (used by the bisection solver from Apache Commons Math)
      * @see org.apache.commons.math.analysis.UnivariateRealFunction
      */
-    private class NonCentralFQuantileFunction implements UnivariateRealFunction
+    private class NonCentralFQuantileFunction implements UnivariateFunction
     {
         protected double quantile;
         
@@ -96,7 +96,7 @@ public class NonCentralFDistribution
      * 
      * Defines the function to be solved, i.e. the CDF of the F distribution
      */
-    private static class NoncentralityFinderCDF implements UnivariateRealFunction
+    private static class NoncentralityFinderCDF implements UnivariateFunction
     {
     	protected double x;
         protected double ndf;
@@ -233,15 +233,14 @@ public class NonCentralFDistribution
         }
         else
         {
-            UnivariateRealSolverFactory factory = UnivariateRealSolverFactory.newInstance();
-            UnivariateRealSolver solver = factory.newBisectionSolver();
+            BisectionSolver solver = new BisectionSolver();
 
             NonCentralFQuantileFunction quantFunc = new NonCentralFQuantileFunction(probability);
 
             int upperBound = getCDFUpperBound(probability);
             try
             {
-                return solver.solve(quantFunc, 0, upperBound);
+                return solver.solve(MAX_ITERATIONS, quantFunc, 0, upperBound);
             }
             catch (Exception e)
             {
@@ -278,12 +277,13 @@ public class NonCentralFDistribution
      */
     public static double noncentrality(double f, double probability, 
     		double ndf, double ddf, double startValue)
-    throws IllegalArgumentException, FunctionEvaluationException, 
-    MaxIterationsExceededException
+    throws IllegalArgumentException, 
+    MathIllegalArgumentException, TooManyEvaluationsException
     {   	
     	BisectionSolver solver = new BisectionSolver();
     	double searchUpperBound = getNoncentralityUpperBound(f, probability, ndf, ddf, startValue);
-    	double noncentrality = solver.solve(new NoncentralityFinderCDF(f, ndf, ddf, probability), 0, 	
+    	double noncentrality = solver.solve(MAX_ITERATIONS,
+    	        new NoncentralityFinderCDF(f, ndf, ddf, probability), 0, 	
     			searchUpperBound);
     	
     	return noncentrality;

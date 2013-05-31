@@ -1,0 +1,189 @@
+\documentclass{glimmpse-report}
+\JavaStatisticsVersion{1.2.0}
+\doctitle{GLMM(F, g) Example 5. Median power for the uncorrected univariate approach to repeated measures, Box, Geisser-Greenhouse, and Huynh-Feldt tests, using the Satterthwaite approximation}
+\docauthor{Sarah Kreidler}
+\docdate{2012/12/05 16:40:23}
+\begin{document}
+\section{Introduction}
+The following report contains validation results for the JavaStatistics library, a component of the GLIMMPSE software system.  For more information about GLIMMPSE and related publications, please visit
+
+ 
+
+\href{http://samplesizeshop.org}{http://samplesizeshop.org}.
+
+The automated validation tests shown below compare power values produced by the JavaStatistics library to published results and also to simulation.  Sources for published values include POWERLIB (Johnson \emph{et al.} 2007) and a SAS IML implementation of the methods described by Glueck and Muller (2003).
+
+Validation results are listed in Section 3 of the report.  Timing results show the calculation and simulation times for the overall experiment and the mean times per power calculation.  Summary statistics show the maximum absolute deviation between the power value calculated by the JavaStatistics library and the results obtained from SAS or via simulation.  The table in Section 3.3 shows the deviation values for each individual power comparison.  Deviations larger than $10^{-6}$ from SAS power values and $0.05$ for simulated power values are displayed in red.
+
+ \section{Study Design}
+The study design in Example 5 is a three sample design with a baseline covariate and four repeated measurements.  We calculate the median power for a test of no difference between groups at each time point.  We calculate median power for the uncorrected univariate approach to repeated measures, Box, Geisser-Greenhouse, and Huynh-Feldt tests.A Satterthwaite approximation is used to obtain the approximate distribution of the test statistic under the alternative hypothesis.  Median power is calculated for the following combinations of mean differences and per group sample sizes.
+
+\begin{enumerate}\item Per group sample size of 5, with beta scale values 0.4997025, 0.8075886, and 1.097641\item Per group sample size of 25, with beta scale values 0.1651525, 0.2623301, and 0.3508015\item Per group sample size of 50, with beta scale values 0.1141548,  0.1812892, and  0.2423835
+\end{enumerate}
+
+The example is based on Table II from
+
+\hangindent2em
+\hangafter=1
+ Glueck, D. H., \& Muller, K. E. (2003). Adjusting power for a baseline covariate in linear models. \emph{Statistics in Medicine}, \emph{22}(16), 2535-2551.
+
+
+\subsection{Inputs to the Power Calculation}
+\subsubsection{List Inputs}
+
+{\bf Type I error rates}
+
+0.0500000
+
+{\bf Sigma scale values}
+
+1.0000000
+
+{\bf Statistical tests}
+
+UNIREP-HF
+
+{\bf Power methods}
+
+quantile
+
+{\bf Power quantile values:}
+
+0.5000000
+
+\subsubsection{Matrix Inputs}
+
+\begin{eqnarray*}
+\underset{\left(3\times3\right)}{\text{Es}\left(\mathbf{X}\right)} & = & \begin{bmatrix}1.0000 & 0.0000 & 0.0000\protect\\
+0.0000 & 1.0000 & 0.0000\protect\\
+0.0000 & 0.0000 & 1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(4\times4\right)}{\mathbf{B}} & = & \begin{bmatrix}0.2424 & 0.0000 & 0.0000 & 0.0000\protect\\
+0.0000 & 0.4848 & 0.0000 & 0.0000\protect\\
+0.0000 & 0.0000 & 0.0000 & 0.0000\protect\\
+0.5000 & 0.5000 & 0.5000 & 0.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(2\times4\right)}{\mathbf{C}} & = & \begin{bmatrix}1.0000 & -1.0000 & 0.0000 & 0.0000\protect\\
+1.0000 & 0.0000 & -1.0000 & 0.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(4\times4\right)}{\mathbf{U}} & = & \begin{bmatrix}1.0000 & 0.0000 & 0.0000 & 0.0000\protect\\
+0.0000 & 1.0000 & 0.0000 & 0.0000\protect\\
+0.0000 & 0.0000 & 1.0000 & 0.0000\protect\\
+0.0000 & 0.0000 & 0.0000 & 1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(2\times4\right)}{\mathbf{\Theta}_0} & = & \begin{bmatrix}0.0000 & 0.0000 & 0.0000 & 0.0000\protect\\
+0.0000 & 0.0000 & 0.0000 & 0.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(4\times4\right)}{\mathbf{\Sigma}_E} & = & \begin{bmatrix}0.7500 & -0.2500 & -0.2500 & 0.0000\protect\\
+-0.2500 & 0.7500 & -0.2500 & 0.0000\protect\\
+-0.2500 & -0.2500 & 0.7500 & 0.0000\protect\\
+0.0000 & 0.0000 & 0.0000 & 1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(4\times4\right)}{\mathbf{\Sigma}_Y} & = & \begin{bmatrix}1.0000 & 0.0000 & 0.0000 & 0.0000\protect\\
+0.0000 & 1.0000 & 0.0000 & 0.0000\protect\\
+0.0000 & 0.0000 & 1.0000 & 0.0000\protect\\
+0.0000 & 0.0000 & 0.0000 & 1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(1\times1\right)}{\mathbf{\Sigma}_g} & = & \begin{bmatrix}1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(4\times1\right)}{\mathbf{\Sigma}_Yg} & = & \begin{bmatrix}0.5000\protect\\
+0.5000\protect\\
+0.5000\protect\\
+0.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\section{Validation Results}
+A total of 36 power values were computed for this experiment.
+
+\subsection{Timing}
+\begin{tabular}{|l|l|l|}
+\hline
+ & Total Time (seconds) & Mean Time (seconds) \\ 
+\hline
+Calculation & 0.0150000 & 4.17E-4\tabularnewline
+\hline
+Simulation & 3369.3090000 & 9.36E1\tabularnewline
+\hline
+\end{tabular}
+\subsection{Summary Statistics}
+\begin{tabular}{|l|l|}
+\hline
+Max deviation from SAS & 0.07343679\tabularnewline
+\hline
+
+Max deviation from simulation & 0.09456851\tabularnewline
+\hline
+
+\end{tabular}
+\subsection{Full Validation Results}
+\scriptsize\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}
+\hline
+{\bf Power} & {\bf SAS Power (deviation)} & {\bf Sim Power (deviation)} & {\bf Test} & {\bf Sigma Scale} & {\bf Beta Scale} & {\bf Total N} & {\bf Alpha} & {\bf Method} & {\bf Quantile}\\ \hline
+0.2425302 & 0.2575634 (\textcolor{red}{0.0150332}) & 0.2170000 (0.0255302) & UNIREP & 1.0000000 & 0.4997025 & 15 & 0.0500000 & quantile & 0.5\\ \hline
+0.5832015 & 0.6160103 (\textcolor{red}{0.0328088}) & 0.5740000 (0.0092015) & UNIREP & 1.0000000 & 0.8075886 & 15 & 0.0500000 & quantile & 0.5\\ \hline
+0.8747335 & 0.8963934 (\textcolor{red}{0.0216599}) & 0.8820050 (0.0072715) & UNIREP & 1.0000000 & 1.0976410 & 15 & 0.0500000 & quantile & 0.5\\ \hline
+0.1698538 & 0.1784866 (\textcolor{red}{0.0086328}) & 0.1480050 (0.0218488) & UNIREP & 1.0000000 & 0.1651525 & 75 & 0.0500000 & quantile & 0.5\\ \hline
+0.3814286 & 0.4055206 (\textcolor{red}{0.0240920}) & 0.3620000 (0.0194286) & UNIREP & 1.0000000 & 0.2623301 & 75 & 0.0500000 & quantile & 0.5\\ \hline
+0.6436264 & 0.6741839 (\textcolor{red}{0.0305575}) & 0.6460000 (0.0023736) & UNIREP & 1.0000000 & 0.3508015 & 75 & 0.0500000 & quantile & 0.5\\ \hline
+0.1662616 & 0.1745828 (\textcolor{red}{0.0083212}) & 0.1380000 (0.0282616) & UNIREP & 1.0000000 & 0.1141548 & 150 & 0.0500000 & quantile & 0.5\\ \hline
+0.3712570 & 0.3946638 (\textcolor{red}{0.0234068}) & 0.3480100 (0.0232470) & UNIREP & 1.0000000 & 0.1812892 & 150 & 0.0500000 & quantile & 0.5\\ \hline
+0.6291110 & 0.6594982 (\textcolor{red}{0.0303872}) & 0.6300050 (0.0008940) & UNIREP & 1.0000000 & 0.2423835 & 150 & 0.0500000 & quantile & 0.5\\ \hline
+0.0241238 & 0.0284428 (\textcolor{red}{0.0043190}) & 0.0140000 (0.0101238) & UNIREP-BOX & 1.0000000 & 0.4997025 & 15 & 0.0500000 & quantile & 0.5\\ \hline
+0.1344826 & 0.1619315 (\textcolor{red}{0.0274489}) & 0.1230050 (0.0114776) & UNIREP-BOX & 1.0000000 & 0.8075886 & 15 & 0.0500000 & quantile & 0.5\\ \hline
+0.4148830 & 0.4749194 (\textcolor{red}{0.0600364}) & 0.4250050 (0.0101220) & UNIREP-BOX & 1.0000000 & 1.0976410 & 15 & 0.0500000 & quantile & 0.5\\ \hline
+0.0203723 & 0.0232885 (\textcolor{red}{0.0029162}) & 0.0130000 (0.0073723) & UNIREP-BOX & 1.0000000 & 0.1651525 & 75 & 0.0500000 & quantile & 0.5\\ \hline
+0.0836963 & 0.0997103 (\textcolor{red}{0.0160140}) & 0.0750000 (0.0086963) & UNIREP-BOX & 1.0000000 & 0.2623301 & 75 & 0.0500000 & quantile & 0.5\\ \hline
+0.2404691 & 0.2808848 (\textcolor{red}{0.0404157}) & 0.2410000 (0.0005309) & UNIREP-BOX & 1.0000000 & 0.3508015 & 75 & 0.0500000 & quantile & 0.5\\ \hline
+0.0205178 & 0.0234029 (\textcolor{red}{0.0028851}) & 0.0110000 (0.0095178) & UNIREP-BOX & 1.0000000 & 0.1141548 & 150 & 0.0500000 & quantile & 0.5\\ \hline
+0.0827213 & 0.0983739 (\textcolor{red}{0.0156526}) & 0.0700000 (0.0127213) & UNIREP-BOX & 1.0000000 & 0.1812892 & 150 & 0.0500000 & quantile & 0.5\\ \hline
+0.2358142 & 0.2752708 (\textcolor{red}{0.0394566}) & 0.2320050 (0.0038092) & UNIREP-BOX & 1.0000000 & 0.2423835 & 150 & 0.0500000 & quantile & 0.5\\ \hline
+0.1546859 & 0.1905279 (\textcolor{red}{0.0358420}) & 0.1360050 (0.0186809) & UNIREP-GG & 1.0000000 & 0.4997025 & 15 & 0.0500000 & quantile & 0.5\\ \hline
+0.4539422 & 0.5266360 (\textcolor{red}{0.0726938}) & 0.4480050 (0.0059372) & UNIREP-GG & 1.0000000 & 0.8075886 & 15 & 0.0500000 & quantile & 0.5\\ \hline
+0.7918839 & 0.8477771 (\textcolor{red}{0.0558932}) & 0.8000000 (0.0081161) & UNIREP-GG & 1.0000000 & 1.0976410 & 15 & 0.0500000 & quantile & 0.5\\ \hline
+0.1399837 & 0.1522568 (\textcolor{red}{0.0122731}) & 0.1190050 (0.0209787) & UNIREP-GG & 1.0000000 & 0.1651525 & 75 & 0.0500000 & quantile & 0.5\\ \hline
+0.3352757 & 0.3662612 (\textcolor{red}{0.0309855}) & 0.3200000 (0.0152757) & UNIREP-GG & 1.0000000 & 0.2623301 & 75 & 0.0500000 & quantile & 0.5\\ \hline
+0.5969985 & 0.6369732 (\textcolor{red}{0.0399747}) & 0.6030050 (0.0060065) & UNIREP-GG & 1.0000000 & 0.3508015 & 75 & 0.0500000 & quantile & 0.5\\ \hline
+0.1408606 & 0.1508624 (\textcolor{red}{0.0100018}) & 0.1140050 (0.0268556) & UNIREP-GG & 1.0000000 & 0.1141548 & 150 & 0.0500000 & quantile & 0.5\\ \hline
+0.3321675 & 0.3591585 (\textcolor{red}{0.0269910}) & 0.3130050 (0.0191625) & UNIREP-GG & 1.0000000 & 0.1812892 & 150 & 0.0500000 & quantile & 0.5\\ \hline
+0.5891310 & 0.6252460 (\textcolor{red}{0.0361150}) & 0.5900000 (0.0008690) & UNIREP-GG & 1.0000000 & 0.2423835 & 150 & 0.0500000 & quantile & 0.5\\ \hline
+0.2120950 & 0.2575634 (\textcolor{red}{0.0454684}) & 0.1360050 (\textcolor{red}{0.0760900}) & UNIREP-HF & 1.0000000 & 0.4997025 & 15 & 0.0500000 & quantile & 0.5\\ \hline
+0.5425735 & 0.6160103 (\textcolor{red}{0.0734368}) & 0.4480050 (\textcolor{red}{0.0945685}) & UNIREP-HF & 1.0000000 & 0.8075886 & 15 & 0.0500000 & quantile & 0.5\\ \hline
+0.8514731 & 0.8963934 (\textcolor{red}{0.0449203}) & 0.8000000 (\textcolor{red}{0.0514731}) & UNIREP-HF & 1.0000000 & 1.0976410 & 15 & 0.0500000 & quantile & 0.5\\ \hline
+0.1476702 & 0.1665691 (\textcolor{red}{0.0188989}) & 0.1190050 (0.0286652) & UNIREP-HF & 1.0000000 & 0.1651525 & 75 & 0.0500000 & quantile & 0.5\\ \hline
+0.3475297 & 0.3880433 (\textcolor{red}{0.0405136}) & 0.3200000 (0.0275297) & UNIREP-HF & 1.0000000 & 0.2623301 & 75 & 0.0500000 & quantile & 0.5\\ \hline
+0.6097622 & 0.6579452 (\textcolor{red}{0.0481830}) & 0.6030050 (0.0067572) & UNIREP-HF & 1.0000000 & 0.3508015 & 75 & 0.0500000 & quantile & 0.5\\ \hline
+0.1445885 & 0.1576913 (\textcolor{red}{0.0131028}) & 0.1140050 (0.0305835) & UNIREP-HF & 1.0000000 & 0.1141548 & 150 & 0.0500000 & quantile & 0.5\\ \hline
+0.3380811 & 0.3696257 (\textcolor{red}{0.0315446}) & 0.3130050 (0.0250761) & UNIREP-HF & 1.0000000 & 0.1812892 & 150 & 0.0500000 & quantile & 0.5\\ \hline
+0.5953608 & 0.6355717 (\textcolor{red}{0.0402109}) & 0.5900000 (0.0053608) & UNIREP-HF & 1.0000000 & 0.2423835 & 150 & 0.0500000 & quantile & 0.5\\ \hline
+\end{longtabu}
+\normalsize
+\section*{References}
+
+\hangindent2em
+\hangafter=1
+ Glueck, D. H., \& Muller, K. E. (2003). Adjusting power for a baseline covariate in linear models. \emph{Statistics in Medicine}, \emph{22}(16), 2535-2551.
+
+\hangindent2em
+\hangafter=1
+ Johnson, J. L., Muller, K. E., Slaughter, J. C., Gurka, M. J., \& Gribbin, M. J. (2009). POWERLIB: SAS/IML Software for Computing Power in Multivariate Linear Models. \emph{Journal of Statistical Software}, \emph{30}(5), 1-27.
+
+\hangindent2em
+\hangafter=1
+ Muller, K. E., \& Stewart, P. W. (2006). Linear model theory: univariate, multivariate, and mixed models. Hoboken, New Jersey: John Wiley and Sons.
+\end{document}

@@ -20,12 +20,10 @@
  */
 package edu.cudenver.bios.power.glmm;
 
-import org.apache.commons.math.linear.InvalidMatrixException;
-import org.apache.commons.math.linear.LUDecompositionImpl;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.power.glmm.GLMMTest.FApproximation;
 
 /**
  * Implementation of the Wilk's Lambda (WL) test for the
@@ -215,10 +213,10 @@ public class GLMMTestWilksLambda extends GLMMTest
      * @returns F statistic
      */
     private double getWilksLambda(RealMatrix H, RealMatrix E, DistributionType type)
-    throws InvalidMatrixException
+    throws IllegalArgumentException
     {
         if (!H.isSquare() || !E.isSquare() || H.getColumnDimension() != E.getRowDimension())
-            throw new InvalidMatrixException("Failed to compute Wilks Lambda: hypothesis and error matrices must be square and same dimensions");
+            throw new IllegalArgumentException("Failed to compute Wilks Lambda: hypothesis and error matrices must be square and same dimensions");
         
         double a = C.getRowDimension();
         double b = U.getColumnDimension();
@@ -233,11 +231,11 @@ public class GLMMTestWilksLambda extends GLMMTest
         }
         
         RealMatrix T = adjustedH.add(E);
-        RealMatrix inverseT = new LUDecompositionImpl(T).getSolver().getInverse();
+        RealMatrix inverseT = new LUDecomposition(T).getSolver().getInverse();
 
         RealMatrix EinverseT = E.multiply(inverseT);
         
-        double lambda = new LUDecompositionImpl(EinverseT).getDeterminant();
+        double lambda = new LUDecomposition(EinverseT).getDeterminant();
         return lambda;
     }
 }

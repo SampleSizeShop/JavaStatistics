@@ -22,9 +22,9 @@ package edu.cudenver.bios.matrix;
 
 import java.util.List;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.EigenDecompositionImpl;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.EigenDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import jsc.distributions.Normal;
 
@@ -463,7 +463,7 @@ public class MatrixUtils
     		throw new IllegalArgumentException("Matrix must be non-null, " +
     				"square. ");
     	}
-    	double[] eigenValues = new EigenDecompositionImpl( matrix, eigenTolerance)
+    	double[] eigenValues = new EigenDecomposition(matrix, eigenTolerance)
     	.getRealEigenvalues();
 
         // if all eigenValues are positive, we return true
@@ -475,5 +475,28 @@ public class MatrixUtils
         	}
         }
         return isPositiveDefinite;
+    }
+    
+
+    /**
+     * Find the maximum value in the matrix
+     * @param matrix
+     */
+    public static double getMaxValue(RealMatrix matrix) {
+        double max;
+        if (matrix == null) {
+            max = Double.NaN;
+        } else {
+            max = Double.NEGATIVE_INFINITY;
+            for(int r = 0; r < matrix.getRowDimension(); r++) {
+                for(int c = 0; c < matrix.getColumnDimension(); c++) {
+                    double value = matrix.getEntry(r, c);
+                    if (value > max) {
+                        max = value;
+                    }
+                }
+            }
+        }
+        return max;
     }
 }

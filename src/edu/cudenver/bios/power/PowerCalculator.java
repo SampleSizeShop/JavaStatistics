@@ -39,21 +39,24 @@ public interface PowerCalculator
 	 * @param params
 	 * @return list of power results
 	 */
-	List<Power> getPower(PowerParameters params);
+	List<Power> getPower(PowerParameters params) 
+	        throws PowerException;
 	
 	/**
 	 * Determine sample size
 	 * @param params
 	 * @return list of sample size results
 	 */
-	List<Power> getSampleSize(PowerParameters params);
+	List<Power> getSampleSize(PowerParameters params)
+	        throws PowerException;
 	
 	/**
 	 * Determine effect size
 	 * @param params
 	 * @return list of effect size results
 	 */
-	List<Power> getDetectableDifference(PowerParameters params);
+	List<Power> getDetectableDifference(PowerParameters params)
+	        throws PowerException;
 	
 	/**
 	 * Determine power by simulation
@@ -61,5 +64,6 @@ public interface PowerCalculator
 	 * @param iterations
 	 * @return list of power results
 	 */
-	List<Power> getSimulatedPower(PowerParameters params, int iterations);
+	List<Power> getSimulatedPower(PowerParameters params, int iterations)
+	        throws PowerException;
 }

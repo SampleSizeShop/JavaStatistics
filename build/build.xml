@@ -25,7 +25,7 @@
 	<property name="owner" value="University of Colorado Denver, 
 		Department of Biostatistics and Informatics" />
 	<property name="author" value="Sarah Kreidler" />
-	<property name="module.version" value="1.1.0" />
+	<property name="module.version" value="1.2.0" />
 	<property name="source.dir" value="${basedir}/../src" />
     <property name="tmp.dir" value="${basedir}/tmp" />
     <property name="artifacts.dir" value="${basedir}/artifacts" />
@@ -35,7 +35,7 @@
 	<property name="thirdparty.dir" value="${basedir}/../../thirdparty" />
 	
 	<fileset id="thirdparty.libs" dir="${thirdparty.dir}">
-		<include name="ApacheCommonsMath/2.1/lib/commons-math-2.1.jar" />
+		<include name="ApacheCommonsMath/3.0/lib/commons-math3-3.0.jar" />
 		<include name="jsc/1.0/lib/jsc.jar" />
 		<include name="junit/4.7/lib/junit-4.7.jar" />
 	</fileset>
@@ -56,6 +56,11 @@
     	<mkdir dir="${javadoc.dir}" />
         <mkdir dir="${journal.dir}"/>
         <mkdir dir="${validation.dir}"/>
+    	<!-- replace version for the validation reports -->
+    	<replace file="${source.dir}/edu/cudenver/bios/power/test/ValidationReportBuilder.java" 
+    		token="UNKNOWN" value="${module.version}"/>
+    	<replace file="${source.dir}/edu/cudenver/bios/power/test/paper/runPaperResults.bat" 
+    		token="UNKNOWN" value="${module.version}"/>
     </target>
 
 	<!-- Run javadoc -->
@@ -139,13 +144,17 @@
 	<!-- Distribution submitted for validation by a journal -->
 	<target name="distribution.journal" depends="compress"> 
 		<mkdir dir="${journal.dir}/text/results" />
+		<copy todir="${journal.dir}/text/results">
+		  <fileset dir="${basedir}/../resources/" includes="*"/>
+		</copy>
 		<mkdir dir="${journal.dir}/lib" />
 		<copy todir="${journal.dir}">
 		  <fileset dir="${basedir}/.." includes="data/**"/>
 		</copy>
 		<copy todir="${journal.dir}">
 			  <fileset dir="${basedir}/../.."  
-			  		includes="thirdparty/ApacheCommonsMath/**,
+			  		includes="thirdparty/ApacheCommonsMath/3.0/*.txt,
+			  		thirdparty/ApacheCommonsMath/3.0/lib/**,
 			  		thirdparty/junit/**,
 			  		thirdparty/jsc/**" />
 		</copy>

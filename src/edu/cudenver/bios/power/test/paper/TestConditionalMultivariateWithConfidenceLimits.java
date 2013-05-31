@@ -23,8 +23,8 @@ package edu.cudenver.bios.power.test.paper;
 import java.io.File;
 import java.util.ArrayList;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.OrthogonalPolynomials;
@@ -203,7 +203,7 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
         params.addSigmaScale(1);
         
         // build design matrix
-        params.setDesignEssence(org.apache.commons.math.linear.MatrixUtils.createRealIdentityMatrix(10));
+        params.setDesignEssence(org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(10));
         // add sample size multipliers
         for(int sampleSize = 2; sampleSize <= 10; sampleSize++) params.addSampleSize(sampleSize);
         

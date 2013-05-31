@@ -1,0 +1,146 @@
+\documentclass{glimmpse-report}
+\JavaStatisticsVersion{1.2.0}
+\doctitle{GLMM(F) Example 7. Power for a time by treatment interaction using orthogonal polynomial contrast for time}
+\docauthor{Sarah Kreidler}
+\docdate{2012/12/05 13:19:10}
+\begin{document}
+\section{Introduction}
+The following report contains validation results for the JavaStatistics library, a component of the GLIMMPSE software system.  For more information about GLIMMPSE and related publications, please visit
+
+ 
+
+\href{http://samplesizeshop.org}{http://samplesizeshop.org}.
+
+The automated validation tests shown below compare power values produced by the JavaStatistics library to published results and also to simulation.  Sources for published values include POWERLIB (Johnson \emph{et al.} 2007) and a SAS IML implementation of the methods described by Glueck and Muller (2003).
+
+Validation results are listed in Section 3 of the report.  Timing results show the calculation and simulation times for the overall experiment and the mean times per power calculation.  Summary statistics show the maximum absolute deviation between the power value calculated by the JavaStatistics library and the results obtained from SAS or via simulation.  The table in Section 3.3 shows the deviation values for each individual power comparison.  Deviations larger than $10^{-6}$ from SAS power values and $0.05$ for simulated power values are displayed in red.
+
+ \section{Study Design}
+The study design for Example 7 is a balanced two sample design with five repeated measures over time. We calculate power for a test of the time trend by treatment interaction.  The example demonstrates the use of an orthogonal polynomial contrast for the effect of time.
+\subsection{Inputs to the Power Calculation}
+\subsubsection{List Inputs}
+
+{\bf Type I error rates}
+
+0.0500000
+
+{\bf Beta scale values}
+
+1.0000000
+
+{\bf Sigma scale values}
+
+1.0000000
+
+{\bf Per group sample size values}
+
+10, 20, 40
+
+{\bf Statistical tests}
+
+UNIREP, UNIREP-BOX, UNIREP-GG, UNIREP-HF, WL, PBT, HLT
+
+{\bf Power methods}
+
+cond
+
+\subsubsection{Matrix Inputs}
+
+\begin{eqnarray*}
+\underset{\left(2\times2\right)}{\text{Es}\left(\mathbf{X}\right)} & = & \begin{bmatrix}1.0000 & 0.0000\protect\\
+0.0000 & 1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(2\times5\right)}{\mathbf{B}} & = & \begin{bmatrix}0.0000 & 0.0000 & 0.0000 & 0.0000 & 1.0000\protect\\
+1.0000 & 0.0000 & 0.0000 & 0.0000 & 0.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(1\times2\right)}{\mathbf{C}} & = & \begin{bmatrix}1.0000 & -1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(5\times4\right)}{\mathbf{U}} & = & \begin{bmatrix}-0.6325 & 0.5345 & -0.3162 & 0.1195\protect\\
+-0.3162 & -0.2673 & 0.6325 & -0.4781\protect\\
+0.0000 & -0.5345 & 0.0000 & 0.7171\protect\\
+0.3162 & -0.2673 & -0.6325 & -0.4781\protect\\
+0.6325 & 0.5345 & 0.3162 & 0.1195\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(1\times4\right)}{\mathbf{\Theta}_0} & = & \begin{bmatrix}0.0000 & 0.0000 & 0.0000 & 0.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(5\times5\right)}{\mathbf{\Sigma}_E} & = & \begin{bmatrix}1.5000 & 0.3750 & 0.3750 & 0.3750 & 0.3750\protect\\
+0.3750 & 1.5000 & 0.3750 & 0.3750 & 0.3750\protect\\
+0.3750 & 0.3750 & 1.5000 & 0.3750 & 0.3750\protect\\
+0.3750 & 0.3750 & 0.3750 & 1.5000 & 0.3750\protect\\
+0.3750 & 0.3750 & 0.3750 & 0.3750 & 1.5000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\section{Validation Results}
+A total of 21 power values were computed for this experiment.
+
+\subsection{Timing}
+\begin{tabular}{|l|l|l|}
+\hline
+ & Total Time (seconds) & Mean Time (seconds) \\ 
+\hline
+Calculation & 0.0000000 & 0.00E0\tabularnewline
+\hline
+Simulation & 12.0590000 & 5.74E-1\tabularnewline
+\hline
+\end{tabular}
+\subsection{Summary Statistics}
+\begin{tabular}{|l|l|}
+\hline
+Max deviation from SAS & 0.00000077\tabularnewline
+\hline
+
+Max deviation from simulation & 0.06886243\tabularnewline
+\hline
+
+\end{tabular}
+\subsection{Full Validation Results}
+\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}
+\hline
+{\bf Power} & {\bf SAS Power (deviation)} & {\bf Sim Power (deviation)} & {\bf Test} & {\bf Sigma Scale} & {\bf Beta Scale} & {\bf Total N} & {\bf Alpha} \\ \hline
+0.6245526 & 0.6245522 (0.0000004) & 0.6222000 (0.0023526) & UNIREP & 1.0000000 & 1.0000000 & 20 & 0.0500000\\ \hline
+0.9325210 & 0.9325209 (0.0000001) & 0.9414000 (0.0088790) & UNIREP & 1.0000000 & 1.0000000 & 40 & 0.0500000\\ \hline
+0.9992799 & 0.9992797 (0.0000002) & 0.9995000 (0.0002201) & UNIREP & 1.0000000 & 1.0000000 & 80 & 0.0500000\\ \hline
+0.2329963 & 0.2329961 (0.0000002) & 0.2311000 (0.0018963) & UNIREP-BOX & 1.0000000 & 1.0000000 & 20 & 0.0500000\\ \hline
+0.7006865 & 0.7006860 (0.0000005) & 0.7038000 (0.0031135) & UNIREP-BOX & 1.0000000 & 1.0000000 & 40 & 0.0500000\\ \hline
+0.9881538 & 0.9881536 (0.0000001) & 0.9905000 (0.0023462) & UNIREP-BOX & 1.0000000 & 1.0000000 & 80 & 0.0500000\\ \hline
+0.5735035 & 0.5735027 (0.0000008) & 0.5711000 (0.0024035) & UNIREP-GG & 1.0000000 & 1.0000000 & 20 & 0.0500000\\ \hline
+0.9240191 & 0.9240189 (0.0000002) & 0.9321000 (0.0080809) & UNIREP-GG & 1.0000000 & 1.0000000 & 40 & 0.0500000\\ \hline
+0.9992016 & 0.9992015 (0.0000001) & 0.9994000 (0.0001984) & UNIREP-GG & 1.0000000 & 1.0000000 & 80 & 0.0500000\\ \hline
+0.6245526 & 0.6245522 (0.0000004) & 0.5711000 (\textcolor{red}{0.0534526}) & UNIREP-HF & 1.0000000 & 1.0000000 & 20 & 0.0500000\\ \hline
+0.9325210 & 0.9325209 (0.0000001) & 0.9321000 (0.0004210) & UNIREP-HF & 1.0000000 & 1.0000000 & 40 & 0.0500000\\ \hline
+0.9992799 & 0.9992797 (0.0000002) & 0.9994000 (0.0001201) & UNIREP-HF & 1.0000000 & 1.0000000 & 80 & 0.0500000\\ \hline
+0.5097624 & 0.5097621 (0.0000004) & 0.5076000 (0.0021624) & WL & 1.0000000 & 1.0000000 & 20 & 0.0500000\\ \hline
+0.9024619 & 0.9024613 (0.0000006) & 0.9118000 (0.0093381) & WL & 1.0000000 & 1.0000000 & 40 & 0.0500000\\ \hline
+0.9988508 & 0.9988507 (0.0000001) & 0.9993000 (0.0004492) & WL & 1.0000000 & 1.0000000 & 80 & 0.0500000\\ \hline
+0.5097624 & 0.5097621 (0.0000004) & 0.4409000 (\textcolor{red}{0.0688624}) & PBT & 1.0000000 & 1.0000000 & 20 & 0.0500000\\ \hline
+0.9024619 & 0.9024613 (0.0000006) & 0.8959000 (0.0065619) & PBT & 1.0000000 & 1.0000000 & 40 & 0.0500000\\ \hline
+0.9988508 & 0.9988507 (0.0000001) & 0.9993000 (0.0004492) & PBT & 1.0000000 & 1.0000000 & 80 & 0.0500000\\ \hline
+0.5097624 & 0.5097621 (0.0000004) & 0.5076000 (0.0021624) & HLT & 1.0000000 & 1.0000000 & 20 & 0.0500000\\ \hline
+0.9024619 & 0.9024613 (0.0000006) & 0.9118000 (0.0093381) & HLT & 1.0000000 & 1.0000000 & 40 & 0.0500000\\ \hline
+0.9988508 & 0.9988507 (0.0000001) & 0.9993000 (0.0004492) & HLT & 1.0000000 & 1.0000000 & 80 & 0.0500000\\ \hline
+\end{longtabu}
+\normalsize
+\section*{References}
+
+\hangindent2em
+\hangafter=1
+ Glueck, D. H., \& Muller, K. E. (2003). Adjusting power for a baseline covariate in linear models. \emph{Statistics in Medicine}, \emph{22}(16), 2535-2551.
+
+\hangindent2em
+\hangafter=1
+ Johnson, J. L., Muller, K. E., Slaughter, J. C., Gurka, M. J., \& Gribbin, M. J. (2009). POWERLIB: SAS/IML Software for Computing Power in Multivariate Linear Models. \emph{Journal of Statistical Software}, \emph{30}(5), 1-27.
+
+\hangindent2em
+\hangafter=1
+ Muller, K. E., \& Stewart, P. W. (2006). Linear model theory: univariate, multivariate, and mixed models. Hoboken, New Jersey: John Wiley and Sons.
+\end{document}

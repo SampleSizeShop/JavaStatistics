@@ -1,0 +1,53 @@
+##
+## Java Statistics.  A java library providing power/sample size estimation for 
+## the general linear model.
+## 
+## Copyright (C) 2010 Regents of the University of Colorado.  
+##
+## This program is free software; you can redistribute it and/or
+## modify it under the terms of the GNU General Public License
+## as published by the Free Software Foundation; either version 2
+## of the License, or (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, write to the Free Software
+## Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+##
+
+JavaStatistics 1.2.0 Release Notes
+--------------------------------------------
+
+Features
+
+- Validation reports now include details about the
+study design.  Reports are produced in LaTeX and typeset
+by the build.  A new resources directory contains the
+associated LaTeX class.
+
+Dependency Changes
+
+- Upgraded to Apache Commons Math version 3.0.
+
+Bug Fixes
+
+- Now returns a -1 with an error code for sample size when 
+there is no difference between the groups.  In this case, no
+sample size, however large, can detect a difference.  Consequently,
+the most appropriate power value is the Type I Error rate.
+- Improved detection of search boundaries in bisection search 
+for sample size.  Searches for lower bound to avoid approximation
+failures in the Hotelling-Lawley trace for very small sample sizes.
+Also stops at MAX_INT for the upper bound. 
+
+Known Issues
+
+- Extremely large sample sizes (> 100K) may lead to numerical
+overflows and yield lower than expected power values.
+
+
+ 

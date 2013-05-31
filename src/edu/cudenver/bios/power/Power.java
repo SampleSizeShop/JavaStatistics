@@ -30,17 +30,21 @@ import java.io.Serializable;
  */
 public abstract class Power implements Serializable
 {	
+    /** required by Java - unique id for serialization */
     private static final long serialVersionUID = 7966872951224771875L;
-
-    String errMsg = null;
-	
-	double nominalPower;
-	
-	double actualPower; 
-	
-	int totalSampleSize;
-	
-	double alpha;
+    /** optional error message */
+    protected String errorMessage = null;
+    /** optional error code */
+    protected PowerErrorEnum errorCode = null;
+	/** desired power (when solving for sample size) */
+    protected double nominalPower;
+	/** actual power for the sample size (may not equal nominal power when solving
+	 * for sample size) */
+    protected double actualPower; 
+    /** total sample size */
+    protected int totalSampleSize;
+	/** Type I Error rate */
+    protected double alpha;
 	
 	/**
 	 * Create a power result object.
@@ -57,6 +61,25 @@ public abstract class Power implements Serializable
 		this.totalSampleSize = totalSampleSize;
 		this.alpha = alpha;
 	}
+	
+	   /**
+     * Create a power result object.
+     * 
+     * @param nominalPower target power (if performing sample size, effect size)
+     * @param actualPower calculated power
+     * @param totalSampleSize total sample size for this power result
+     * @param alpha type 1 error for this power result
+     */
+    public Power(double nominalPower, double actualPower, int totalSampleSize, double alpha,
+            String errorMessage, PowerErrorEnum errorCode)
+    {
+        this.nominalPower = nominalPower;
+        this.actualPower = actualPower;
+        this.totalSampleSize = totalSampleSize;
+        this.alpha = alpha;
+        this.errorMessage = errorMessage;
+        this.errorCode = errorCode;
+    }
 	
 	/**
 	 * Create an XML representation of the power result
@@ -135,6 +158,40 @@ public abstract class Power implements Serializable
 	{
 		this.alpha = alpha;
 	}
+
+	/**
+	 * Get the error message associated with this power.
+	 * Currently English only - calling app will need to 
+	 * handle internationalization at this time.
+	 * @return English error message 
+	 */
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    /**
+     * Set the error message
+     * @param errorMessage error message string
+     */
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    /**
+     * Get the error code for the power calculation
+     * @return error code
+     */
+    public PowerErrorEnum getErrorCode() {
+        return errorCode;
+    }
+
+    /**
+     * Set the error code for the power calculation
+     * @param errorCode error code
+     */
+    public void setErrorCode(PowerErrorEnum errorCode) {
+        this.errorCode = errorCode;
+    }
 	
 	
 }

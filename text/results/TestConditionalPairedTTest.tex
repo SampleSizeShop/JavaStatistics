@@ -1,0 +1,123 @@
+\documentclass{glimmpse-report}
+\JavaStatisticsVersion{1.2.0}
+\doctitle{GLMM(F) Example 2. Power results for a Paired T-test}
+\docauthor{Sarah Kreidler}
+\docdate{2012/12/05 12:46:47}
+\begin{document}
+\section{Introduction}
+The following report contains validation results for the JavaStatistics library, a component of the GLIMMPSE software system.  For more information about GLIMMPSE and related publications, please visit
+
+ 
+
+\href{http://samplesizeshop.org}{http://samplesizeshop.org}.
+
+The automated validation tests shown below compare power values produced by the JavaStatistics library to published results and also to simulation.  Sources for published values include POWERLIB (Johnson \emph{et al.} 2007) and a SAS IML implementation of the methods described by Glueck and Muller (2003).
+
+Validation results are listed in Section 3 of the report.  Timing results show the calculation and simulation times for the overall experiment and the mean times per power calculation.  Summary statistics show the maximum absolute deviation between the power value calculated by the JavaStatistics library and the results obtained from SAS or via simulation.  The table in Section 3.3 shows the deviation values for each individual power comparison.  Deviations larger than $10^{-6}$ from SAS power values and $0.05$ for simulated power values are displayed in red.
+
+ \section{Study Design}
+The study design in Example 2 is a one sample design with a pre- and post-measurement for each participant.  We calculate power for a paired t-test comparing the mean responses at the pre- and post-measurements.  We express the paired t-test as a general linear hypothesis in a multivariate linear model.
+\subsection{Inputs to the Power Calculation}
+\subsubsection{List Inputs}
+
+{\bf Type I error rates}
+
+0.0500000
+
+{\bf Beta scale values}
+
+0.0000000, 0.5000000, 1.0000000, 1.5000000, 2.0000000, 2.5000000
+
+{\bf Sigma scale values}
+
+1.0000000
+
+{\bf Per group sample size values}
+
+10
+
+{\bf Statistical tests}
+
+UNIREP
+
+{\bf Power methods}
+
+cond
+
+\subsubsection{Matrix Inputs}
+
+\begin{eqnarray*}
+\underset{\left(1\times1\right)}{\text{Es}\left(\mathbf{X}\right)} & = & \begin{bmatrix}1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(1\times2\right)}{\mathbf{B}} & = & \begin{bmatrix}0.0000 & 2.5000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(1\times1\right)}{\mathbf{C}} & = & \begin{bmatrix}1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(2\times1\right)}{\mathbf{U}} & = & \begin{bmatrix}1.0000\protect\\
+-1.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(1\times1\right)}{\mathbf{\Theta}_0} & = & \begin{bmatrix}0.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\begin{eqnarray*}
+\underset{\left(2\times2\right)}{\mathbf{\Sigma}_E} & = & \begin{bmatrix}2.0000 & 1.0000\protect\\
+1.0000 & 2.0000\protect\\
+\end{bmatrix}
+\end{eqnarray*}
+\section{Validation Results}
+A total of 6 power values were computed for this experiment.
+
+\subsection{Timing}
+\begin{tabular}{|l|l|l|}
+\hline
+ & Total Time (seconds) & Mean Time (seconds) \\ 
+\hline
+Calculation & 0.0000000 & 0.00E0\tabularnewline
+\hline
+Simulation & 0.8890000 & 1.48E-1\tabularnewline
+\hline
+\end{tabular}
+\subsection{Summary Statistics}
+\begin{tabular}{|l|l|}
+\hline
+Max deviation from SAS & 0.00000025\tabularnewline
+\hline
+
+Max deviation from simulation & 0.00445117\tabularnewline
+\hline
+
+\end{tabular}
+\subsection{Full Validation Results}
+\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}
+\hline
+{\bf Power} & {\bf SAS Power (deviation)} & {\bf Sim Power (deviation)} & {\bf Test} & {\bf Sigma Scale} & {\bf Beta Scale} & {\bf Total N} & {\bf Alpha} \\ \hline
+0.0500000 & 0.0500000 (0.0000000) & 0.0500000 (0.0000000) & UNIREP & 1.0000000 & 0.0000000 & 10 & 0.0500000\\ \hline
+0.1705788 & 0.1705786 (0.0000001) & 0.1673000 (0.0032788) & UNIREP & 1.0000000 & 0.5000000 & 10 & 0.0500000\\ \hline
+0.5143512 & 0.5143511 (0.0000001) & 0.5099000 (0.0044512) & UNIREP & 1.0000000 & 1.0000000 & 10 & 0.0500000\\ \hline
+0.8464223 & 0.8464220 (0.0000003) & 0.8500000 (0.0035777) & UNIREP & 1.0000000 & 1.5000000 & 10 & 0.0500000\\ \hline
+0.9771722 & 0.9771720 (0.0000002) & 0.9775000 (0.0003278) & UNIREP & 1.0000000 & 2.0000000 & 10 & 0.0500000\\ \hline
+0.9985038 & 0.9985036 (0.0000002) & 0.9983000 (0.0002038) & UNIREP & 1.0000000 & 2.5000000 & 10 & 0.0500000\\ \hline
+\end{longtabu}
+\normalsize
+\section*{References}
+
+\hangindent2em
+\hangafter=1
+ Glueck, D. H., \& Muller, K. E. (2003). Adjusting power for a baseline covariate in linear models. \emph{Statistics in Medicine}, \emph{22}(16), 2535-2551.
+
+\hangindent2em
+\hangafter=1
+ Johnson, J. L., Muller, K. E., Slaughter, J. C., Gurka, M. J., \& Gribbin, M. J. (2009). POWERLIB: SAS/IML Software for Computing Power in Multivariate Linear Models. \emph{Journal of Statistical Software}, \emph{30}(5), 1-27.
+
+\hangindent2em
+\hangafter=1
+ Muller, K. E., \& Stewart, P. W. (2006). Linear model theory: univariate, multivariate, and mixed models. Hoboken, New Jersey: John Wiley and Sons.
+\end{document}

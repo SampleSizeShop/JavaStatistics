@@ -23,22 +23,20 @@ package edu.cudenver.bios.power.test.general;
 import java.text.DecimalFormat;
 import java.util.List;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.MatrixUtils;
-import org.apache.commons.math.linear.RealMatrix;
-import edu.cudenver.bios.matrix.DesignEssenceMatrix;
+import junit.framework.TestCase;
+
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
+
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.RandomColumnMetaData;
-import edu.cudenver.bios.matrix.RowMetaData;
 import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.GLMMPowerCalculator;
 import edu.cudenver.bios.power.Power;
+import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
-
-import jsc.distributions.Normal;
-import junit.framework.TestCase;
 
 /**
  * Non-automated test cases for detectable difference feature of 
@@ -62,9 +60,13 @@ public class TestDetectableDifferenceGLMM extends TestCase
         GLMMPowerParameters params = buildValidUnivariateInputs();
         // create a power calculator
         GLMMPowerCalculator calc = new GLMMPowerCalculator();
-                
-        List<Power> results = calc.getDetectableDifference(params);
-        checkDetectableDifference(false, results);
+        try {
+            List<Power> results = calc.getDetectableDifference(params);
+            checkDetectableDifference(false, results);
+        } catch (PowerException e) {
+            System.err.println("Detectable difference failed: ["+ 
+                    e.getErrorCode() +"]" + e.getMessage());
+        }
     }
 
     public void testInvalidUnivariateFixed()
@@ -94,8 +96,13 @@ public class TestDetectableDifferenceGLMM extends TestCase
         // create a power calculator
         GLMMPowerCalculator calc = new GLMMPowerCalculator();
         
-        List<Power> results = calc.getDetectableDifference(params);
-        checkDetectableDifference(false, results);
+        try {
+            List<Power> results = calc.getDetectableDifference(params);
+            checkDetectableDifference(false, results);
+        } catch (PowerException e) {
+            System.err.println("Detectable difference failed: ["+ 
+                    e.getErrorCode() +"]" + e.getMessage());
+        }
 
     }
 
@@ -127,8 +134,14 @@ public class TestDetectableDifferenceGLMM extends TestCase
         // create a power calculator
         GLMMPowerCalculator calc = new GLMMPowerCalculator();
         
-        List<Power> results = calc.getDetectableDifference(params);
-        checkDetectableDifference(true, results);
+        try {
+            List<Power> results = calc.getDetectableDifference(params);
+            checkDetectableDifference(false, results);
+        } catch (PowerException e) {
+            System.err.println("Detectable difference failed: ["+ 
+                    e.getErrorCode() +"]" + e.getMessage());
+        }
+
     }
 
     

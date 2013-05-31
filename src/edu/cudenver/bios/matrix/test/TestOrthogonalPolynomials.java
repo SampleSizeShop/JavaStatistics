@@ -23,7 +23,7 @@ package edu.cudenver.bios.matrix.test;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.matrix.OrthogonalPolynomialContrastCollection;
 import edu.cudenver.bios.matrix.OrthogonalPolynomials;

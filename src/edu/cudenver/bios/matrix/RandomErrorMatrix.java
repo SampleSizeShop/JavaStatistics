@@ -2,9 +2,9 @@ package edu.cudenver.bios.matrix;
 
 import jsc.distributions.Normal;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.CholeskyDecompositionImpl;
-import org.apache.commons.math.linear.RealMatrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.CholeskyDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
 
 /**
  * Matrix of random normals with the specified covariance matrix
@@ -12,14 +12,14 @@ import org.apache.commons.math.linear.RealMatrix;
 public class RandomErrorMatrix
 {
 	private double symmetryThreshold = 
-	    CholeskyDecompositionImpl.DEFAULT_RELATIVE_SYMMETRY_THRESHOLD;
+	    CholeskyDecomposition.DEFAULT_RELATIVE_SYMMETRY_THRESHOLD;
 	private double positivityThreshold = 
-		CholeskyDecompositionImpl.DEFAULT_ABSOLUTE_POSITIVITY_THRESHOLD;
+		CholeskyDecomposition.DEFAULT_ABSOLUTE_POSITIVITY_THRESHOLD;
 	
 	protected long seed = 1234;
 	protected RealMatrix matrix;
 	protected RealMatrix sigma;
-	protected CholeskyDecompositionImpl cholesky = null;
+	protected CholeskyDecomposition cholesky = null;
 	protected RealMatrix sqrtMatrix = null;
 	protected Normal normalDist;
 
@@ -87,7 +87,7 @@ public class RandomErrorMatrix
         {            
         	if (this.cholesky == null)
         	{
-        		this.cholesky = new CholeskyDecompositionImpl(sigma, 
+        		this.cholesky = new CholeskyDecomposition(sigma, 
                         symmetryThreshold,
                         positivityThreshold);
                 sqrtMatrix = cholesky.getLT();

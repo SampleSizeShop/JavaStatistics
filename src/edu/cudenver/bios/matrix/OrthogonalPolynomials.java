@@ -24,10 +24,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.QRDecompositionImpl;
-import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.stat.StatUtils;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.QRDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.stat.StatUtils;
 
 import edu.cudenver.bios.matrix.OrthogonalPolynomialContrast.ContrastType;
 import edu.cudenver.bios.utils.Factor;
@@ -82,7 +82,7 @@ public class OrthogonalPolynomials
 		}		
 		// do some mysterious QR decomposition stuff.  See Emerson (1968)
 		RealMatrix outerVector = new Array2DRowRealMatrix(xOuter);
-		QRDecompositionImpl qrDecomp = new QRDecompositionImpl(outerVector);
+		QRDecomposition  qrDecomp = new QRDecomposition (outerVector);
 
 		RealMatrix z = MatrixUtils.getDiagonalMatrix(qrDecomp.getR());
 		RealMatrix raw = qrDecomp.getQ().multiply(z);
