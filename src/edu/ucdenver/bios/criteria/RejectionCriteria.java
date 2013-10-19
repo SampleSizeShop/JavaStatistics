@@ -18,13 +18,27 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package edu.ucdenver.bios.design;
+package edu.ucdenver.bios.criteria;
 
-/**
- * Abstract base class for criteria used to determine study quality
- * @author kreidles
- *
- */
-public abstract class Criteria {
+import org.apache.commons.math3.linear.RealMatrix;
 
+import edu.ucdenver.bios.design.StatisticalTest;
+
+public class RejectionCriteria {
+    // the between participant contrast 
+    RealMatrix betweenFixedContrastMatrix;
+    RealMatrix betweenRandomContrastMatrix;
+    
+    // the within participant contrast
+    RealMatrix withinParticipantContrastMatrix;
+    
+    // the null hypothesis matrix
+    RealMatrix nullHypothesisMatrix;
+    
+    // the alpha level 
+    double alpha;
+    
+    // the statistical test
+    StatisticalTest test;
+    
 }
