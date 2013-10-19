@@ -21,7 +21,7 @@
 package edu.ucdenver.bios.design;
 
 /**
- * Applies a set of quality criteria to a study design description to
+ * Applies a quality criterion to a study design description to
  * produce a complete study design
  * 
  * @author kreidles
@@ -29,61 +29,91 @@ package edu.ucdenver.bios.design;
  */
 public class DesignCalculator {
     
-    public Design getPower(DesignDescription designDescription, CriteriaRejection criteria) {
+    /**
+     * Calculate the power of the specified design based on the given rejection criteria
+     * 
+     * @param designDescription
+     * @param criteria
+     * @return
+     */
+    public Power getPower(Design designDescription, CriteriaRejection criteria) {
         // TODO
         return null;
     }
     
-    public Design getDetectableDifference(DesignDescription designDescription, CriteriaRejection criteria) {
+    /**
+     * Calculate the minimum detectable difference of the specified design 
+     * based on the given rejection criteria
+     * 
+     * @param designDescription
+     * @param criteria
+     * @return
+     */
+    public DetectableDifference getDetectableDifference(Design designDescription, CriteriaRejection criteria) {
         // TODO
         return null;
     }
     
-    public Design getDetectableDifference(DesignDescription designDescription, CriteriaPrecision criteria) {
+    /**
+     * Calculate the minimum detectable difference of the specified design 
+     * based on the given precision criteria
+     * 
+     * @param designDescription
+     * @param criteria
+     * @return
+     */
+    public DetectableDifference getDetectableDifference(Design designDescription, CriteriaPrecision criteria) {
         // TODO
         return null;
     }
     
-    
-    public Design getDetectableDifference(DesignDescription designDescription, CriteriaRejection rejectionCriteria, 
+    /**
+     * Calculate the minimum detectable difference of the specified design 
+     * based on the given precision criteria
+     * 
+     * @param designDescription
+     * @param criteria
+     * @return
+     */
+    public DetectableDifference getDetectableDifference(Design designDescription, CriteriaRejection rejectionCriteria, 
             CriteriaPrecision precisionCriteria) {
         // TODO
         return null;
     }
     
     
-    public Design getSampleSize(DesignDescription designDescription, CriteriaRejection criteria) {
+    public SampleSize getSampleSize(Design designDescription, CriteriaRejection criteria) {
         // TODO
         return null;
         
     }
     
-    public Design getSampleSize(DesignDescription designDescription, CriteriaPrecision criteria) {
+    public SampleSize getSampleSize(Design designDescription, CriteriaPrecision criteria) {
         // TODO
         return null;
         
     }
     
-    public Design getSampleSize(DesignDescription designDescription, CriteriaRejection rejectionCriteria, 
+    public SampleSize getSampleSize(Design designDescription, CriteriaRejection rejectionCriteria, 
             CriteriaPrecision precisionCriteria) {
         // TODO
         return null;
         
     }
     
-    public Design getClusterSize(DesignDescription designDescription, CriteriaRejection criteria) {
+    public ClusterSize getClusterSize(Design designDescription, CriteriaRejection criteria) {
         // TODO
         return null;
         
     }
     
-    public Design getClusterSize(DesignDescription designDescription, CriteriaPrecision criteria) {
+    public ClusterSize getClusterSize(Design designDescription, CriteriaPrecision criteria) {
         // TODO
         return null;
         
     }
     
-    public Design getClusterSize(DesignDescription designDescription, CriteriaRejection rejectionCriteria, 
+    public ClusterSize getClusterSize(Design designDescription, CriteriaRejection rejectionCriteria, 
             CriteriaPrecision precisionCriteria) {
         // TODO
         return null;
