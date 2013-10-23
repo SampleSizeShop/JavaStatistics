@@ -1,5 +1,5 @@
 package edu.ucdenver.bios.design;
 
-public class MixedDesign {
+public class MixedDesign extends Design{
 
 }
