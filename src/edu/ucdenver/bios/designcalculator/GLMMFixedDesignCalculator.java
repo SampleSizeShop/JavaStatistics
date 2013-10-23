@@ -24,20 +24,29 @@ import edu.ucdenver.bios.criteria.PrecisionCriteria;
 import edu.ucdenver.bios.criteria.RejectionCriteria;
 import edu.ucdenver.bios.design.Design;
 import edu.ucdenver.bios.design.GLMMFixedDesign;
+import edu.ucdenver.bios.designcalculator.exception.InvalidCriteriaException;
+import edu.ucdenver.bios.designcalculator.exception.InvalidDesignException;
+import edu.ucdenver.bios.designcalculator.exception.MismatchedDesignCriteriaException;
 
-public class GLMMFixedDesignCalculator implements DesignCalculator {
+public class GLMMFixedDesignCalculator extends DesignCalculator {
 
-    private void validateDesign(GLMMFixedDesign design) {
-        
+    private void validateDesign(GLMMFixedDesign design) 
+    throws InvalidDesignException {
+            if (design == null) throw new InvalidDesignException();
+            
     } 
     
     @Override
-    public Power getPower(Design design, RejectionCriteria criteria) {
+    public Power getPower(Design design, RejectionCriteria criteria) 
+    throws InvalidCriteriaException, InvalidDesignException, 
+    MismatchedDesignCriteriaException {
         
         GLMMFixedDesign fixedDesign = (GLMMFixedDesign) design;
         
         validateDesign(fixedDesign);
-        // TODO Auto-generated method stub
+
+        
+        
         return null;
     }
 

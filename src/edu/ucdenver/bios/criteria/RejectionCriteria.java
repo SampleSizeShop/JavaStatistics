@@ -22,11 +22,12 @@ package edu.ucdenver.bios.criteria;
 
 import org.apache.commons.math3.linear.RealMatrix;
 
-import edu.ucdenver.bios.design.StatisticalTest;
+import edu.ucdenver.bios.statisticaltest.StatisticalTest;
 
 public class RejectionCriteria {
-    // the between participant contrast 
+    // the between participant contrast for fixed predictors
     RealMatrix betweenFixedContrastMatrix;
+    // the between participant contrast for random predictors
     RealMatrix betweenRandomContrastMatrix;
     
     // the within participant contrast
@@ -40,5 +41,16 @@ public class RejectionCriteria {
     
     // the statistical test
     StatisticalTest test;
+    
+    /*
+     *  A subset of the following will be set depending on which value
+     *  the user is solving for (power, sample size, detectable difference, etc.)
+     */
+    
+    // per group sample size
+    int perGroupSampleSize;
+    
+    // desired power
+    double desiredPower;   
     
 }

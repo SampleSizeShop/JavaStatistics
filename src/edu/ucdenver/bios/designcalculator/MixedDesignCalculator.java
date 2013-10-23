@@ -4,7 +4,7 @@ import edu.ucdenver.bios.criteria.PrecisionCriteria;
 import edu.ucdenver.bios.criteria.RejectionCriteria;
 import edu.ucdenver.bios.design.Design;
 
-public class MixedDesignCalculator implements DesignCalculator {
+public class MixedDesignCalculator extends DesignCalculator {
 
     @Override
     public Power getPower(Design design, RejectionCriteria criteria) {

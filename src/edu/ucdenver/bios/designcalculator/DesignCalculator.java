@@ -20,9 +20,14 @@
  */
 package edu.ucdenver.bios.designcalculator;
 
+import org.apache.commons.math3.linear.RealMatrix;
+
 import edu.ucdenver.bios.criteria.PrecisionCriteria;
 import edu.ucdenver.bios.criteria.RejectionCriteria;
 import edu.ucdenver.bios.design.Design;
+import edu.ucdenver.bios.designcalculator.exception.InvalidCriteriaException;
+import edu.ucdenver.bios.designcalculator.exception.InvalidDesignException;
+import edu.ucdenver.bios.designcalculator.exception.MismatchedDesignCriteriaException;
 
 /**
  * Applies a quality criterion to a study design description to
@@ -31,8 +36,45 @@ import edu.ucdenver.bios.design.Design;
  * @author kreidles
  *
  */
-public interface DesignCalculator {
+public abstract class DesignCalculator {
     
+    /**
+     * Calculate the sum of squares hypothesis matrix (the H matrix)
+     * @param params matrices input by user
+     * @return H matrix
+     */
+    public RealMatrix getHypothesisSumOfSquares(RealMatrix C, RealMatrix beta, RealMatrix U,
+            RealMatrix thetaNull, RealMatrix XtXInverse)
+    {        
+        // M = C(X'X)^-1C'
+        RealMatrix M = C.multiply(XtXInverse.multiply(C.transpose()));
+        // thetaHat = C * Beta * U
+        RealMatrix thetaHat = C.multiply(beta.multiply(U));
+        // thetaHat - thetaNull.  Multiple by negative one to do subtraction
+        RealMatrix thetaDiff = thetaHat.subtract(thetaNull);
+        
+        // calculate the hypothesis sum of squares: (thetaHat - thetaNull)'[C(X'X)-1C'](thetaHat - thetaNull)
+        RealMatrix hss = thetaDiff.transpose().multiply(M.multiply(thetaDiff));
+        
+        return hss;
+        
+    }
+    
+    /**
+     * Calculate the sum of squares error matrix (the E matrix)
+     * 
+     * @param params matrices input by the user
+     * @return error sum of squares
+     */
+    public RealMatrix getErrorSumOfSquares(RealMatrix U, RealMatrix sigmaError,
+            double nuError)
+    {        
+        return U.transpose().multiply(sigmaError.multiply(U)).scalarMultiply(nuError);
+    }    
+    
+    /**
+     * 
+     */
     /**
      * Calculate the power of the specified design based on the given rejection criteria
      * 
@@ -40,7 +82,9 @@ public interface DesignCalculator {
      * @param criteria
      * @return
      */
-    public Power getPower(Design design, RejectionCriteria criteria) ;
+    public abstract Power getPower(Design design, RejectionCriteria criteria) 
+    throws InvalidCriteriaException, InvalidDesignException, 
+    MismatchedDesignCriteriaException;
     
     /**
      * Calculate the minimum detectable difference required to meet the specified 
@@ -50,7 +94,7 @@ public interface DesignCalculator {
      * @param criteria
      * @return
      */
-    public DetectableDifference getDetectableDifference(Design design, RejectionCriteria criteria);
+    public abstract DetectableDifference getDetectableDifference(Design design, RejectionCriteria criteria);
     
     /**
      * Calculate the minimum detectable difference required to meet the specified 
@@ -60,7 +104,7 @@ public interface DesignCalculator {
      * @param criteria
      * @return
      */
-    public DetectableDifference getDetectableDifference(Design design, PrecisionCriteria criteria);
+    public abstract DetectableDifference getDetectableDifference(Design design, PrecisionCriteria criteria);
     
     /**
      * Calculate the minimum detectable difference required to meet the specified 
@@ -70,7 +114,7 @@ public interface DesignCalculator {
      * @param criteria
      * @return
      */
-    public DetectableDifference getDetectableDifference(Design design, RejectionCriteria rejectionCriteria, 
+    public abstract DetectableDifference getDetectableDifference(Design design, RejectionCriteria rejectionCriteria, 
             PrecisionCriteria precisionCriteria);
     
     /**
@@ -81,7 +125,7 @@ public interface DesignCalculator {
      * @param criteria
      * @return
      */
-    public SampleSize getSampleSize(Design design, RejectionCriteria criteria);
+    public abstract SampleSize getSampleSize(Design design, RejectionCriteria criteria);
     
     /**
      * Calculate the minimum sample size required to meet the specified 
@@ -91,7 +135,7 @@ public interface DesignCalculator {
      * @param criteria
      * @return
      */
-    public SampleSize getSampleSize(Design design, PrecisionCriteria criteria);
+    public abstract SampleSize getSampleSize(Design design, PrecisionCriteria criteria);
     
     /**
      * Calculate the minimum sample size required to meet the specified 
@@ -101,7 +145,7 @@ public interface DesignCalculator {
      * @param criteria
      * @return
      */
-    public SampleSize getSampleSize(Design design, RejectionCriteria rejectionCriteria, 
+    public abstract SampleSize getSampleSize(Design design, RejectionCriteria rejectionCriteria, 
             PrecisionCriteria precisionCriteria);
     
     /**
@@ -110,7 +154,7 @@ public interface DesignCalculator {
      * @param criteria
      * @return
      */
-    public ClusterSize getClusterSize(Design design, RejectionCriteria criteria);
+    public abstract ClusterSize getClusterSize(Design design, RejectionCriteria criteria);
     
     /**
      * Calculate the minimum cluster size required to meet the specified precision criteria
@@ -119,7 +163,7 @@ public interface DesignCalculator {
      * @param criteria
      * @return
      */
-    public ClusterSize getClusterSize(Design design, PrecisionCriteria criteria);
+    public abstract ClusterSize getClusterSize(Design design, PrecisionCriteria criteria);
     
     /**
      * Calculate the minimum cluster size required to meet the specified rejection and
@@ -130,6 +174,6 @@ public interface DesignCalculator {
      * @param precisionCriteria
      * @return
      */
-    public ClusterSize getClusterSize(Design design, RejectionCriteria rejectionCriteria, 
+    public abstract ClusterSize getClusterSize(Design design, RejectionCriteria rejectionCriteria, 
             PrecisionCriteria precisionCriteria);
 }

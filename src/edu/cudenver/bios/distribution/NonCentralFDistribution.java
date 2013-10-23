@@ -25,6 +25,7 @@ import jsc.distributions.Normal;
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.solvers.BisectionSolver;
 import org.apache.commons.math3.analysis.solvers.UnivariateSolver;
+import org.apache.commons.math3.distribution.AbstractRealDistribution;
 import org.apache.commons.math3.exception.MathIllegalArgumentException;
 import org.apache.commons.math3.exception.TooManyEvaluationsException;
 
@@ -39,7 +40,7 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
  * @author translated from POWERLIB (SAS/IML) written by Keith Muller
  *
  */
-public class NonCentralFDistribution
+public class NonCentralFDistribution extends AbstractRealDistribution
 {     
     private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
     private static final int STARTING_F = 10;
@@ -312,6 +313,66 @@ public class NonCentralFDistribution
 
         }
         return noncentralityBound;
+    }
+
+    @Override
+    public double cumulativeProbability(double arg0) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public double density(double arg0) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public double getNumericalMean() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public double getNumericalVariance() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public double getSupportLowerBound() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public double getSupportUpperBound() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public boolean isSupportConnected() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isSupportLowerBoundInclusive() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isSupportUpperBoundInclusive() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public double probability(double arg0) {
+        // TODO Auto-generated method stub
+        return 0;
     }
     
     

@@ -20,6 +20,43 @@
  */
 package edu.ucdenver.bios.design;
 
-public class GLMMFixedRandomDesign extends Design {
+import org.apache.commons.math3.linear.RealMatrix;
 
+public class GLMMFixedRandomDesign extends Design {
+    /* matrix inputs to the power calculation.  */
+    // the design essence matrix 
+    /* For details please see Muller & Fetterman (2002) "Regression and ANOVA" */
+    private RealMatrix designEssence = null;
+    // caching of X'X inverse and rank since these are order(n^3) operations
+    private RealMatrix XtXInverse = null;
+    private int designRank = -1;
+
+    // beta matrix of regression coefficients associated with fixed predictors
+    RealMatrix betaFixed = null;
+    // beta matrix of regression coefficients associated with random predictors
+    RealMatrix betaRandom = null;
+    
+    // residual error matrix - calculated from the remaining elements
+    private RealMatrix sigmaError = null;
+    // covariance for outcomes (assuming no covariates)
+    private RealMatrix sigmaOutcomes = null;
+    // covariance of Gaussian predictors
+    private RealMatrix sigmaRandomPredictors = null;
+    // covariance of outcomes and random predictors
+    private RealMatrix sigmaOutcomesRandomPredictors = null;
+    
+    // if true, power will be adjusted slightly to account for uncertainty in Sigma
+    private  boolean sigmaEstimated = false;
+    
+    // additional parameters must be specified when Sigma is estimated
+    // in order to build the confidence limits
+    // lower tail probability
+    private double alphaLowerConfidenceLimit = -1;
+    // upper tail probability
+    private  double alphaUpperConfidenceLimit = -1;
+    // 
+    private int sampleSizeForEstimates = 0;
+    private int designMatrixRankForEstimates = 0;
+    
+    
 }

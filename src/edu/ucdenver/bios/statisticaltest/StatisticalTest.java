@@ -18,16 +18,20 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package edu.ucdenver.bios.criteria;
+package edu.ucdenver.bios.statisticaltest;
 
-public class PrecisionCriteria {
-    // the upper tail probability for the confidence interval
-    double upperTailProbability;
+import org.apache.commons.math3.distribution.AbstractRealDistribution;
+
+public abstract class StatisticalTest {
     
-    // the lower tail probability for the confidence interval
-    double lowerTailProbability;
+    public abstract AbstractRealDistribution getDataAnalysisNullDistribution();
     
-    // desired width of the confidence interval
-    double ciWidth;
+    public abstract AbstractRealDistribution getPowerNullDistribution();
+    
+    public abstract AbstractRealDistribution getPowerAlternativeDistribution();
+    
+    public abstract double getStatistic();
+    
+    public abstract double getPvalue();
     
 }
