@@ -75,7 +75,7 @@ public class WilksLambdaTest extends StatisticalTest {
         this.s = (a < b) ? a : b;  
         
         // calculate the value of the statistic
-        this.lambda = getWilksLambda();
+        this.lambda = getWilksLambda(hypothesisSumOfSquares, errorSumOfSquares);
 
         this.totalSampleSize = totalSampleSize;
         // calculate nuE
@@ -197,16 +197,17 @@ public class WilksLambdaTest extends StatisticalTest {
      * @param E error sum of squares matrix
      * @returns F statistic
      */
-    private double getWilksLambda(DistributionType type)
+    private double getWilksLambda(RealMatrix hypothesisSumOfSquares,
+    		RealMatrix errorSumOfSquares)
     throws IllegalArgumentException
     {
         
         RealMatrix adjustedH = hypothesisSumOfSquares;
-        if (type != DistributionType.DATA_ANALYSIS_NULL && ((s == 1 && p > 1) ||
-                fMethod == FApproximation.RAO_TWO_MOMENT_OMEGA_MULT))
-        {
-            adjustedH = hypothesisSumOfSquares.scalarMultiply(nuE/totalSampleSize);
-        }
+//        if (type != DistributionType.DATA_ANALYSIS_NULL && ((s == 1 && p > 1) ||
+//                fMethod == FApproximation.RAO_TWO_MOMENT_OMEGA_MULT))
+//        {
+//            adjustedH = hypothesisSumOfSquares.scalarMultiply(nuE/totalSampleSize);
+//        }
         
         RealMatrix T = adjustedH.add(errorSumOfSquares);
         RealMatrix inverseT = new LUDecomposition(T).getSolver().getInverse();
@@ -216,13 +217,6 @@ public class WilksLambdaTest extends StatisticalTest {
         double det = new LUDecomposition(EinverseT).getDeterminant();
         return det;
     }
-
-
-    
-    
-    
-    
-    
     
     
     @Override
