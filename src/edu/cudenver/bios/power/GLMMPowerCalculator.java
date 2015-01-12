@@ -31,6 +31,7 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.apache.commons.math3.stat.StatUtils;
+import org.apache.log4j.Logger;
 
 import edu.cudenver.bios.distribution.NonCentralFDistribution;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
@@ -57,7 +58,7 @@ import edu.cudenver.bios.power.parameters.PowerParameters;
  *
  */
 public class GLMMPowerCalculator implements PowerCalculator
-{	    
+{
     private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
     private static final int STARTING_SAMPLE_SIZE = 1024;
     private static final int STARTING_BETA_SCALE = 10;
@@ -73,6 +74,8 @@ public class GLMMPowerCalculator implements PowerCalculator
             CholeskyDecomposition.DEFAULT_RELATIVE_SYMMETRY_THRESHOLD;
     // eigen value decomposition tolerance
     protected double eigenTolerance = 0.000000000001;
+
+    private Logger logger = Logger.getLogger(getClass());
 
     public class SimulatedPower
     {
@@ -309,7 +312,8 @@ public class GLMMPowerCalculator implements PowerCalculator
                                 }
                                 qIdx++;
                             } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size());
+                                    qIdx < params.getQuantileList().size() &&
+                                    !Thread.currentThread().isInterrupted());
                         }
                     }
                 }
@@ -370,7 +374,8 @@ public class GLMMPowerCalculator implements PowerCalculator
                                     qIdx++;
                                 } 
                             } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size());
+                                    qIdx < params.getQuantileList().size() &&
+                                    !Thread.currentThread().isInterrupted());
                         }
                     }
                 }
@@ -435,7 +440,8 @@ public class GLMMPowerCalculator implements PowerCalculator
                                 }
                                 qIdx++;
                             } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size());
+                                    qIdx < params.getQuantileList().size() &&
+                                    !Thread.currentThread().isInterrupted());
                         }
                     }
                 }
@@ -496,7 +502,8 @@ public class GLMMPowerCalculator implements PowerCalculator
                                 }
                                 qIdx++;
                             } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size());
+                                    qIdx < params.getQuantileList().size() &&
+                                    !Thread.currentThread().isInterrupted());
                         }
                     }
                 }
@@ -960,7 +967,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                 } catch (Exception e) {
                     // just keep iterating until we find a minimum valid sample size
                 }
-            } while (lowerBound < upperN);
+            } while (lowerBound < upperN && !Thread.currentThread().isInterrupted());
             return new SampleSizeBound(lowerBound, calculatedPower);
         }
     }
@@ -1017,13 +1024,17 @@ public class GLMMPowerCalculator implements PowerCalculator
             }
             try {
                 glmmTest.setPerGroupSampleSize(upperBound); 
-                if (nonCentralityDist != null) nonCentralityDist.setPerGroupSampleSize(upperBound);
+                if (nonCentralityDist != null) {
+                    nonCentralityDist.setPerGroupSampleSize(upperBound);
+                }
                 currentPower = getPowerByType(glmmTest, nonCentralityDist, method, alpha, quantile);
             } catch (Exception e) {
                 // ignore steps which yield invalid degrees of freedom
+                logger.warn("Exception getting power by type: " + e.getMessage(), e);
+                return new SampleSizeBound(-1, alpha, SampleSizeError.SAMPLE_SIZE_UNDEFINED);
             }
-        } while (currentPower <= targetPower &&
-                upperBound <= maxPerGroupN);
+        } while (currentPower <= targetPower && upperBound < maxPerGroupN &&
+                !Thread.currentThread().isInterrupted());
         if (currentPower < targetPower) {
             // no sample size meets the criteria, so return an error
             return new SampleSizeBound(-1, alpha, 
@@ -1171,8 +1182,8 @@ public class GLMMPowerCalculator implements PowerCalculator
             } catch (Exception e) {
                 // ignore steps which yield invalid degrees of freedom
             }
-        } while (currentPower <= targetPower &&
-                upperBound <= Double.MAX_VALUE);
+        } while (currentPower <= targetPower && upperBound <= Double.MAX_VALUE &&
+                !Thread.currentThread().isInterrupted());
         if (currentPower < targetPower) {
             // no sample size meets the criteria, so return an error
             return new DetectableDifferenceBound(Double.NaN, alpha, 
@@ -1344,7 +1355,8 @@ public class GLMMPowerCalculator implements PowerCalculator
                                     qIdx++;
                                 }
                             } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size());
+                                    qIdx < params.getQuantileList().size() &&
+                                    !Thread.currentThread().isInterrupted());
                         }
                     }
                 }
