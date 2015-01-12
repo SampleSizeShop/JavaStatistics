@@ -1,0 +1,63 @@
+apply plugin: 'java'
+//ant.importBuild 'build/build.xml'
+
+version = '1.2.0'
+
+repositories {
+    mavenCentral()
+}
+
+buildDir = 'build/tmp'
+
+configurations {
+    paper.extendsFrom testRuntime
+}
+
+dependencies {
+    compile 'commons-collections:commons-collections:3.2.1',
+            'org.apache.commons:commons-math3:3.3',
+            'org.hibernate:hibernate-entitymanager:4.0.1.Final',
+            'org.hibernate.common:hibernate-commons-annotations:4.0.1.Final',
+            'org.hibernate:hibernate-core:4.0.0.Final',
+            'com.google.code.gson:gson:2.1',
+            'junit:junit:4.7'
+    compile('log4j:log4j:1.2.15') {
+        exclude group: 'javax.jms'
+        exclude group: 'com.sun.jdmk'
+        exclude group: 'com.sun.jmx'
+    }
+    compile files('../thirdparty/jsc/1.0/lib/jsc.jar')
+    testCompile 'junit:junit:4.7'
+    paper "junit:junit:4.7"
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+            exclude '**/power/test/**',
+                    '**/bios/matrix/test/**'
+        }
+    }
+    test {
+        java {
+            srcDir 'src'
+            include '**/bios/matrix/test/**'
+        }
+    }
+
+    paper {
+        java {
+            srcDir 'src'
+            include '**/power/test/**'
+            compileClasspath = sourceSets.main.output + configurations.paper
+            runtimeClasspath = output + compileClasspath
+        }
+    }
+}
+
+task paperTest(type: Test, group: 'Publication', description: 'Runs tests and prepares PDF for publication') {
+    testClassesDir = sourceSets.paper.output.classesDir
+    classpath = sourceSets.paper.runtimeClasspath
+}
+
