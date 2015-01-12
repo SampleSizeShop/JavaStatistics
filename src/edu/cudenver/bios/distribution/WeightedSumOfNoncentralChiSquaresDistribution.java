@@ -307,7 +307,8 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 				}
 			}
 		}
-		while (numTermsMain > 1.5 * numTermsAux && integrationLimit <= Math.abs(quantile));
+		while (numTermsMain > 1.5 * numTermsAux && integrationLimit <= Math.abs(quantile) &&
+                !Thread.currentThread().isInterrupted());
 		
 		// perform main integration
 		if (numTermsMain > MAX_STEPS-counter.getCount())
@@ -353,7 +354,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 			
 			sum1 = Math.sin(0.5*sum1)*partialValue;
 			sum2 = 0.5*sum2*partialValue;
-			// TODO: return sum1 from auxilliary integration
+			// TODO: return sum1 from auxiliary integration
 			
 			value += sum1;
 		}
@@ -364,9 +365,10 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 	/**
 	 * Find the upper cutoff point for the integral such that P(Q > c) &lt; accuracy
 	 * for U > 0, and 
-	 * @param acc
+	 * @param startCutoff
 	 * @param mean
-	 * @param limit
+	 * @param sigmaSquared
+     * @param acc
 	 * @param counter
 	 * @return
 	 */
@@ -386,7 +388,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		double u = u2 / (1 + u2*rb);
 		TailProbabilityBound bound = findTailProbabilityBound(u, sigmaSquared, counter);
 		c2 = bound.cutoff;
-		while (bound.bound > acc)
+		while (bound.bound > acc && !Thread.currentThread().isInterrupted())
 		{
 			u1 = u2;
 			c2 = bound.cutoff;
@@ -397,7 +399,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 		}
 		u = (c1 - mean)/(bound.cutoff - mean);
 
-		while (u < 0.9)
+		while (u < 0.9 && !Thread.currentThread().isInterrupted())
 		{
 			u = (u1 + u2)/2;
 			bound = findTailProbabilityBound(u/(1+ u*rb), sigmaSquared, counter);
@@ -465,7 +467,8 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 			// the minimum value with appropriate accuracy
 			double Utemp = U;
 			U /= 4;
-			while(calculateIntegrationError(U, sigmaSquared, DEFAULT_TAU_SQUARED, counter) <= acc) 
+			while(calculateIntegrationError(U, sigmaSquared, DEFAULT_TAU_SQUARED, counter) <= acc &&
+                    !Thread.currentThread().isInterrupted())
 			{
 				Utemp = U;
 				U /= 4;
@@ -480,7 +483,8 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 			{
 				U *= 4;
 			} 
-			while(calculateIntegrationError(U, sigmaSquared, DEFAULT_TAU_SQUARED, counter) > acc);
+			while(calculateIntegrationError(U, sigmaSquared, DEFAULT_TAU_SQUARED, counter) > acc &&
+                    !Thread.currentThread().isInterrupted());
 		}
 		
 		// now ensure that the truncating error of U/1.2 > accuracy
@@ -667,7 +671,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 			y *= y;
 			double s1 = s + term/ak;
 			
-			while(s1 != s)
+			while(s1 != s && !Thread.currentThread().isInterrupted())
 			{
 				ak = ak +2;
 				term *= y;
