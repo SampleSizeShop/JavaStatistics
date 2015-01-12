@@ -1012,7 +1012,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         }
 
         // otherwise, keep ramping up sample size until we exceed the desired power
-        int upperBound = STARTING_SAMPLE_SIZE;  // 2^10
+        int upperBound = STARTING_SAMPLE_SIZE;
         int prevBound;
         double currentPower = 0.0;
         do {
