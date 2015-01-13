@@ -25,7 +25,7 @@
 	<property name="owner" value="University of Colorado Denver, 
 		Department of Biostatistics and Informatics" />
 	<property name="author" value="Sarah Kreidler" />
-	<property name="module.version" value="1.2.0" />
+	<property name="module.version" value="1.2.1" />
 	<property name="source.dir" value="${basedir}/../src" />
     <property name="tmp.dir" value="${basedir}/tmp" />
     <property name="artifacts.dir" value="${basedir}/artifacts" />
@@ -38,6 +38,7 @@
 		<include name="ApacheCommonsMath/3.0/lib/commons-math3-3.0.jar" />
 		<include name="jsc/1.0/lib/jsc.jar" />
 		<include name="junit/4.7/lib/junit-4.7.jar" />
+		<include name="log4j/1.2.15/lib/log4j-1.2.15.jar" />
 	</fileset>
 	
 	<path id="library.path">
