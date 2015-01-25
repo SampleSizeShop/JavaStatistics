@@ -54,7 +54,7 @@ public class UnirepExactUnconditionalTest {
 			"power for the uncorrected univariate approach to repeated " +
 			"measures, Box, Geisser-Greenhouse, and Huynh-Feldt tests, " +
 			"using Davies algorithm";
-    private static double TOLERANCE = 0.1;
+    private static final double TOLERANCE = 0.1;
 
 	private PowerChecker checker;
 
