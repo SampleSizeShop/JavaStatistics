@@ -164,7 +164,21 @@ public class PowerChecker
     {
     	this.simulate = compareAgainstSimulation;
     }
-    
+
+    /**
+     * Create a power checker which compares the power
+     * values against an XML formatted input file of SAS results.
+     * The user may optionally disable simulation comparisons.
+     *
+     * @param sasPowers SAS power values
+     * @param simulate if true, power values
+     * are compared against simulation.
+     */
+    public PowerChecker(List<GLMMPower> sasPowers, boolean simulate) {
+        this.sasPowers = sasPowers;
+        this.simulate = simulate;
+    }
+
     /**
      * Create a power checker which compares the power
      * values against an XML formatted input file of SAS results.
@@ -333,6 +347,20 @@ public class PowerChecker
         
     /**
      * Returns true if the max deviation from SAS
+     * power values is lower than the input tolerance level.
+     * This indicates that the power results match within
+     * the desired tolerance.
+     *
+     * @param tolerance tolerance to compare to max deviation
+     * @return true if power difference is within the desired
+     * tolerance.
+     */
+    public boolean isSASDeviationBelowTolerance(double tolerance) {
+    	return (maxSasDeviation <= tolerance);
+    }
+
+    /**
+     * Returns true if the max deviation from SAS
      * power values is lower than the tolerance level.
      * This indicates that the power results match within
      * the desired tolerance.
@@ -341,9 +369,9 @@ public class PowerChecker
      */
     public boolean isSASDeviationBelowTolerance()
     {
-    	return (maxSasDeviation <= sasTolerance);
+        return (maxSasDeviation <= sasTolerance);
     }
-    
+
     /**
      * Returns true if the max deviation from simulated
      * power values is lower than the tolerance level.
