@@ -1,0 +1,11 @@
+<powerList>
+<glmmPower test='hlt' alpha='     0.05' nominalPower='0.2001068' actualPower='0.2001068' betaScale='0.4997025' sigmaScale='1' sampleSize='       15' powerMethod='quantile' quantile='0.50' />
+<glmmPower test='hlt' alpha='     0.05' nominalPower='0.5002726' actualPower='0.5002726' betaScale='0.8075886' sigmaScale='1' sampleSize='       15' powerMethod='quantile' quantile='0.50' />
+<glmmPower test='hlt' alpha='     0.05' nominalPower='0.8002674' actualPower='0.8002674' betaScale=' 1.097641' sigmaScale='1' sampleSize='       15' powerMethod='quantile' quantile='0.50' />
+<glmmPower test='hlt' alpha='     0.05' nominalPower='0.2000164' actualPower='0.2000164' betaScale='0.1651525' sigmaScale='1' sampleSize='       75' powerMethod='quantile' quantile='0.50' />
+<glmmPower test='hlt' alpha='     0.05' nominalPower='0.5000414' actualPower='0.5000414' betaScale='0.2623301' sigmaScale='1' sampleSize='       75' powerMethod='quantile' quantile='0.50' />
+<glmmPower test='hlt' alpha='     0.05' nominalPower='0.8000407' actualPower='0.8000407' betaScale='0.3508015' sigmaScale='1' sampleSize='       75' powerMethod='quantile' quantile='0.50' />
+<glmmPower test='hlt' alpha='     0.05' nominalPower='0.2000057' actualPower='0.2000057' betaScale='0.1141548' sigmaScale='1' sampleSize='      150' powerMethod='quantile' quantile='0.50' />
+<glmmPower test='hlt' alpha='     0.05' nominalPower='0.5000155' actualPower='0.5000155' betaScale='0.1812892' sigmaScale='1' sampleSize='      150' powerMethod='quantile' quantile='0.50' />
+<glmmPower test='hlt' alpha='     0.05' nominalPower='0.8000163' actualPower='0.8000163' betaScale='0.2423835' sigmaScale='1' sampleSize='      150' powerMethod='quantile' quantile='0.50' />
+</powerList>

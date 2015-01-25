@@ -35,14 +35,16 @@ sourceSets {
     main {
         java {
             srcDir 'src'
-            exclude '**/power/test/**',
-                    '**/bios/matrix/test/**'
+//            exclude '**/power/test/**',
+//                    '**/bios/matrix/test/**'
         }
     }
     test {
         java {
-            srcDir 'src'
-            include '**/bios/matrix/test/**'
+            srcDir 'src/test/java'
+            exclude 'src'
+            include 'src//power/test/**'
+            include '**bios/matrix/test/**'
         }
     }
 
@@ -54,6 +56,18 @@ sourceSets {
             runtimeClasspath = output + compileClasspath
         }
     }
+}
+//sourceSets.test.java.srcDirs = [ 'src/test/java', 'src' ]
+
+println "srcDirs = $sourceSets.test.java.srcDirs"
+
+test {
+    exclude 'edu/cudenver/bios/power/test/general/**'
+    exclude 'edu/cudenver/bios/power/test/paper'
+}
+
+tasks.withType(Test) {
+    maxParallelForks = Runtime.runtime.availableProcessors() / 2;
 }
 
 task paperTest(type: Test, group: 'Publication', description: 'Runs tests and prepares PDF for publication') {
