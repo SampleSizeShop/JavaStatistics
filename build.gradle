@@ -1,7 +1,6 @@
 apply plugin: 'java'
-//ant.importBuild 'build/build.xml'
 
-version = '1.2.0'
+version = '1.2.2-dev'
 
 repositories {
     mavenCentral()
@@ -35,6 +34,7 @@ sourceSets {
     main {
         java {
             srcDir 'src'
+// TODO: find way to exclude these directories from jar but still let tests run
 //            exclude '**/power/test/**',
 //                    '**/bios/matrix/test/**'
         }
@@ -57,17 +57,16 @@ sourceSets {
         }
     }
 }
-//sourceSets.test.java.srcDirs = [ 'src/test/java', 'src' ]
 
-println "srcDirs = $sourceSets.test.java.srcDirs"
-
+// Exclusions keep tests from paper from running during test task, run
+// paperTest task  to run those and generate results.
 test {
     exclude 'edu/cudenver/bios/power/test/general/**'
     exclude 'edu/cudenver/bios/power/test/paper'
 }
 
 tasks.withType(Test) {
-    maxParallelForks = Runtime.runtime.availableProcessors() / 2;
+    maxParallelForks = Runtime.runtime.availableProcessors();
 }
 
 task paperTest(type: Test, group: 'Publication', description: 'Runs tests and prepares PDF for publication') {
@@ -75,3 +74,6 @@ task paperTest(type: Test, group: 'Publication', description: 'Runs tests and pr
     classpath = sourceSets.paper.runtimeClasspath
 }
 
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.2.1'
+}
