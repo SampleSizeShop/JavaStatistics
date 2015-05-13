@@ -548,7 +548,7 @@ public class GLMMPowerCalculator implements PowerCalculator
      */
     protected void validateMatrices(GLMMPowerParameters params)
             throws PowerException
-            {
+    {
         // convenience variables
         RealMatrix beta = params.getBeta().getCombinedMatrix();
         RealMatrix theta0 = params.getTheta();
@@ -666,7 +666,11 @@ public class GLMMPowerCalculator implements PowerCalculator
         if (theta0.getRowDimension() != C.getRowDimension())
             throw new PowerException("Number of rows in theta null " +
                     "must equal number of rows in between subject contrast",
-                    PowerErrorEnum.MATRIX_COMFORMANCE_C_THETA_NULL);
+                    PowerErrorEnum.MATRIX_CONFORMANCE_C_THETA_NULL);
+        if (theta0.getColumnDimension() != U.getColumnDimension())
+            throw new PowerException("Number of columns in theta null " +
+                    "must equal number of columns in within subject contrast",
+                    PowerErrorEnum.MATRIX_CONFORMANCE_U_THETA_NULL);
 
         // check rank of the design matrix
         int rankX = new SingularValueDecomposition(XEssence).getRank();
@@ -676,7 +680,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 
         // make sure design matrix is symmetric and positive definite
         // TODO: how to check this?
-            }
+    }
 
     /**
      * Compute conditional power.  Conditional power is conditional on
