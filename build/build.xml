@@ -25,7 +25,7 @@
 	<property name="owner" value="University of Colorado Denver, 
 		Department of Biostatistics and Informatics" />
 	<property name="author" value="Sarah Kreidler" />
-	<property name="module.version" value="1.2.1" />
+	<property name="module.version" value="1.2.2.0" />
 	<property name="source.dir" value="${basedir}/../src" />
     <property name="tmp.dir" value="${basedir}/tmp" />
     <property name="artifacts.dir" value="${basedir}/artifacts" />
