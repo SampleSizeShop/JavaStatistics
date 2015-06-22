@@ -1,8 +1,8 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,7 +38,7 @@ import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
  * Container class for inputs for general linear model power calculations.
  * A power/sample size calculation required matrix inputs to define the study
  * design, and lists defining the tests, type I error levels, scale factors, etc to
- * include in the power calculations.  
+ * include in the power calculations.
  * <p>
  * The following matrices should be specified
  * <ul>
@@ -80,7 +80,7 @@ import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
  *
  */
 public class GLMMPowerParameters extends PowerParameters
-{	
+{
 	// power methods
 	public enum PowerMethod
 	{
@@ -88,28 +88,28 @@ public class GLMMPowerParameters extends PowerParameters
 		UNCONDITIONAL_POWER,
 		QUANTILE_POWER
 	};
-	
+
 	// parameters related to confidence intervals
 	ConfidenceIntervalType confidenceIntervalType = ConfidenceIntervalType.NONE;
 	double alphaLowerConfidenceLimit = 0.025;
 	double alphaUpperConfidenceLimit = 0.025;
 	int sampleSizeForEstimates = 0;
 	int designMatrixRankForEstimates = 0;
-	
+
 	/** flags for selecting approximation methods, cdf methods **/
 	// approximation method setting.  These can be set for each statistical test
-	HashMap<Test,UnivariateCdfApproximation> univariateCdfMap = 
+	HashMap<Test,UnivariateCdfApproximation> univariateCdfMap =
 		new HashMap<Test,UnivariateCdfApproximation>();
-	HashMap<Test,UnivariateEpsilonApproximation> univariateEpsilonMap = 
+	HashMap<Test,UnivariateEpsilonApproximation> univariateEpsilonMap =
 		new HashMap<Test,UnivariateEpsilonApproximation>();
-	HashMap<Test,FApproximation> FMap = 
+	HashMap<Test,FApproximation> FMap =
 		new HashMap<Test,FApproximation>();
 	// if true, use the exact calculation of the CDF of the non-centrality parameter
 	// (applies to quantile and conditional power only)
 	boolean nonCentralityCDFExact = false;
-	
+
 	/* lists which define a set of powers calculations for the current run
-	 * note that sample size, power, and alpha lists are defined in the PowerParameters super class 
+	 * note that sample size, power, and alpha lists are defined in the PowerParameters super class
 	 */
 	// type of statistical test being performed
 	ArrayList<Test> testList = new ArrayList<Test>();
@@ -123,9 +123,9 @@ public class GLMMPowerParameters extends PowerParameters
 	ArrayList<PowerMethod> powerMethodList = new ArrayList<PowerMethod>();
 	// list of quantiles to use for quantile power
 	ArrayList<Double> quantileList = new ArrayList<Double>();
-	
+
 	/* matrix inputs to the power calculation.  */
-	// the design essence matrix 
+	// the design essence matrix
 	/* For details please see Muller & Fetterman (2002) "Regression and ANOVA" */
 	RealMatrix designEssence = null;
 	// caching of X'X inverse and rank since these are order(n^3) operations
@@ -139,9 +139,9 @@ public class GLMMPowerParameters extends PowerParameters
 	RealMatrix theta = null;
 	// beta matrix of regression coefficients
 	FixedRandomMatrix beta = null;
-	// residual error matrix 
+	// residual error matrix
 	RealMatrix sigmaError = null;
-	// variance/ covariances required for random gaussian covariates 
+	// variance/ covariances required for random gaussian covariates
 	// i.e. GLMM(F,g) designs
 	RealMatrix sigmaOutcomeGaussianRandom = null;
 	RealMatrix sigmaGaussianRandom = null;
@@ -150,16 +150,16 @@ public class GLMMPowerParameters extends PowerParameters
 	/**
 	 * Constructor.  Creates an empty set of linear model power parameters
 	 */
-	public GLMMPowerParameters() 
+	public GLMMPowerParameters()
 	{
 	    super();
 	    setTestDefaults();
 	}
 
 	/**** Functions for list inputs which define multiple power calculations ****/
-	
+
 	/**
-	 * Add the statistical test to those included in the power/sample size 
+	 * Add the statistical test to those included in the power/sample size
 	 * calculations
 	 * @param test statistical test
 	 */
@@ -167,7 +167,7 @@ public class GLMMPowerParameters extends PowerParameters
 	{
     	testList.add(test);
 	}
-	
+
     /**
      * Add a scale factor for the beta matrix.  This scale factor
      * only effects the fixed portion of the beta matrix
@@ -175,9 +175,9 @@ public class GLMMPowerParameters extends PowerParameters
      */
     public void addBetaScale(double scale)
     {
-    	betaScaleList.add(new Double(scale));    	
+    	betaScaleList.add(new Double(scale));
     }
-    
+
     /**
      * Add a scale factor for the sigma error matrix.  Allows the user
      * to tweak the estimates of residual variance in the model
@@ -185,9 +185,9 @@ public class GLMMPowerParameters extends PowerParameters
      */
     public void addSigmaScale(double scale)
     {
-    	sigmaScaleList.add(new Double(scale));    	
-    }   
-    
+    	sigmaScaleList.add(new Double(scale));
+    }
+
     /**
      * Add a power method for use in power calculations
      * @param method conditional, quantile, or unconditional power
@@ -196,7 +196,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
     	powerMethodList.add(method);
     }
-    
+
     /**
      * Add a quantile (value between 0 and 1) to the list for use with the quantile
      * power method.
@@ -206,7 +206,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
     	quantileList.add(new Double(quantile));
     }
-    
+
 	/**
 	 * Get the list of statistical tests
 	 * @return list of statistical tests requested
@@ -215,7 +215,7 @@ public class GLMMPowerParameters extends PowerParameters
 	{
 		return testList;
 	}
-	
+
     /**
      * Get the list of beta scale factors
      * @return beta scale list
@@ -233,7 +233,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
         return sigmaScaleList;
     }
-    
+
     /**
      * Get the list of power methods
      * @return power method list
@@ -242,7 +242,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
     	return powerMethodList;
     }
-	
+
     /**
      * Get the list of quantiles associated with a set of quantile power calculations
      * @return list of quantiles
@@ -251,7 +251,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
     	return quantileList;
     }
-	
+
 	/**
 	 * Clear the list of statistical tests
 	 */
@@ -259,7 +259,7 @@ public class GLMMPowerParameters extends PowerParameters
 	{
 		testList.clear();
 	}
-	
+
     /**
      * Clear the list of beta scale factors
      */
@@ -275,7 +275,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
         sigmaScaleList.clear();
     }
-    
+
     /**
      * Clear the list of power methods
      */
@@ -283,7 +283,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
     	powerMethodList.clear();
     }
-	
+
     /**
      * Clear the list of quantiles associated with a set of quantile power calculations
      */
@@ -291,7 +291,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
     	quantileList.clear();
     }
-    
+
     /**
      * Clear the list of per group sample size values
      */
@@ -299,9 +299,9 @@ public class GLMMPowerParameters extends PowerParameters
     {
         sampleSizeList.clear();
     }
-    
+
 	/**** Functions for setting approximation and cdf methods ****/
-    
+
     /**
      * Sets the approximation method for the F statistic which is created
      * by the underlying statistical test.
@@ -311,7 +311,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
     	FMap.put(test, method);
     }
-    
+
     /**
      * Get the F approximation method for the specified test
      * @param test
@@ -320,7 +320,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
     	return FMap.get(test);
     }
-    
+
     /**
      * Sets the CDF approximation method for the univariate tests
      * @param test statistical test type
@@ -330,7 +330,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
     	univariateCdfMap.put(test, method);
     }
-    
+
     /**
      * Get the CDF approximation method for the specified test
      * @param test statistical test
@@ -340,7 +340,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
     	return univariateCdfMap.get(test);
     }
-    
+
     /**
      * Sets the approximation method for mean epsilon the univariate tests
      * @param test statistical test type
@@ -350,7 +350,7 @@ public class GLMMPowerParameters extends PowerParameters
     {
     	univariateEpsilonMap.put(test, method);
     }
-    
+
     /**
      * Get the approximation method for mean epsilon for the specified univariate test
      * @param test statistical test
@@ -360,14 +360,14 @@ public class GLMMPowerParameters extends PowerParameters
     {
     	return univariateEpsilonMap.get(test);
     }
-    
+
     /**
      * Indicates if the estimate of the non-centrality cdf
      * uses the exact Davies' algorithm.  If false, a Satterthwaite
      * approximation is used.
      * @return true if exact Davies's algorithm is used.
      */
-	public boolean isNonCentralityCDFExact() 
+	public boolean isNonCentralityCDFExact()
 	{
 		return nonCentralityCDFExact;
 	}
@@ -376,20 +376,20 @@ public class GLMMPowerParameters extends PowerParameters
      * Set whether the estimate of the non-centrality cdf
      * should use the exact Davies' algorithm.  If false, a Satterthwaite
      * approximation is used.
-     * 
+     *
      * @param nonCentralityCDFExact true for Davies' algorithm, false
      * for Satterthwaite approximation.
      */
-	public void setNonCentralityCDFExact(boolean nonCentralityCDFExact) 
+	public void setNonCentralityCDFExact(boolean nonCentralityCDFExact)
 	{
 		this.nonCentralityCDFExact = nonCentralityCDFExact;
 	}
-    
+
 	/**** Functions for setting the matrix inputs ****/
-	
+
 	/**
 	 * Get the "essence" design matrix which contains 1 entry for
-	 * each row in the fixed portion of the full design matrix 
+	 * each row in the fixed portion of the full design matrix
 	 * @return essence design matrix
 	 */
 	public RealMatrix getDesignEssence()
@@ -399,7 +399,7 @@ public class GLMMPowerParameters extends PowerParameters
 
 	/**
 	 * Set the "essence" design matrix which contains 1 entry for
-	 * each row in the fixed portion of the full design matrix 
+	 * each row in the fixed portion of the full design matrix
 	 * @param designEssence design essence matrix.
 	 */
 	public void setDesignEssence(RealMatrix designEssence)
@@ -407,13 +407,13 @@ public class GLMMPowerParameters extends PowerParameters
 		this.designEssence = designEssence;
 		designRank = new SingularValueDecomposition(designEssence).getRank();
 		if (this.sigmaGaussianRandom != null) designRank++;
-		XtXInverse = 
+		XtXInverse =
         	new LUDecomposition(this.designEssence.transpose().multiply(this.designEssence)).getSolver().getInverse();
 	}
 
 	/**
 	 * Get rank of design matrix
-	 * 
+	 *
 	 * @return rank of design matrix
 	 */
 	public int getDesignRank()
@@ -424,23 +424,23 @@ public class GLMMPowerParameters extends PowerParameters
 		}
 		return designRank;
 	}
-	
+
 	/**
 	 * Get cached (X'X)-1.  Matrix inversion is order n^3 so we
 	 * cache this value
-	 * 
+	 *
 	 * @return (X'X) inverse
 	 */
 	public RealMatrix getXtXInverse()
 	{
 		if (XtXInverse == null)
 		{
-	        XtXInverse = 
+	        XtXInverse =
 	        	new LUDecomposition(designEssence.transpose().multiply(designEssence)).getSolver().getInverse();
 		}
 		return XtXInverse;
 	}
-	
+
 	/**
 	 * Get the between subject contrast matrix (C)
 	 * @return C matrix
@@ -458,7 +458,7 @@ public class GLMMPowerParameters extends PowerParameters
 	{
 		this.betweenSubjectContrast = betweenSubjectContrast;
 	}
-	
+
 	/**
 	 * Get the within subject contrast (U)
 	 * @return U matrix
@@ -494,7 +494,7 @@ public class GLMMPowerParameters extends PowerParameters
 	{
 		this.theta = theta;
 	}
-	
+
     /**
      * Get the beta matrix
      * @return beta matrix
@@ -512,7 +512,7 @@ public class GLMMPowerParameters extends PowerParameters
 	{
 		this.beta = beta;
 	}
-	
+
 	/**
 	 * Get the residual error covariance matrix
 	 * @return sigma error
@@ -658,7 +658,7 @@ public class GLMMPowerParameters extends PowerParameters
 	}
 
 	/**
-	 * Set the sample size of the data set from which the beta and sigma estimates 
+	 * Set the sample size of the data set from which the beta and sigma estimates
 	 * were derived
 	 * @param sampleSizeForEstimates sample size for data set used to estimate beta and sigma
 	 */
@@ -669,7 +669,7 @@ public class GLMMPowerParameters extends PowerParameters
 
 	/**
 	 * Get the rank of the design matrix for the data set used to estimate beta and sigma
-	 * @return rank of the design matrix for the estimation data set 
+	 * @return rank of the design matrix for the estimation data set
 	 */
 	public int getDesignMatrixRankForEstimates()
 	{
@@ -687,7 +687,7 @@ public class GLMMPowerParameters extends PowerParameters
 
 	/**
 	 * Get the type of confidence interval.  The confidence intervals can either be constructed
-	 * under the assumption that both beta and sigma are estimates, 
+	 * under the assumption that both beta and sigma are estimates,
 	 * or that beta is fixed and only sigma is estimated.
 	 * @return type of confidence interval
 	 */
@@ -698,7 +698,7 @@ public class GLMMPowerParameters extends PowerParameters
 
 	/**
 	 * Get the type of confidence interval.  The confidence intervals can either be constructed
-	 * under the assumption that both beta and sigma are estimates, 
+	 * under the assumption that both beta and sigma are estimates,
 	 * or that beta is fixed and only sigma is estimated.
 	 * @param ConfidenceIntervalType type of confidence interval
 	 */
@@ -706,8 +706,4 @@ public class GLMMPowerParameters extends PowerParameters
 	{
 		this.confidenceIntervalType = ConfidenceIntervalType;
 	}
-	
-	
 }
-
-
