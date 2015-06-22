@@ -59,7 +59,7 @@ import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
  * <ul>
  * <li>Sigma Outcome (Y) - covariance matrix of responses</li>
  * <li>Sigma Gaussian Random (G) - covariance matrix of the baseline covariate (1x1)</li>
- * <li>SIgma Outcome Gaussian Random (YG) - covariance between responses and baseline covariate</li>
+ * <li>Sigma Outcome Gaussian Random (YG) - covariance between responses and baseline covariate</li>
  * </ul>
  * The user may perform multiple power calculations on the above set of
  * matrices by specifying lists (with the corresponding "add" function) of the following values:
@@ -128,7 +128,7 @@ public class GLMMPowerParameters extends PowerParameters
     // the design essence matrix
     /* For details please see Muller & Fetterman (2002) "Regression and ANOVA" */
     RealMatrix designEssence = null;
-    // caching of X'X inverse and rank since these are order(n^3) operations
+    // caching of X'X inverse and rank since these are expensive operations
     RealMatrix XtXInverse = null;
     int designRank = -1;
     // C matrix - contrasts for between subject effects
@@ -405,38 +405,39 @@ public class GLMMPowerParameters extends PowerParameters
     public void setDesignEssence(RealMatrix designEssence)
     {
         this.designEssence = designEssence;
-        designRank = new SingularValueDecomposition(designEssence).getRank();
-        if (this.sigmaGaussianRandom != null) designRank++;
-        XtXInverse =
-            new LUDecomposition(this.designEssence.transpose().multiply(this.designEssence)).getSolver().getInverse();
     }
 
     /**
-     * Get rank of design matrix
+     * Get rank of design matrix. Singular value decomposition is order mn^2,
+     * so we cache this value.
+     *
+     * <p/>
+     * setDesignEssence and, if appropriate, setSigmaGaussianRandom must
+     * have been invoked prior to invoking this method.
      *
      * @return rank of design matrix
      */
-    public int getDesignRank()
-    {
-        if (designRank < 0)
-        {
+    public int getDesignRank() {
+        if (designRank < 0) {
             designRank = new SingularValueDecomposition(designEssence).getRank();
+            if (sigmaGaussianRandom != null) {
+                ++ designRank;
+            }
         }
         return designRank;
     }
 
     /**
-     * Get cached (X'X)-1.  Matrix inversion is order n^3 so we
-     * cache this value
+     * Get (X'X)^-1. Matrix inversion is order n^3, so we cache this value.
+     *
+     * <p/>
+     * setDesignEssence must have been invoked prior to invoking this method.
      *
      * @return (X'X) inverse
      */
-    public RealMatrix getXtXInverse()
-    {
-        if (XtXInverse == null)
-        {
-            XtXInverse =
-                new LUDecomposition(designEssence.transpose().multiply(designEssence)).getSolver().getInverse();
+    public RealMatrix getXtXInverse() {
+        if (XtXInverse == null) {
+            XtXInverse = new LUDecomposition(designEssence.transpose().multiply(designEssence)).getSolver().getInverse();
         }
         return XtXInverse;
     }
@@ -564,7 +565,6 @@ public class GLMMPowerParameters extends PowerParameters
      */
     public void setSigmaGaussianRandom(RealMatrix sigmaGaussianRandom)
     {
-        if (this.sigmaGaussianRandom == null) designRank++;
         this.sigmaGaussianRandom = sigmaGaussianRandom;
     }
 

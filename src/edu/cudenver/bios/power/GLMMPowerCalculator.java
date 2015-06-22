@@ -675,7 +675,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         // check rank of the design matrix
         int rankX = new SingularValueDecomposition(XEssence).getRank();
         if (rankX != Math.min(XEssence.getColumnDimension(), XEssence.getRowDimension()))
-            throw new PowerException("Design matrix is not full rank",
+            throw new PowerException("Design matrix is not full rank: it is of rank " + rankX,
                     PowerErrorEnum.MATRIX_RANK_DESIGN_LTFR);
 
         // make sure design matrix is symmetric and positive definite
