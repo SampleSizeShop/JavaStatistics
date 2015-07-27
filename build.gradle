@@ -1,9 +1,12 @@
 apply plugin: 'java'
-//ant.importBuild 'build/build.xml'
+apply plugin: 'maven'
 
-version = '1.2.0'
+group = 'org.samplesizeshop'
+archivesBaseName = 'javastatistics'
+version = '1.2.4-SNAPSHOT'
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -35,14 +38,16 @@ sourceSets {
     main {
         java {
             srcDir 'src'
-            exclude '**/power/test/**',
-                    '**/bios/matrix/test/**'
+//            exclude '**/power/test/**',
+//                    '**/bios/matrix/test/**'
         }
     }
     test {
         java {
-            srcDir 'src'
-            include '**/bios/matrix/test/**'
+            srcDir 'src/test/java'
+            exclude 'src/edu/cudenver/bios/power/test/general/**'
+//            include 'src/power/test/**'
+//            include '**bios/matrix/test/**'
         }
     }
 
@@ -55,9 +60,20 @@ sourceSets {
         }
     }
 }
+sourceSets.test.java.srcDirs = [ 'src/test/java', 'src' ]
+
+println "srcDirs = $sourceSets.test.java.srcDirs"
+
+test {
+    exclude 'edu/cudenver/bios/power/test/general/**'
+    exclude 'edu/cudenver/bios/power/test/paper'
+}
 
 task paperTest(type: Test, group: 'Publication', description: 'Runs tests and prepares PDF for publication') {
     testClassesDir = sourceSets.paper.output.classesDir
     classpath = sourceSets.paper.runtimeClasspath
 }
 
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.2.1'
+}

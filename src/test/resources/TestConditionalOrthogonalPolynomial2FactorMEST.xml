@@ -1,0 +1,50 @@
+<powerList>
+<glmmPower test='unirep   ' alpha='     0.04' nominalPower=' 0.99999595624364' actualPower=' 0.99999595624364' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.04' nominalPower=' 0.98594184357384' actualPower=' 0.98594184357384' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.04' nominalPower='  0.7606783522271' actualPower='  0.7606783522271' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.04' nominalPower=' 0.99999391316629' actualPower=' 0.99999391316629' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.04' nominalPower='   0.986323987277' actualPower='   0.986323987277' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.04' nominalPower=' 0.77079640804429' actualPower=' 0.77079640804429' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.04' nominalPower=' 0.99996352333139' actualPower=' 0.99996352333139' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.04' nominalPower=' 0.97836543961373' actualPower=' 0.97836543961373' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.04' nominalPower=' 0.75291854928855' actualPower=' 0.75291854928855' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.04' nominalPower=' 0.99995675623535' actualPower=' 0.99995675623535' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.04' nominalPower=' 0.97788968964049' actualPower=' 0.97788968964049' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirep   ' alpha='     0.04' nominalPower='  0.7541642704445' actualPower='  0.7541642704445' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.04' nominalPower=' 0.99774949265116' actualPower=' 0.99774949265116' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.04' nominalPower=' 0.81223113040506' actualPower=' 0.81223113040506' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.04' nominalPower=' 0.35181972227892' actualPower=' 0.35181972227892' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.04' nominalPower='  0.9981942823042' actualPower='  0.9981942823042' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.04' nominalPower=' 0.81643155017289' actualPower=' 0.81643155017289' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.04' nominalPower=' 0.32900550723114' actualPower=' 0.32900550723114' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.04' nominalPower=' 0.99654644257302' actualPower=' 0.99654644257302' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.04' nominalPower=' 0.79638911186447' actualPower=' 0.79638911186447' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.04' nominalPower=' 0.32368318350747' actualPower=' 0.32368318350747' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.04' nominalPower=' 0.99652933968172' actualPower=' 0.99652933968172' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.04' nominalPower=' 0.79605810833348' actualPower=' 0.79605810833348' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepBox' alpha='     0.04' nominalPower=' 0.31769331243839' actualPower=' 0.31769331243839' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.04' nominalPower='  0.9985647375699' actualPower='  0.9985647375699' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.04' nominalPower=' 0.84140576769005' actualPower=' 0.84140576769005' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.04' nominalPower='  0.3879017640011' actualPower='  0.3879017640011' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.04' nominalPower=' 0.99986220420312' actualPower=' 0.99986220420312' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.04' nominalPower='  0.9391241261303' actualPower='  0.9391241261303' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.04' nominalPower=' 0.55657519486408' actualPower=' 0.55657519486408' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.04' nominalPower=' 0.99984321077947' actualPower=' 0.99984321077947' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.04' nominalPower=' 0.95326307232904' actualPower=' 0.95326307232904' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.04' nominalPower=' 0.63802564051573' actualPower=' 0.63802564051573' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.04' nominalPower=' 0.99992239295904' actualPower=' 0.99992239295904' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.04' nominalPower=' 0.96945313795018' actualPower=' 0.96945313795018' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepGG ' alpha='     0.04' nominalPower=' 0.70894676719189' actualPower=' 0.70894676719189' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.04' nominalPower=' 0.99866784966651' actualPower=' 0.99866784966651' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.04' nominalPower=' 0.84583033209353' actualPower=' 0.84583033209353' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.04' nominalPower=' 0.39383505330912' actualPower=' 0.39383505330912' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.04' nominalPower=' 0.99990825976087' actualPower=' 0.99990825976087' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.04' nominalPower=' 0.94946538504203' actualPower=' 0.94946538504203' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.04' nominalPower=' 0.58939590330067' actualPower=' 0.58939590330067' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.04' nominalPower=' 0.99990251009398' actualPower=' 0.99990251009398' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.04' nominalPower=' 0.96346857487907' actualPower=' 0.96346857487907' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.04' nominalPower=' 0.67856361146458' actualPower=' 0.67856361146458' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.04' nominalPower=' 0.99995675623535' actualPower=' 0.99995675623535' betaScale='        1' sigmaScale='      0.5' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.04' nominalPower=' 0.97788968964049' actualPower=' 0.97788968964049' betaScale='        1' sigmaScale='        1' sampleSize='       20' powerMethod='conditional' />
+<glmmPower test='unirepHF ' alpha='     0.04' nominalPower='  0.7541642704445' actualPower='  0.7541642704445' betaScale='        1' sigmaScale='        2' sampleSize='       20' powerMethod='conditional' />
+</powerList>
