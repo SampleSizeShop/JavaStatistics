@@ -1,8 +1,8 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
- * Copyright (C) 2012 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2012 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,19 +27,19 @@ package edu.cudenver.bios.power;
  *
  */
 public class SampleSizeBound {
-    
+
     public enum SampleSizeError {
         MAX_SAMPLE_SIZE_EXCEEDED,
         SAMPLE_SIZE_UNDEFINED
     }
-    
+
     // the sample size
     int sampleSize;
     // the actual power associated with the bound
     double actualPower;
     // error code
     SampleSizeError error = null;
-    
+
     /**
      * Constructor for successful boundaries
      * @param sampleSize
@@ -49,7 +49,7 @@ public class SampleSizeBound {
         this.sampleSize = sampleSize;
         this.actualPower = actualPower;
     }
-    
+
     /**
      * Constructor indicating that sample size failed
      * @param sampleSize
@@ -77,13 +77,13 @@ public class SampleSizeBound {
      */
     public double getActualPower() {
         return actualPower;
-    }   
-    
+    }
+
     /**
      * Get the actual power
      * @return power
      */
     public SampleSizeError getError() {
         return error;
-    }   
+    }
 }
