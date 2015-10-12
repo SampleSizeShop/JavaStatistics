@@ -2,7 +2,7 @@
  * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
  *
- * Copyright (C) 2010 Regents of the University of Colorado.
+ * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -59,6 +59,12 @@ import edu.cudenver.bios.power.parameters.PowerParameters;
  */
 public class GLMMPowerCalculator implements PowerCalculator
 {
+    private static final String NO_MEAN_DIFFERENCE_MESSAGE =
+        "The null hypothesis is true: that is, all contrasts defined by the hypothesis have zero sums of squares."
+            + " (This may arise, for example, in a test of mean difference if the means are equal.)"
+            + " Thus the highest possible power is \u03B1 (alpha, the Type I error rate),"
+            + " and no sample size can be large enough to achieve higher power.";
+
     private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
     private static final int STARTING_SAMPLE_SIZE = 1024;
     private static final int STARTING_BETA_SCALE = 10;
@@ -846,9 +852,12 @@ public class GLMMPowerCalculator implements PowerCalculator
                 power.setErrorCode(PowerErrorEnum.MAX_SAMPLE_SIZE_EXCEEDED);
                 break;
             case SAMPLE_SIZE_UNDEFINED:
-                power.setErrorMessage("Sample size not well defined for no difference");
-                power.setErrorCode(
-                        PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
+                power.setErrorMessage(NO_MEAN_DIFFERENCE_MESSAGE);
+                power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
+                break;
+            case SAMPLE_SIZE_UNDEFINED_DUE_TO_EXCEPTION:
+                power.setErrorMessage("Sample size not well defined");
+                power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
                 break;
             }
             return power;
@@ -871,9 +880,12 @@ public class GLMMPowerCalculator implements PowerCalculator
                 power.setErrorCode(PowerErrorEnum.MAX_SAMPLE_SIZE_EXCEEDED);
                 break;
             case SAMPLE_SIZE_UNDEFINED:
-                power.setErrorMessage("Sample size not well defined for no difference");
-                power.setErrorCode(
-                        PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
+                power.setErrorMessage(NO_MEAN_DIFFERENCE_MESSAGE);
+                power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
+                break;
+            case SAMPLE_SIZE_UNDEFINED_DUE_TO_EXCEPTION:
+                power.setErrorMessage("Sample size not well defined");
+                power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
                 break;
             }
             return power;
@@ -1011,8 +1023,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         // check if no mean difference.  In this case, sample size is undefined and
         // power is always alpha
         if (noMeanDifference(glmmTest)) {
-            return new SampleSizeBound(-1, alpha,
-                    SampleSizeError.SAMPLE_SIZE_UNDEFINED);
+            return new SampleSizeBound(-1, alpha, SampleSizeError.SAMPLE_SIZE_UNDEFINED);
         }
 
         // otherwise, keep ramping up sample size until we exceed the desired power
@@ -1035,14 +1046,13 @@ public class GLMMPowerCalculator implements PowerCalculator
             } catch (Exception e) {
                 // ignore steps which yield invalid degrees of freedom
                 logger.warn("Exception getting power by type: " + e.getMessage(), e);
-                return new SampleSizeBound(-1, alpha, SampleSizeError.SAMPLE_SIZE_UNDEFINED);
+                return new SampleSizeBound(-1, alpha, SampleSizeError.SAMPLE_SIZE_UNDEFINED_DUE_TO_EXCEPTION);
             }
         } while (currentPower <= targetPower && upperBound < maxPerGroupN &&
                 !Thread.currentThread().isInterrupted());
         if (currentPower < targetPower) {
             // no sample size meets the criteria, so return an error
-            return new SampleSizeBound(-1, alpha,
-                    SampleSizeError.MAX_SAMPLE_SIZE_EXCEEDED);
+            return new SampleSizeBound(-1, alpha, SampleSizeError.MAX_SAMPLE_SIZE_EXCEEDED);
         } else {
             return new SampleSizeBound(upperBound, currentPower);
         }
@@ -1124,8 +1134,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                     break;
                 case BETA_SCALE_UNDEFINED:
                     power.setErrorMessage("Beta scale not well defined for no difference");
-                    power.setErrorCode(
-                            PowerErrorEnum.BETA_SCALE_UNDEFINED);
+                    power.setErrorCode(PowerErrorEnum.BETA_SCALE_UNDEFINED);
                     break;
                 }
                 return power;
@@ -1444,6 +1453,17 @@ public class GLMMPowerCalculator implements PowerCalculator
                     scaledBeta, scaledSigmaError,
                     (params.getConfidenceIntervalType() != ConfidenceIntervalType.NONE ?
                             params.getSampleSizeForEstimates() - params.getDesignMatrixRankForEstimates(): 0));
+
+            // check if no mean difference.  In this case,
+            // power is always alpha
+            if (noMeanDifference(glmmTest)) {
+                GLMMPower power = new GLMMPower(test, alpha, alpha, alpha,
+                                   MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize), betaScale,
+                                   sigmaScale, method, quantile, ci);
+                power.setErrorMessage(NO_MEAN_DIFFERENCE_MESSAGE);
+                power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
+                return power;
+            }
 
             NonCentralityDistribution nonCentralityDist = null;
             if (method != PowerMethod.CONDITIONAL_POWER)
