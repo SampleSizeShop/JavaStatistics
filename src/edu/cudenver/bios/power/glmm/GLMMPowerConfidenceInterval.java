@@ -37,7 +37,7 @@ public class GLMMPowerConfidenceInterval extends ConfidenceInterval
     }
 
     /**
-     * Compute confidence limits for power the GLMM(F)
+     * Compute confidence limits for power of the GLMM(F)
      * (i.e. fixed predictors only).  This function is only called if the
      * ConfidenceInterval field in the parameters is not set to NONE
      *
