@@ -2,7 +2,7 @@
  * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
  *
- * Copyright (C) 2012 Regents of the University of Colorado.
+ * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,7 +30,8 @@ public class SampleSizeBound {
 
     public enum SampleSizeError {
         MAX_SAMPLE_SIZE_EXCEEDED,
-        SAMPLE_SIZE_UNDEFINED
+        SAMPLE_SIZE_UNDEFINED,
+        SAMPLE_SIZE_UNDEFINED_DUE_TO_EXCEPTION
     }
 
     // the sample size
