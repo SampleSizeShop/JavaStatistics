@@ -10,6 +10,12 @@ repositories {
     mavenCentral()
 }
 
+install {
+    dependsOn cleanTest,
+            cleanCompileJava,
+            build
+}
+
 buildDir = 'build/tmp'
 
 configurations {
@@ -38,16 +44,12 @@ sourceSets {
     main {
         java {
             srcDir 'src'
-//            exclude '**/power/test/**',
-//                    '**/bios/matrix/test/**'
         }
     }
     test {
         java {
             srcDir 'src/test/java'
             exclude 'src/edu/cudenver/bios/power/test/general/**'
-//            include 'src/power/test/**'
-//            include '**bios/matrix/test/**'
         }
     }
 
