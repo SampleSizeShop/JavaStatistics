@@ -4,6 +4,7 @@ apply plugin: 'maven'
 group = 'org.samplesizeshop'
 archivesBaseName = 'javastatistics'
 version = '1.2.6-SNAPSHOT'
+buildDir = 'target'
 
 repositories {
     mavenLocal()
@@ -15,8 +16,6 @@ install {
             cleanCompileJava,
             build
 }
-
-buildDir = 'build/tmp'
 
 configurations {
     paper.extendsFrom testRuntime
