@@ -1,8 +1,8 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -39,12 +39,12 @@ import junit.framework.TestCase;
 /**
  * Unit test for fixed multivariate design including confidence intervals
  * with comparison against simulation and SAS output.
- * 
+ *
  *  based on the example 6 from POWERLIB:
-*   Johnson J.L., Muller K.E., Slaughter J.C., Gurka M.J., Gribbin M.J. and Simpson S.L. 
-*   (2009) POWERLIB: SAS/IML software for computing power in multivariate linear models, 
+*   Johnson J.L., Muller K.E., Slaughter J.C., Gurka M.J., Gribbin M.J. and Simpson S.L.
+*   (2009) POWERLIB: SAS/IML software for computing power in multivariate linear models,
 *   Journal of Statistical Software, 30(5), 1-27.
-*   
+*
 *   !WARNING! - you will need to increase the main_memory size in your
 *   LaTeX install to typeset this report.  To do so:
 *   1. Open a terminal window
@@ -55,20 +55,20 @@ import junit.framework.TestCase;
 *   Save the file then quit the editor
 *   4. Rebuild the format by running
 *   initexmf --dump=latex
-*   5. Repeat steps 2-4 with config files 'pdflatex' and 'xelatex' 
-*   
+*   5. Repeat steps 2-4 with config files 'pdflatex' and 'xelatex'
+*
  * @author Sarah Kreidler
  *
  */
 public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
 {
-	private static final String DATA_FILE =  "data" + File.separator + "TestConditionalMultivariateWithConfidenceLimits.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + 
-	        "results" + File.separator + "TestConditionalMultivariateWithConfidenceLimits.tex";
-	private static final String TITLE = "GLMM(F) Example 6. Power and confidence " +
-			"limits for the univariate approach to repeated measures in a multivariate model";
+    private static final String DATA_FILE =  "data" + File.separator + "TestConditionalMultivariateWithConfidenceLimits.xml";
+    private static final String OUTPUT_FILE = "text" + File.separator +
+            "results" + File.separator + "TestConditionalMultivariateWithConfidenceLimits.tex";
+    private static final String TITLE = "GLMM(F) Example 6. Power and confidence " +
+            "limits for the univariate approach to repeated measures in a multivariate model";
     private static final String AUTHOR = "Sarah Kreidler";
-    private static final String STUDY_DESIGN_DESCRIPTION  = 
+    private static final String STUDY_DESIGN_DESCRIPTION  =
             "The study design for Example 6 is a factorial design with two between participant " +
             "factors and one within participant factor.  Participants were categorized by " +
             "gender and classified into five age groups.  For each participant, cerebral vessel tortuosity " +
@@ -101,127 +101,127 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
             "\\& Muller, K. E. (2007). Internal pilots for a class " +
             "of linear mixed models with Gaussian and compound symmetric data. " +
             "\\emph{Statistics in Medicine}, \\emph{26}(22), 4083-4099.\n\n";
-	private PowerChecker checker;
-	
+    private PowerChecker checker;
+
     // set beta matrix
-	private double[][] beta = 
-	{
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2}
-	};
-	
-	public void setUp()
-	{
-		try
-		{
-			checker = new PowerChecker(DATA_FILE, true);
-		}
-		catch (Exception e)
-		{
-			System.err.println("Setup failed: " + e.getMessage());
-			fail();
-		}
-	}
-	
+    private double[][] beta =
+    {
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2}
+    };
+
+    public void setUp()
+    {
+        try
+        {
+            checker = new PowerChecker(DATA_FILE, true);
+        }
+        catch (Exception e)
+        {
+            System.err.println("Setup failed: " + e.getMessage());
+            fail();
+        }
+    }
+
     /**
      * Test valid inputs for a univariate linear model with only fixed predictors
      */
     public void testMultivariateWithConfidenceLimits()
     {
-    	Test[] testList = {Test.UNIREP_GEISSER_GREENHOUSE};
-    	for(Test test: testList)
-    	{
-    	    GLMMPowerParameters params = buildInputs(test);
+        Test[] testList = {Test.UNIREP_GEISSER_GREENHOUSE};
+        for(Test test: testList)
+        {
+            GLMMPowerParameters params = buildInputs(test);
 
-    		for(double delta = 0.0; delta < 0.2001; delta += 0.0008)
-    		{
-    			// increase the gender difference by 2 * delta
-    			RealMatrix betaMatrix = params.getBeta().getFixedMatrix();
-    			for(int row = 0; row < 5; row++) betaMatrix.setEntry(row, 2, beta[row][2] + delta);
-    			for(int row = 5; row < 10; row++) betaMatrix.setEntry(row, 2, beta[row][2] - delta);
+            for(double delta = 0.0; delta < 0.2001; delta += 0.0008)
+            {
+                // increase the gender difference by 2 * delta
+                RealMatrix betaMatrix = params.getBeta().getFixedMatrix();
+                for(int row = 0; row < 5; row++) betaMatrix.setEntry(row, 2, beta[row][2] + delta);
+                for(int row = 5; row < 10; row++) betaMatrix.setEntry(row, 2, beta[row][2] - delta);
 
-    			checker.checkPower(params);
-    		}
-    	}
+                checker.checkPower(params);
+            }
+        }
 
-    	// we add all of the tests back into the params to ensure the report lists them all
-    	// we do this to ensure the order of results in the SAS output matches the order
-    	// in the JavaStatistics calls.
-    	GLMMPowerParameters params = buildInputs(Test.UNIREP);
-    	params.clearTestList();
-    	for(Test test: testList) {
-    	    params.addTest(test);
-    	}
-    	// output the results
-    	try {
-    	    ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
-    	    reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
-    	    reportBuilder.createValidationReportAsLaTex(
-    	            OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
-    	            params, checker);
-    	} catch (Exception e) {
-    	    System.err.println(e.getMessage());
-    	}
-		assertTrue(checker.isSASDeviationBelowTolerance());
-		checker.reset();
+        // we add all of the tests back into the params to ensure the report lists them all
+        // we do this to ensure the order of results in the SAS output matches the order
+        // in the JavaStatistics calls.
+        GLMMPowerParameters params = buildInputs(Test.UNIREP);
+        params.clearTestList();
+        for(Test test: testList) {
+            params.addTest(test);
+        }
+        // output the results
+        try {
+            ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+            reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+            reportBuilder.createValidationReportAsLaTex(
+                    OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION,
+                    params, checker);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        assertTrue(checker.isSASDeviationBelowTolerance());
+        checker.reset();
     }
 
-    
+
     private GLMMPowerParameters buildInputs(Test test)
     {
-        // build the inputs        
-    	GLMMPowerParameters params = new GLMMPowerParameters();
-        
+        // build the inputs
+        GLMMPowerParameters params = new GLMMPowerParameters();
+
         // add tests
-    	params.addTest(test);
+        params.addTest(test);
 
         // add alpha values - bonferroni corrected for 6 comparisons
         params.addAlpha(0.05/6);
-        
+
         // add beta scale values
         params.addBetaScale(1);
-        
+
         // build theta null matrix
         double [][] theta0 = {{0,0,0}};
         params.setTheta(new Array2DRowRealMatrix(theta0));
-        
+
         // build sigma matrix
         double [][] sigma = {{0.08380, 0.05020, 0.03560, 0.05330},
-       		 {0.05020, 0.05370, 0.03250, 0.03330},                         
-             {0.03560, 0.03250, 0.04410, 0.03860},                          
+                {0.05020, 0.05370, 0.03250, 0.03330},
+             {0.03560, 0.03250, 0.04410, 0.03860},
              {0.05330, 0.03330, 0.03860, 0.07220}};
         params.setSigmaError(new Array2DRowRealMatrix(sigma));
         // add sigma scale values
         params.addSigmaScale(1);
-        
+
         // build design matrix
         params.setDesignEssence(org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(10));
         // add sample size multipliers
         for(int sampleSize = 2; sampleSize <= 10; sampleSize++) params.addSampleSize(sampleSize);
-        
+
         // build beta matrix
         params.setBeta(new FixedRandomMatrix(beta, null, false));
-        
+
         // build between subject contrast
         double [][] between = {{1,1,1,1,1,-1,-1,-1,-1,-1}};
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
-        
+
         double[] regions = {1,2,3,4};
         String name = "region";
         ArrayList<Factor> factorList = new ArrayList<Factor>();
         Factor regionFactor = new Factor(name, regions);
         factorList.add(regionFactor);
         params.setWithinSubjectContrast(
-        		OrthogonalPolynomials.withinSubjectContrast(factorList).getMainEffectContrast(regionFactor).getContrastMatrix());
-        
+                OrthogonalPolynomials.withinSubjectContrast(factorList).getMainEffectContrast(regionFactor).getContrastMatrix());
+
         // parameters for confidence limits
         params.setConfidenceIntervalType(ConfidenceIntervalType.BETA_KNOWN_SIGMA_ESTIMATED);
         params.setSampleSizeForEstimates(21);
@@ -229,7 +229,7 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
         // 2 sided CI
         params.setAlphaLowerConfidenceLimit(0.025);
         params.setAlphaUpperConfidenceLimit(0.025);
-        
+
         return params;
     }
 }
