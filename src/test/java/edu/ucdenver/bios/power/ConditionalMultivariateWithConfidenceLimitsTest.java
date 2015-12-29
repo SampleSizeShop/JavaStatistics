@@ -68,8 +68,7 @@ public class ConditionalMultivariateWithConfidenceLimitsTest {
     private static final String DATA_FILE =  "TestConditionalMultivariateWithConfidenceLimits.xml";
     private static final String TITLE = "GLMM(F) Example 6. Power and confidence " +
             "limits for the univariate approach to repeated measures in a multivariate model";
-//  private static final double TOLERANCE = 0.000001; // TODO: restore this when we figure out what broke, and fix it
-    private static final double TOLERANCE = 0.003;
+    private static final double TOLERANCE = 0.000001;
 
     private PowerChecker checker;
 
@@ -105,7 +104,7 @@ public class ConditionalMultivariateWithConfidenceLimitsTest {
         {
             GLMMPowerParameters params = buildInputs(test);
 
-            for(double delta = 0.0; delta < 0.2001; delta += 0.0008)
+            for(double delta = 0.0008; delta < 0.2001; delta += 0.0008)
             {
                 // increase the gender difference by 2 * delta
                 RealMatrix betaMatrix = params.getBeta().getFixedMatrix();
