@@ -141,7 +141,7 @@ public class TestConditionalMultivariateWithConfidenceLimits extends TestCase
         {
             GLMMPowerParameters params = buildInputs(test);
 
-            for(double delta = 0.0; delta < 0.2001; delta += 0.0008)
+            for(double delta = 0.0008; delta < 0.2001; delta += 0.0008)
             {
                 // increase the gender difference by 2 * delta
                 RealMatrix betaMatrix = params.getBeta().getFixedMatrix();
