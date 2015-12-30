@@ -5,6 +5,8 @@ group = 'org.samplesizeshop'
 archivesBaseName = 'javastatistics'
 version = '1.2.6-SNAPSHOT'
 buildDir = 'target'
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 repositories {
     mavenLocal()
