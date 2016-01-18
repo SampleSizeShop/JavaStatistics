@@ -1,8 +1,8 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,68 +27,68 @@ package edu.cudenver.bios.power;
  */
 public class OneSampleStudentsTPower extends Power
 {
-	double sigma;
-	double detectableDifference;
-	
-	/**
-	 * Constructor
-	 * @param alpha type I error
-	 * @param nominalPower target power
-	 * @param actualPower calculated power
-	 * @param sampleSize total sample size
-	 * @param detectableDifference effect size
-	 * @param sigma
-	 */
-	public OneSampleStudentsTPower(double alpha, double nominalPower, double actualPower,
-			int sampleSize, double detectableDifference, double sigma)
-	{
-		super(nominalPower, actualPower, sampleSize, alpha);
-		this.sigma = sigma;
-		this.detectableDifference = detectableDifference;
-	}
-	
-	/**
-	 * Get variance used in power calculation
-	 * @return sigma
-	 */
-	public double getSigma()
-	{
-		return sigma;
-	}
+    double sigma;
+    double detectableDifference;
 
-	/**
-	 * Set the variance 
-	 * @param sigma
-	 */
-	public void setSigma(double sigma)
-	{
-		this.sigma = sigma;
-	}
+    /**
+     * Constructor
+     * @param alpha type I error
+     * @param nominalPower target power
+     * @param actualPower calculated power
+     * @param sampleSize total sample size
+     * @param detectableDifference effect size
+     * @param sigma
+     */
+    public OneSampleStudentsTPower(double alpha, double nominalPower, double actualPower,
+            int sampleSize, double detectableDifference, double sigma)
+    {
+        super(nominalPower, actualPower, sampleSize, alpha);
+        this.sigma = sigma;
+        this.detectableDifference = detectableDifference;
+    }
 
-	/**
-	 * Get the detectable difference
-	 * @return detectable difference
-	 */
-	public double getDetectableDifference()
-	{
-		return detectableDifference;
-	}
+    /**
+     * Get variance used in power calculation
+     * @return sigma
+     */
+    public double getSigma()
+    {
+        return sigma;
+    }
 
-	/**
-	 * Set the detectable difference
-	 * @param detectableDifference
-	 */
-	public void setDetectableDifference(double detectableDifference)
-	{
-		this.detectableDifference = detectableDifference;
-	}
+    /**
+     * Set the variance
+     * @param sigma
+     */
+    public void setSigma(double sigma)
+    {
+        this.sigma = sigma;
+    }
 
-	/**
-	 * Return power result as XML
-	 */
-	public String toXML()
-	{
-		return "<power alpha='"+ alpha +"' nominalPower='" + nominalPower + "' actualPower='"+ actualPower +
-			"' sampleSize='"+ totalSampleSize + "' difference='"+detectableDifference +"' sigma='"+ sigma +"' />";
-	}
+    /**
+     * Get the detectable difference
+     * @return detectable difference
+     */
+    public double getDetectableDifference()
+    {
+        return detectableDifference;
+    }
+
+    /**
+     * Set the detectable difference
+     * @param detectableDifference
+     */
+    public void setDetectableDifference(double detectableDifference)
+    {
+        this.detectableDifference = detectableDifference;
+    }
+
+    /**
+     * Return power result as XML
+     */
+    public String toXML()
+    {
+        return "<power alpha='"+ alpha +"' nominalPower='" + nominalPower + "' actualPower='"+ actualPower +
+            "' sampleSize='"+ totalSampleSize + "' difference='"+detectableDifference +"' sigma='"+ sigma +"' />";
+    }
 }

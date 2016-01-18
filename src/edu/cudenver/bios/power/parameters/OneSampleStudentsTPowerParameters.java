@@ -1,8 +1,8 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,94 +29,94 @@ import java.util.ArrayList;
  */
 public class OneSampleStudentsTPowerParameters extends PowerParameters
 {
-	// class to hold null and alternative means
-	public class MeanPair 
-	{
-		public double mu0 = Double.NaN;
-		public double muA = Double.NaN;
-		
-		public MeanPair(double mu0, double muA)
-		{
-			this.mu0 = mu0;
-			this.muA = muA;
-		}
-	}
-	
+    // class to hold null and alternative means
+    public class MeanPair
+    {
+        public double mu0 = Double.NaN;
+        public double muA = Double.NaN;
+
+        public MeanPair(double mu0, double muA)
+        {
+            this.mu0 = mu0;
+            this.muA = muA;
+        }
+    }
+
     // means under the null and alternative hypotheses
-	ArrayList<MeanPair> meansList = new ArrayList<MeanPair>();
-    
+    ArrayList<MeanPair> meansList = new ArrayList<MeanPair>();
+
     // estimated population std dev
-	ArrayList<Double> sigmaList = new ArrayList<Double>();
-    
+    ArrayList<Double> sigmaList = new ArrayList<Double>();
+
     // indicates if a one or two tailed test should be performed
     boolean twoTailed = true;
-    
+
     /**
      * Constructor.
      */
     public OneSampleStudentsTPowerParameters()
     {
-    	super();
+        super();
     }
-    
+
     /**
      * Add a standard deviation to the list of power calculations
-     * 
+     *
      * @param sigma standard deviation
      */
     public void addVariance(double sigma)
     {
-    	sigmaList.add(new Double(sigma));    	
+        sigmaList.add(new Double(sigma));
     }
-    
+
     /**
      * Add a set of null and alternative means to the list of power calculations
-     * @param mu0 estimated mean under the null hypothesis 
+     * @param mu0 estimated mean under the null hypothesis
      * @param muA estimated mean under the alternative hypothesis
      */
-    public void addMeans(double mu0, double muA) 
+    public void addMeans(double mu0, double muA)
     {
-    	if (powerList.size() > 0 && sampleSizeList.size() > 0) 
-    		throw new IllegalArgumentException("Must leave one of power, sample size, or null/aternative mean blank");
-    	
-    	meansList.add(new MeanPair(mu0, muA));
+        if (powerList.size() > 0 && sampleSizeList.size() > 0)
+            throw new IllegalArgumentException("Must leave one of power, sample size, or null/aternative mean blank");
+
+        meansList.add(new MeanPair(mu0, muA));
     }
 
     /**
      * Indicates if a two tailed calculation is being used
      * @return true if two tailed, false if one tailed
      */
-	public boolean isTwoTailed()
-	{
-		return twoTailed;
-	}
+    public boolean isTwoTailed()
+    {
+        return twoTailed;
+    }
 
-	/**
-	 * Set whether a two tailed power should be calculated
-	 * @param twoTailed if true, uses a two-tailed calculation, otherwise one-tailed
-	 */
-	public void setTwoTailed(boolean twoTailed)
-	{
-		this.twoTailed = twoTailed;
-	}
+    /**
+     * Set whether a two tailed power should be calculated
+     * @param twoTailed if true, uses a two-tailed calculation, otherwise one-tailed
+     */
+    public void setTwoTailed(boolean twoTailed)
+    {
+        this.twoTailed = twoTailed;
+    }
 
-	/**
-	 * Get the list of mean (null and alternative) pairs
-	 * @return list of null and alternative means
-	 */
-	public ArrayList<MeanPair> getMeansList()
-	{
-		return meansList;
-	}
+    /**
+     * Get the list of mean (null and alternative) pairs
+     * @return list of null and alternative means
+     */
+    public ArrayList<MeanPair> getMeansList()
+    {
+        return meansList;
+    }
 
-	/**
-	 * Get list of variance values
-	 * @return list of variance values
-	 */
-	public ArrayList<Double> getSigmaList()
-	{
-		return sigmaList;
-	}
+    /**
+     * Get list of variance values
+     * @return list of variance values
+     */
+    public ArrayList<Double> getSigmaList()
+    {
+        return sigmaList;
+    }
 
-	
+
 }
