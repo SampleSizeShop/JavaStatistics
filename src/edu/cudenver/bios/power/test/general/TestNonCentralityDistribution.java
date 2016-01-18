@@ -36,7 +36,6 @@ import edu.cudenver.bios.power.glmm.NonCentralityDistribution;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
-import jsc.distributions.Normal;
 import junit.framework.TestCase;
 
 /**
@@ -55,7 +54,6 @@ public class TestNonCentralityDistribution extends TestCase
     private static final double[] BETA_SCALE_LIST = {1};
     private static final double[] SIGMA_SCALE_LIST = {1};
     private static final int[] SAMPLE_SIZE_LIST = {5};
-    private Normal normalDist = new Normal();
     private DecimalFormat Number = new DecimalFormat("#0.0000000000");
 
     public void testApproximateNonCentralCDF()

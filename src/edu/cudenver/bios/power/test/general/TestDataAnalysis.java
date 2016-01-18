@@ -47,8 +47,6 @@ import edu.cudenver.bios.power.glmm.GLMMTestUnirepHuynhFeldt;
 import edu.cudenver.bios.power.glmm.GLMMTestUnivariateRepeatedMeasures;
 import edu.cudenver.bios.power.glmm.GLMMTestWilksLambda;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
-import jsc.distributions.FishersF;
-import jsc.distributions.Normal;
 import junit.framework.TestCase;
 
 /**
@@ -70,7 +68,6 @@ public class TestDataAnalysis extends TestCase
     private static final double[] BETA_SCALE_LIST = {2};
     private static final double[] SIGMA_SCALE_LIST = {2};
     private static final int[] SAMPLE_SIZE_LIST = {5};
-    private Normal normalDist = new Normal();
     private DecimalFormat number = new DecimalFormat("#0.000");
 
     // design matrix for multivariate tests
