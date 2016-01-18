@@ -1,8 +1,8 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -40,7 +40,7 @@ import jsc.distributions.Normal;
 import junit.framework.TestCase;
 
 /**
- * Non-automated test of non-centrality distribution.  Manually compared against 
+ * Non-automated test of non-centrality distribution.  Manually compared against
  * Glueck & Muller 2003 implementation in SAS/IML
  * @author Sarah Kreidler
  *
@@ -51,7 +51,7 @@ public class TestNonCentralityDistribution extends TestCase
     private static final double UNIT_TEST_ALPHA = 0.01;
     private static final double MEAN = 9.75;
     private static final double VARIANCE = 1.0;
-    private static final double[] ALPHA_LIST = {0.05};    
+    private static final double[] ALPHA_LIST = {0.05};
     private static final double[] BETA_SCALE_LIST = {1};
     private static final double[] SIGMA_SCALE_LIST = {1};
     private static final int[] SAMPLE_SIZE_LIST = {5};
@@ -66,16 +66,16 @@ public class TestNonCentralityDistribution extends TestCase
         int perGroupN = params.getSampleSizeList().get(0);
         Test test = params.getTestList().get(0);
 
-        //        Test test, RealMatrix F, RealMatrix FtFinverse, int N, 
-        //		FixedRandomMatrix CFixedRand, RealMatrix U, 
-        //		RealMatrix thetaNull, RealMatrix beta, 
-        //		RealMatrix sigmaError, RealMatrix sigmaG, boolean exact
+        //        Test test, RealMatrix F, RealMatrix FtFinverse, int N,
+        //        FixedRandomMatrix CFixedRand, RealMatrix U,
+        //        RealMatrix thetaNull, RealMatrix beta,
+        //        RealMatrix sigmaError, RealMatrix sigmaG, boolean exact
 
         try {
-            NonCentralityDistribution ncd = 
+            NonCentralityDistribution ncd =
                     new NonCentralityDistribution(test, params.getDesignEssence(),
-                            null, 
-                            perGroupN, 
+                            null,
+                            perGroupN,
                             params.getBetweenSubjectContrast(),
                             params.getWithinSubjectContrast(),
                             params.getTheta(),
@@ -103,10 +103,10 @@ public class TestNonCentralityDistribution extends TestCase
         int perGroupN = params.getSampleSizeList().get(0);
         Test test = params.getTestList().get(0);
         try {
-            NonCentralityDistribution ncd = 
+            NonCentralityDistribution ncd =
                     new NonCentralityDistribution(test, params.getDesignEssence(),
-                            null, 
-                            perGroupN, 
+                            null,
+                            perGroupN,
                             params.getBetweenSubjectContrast(),
                             params.getWithinSubjectContrast(),
                             params.getTheta(),
@@ -118,7 +118,7 @@ public class TestNonCentralityDistribution extends TestCase
             for(double w = 0.10; w < 1.05; w += 0.1)
             {
                 double nonCentralityParam = ncd.inverseCDF(w);
-                System.out.println("Quantile: " + Number.format(w) + 
+                System.out.println("Quantile: " + Number.format(w) +
                         " inverseCDF: " + Number.format(nonCentralityParam));
             }
         } catch (PowerException e) {
@@ -193,12 +193,11 @@ public class TestNonCentralityDistribution extends TestCase
         double [][] within = {{1,0},{0,1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
 
-        // set the sigma error matrix to [sigmaY - sigmaYG * sigmaG-1 * sigmaGY] 
+        // set the sigma error matrix to [sigmaY - sigmaYG * sigmaG-1 * sigmaGY]
         RealMatrix sigmaGY = params.getSigmaOutcomeGaussianRandom().transpose();
         RealMatrix sigmaGInverse = new LUDecomposition(params.getSigmaGaussianRandom()).getSolver().getInverse();
         params.setSigmaError(params.getSigmaOutcome().subtract(params.getSigmaOutcomeGaussianRandom().multiply(sigmaGInverse.multiply(sigmaGY))));
 
-        return params;     
+        return params;
     }
-
 }
