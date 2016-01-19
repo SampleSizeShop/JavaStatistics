@@ -1,8 +1,8 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -52,7 +52,7 @@ public class ValidationReportBuilder {
     private static final String TITLE_PREFIX = "GLIMMPSE Validation Report: ";
     private static final String SECTION_INTRO = "Introduction";
     private static final String SECTION_DESIGN = "Study Design";
-    private static final String SECTION_RESULTS = "Validation Results";   
+    private static final String SECTION_RESULTS = "Validation Results";
     private static final String SUBSECTION_INPUTS = "Inputs to the Power Calculation";
     private static final String SUBSECTION_TIMING = "Timing";
     private static final String SUBSECTION_SUMMARY = "Summary Statistics";
@@ -64,12 +64,12 @@ public class ValidationReportBuilder {
             "compare power values produced by the JavaStatistics library to published results " +
             "and also to simulation.  Sources for published values include POWERLIB (Johnson \\emph{et al.} 2007) and " +
             "a SAS IML implementation of the methods described by Glueck and Muller (2003).\n\n" +
-    		"Validation results are listed in Section 3 of the report.  Timing results show the calculation " +
-    		"and simulation times for the overall experiment and the mean times per power calculation.  " +
-    		"Summary statistics show the maximum absolute deviation between the power value calculated " +
-    		"by the JavaStatistics library and the results obtained from SAS or via simulation.  The table in " +
-    		"Section 3.3 shows the deviation values for each individual power comparison.  Deviations larger " +
-    		"than $10^{-6}$ from SAS power values and $0.05$ for simulated power values are displayed in red.\n\n ";
+            "Validation results are listed in Section 3 of the report.  Timing results show the calculation " +
+            "and simulation times for the overall experiment and the mean times per power calculation.  " +
+            "Summary statistics show the maximum absolute deviation between the power value calculated " +
+            "by the JavaStatistics library and the results obtained from SAS or via simulation.  The table in " +
+            "Section 3.3 shows the deviation values for each individual power comparison.  Deviations larger " +
+            "than $10^{-6}$ from SAS power values and $0.05$ for simulated power values are displayed in red.\n\n ";
     private static final String REFERENCES = "\\section*{References}\n\n" +
             "\\hangindent2em\n\\hangafter=1\n Glueck, D. H., \\& Muller, K. E. (2003). " +
             "Adjusting power for a baseline covariate in linear models. \\emph{Statistics " +
@@ -85,7 +85,7 @@ public class ValidationReportBuilder {
     private static DecimalFormat ShortNumber = new DecimalFormat("#0.0000");
     private static DecimalFormat VeryShortNumber = new DecimalFormat("#0.00");
     private static DecimalFormat LongNumber = new DecimalFormat("#0.00000000");
-    private static DecimalFormat ScientificNumber = new DecimalFormat("0.00E0");  
+    private static DecimalFormat ScientificNumber = new DecimalFormat("0.00E0");
 
     // tolerance for comparison
     private double sasTolerance = 0.00001;
@@ -103,7 +103,7 @@ public class ValidationReportBuilder {
      * @param sasTolerance comparison threshold for SAS
      * @param simTolerance comparison threshold for simulation
      */
-    public ValidationReportBuilder(double sasTolerance, 
+    public ValidationReportBuilder(double sasTolerance,
             double simTolerance) {
         this.sasTolerance = sasTolerance;
         this.simTolerance = simTolerance;
@@ -116,9 +116,9 @@ public class ValidationReportBuilder {
     public void createValidationReportAsLaTex(String filename,
             String title, String author, String studyDesignDescription,
             GLMMPowerParameters params,
-            PowerChecker checker) 
+            PowerChecker checker)
                     throws FileNotFoundException, IOException {
-        createValidationReportAsLaTex(filename, title, author, 
+        createValidationReportAsLaTex(filename, title, author,
                 studyDesignDescription, params, null, checker, null);
     }
 
@@ -128,9 +128,9 @@ public class ValidationReportBuilder {
     public void createValidationReportAsLaTex(String filename,
             String title, String author, String studyDesignDescription,
             GLMMPowerParameters params,
-            PowerChecker checker, String image) 
+            PowerChecker checker, String image)
                     throws FileNotFoundException, IOException {
-        createValidationReportAsLaTex(filename, title, author, 
+        createValidationReportAsLaTex(filename, title, author,
                 studyDesignDescription, params, null, checker, image);
     }
 
@@ -140,9 +140,9 @@ public class ValidationReportBuilder {
     public void createValidationReportAsLaTex(String filename,
             String title, String author, String studyDesignDescription,
             GLMMPowerParameters params, String matrixAltString,
-            PowerChecker checker) 
+            PowerChecker checker)
                     throws FileNotFoundException, IOException {
-        createValidationReportAsLaTex(filename, title, author, 
+        createValidationReportAsLaTex(filename, title, author,
                 studyDesignDescription, params, matrixAltString, checker, null);
     }
 
@@ -151,8 +151,8 @@ public class ValidationReportBuilder {
      */
     public void createValidationReportAsLaTex(String filename,
             String title, String author, String studyDesignDescription,
-            GLMMPowerParameters params, String matrixAltString, 
-            PowerChecker checker, String image) 
+            GLMMPowerParameters params, String matrixAltString,
+            PowerChecker checker, String image)
                     throws FileNotFoundException, IOException {
         if (filename != null) {
             FileWriter fWriter = null;
@@ -181,7 +181,7 @@ public class ValidationReportBuilder {
                 }
             }
         }
-    }    
+    }
 
     /**
      * Write the latex preamble for a pdflatex document
@@ -189,17 +189,17 @@ public class ValidationReportBuilder {
      * @throws IOException
      */
     private void addPreamble(BufferedWriter outFile,
-            String title, String author) 
+            String title, String author)
             throws IOException {
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Date date = new Date();
-        
+
         outFile.write("\\documentclass{glimmpse-report}\n" +
                 "\\JavaStatisticsVersion{" + LIBRARY_VERSION +"}\n" +
-                "\\doctitle{" + title + "}\n" + 
-                "\\docauthor{" + author + "}\n" + 
+                "\\doctitle{" + title + "}\n" +
+                "\\docauthor{" + author + "}\n" +
                 "\\docdate{" + dateFormat.format(date) + "}\n");
-        
+
 //        outFile.write("\\documentclass[12pt,english]{article}\n" +
 //                "\\renewcommand{\\familydefault}{\\sfdefault}" +
 //                "\\usepackage{longtable,tabu}\n" +
@@ -230,7 +230,7 @@ public class ValidationReportBuilder {
      * @param outFile output file stream
      * @throws IOException
      */
-    private void addClosing(BufferedWriter outFile) 
+    private void addClosing(BufferedWriter outFile)
             throws IOException {
         outFile.write("\n\\end{document}\n");
     }
@@ -242,13 +242,13 @@ public class ValidationReportBuilder {
      * @param author
      */
     private void addIntroduction(BufferedWriter outFile,
-            String title, String author) 
+            String title, String author)
                     throws IOException {
         // start document
         outFile.write("\\begin{document}\n");
         // add the introduction section shared across all validation reports
         outFile.write("\\section{"+SECTION_INTRO +"}\n");
-        outFile.write(TEXT_INTRO1 + 
+        outFile.write(TEXT_INTRO1 +
                 " \n\n\\href{http://samplesizeshop.org}{http://samplesizeshop.org}.\n\n" +
                 TEXT_INTRO2);
     }
@@ -260,9 +260,9 @@ public class ValidationReportBuilder {
      * @param author
      */
     private void addStudyDesignInfo(BufferedWriter outFile,
-            String studyDesignDescription, 
+            String studyDesignDescription,
             GLMMPowerParameters params,
-            String matrixAltString) 
+            String matrixAltString)
                     throws IOException {
 
         outFile.write("\\section{"+SECTION_DESIGN +"}\n");
@@ -270,7 +270,7 @@ public class ValidationReportBuilder {
         outFile.write("\\subsection{"+SUBSECTION_INPUTS +"}\n");
         // add the inputs
         addListInputs(outFile, params);
-        addMatrixInputs(outFile, params, matrixAltString);   
+        addMatrixInputs(outFile, params, matrixAltString);
     }
 
     /**
@@ -280,7 +280,7 @@ public class ValidationReportBuilder {
      * @throws IOException
      */
     private void addResults(BufferedWriter outFile,
-            PowerChecker checker, boolean hasCovariate) 
+            PowerChecker checker, boolean hasCovariate)
                     throws IOException {
         outFile.write("\\section{"+SECTION_RESULTS +"}\n");
         outFile.write("A total of "+ checker.getResults().size() +
@@ -301,7 +301,7 @@ public class ValidationReportBuilder {
      * @param params input parameters to the power calculation
      */
     private void addListInputs(BufferedWriter outFile,
-            GLMMPowerParameters params) 
+            GLMMPowerParameters params)
                     throws IOException {
         outFile.write("\\subsubsection{List Inputs}\n\n");
         writeDoubleList(outFile, "Type I error rates", params.getAlphaList());
@@ -341,7 +341,7 @@ public class ValidationReportBuilder {
         }
         writeDoubleList(outFile, "Power quantile values:", params.getQuantileList());
 
-    }  
+    }
 
     /**
      * Write out a list of integers
@@ -349,8 +349,8 @@ public class ValidationReportBuilder {
      * @param label
      * @param list
      */
-    private void writeIntegerList(BufferedWriter outFile, 
-            String label, List<Integer> list) 
+    private void writeIntegerList(BufferedWriter outFile,
+            String label, List<Integer> list)
                     throws IOException {
         if (list != null && list.size() > 0) {
             outFile.write("{\\bf " + label + "}\n\n");
@@ -374,8 +374,8 @@ public class ValidationReportBuilder {
      * @param label
      * @param list
      */
-    private void writeDoubleList(BufferedWriter outFile, 
-            String label, List<Double> list) 
+    private void writeDoubleList(BufferedWriter outFile,
+            String label, List<Double> list)
                     throws IOException {
         if (list != null && list.size() > 0) {
             outFile.write("{\\bf " + label + "}\n\n");
@@ -398,11 +398,11 @@ public class ValidationReportBuilder {
      * @param outFile output LaTeX file
      * @param params input parameters to the power calculation
      * @param matrixAltString alternative matrix latex for large or
-     * other difficult to typeset matrices 
+     * other difficult to typeset matrices
      */
     private void addMatrixInputs(BufferedWriter outFile,
             GLMMPowerParameters params,
-            String matrixAltString) 
+            String matrixAltString)
                     throws IOException {
         outFile.write("\\subsubsection{Matrix Inputs}\n\n");
 
@@ -447,7 +447,7 @@ public class ValidationReportBuilder {
                 writeMatrix(outFile, "\\mathbf{\\Sigma}_Yg", sigmaYG);
             }
         }
-    }   
+    }
 
     /**
      * Write a matrix in latex
@@ -463,8 +463,8 @@ public class ValidationReportBuilder {
         }
         outFile.write("\\begin{eqnarray*}\n");
         // add name label
-        outFile.write("\\underset{\\left("+ matrix.getRowDimension() + 
-                        "\\times" + matrix.getColumnDimension() + "\\right)}{" + name + 
+        outFile.write("\\underset{\\left("+ matrix.getRowDimension() +
+                        "\\times" + matrix.getColumnDimension() + "\\right)}{" + name +
                         "} & = & \\begin{bmatrix}");
         for(int r = 0; r < matrix.getRowDimension(); r++) {
             boolean first = true;
@@ -495,14 +495,14 @@ public class ValidationReportBuilder {
      * @param timer timer object from the power check
      */
     private void addTimingResults(BufferedWriter outFile,
-            PowerChecker.Timer timer, int totalCases) 
+            PowerChecker.Timer timer, int totalCases)
                     throws IOException {
 
         double calcTimeTotalSeconds = ((double) timer.calculationMilliseconds / 1000.0);
-        double calcTimeAvgSeconds = 
+        double calcTimeAvgSeconds =
                 ((double) timer.calculationMilliseconds / (double) totalCases) / 1000.0;
         double simTimeTotalSeconds = ((double) timer.simulationMilliseconds / 1000.0);
-        double simTimeAvgSeconds = 
+        double simTimeAvgSeconds =
                 ((double) timer.simulationMilliseconds / (double) totalCases) / 1000.0;
 
         outFile.write("\\begin{tabular}{|l|l|l|}\n");
@@ -523,39 +523,39 @@ public class ValidationReportBuilder {
      * @param checker power checker with summary information
      */
     private void addSummaryStatistics(BufferedWriter outFile,
-            PowerChecker checker) 
+            PowerChecker checker)
                     throws IOException{
         outFile.write("\\begin{tabular}{|l|l|}\n");
         outFile.write("\\hline\n");
-        outFile.write("Max deviation from SAS & "+ 
+        outFile.write("Max deviation from SAS & "+
                 LongNumber.format(checker.getMaxSasDeviation())+
                 "\\tabularnewline\n\\hline\n\n");
         if (checker.getMaxSaslowerCIDeviation() > -1 &&
                 checker.getMaxSasUpperCIDeviation() > -1) {
-            outFile.write("Max deviation from lower CI limit & "+ 
+            outFile.write("Max deviation from lower CI limit & "+
                     LongNumber.format(checker.getMaxSaslowerCIDeviation())+
                     "\\tabularnewline\n\\hline\n\n");
-            outFile.write("Max deviation from upper CI limit & "+ 
+            outFile.write("Max deviation from upper CI limit & "+
                     LongNumber.format(checker.getMaxSasUpperCIDeviation())+
                     "\\tabularnewline\n\\hline\n\n");
         }
-        outFile.write("Max deviation from simulation & "+ 
+        outFile.write("Max deviation from simulation & "+
                 LongNumber.format(checker.getMaxSimDeviation())+
                 "\\tabularnewline\n\\hline\n\n");
-        outFile.write("\\end{tabular}\n");     
+        outFile.write("\\end{tabular}\n");
     }
 
     /**
      * Add a section with power comparison results.  The section also
      * includes a brief header describing how to interpret the results.
-     * 
+     *
      * @param results result list from the power check
      */
     private void addResultsTable(BufferedWriter outFile,
             PowerChecker checker, boolean hasCovariate) throws IOException {
         List<PowerChecker.Result> checkerResults = checker.getResults();
         if (checkerResults != null) {
-            boolean hasCI = (checkerResults.size() > 0 && 
+            boolean hasCI = (checkerResults.size() > 0 &&
                     checkerResults.get(0).calculatedPower.getConfidenceInterval() != null);
             if (hasCI) {
                 outFile.write("\\scriptsize");
@@ -572,7 +572,7 @@ public class ValidationReportBuilder {
                     outFile.write("\\begin{longtabu}{|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|X[l]|}\n");
                 }
             }
-            outFile.write("\\hline\n");    
+            outFile.write("\\hline\n");
             outFile.write("{\\bf Power} & ");
             if (hasCI) {
                 outFile.write("{\\bf CI} & ");
@@ -603,10 +603,10 @@ public class ValidationReportBuilder {
                 // if applicable, add confidence interval
                 ConfidenceInterval ci = result.calculatedPower.getConfidenceInterval();
                 if (ci != null) {
-                    outFile.write("(" + Number.format(ci.getLowerLimit()) + ", " + 
+                    outFile.write("(" + Number.format(ci.getLowerLimit()) + ", " +
                             Number.format(ci.getUpperLimit()) + ")" + " & ");
-                }     
-                // add SAS power and deviation 
+                }
+                // add SAS power and deviation
                 outFile.write(Number.format(result.sasPower) + " (");
                 if (result.sasDeviation > sasTolerance) {
                     outFile.write("\\textcolor{red}{");
@@ -620,7 +620,7 @@ public class ValidationReportBuilder {
                 // if applicable, add SAS CI and deviation
                 if (ci != null)
                 {
-                    outFile.write("(" + Number.format(result.sasCILower) + ", " + 
+                    outFile.write("(" + Number.format(result.sasCILower) + ", " +
                             Number.format(result.sasCIUpper) + ") ");
                     outFile.write("\\{");
                     // lower ci deviation
@@ -642,13 +642,13 @@ public class ValidationReportBuilder {
                     outFile.write("\\} & ");
                 }
                 // add simulation power
-                outFile.write((Double.isNaN(result.simulatedPower) ? 
-                        "N/A" :  Number.format(result.simulatedPower)) + 
+                outFile.write((Double.isNaN(result.simulatedPower) ?
+                        "N/A" :  Number.format(result.simulatedPower)) +
                         " (");
                 if (result.simulationDeviation > simTolerance) {
                     outFile.write("\\textcolor{red}{");
                 }
-                outFile.write((Double.isNaN(result.simulatedPower) ? 
+                outFile.write((Double.isNaN(result.simulatedPower) ?
                         "N/A" : Number.format(result.simulationDeviation)));
                 if (result.simulationDeviation > simTolerance) {
                     outFile.write("}) & ");
@@ -670,8 +670,8 @@ public class ValidationReportBuilder {
                 outFile.write("\\\\ \\hline\n");
             }
 
-            outFile.write("\\end{longtabu}\n");    
-            outFile.write("\\normalsize\n");    
+            outFile.write("\\end{longtabu}\n");
+            outFile.write("\\normalsize\n");
         }
 
     }
@@ -760,7 +760,7 @@ public class ValidationReportBuilder {
             if (ci != null)
             {
                 buffer.append("(" + Number.format(result.sasCILower) + ", " + Number.format(result.sasCIUpper) + ")");
-                buffer.append("{"); 
+                buffer.append("{");
                 if (result.sasCILowerDeviation > sasTolerance)
                     buffer.append("<font color='red'>" + Number.format(result.sasCILowerDeviation) + "</font>");
                 else
@@ -778,12 +778,12 @@ public class ValidationReportBuilder {
             else
                 buffer.append(" (" + Number.format(result.simulationDeviation) + ")</td><td>");
 
-            buffer.append(result.calculatedPower.getTest() + "</td><td>" + 
-                    Number.format(result.calculatedPower.getSigmaScale()) + "</td><td>" + 
-                    Number.format(result.calculatedPower.getBetaScale()) + "</td><td>" + 
-                    result.calculatedPower.getTotalSampleSize() + "</td><td>" + 
-                    Number.format(result.calculatedPower.getAlpha()) + "</td><td>" + 
-                    powerMethodToString(result.calculatedPower.getPowerMethod()) + "</td><td>" + 
+            buffer.append(result.calculatedPower.getTest() + "</td><td>" +
+                    Number.format(result.calculatedPower.getSigmaScale()) + "</td><td>" +
+                    Number.format(result.calculatedPower.getBetaScale()) + "</td><td>" +
+                    result.calculatedPower.getTotalSampleSize() + "</td><td>" +
+                    Number.format(result.calculatedPower.getAlpha()) + "</td><td>" +
+                    powerMethodToString(result.calculatedPower.getPowerMethod()) + "</td><td>" +
                     result.calculatedPower.getQuantile() + "</td></tr>");
         }
 
@@ -816,7 +816,7 @@ public class ValidationReportBuilder {
     /**
      * Write the current result set to stdout.
      */
-    public void createValidationReportAsStdout(PowerChecker checker, 
+    public void createValidationReportAsStdout(PowerChecker checker,
             String title, boolean verbose)
     {
         List<PowerChecker.Result> checkerResults = checker.getResults();
@@ -829,19 +829,19 @@ public class ValidationReportBuilder {
 
             for(Result result: checkerResults)
             {
-                System.out.println(Number.format(result.calculatedPower.getActualPower()) + "(" + 
-                        (result.calculatedPower.getConfidenceInterval() != null ? 
-                                Number.format(result.calculatedPower.getConfidenceInterval().getLowerLimit()) : "n/a") + ", " + 
-                                (result.calculatedPower.getConfidenceInterval() != null ? 
-                                        Number.format(result.calculatedPower.getConfidenceInterval().getUpperLimit()) : "n/a") + ")\t" +  
+                System.out.println(Number.format(result.calculatedPower.getActualPower()) + "(" +
+                        (result.calculatedPower.getConfidenceInterval() != null ?
+                                Number.format(result.calculatedPower.getConfidenceInterval().getLowerLimit()) : "n/a") + ", " +
+                                (result.calculatedPower.getConfidenceInterval() != null ?
+                                        Number.format(result.calculatedPower.getConfidenceInterval().getUpperLimit()) : "n/a") + ")\t" +
                                         Number.format(result.sasPower) + " (" +  Number.format(result.sasDeviation) + ")\t" +
                                         Number.format(result.simulatedPower) + " (" + Number.format(result.simulationDeviation) + ")\t" +
-                                        result.calculatedPower.getTest() + "\t" + 
-                                        Number.format(result.calculatedPower.getSigmaScale()) + "\t" + 
-                                        Number.format(result.calculatedPower.getBetaScale()) + "\t" + 
-                                        result.calculatedPower.getTotalSampleSize() + "\t" + 
-                                        Number.format(result.calculatedPower.getAlpha()) + "\t" + 
-                                        result.calculatedPower.getPowerMethod() + "\t" + 
+                                        result.calculatedPower.getTest() + "\t" +
+                                        Number.format(result.calculatedPower.getSigmaScale()) + "\t" +
+                                        Number.format(result.calculatedPower.getBetaScale()) + "\t" +
+                                        result.calculatedPower.getTotalSampleSize() + "\t" +
+                                        Number.format(result.calculatedPower.getAlpha()) + "\t" +
+                                        result.calculatedPower.getPowerMethod() + "\t" +
                                         result.calculatedPower.getQuantile() + "\t");
             }
         }
@@ -857,9 +857,9 @@ public class ValidationReportBuilder {
         System.out.println("Max Deviation from Simulation: " + LongNumber.format(checker.getMaxSimDeviation()));
         if (checker.getMaxSaslowerCIDeviation() >= 0 || checker.getMaxSasUpperCIDeviation() >=0)
         {
-            System.out.println("Max Deviation from SAS, Lower Confidence Limit: " + 
+            System.out.println("Max Deviation from SAS, Lower Confidence Limit: " +
                     LongNumber.format(checker.getMaxSaslowerCIDeviation()));
-            System.out.println("Max Deviation from SAS, Upper Confidence Limit: " + 
+            System.out.println("Max Deviation from SAS, Upper Confidence Limit: " +
                     LongNumber.format(checker.getMaxSasUpperCIDeviation()));
         }
     }
@@ -882,7 +882,7 @@ public class ValidationReportBuilder {
             break;
         case QUANTILE_POWER:
             value = "quantile";
-            break;          
+            break;
         }
         return value;
     }
@@ -905,21 +905,20 @@ public class ValidationReportBuilder {
             break;
         case PILLAI_BARTLETT_TRACE:
             value = "PBT";
-            break;          
+            break;
         case UNIREP:
             value = "UNIREP";
-            break;   
+            break;
         case UNIREP_GEISSER_GREENHOUSE:
             value = "UNIREP-GG";
-            break;   
+            break;
         case UNIREP_HUYNH_FELDT:
             value = "UNIREP-HF";
-            break;   
+            break;
         case UNIREP_BOX:
             value = "UNIREP-BOX";
-            break;   
+            break;
         }
         return value;
     }
-
 }
