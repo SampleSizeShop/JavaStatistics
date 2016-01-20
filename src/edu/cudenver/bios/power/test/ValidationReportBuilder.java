@@ -154,6 +154,10 @@ public class ValidationReportBuilder {
             GLMMPowerParameters params, String matrixAltString,
             PowerChecker checker, String image)
                     throws FileNotFoundException, IOException {
+        if (! "true".equals(System.getProperty("glimmpse.create.validation.report.as.latex"))) {
+            return;
+        }
+
         if (filename != null) {
             FileWriter fWriter = null;
             BufferedWriter outFile = null;

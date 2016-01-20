@@ -72,9 +72,15 @@ test {
     exclude 'edu/cudenver/bios/power/test/paper'
 }
 
-task paperTest(type: Test, group: 'Publication', description: 'Runs tests and prepares PDF for publication') {
+task paperTest(type: Test, group: 'Publication', description: 'Runs tests') {
     testClassesDir = sourceSets.paper.output.classesDir
     classpath = sourceSets.paper.runtimeClasspath
+}
+
+task paperTestPlusLaTex(type: Test, group: 'Publication', description: 'Runs tests and prepares LaTex for publication') {
+    testClassesDir = sourceSets.paper.output.classesDir
+    classpath = sourceSets.paper.runtimeClasspath
+    systemProperty "glimmpse.create.validation.report.as.latex", "true"
 }
 
 task wrapper(type: Wrapper) {
