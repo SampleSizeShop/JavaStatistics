@@ -69,6 +69,8 @@ public class GLMMPowerCalculator implements PowerCalculator
     private static final int STARTING_SAMPLE_SIZE = 1024;
     private static final int STARTING_BETA_SCALE = 10;
     private static final int SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL = 1000;
+    private static final double EPSILON = 1e-12;
+
     // seed for random column generation
     private int seed = 1234;
     // accuracy thresholds
@@ -1000,7 +1002,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         if (sumSqHypothesis != null) {
             for(int r = 0; r < sumSqHypothesis.getRowDimension(); r++) {
                 for(int c = 0; c < sumSqHypothesis.getColumnDimension(); c++) {
-                    if (Double.compare(sumSqHypothesis.getEntry(r, c), 0.0) != 0) {
+                    if (Math.abs(sumSqHypothesis.getEntry(r, c)) > EPSILON) {
                         return false;
                     }
                 }
