@@ -314,6 +314,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
      */
     protected void calculateEpsilon()
     {
+        distinctSigmaStarEigenValues.clear();
         rankC = new SingularValueDecomposition(C).getRank();
         rankU = new SingularValueDecomposition(U).getRank();
 
