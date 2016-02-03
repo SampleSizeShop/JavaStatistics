@@ -1,8 +1,8 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -34,7 +34,7 @@ public class TestPowerParameters extends TestCase
     private class MyParams extends PowerParameters {}
     private double[] alphaList = {0.1, 0.2, 0.3, 0.4};
     private int[] sampleSizeList = {10, 20, 30, 40};
-    
+
     public void testList()
     {
         MyParams params = buildParams();
@@ -46,7 +46,7 @@ public class TestPowerParameters extends TestCase
             alphaCount++;
         }
         assertEquals(alphaCount, alphaList.length);
-        
+
         int sampleSizeCount = 0;
         for(Integer sampleSize: params.getSampleSizeList())
         {
@@ -55,7 +55,7 @@ public class TestPowerParameters extends TestCase
         }
         assertEquals(sampleSizeCount, sampleSizeList.length);
     }
-    
+
     public void testNestedList()
     {
         MyParams params = buildParams();
@@ -71,14 +71,14 @@ public class TestPowerParameters extends TestCase
         }
         assertEquals(count, alphaList.length*sampleSizeList.length);
     }
-    
+
     private MyParams buildParams()
     {
         MyParams params = new MyParams();
-        
+
         for(double alpha: alphaList) params.addAlpha(alpha);
         for(int sampleSize: sampleSizeList) params.addSampleSize(sampleSize);
-        
+
         return params;
     }
 }

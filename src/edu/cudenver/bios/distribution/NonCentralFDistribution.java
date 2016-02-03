@@ -1,8 +1,8 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,21 +30,21 @@ import org.apache.commons.math3.exception.MathIllegalArgumentException;
 import org.apache.commons.math3.exception.TooManyEvaluationsException;
 
 /**
- * 
- * This class calculates Pr(Fcrit < F(ndf,ddf,nonCentrality)) using one of four methods. 
- * The first, most common method uses the cumulative distribution function of the non-central F.  
- * If the CDF method will fail, the second method uses the Tiku approximation to the non-central F 
- * (see Johnson and Kotz).  In situations where the TIKU will fail or be inaccurate, a 
+ *
+ * This class calculates Pr(Fcrit < F(ndf,ddf,nonCentrality)) using one of four methods.
+ * The first, most common method uses the cumulative distribution function of the non-central F.
+ * If the CDF method will fail, the second method uses the Tiku approximation to the non-central F
+ * (see Johnson and Kotz).  In situations where the TIKU will fail or be inaccurate, a
  * normal approximation is used.
- *  
+ *
  * @author translated from POWERLIB (SAS/IML) written by Keith Muller
  *
  */
 public class NonCentralFDistribution extends AbstractRealDistribution
-{     
+{
     private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
     private static final int STARTING_F = 10;
-    
+
     // supported approximation methods for the F distribution
     protected enum FMethod
     {
@@ -52,54 +52,54 @@ public class NonCentralFDistribution extends AbstractRealDistribution
         TIKU_APPROXIMATION, // use the Tiku approximation to the non-central F
         NORMAL_APPROXIMATION // approximate with a normal distribution
     };
-    
+
     // numerator and denominator degrees of freedom
     protected double ndf;
     protected double ddf;
     protected double nonCentrality;
     // method of approximation
     protected FMethod method = FMethod.CDF;
-    
+
     // non-central F distribution for use with the CDF method
     protected NoncentralFishersF nonCentralF= null;
-    
+
     // Intermediate parameters for use with the Tiku approximation method
     protected double TikuC;
     protected double TikuB;
-    
+
     // normal distribution for use with the NORMAL_APPROXIMATION method
     protected Normal normal = null;
 
     /**
-     * Function calculating the difference between the probability of a target quantile 
+     * Function calculating the difference between the probability of a target quantile
      * and the  (used by the bisection solver from Apache Commons Math)
      * @see org.apache.commons.math.analysis.UnivariateRealFunction
      */
     private class NonCentralFQuantileFunction implements UnivariateFunction
     {
         protected double quantile;
-        
+
         public NonCentralFQuantileFunction(double quantile)
         {
             this.quantile = quantile;
         }
-        
+
         public double value(double n)
         {
             return cdf(n) - quantile;
         }
     }
-    
+
     /**
      * Class passed into Apache's NewtonSolver function to find a noncentrality of
      * an F-distribution with ndf numerator and ddf denominator degrees of freedom
      * such that Pr(X &lt; x) = p
-     * 
+     *
      * Defines the function to be solved, i.e. the CDF of the F distribution
      */
     private static class NoncentralityFinderCDF implements UnivariateFunction
     {
-    	protected double x;
+        protected double x;
         protected double ndf;
         protected double ddf;
         protected double probability;
@@ -111,32 +111,32 @@ public class NonCentralFDistribution extends AbstractRealDistribution
             this.ddf = ddf;
             this.probability = probability;
         }
-        
-		@Override
+
+        @Override
         public double value(double t)
         {
             NonCentralFDistribution fdist = new NonCentralFDistribution(ndf, ddf, t);
             return fdist.cdf(x) - probability;
         }
     }
-    
+
     /**
      * Create a non-central F distribution with the specified numerator degrees of freedom,
      * denominator degrees of freedom, and non-centrality parameter
-     * 
+     *
      * @param numeratorDegreesOfFreedom
      * @param denominatorDegreesOfFreedom
      * @param nonCentralityParameter
      */
-    public NonCentralFDistribution(double numeratorDegreesOfFreedom, 
+    public NonCentralFDistribution(double numeratorDegreesOfFreedom,
             double denominatorDegreesOfFreedom, double nonCentralityParameter)
     {
         ndf = numeratorDegreesOfFreedom;
         ddf = denominatorDegreesOfFreedom;
         nonCentrality = nonCentralityParameter;
-        
+
         // set the method of approximation and initialize appropriately
-        if ((ndf < Math.pow(10, 4.4) && ddf < Math.pow(10, 5.4) && 
+        if ((ndf < Math.pow(10, 4.4) && ddf < Math.pow(10, 5.4) &&
                 this.nonCentrality < Math.pow(10, 6.4)) ||
                 (ndf < Math.pow(10, 6) && ddf < 10 && nonCentrality <= Math.pow(10, 6)))
         {
@@ -150,12 +150,12 @@ public class NonCentralFDistribution extends AbstractRealDistribution
         {
             // use Tiku approximation for extreme ndf values
             method = FMethod.TIKU_APPROXIMATION;
-            double TikuH = 2 * Math.pow(ndf + nonCentrality, 3) +  
-                3 * (ndf + nonCentrality) * (ndf + 2 * nonCentrality) *(ddf - 2) + 
+            double TikuH = 2 * Math.pow(ndf + nonCentrality, 3) +
+                3 * (ndf + nonCentrality) * (ndf + 2 * nonCentrality) *(ddf - 2) +
                 (ndf + 3 * nonCentrality) * Math.pow(ddf - 2, 2);
-            double TikuK = Math.pow(ndf + nonCentrality, 2) + 
+            double TikuK = Math.pow(ndf + nonCentrality, 2) +
                 (ddf - 2) * (ndf + 2 * nonCentrality);
-            double TikuNdf = Math.floor(0.5 * (ddf - 2)*(Math.sqrt((TikuH*TikuH) / 
+            double TikuNdf = Math.floor(0.5 * (ddf - 2)*(Math.sqrt((TikuH*TikuH) /
                     ((TikuH*TikuH) - 4 * Math.pow(TikuK, 3))) - 1));
             TikuC = (TikuNdf / ndf) / (2 * TikuNdf + ddf - 2) * (TikuH / TikuK);
             TikuB = - ddf / (ddf - 2) * (TikuC - 1 - nonCentrality / ndf);
@@ -169,8 +169,8 @@ public class NonCentralFDistribution extends AbstractRealDistribution
     }
 
     /**
-     * For this non-central F distribution, F, this method returns P(F < f). 
-     * 
+     * For this non-central F distribution, F, this method returns P(F < f).
+     *
      * @param Fcritical critical point for which to calculate cumulative probability
      * @return P(F < f)
      */
@@ -201,21 +201,21 @@ public class NonCentralFDistribution extends AbstractRealDistribution
             }
             else
             {
-                if (zScore < -6) 
+                if (zScore < -6)
                     return 0;
                 else
                     return 1; // Z > 6
             }
         default: // method = CDF
             return nonCentralF.cdf(Fcritical);
-        }      
+        }
 
     }
-    
+
     /**
      * For this non-central F distribution, F, this function returns the critical value, f,
-     * such that P(F < f). 
-     * 
+     * such that P(F < f).
+     *
      * @param probability desired value of P(F < f)
      * @return critical f such that P(F < f)
      */
@@ -223,11 +223,11 @@ public class NonCentralFDistribution extends AbstractRealDistribution
     {
         if (probability <= 0) return Double.NaN;
         if (probability >= 1) return Double.POSITIVE_INFINITY;
-        
+
         if (method == FMethod.CDF && nonCentrality == 0)
         {
             // inverseCdf throws an illegal argument exception when the
-            // non-centrality parameter is non-zero.  So we just bisection solve 
+            // non-centrality parameter is non-zero.  So we just bisection solve
             // unless we're really dealing with a central F.  Ah, the hazards of
             // pulling code off of the interwebs.
             return nonCentralF.inverseCdf(probability);
@@ -249,9 +249,9 @@ public class NonCentralFDistribution extends AbstractRealDistribution
             }
         }
     }
-    
+
     /*
-     * Finds an upper bound for the bisection search 
+     * Finds an upper bound for the bisection search
      */
     private int getCDFUpperBound(double quantile)
     {
@@ -263,37 +263,37 @@ public class NonCentralFDistribution extends AbstractRealDistribution
         }
         return upperBound;
     }
-    
+
     /**
      * For a noncentral F distribution with the specified numerator and denominator
      * degrees of freedom, returns the noncentrality parameter such that for the given
      * cumulative probability and value (f), Pr(F &lt; f) = probability
-     * 
-     * 
+     *
+     *
      * @param f value of the random variable
      * @param probability target cumulative probability
      * @param ndf numerator degrees of freedom
      * @param ddf denominator degrees of freedom
      * @return noncentrality such that Pr(F &lt; f)
      */
-    public static double noncentrality(double f, double probability, 
-    		double ndf, double ddf, double startValue)
-    throws IllegalArgumentException, 
+    public static double noncentrality(double f, double probability,
+            double ndf, double ddf, double startValue)
+    throws IllegalArgumentException,
     MathIllegalArgumentException, TooManyEvaluationsException
-    {   	
-    	BisectionSolver solver = new BisectionSolver();
-    	double searchUpperBound = getNoncentralityUpperBound(f, probability, ndf, ddf, startValue);
-    	double noncentrality = solver.solve(MAX_ITERATIONS,
-    	        new NoncentralityFinderCDF(f, ndf, ddf, probability), 0, 	
-    			searchUpperBound);
-    	
-    	return noncentrality;
+    {
+        BisectionSolver solver = new BisectionSolver();
+        double searchUpperBound = getNoncentralityUpperBound(f, probability, ndf, ddf, startValue);
+        double noncentrality = solver.solve(MAX_ITERATIONS,
+                new NoncentralityFinderCDF(f, ndf, ddf, probability), 0,
+                searchUpperBound);
+
+        return noncentrality;
     }
-    
+
     /**
-     * Determine the upper bound for the Newton search used in 
+     * Determine the upper bound for the Newton search used in
      * finding the noncentrality
-     * 
+     *
      * @param x the target critical value
      * @param probability the target cumulative probability
      * @param ndf numerator degrees of freedom of F
@@ -305,11 +305,11 @@ public class NonCentralFDistribution extends AbstractRealDistribution
             double ndf, double ddf, double startNoncentrality)
     {
         double noncentralityBound = startNoncentrality;
-        
+
         for(double currentProbability = 1.0; currentProbability >= probability; noncentralityBound *= 2)
         {
-        	NonCentralFDistribution dist = new NonCentralFDistribution(ndf, ddf, noncentralityBound);
-        	currentProbability = dist.cdf(f);
+            NonCentralFDistribution dist = new NonCentralFDistribution(ndf, ddf, noncentralityBound);
+            currentProbability = dist.cdf(f);
 
         }
         return noncentralityBound;
@@ -374,6 +374,6 @@ public class NonCentralFDistribution extends AbstractRealDistribution
         // TODO Auto-generated method stub
         return 0;
     }
-    
-    
+
+
 }

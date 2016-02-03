@@ -3,14 +3,21 @@ apply plugin: 'maven'
 
 group = 'org.samplesizeshop'
 archivesBaseName = 'javastatistics'
-version = '1.2.5.0'
+version = '1.2.6.0'
+buildDir = 'target'
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 repositories {
     mavenLocal()
     mavenCentral()
 }
 
-buildDir = 'build/tmp'
+install {
+    dependsOn cleanTest,
+            cleanCompileJava,
+            build
+}
 
 configurations {
     paper.extendsFrom testRuntime
@@ -38,16 +45,12 @@ sourceSets {
     main {
         java {
             srcDir 'src'
-//            exclude '**/power/test/**',
-//                    '**/bios/matrix/test/**'
         }
     }
     test {
         java {
             srcDir 'src/test/java'
             exclude 'src/edu/cudenver/bios/power/test/general/**'
-//            include 'src/power/test/**'
-//            include '**bios/matrix/test/**'
         }
     }
 
@@ -69,9 +72,15 @@ test {
     exclude 'edu/cudenver/bios/power/test/paper'
 }
 
-task paperTest(type: Test, group: 'Publication', description: 'Runs tests and prepares PDF for publication') {
+task paperTest(type: Test, group: 'Publication', description: 'Runs tests') {
     testClassesDir = sourceSets.paper.output.classesDir
     classpath = sourceSets.paper.runtimeClasspath
+}
+
+task paperTestPlusLaTex(type: Test, group: 'Publication', description: 'Runs tests and prepares LaTex for publication') {
+    testClassesDir = sourceSets.paper.output.classesDir
+    classpath = sourceSets.paper.runtimeClasspath
+    systemProperty "glimmpse.create.validation.report.as.latex", "true"
 }
 
 task wrapper(type: Wrapper) {

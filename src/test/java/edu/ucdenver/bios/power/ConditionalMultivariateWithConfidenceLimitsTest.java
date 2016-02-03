@@ -1,7 +1,7 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
+ *
  * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
@@ -42,12 +42,12 @@ import static org.junit.Assert.assertTrue;
 /**
  * Unit test for fixed multivariate design including confidence intervals
  * with comparison against simulation and SAS output.
- * 
+ *
  *  based on the example 6 from POWERLIB:
-*   Johnson J.L., Muller K.E., Slaughter J.C., Gurka M.J., Gribbin M.J. and Simpson S.L. 
-*   (2009) POWERLIB: SAS/IML software for computing power in multivariate linear models, 
+*   Johnson J.L., Muller K.E., Slaughter J.C., Gurka M.J., Gribbin M.J. and Simpson S.L.
+*   (2009) POWERLIB: SAS/IML software for computing power in multivariate linear models,
 *   Journal of Statistical Software, 30(5), 1-27.
-*   
+*
 *   !WARNING! - you will need to increase the main_memory size in your
 *   LaTeX install to typeset this report.  To do so:
 *   1. Open a terminal window
@@ -58,40 +58,40 @@ import static org.junit.Assert.assertTrue;
 *   Save the file then quit the editor
 *   4. Rebuild the format by running
 *   initexmf --dump=latex
-*   5. Repeat steps 2-4 with config files 'pdflatex' and 'xelatex' 
-*   
+*   5. Repeat steps 2-4 with config files 'pdflatex' and 'xelatex'
+*
  * @author Sarah Kreidler
  *
  */
 public class ConditionalMultivariateWithConfidenceLimitsTest {
 
-	private static final String DATA_FILE =  "TestConditionalMultivariateWithConfidenceLimits.xml";
-	private static final String TITLE = "GLMM(F) Example 6. Power and confidence " +
-			"limits for the univariate approach to repeated measures in a multivariate model";
+    private static final String DATA_FILE =  "TestConditionalMultivariateWithConfidenceLimits.xml";
+    private static final String TITLE = "GLMM(F) Example 6. Power and confidence " +
+            "limits for the univariate approach to repeated measures in a multivariate model";
     private static final double TOLERANCE = 0.000001;
 
-	private PowerChecker checker;
-	
+    private PowerChecker checker;
+
     // set beta matrix
-	private double[][] beta = 
-	{
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2},
-			{2.9, 3.2, 3.5, 3.2}
-	};
+    private double[][] beta =
+    {
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2},
+            {2.9, 3.2, 3.5, 3.2}
+    };
 
     @Before
-	public void setUp() {
+    public void setUp() {
         List<GLMMPower> sasPowers = Utils.readSasPowers(DATA_FILE);
         checker = new PowerChecker(sasPowers, false);
-	}
+    }
 
     /**
      * Test valid inputs for a univariate linear model with only fixed predictors
@@ -104,7 +104,7 @@ public class ConditionalMultivariateWithConfidenceLimitsTest {
         {
             GLMMPowerParameters params = buildInputs(test);
 
-            for(double delta = 0.0; delta < 0.2001; delta += 0.0008)
+            for(double delta = 0.0008; delta < 0.2001; delta += 0.0008)
             {
                 // increase the gender difference by 2 * delta
                 RealMatrix betaMatrix = params.getBeta().getFixedMatrix();
@@ -127,16 +127,17 @@ public class ConditionalMultivariateWithConfidenceLimitsTest {
         // output the results
         ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
         reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
-        assertTrue("results outside tolerance: " + TOLERANCE, checker.isSASDeviationBelowTolerance(TOLERANCE));
+        assertTrue("SAS deviation " + checker.getMaxSasDeviation() + " is not below tolerance " + TOLERANCE,
+                    checker.isSASDeviationBelowTolerance(TOLERANCE));
     }
 
     private GLMMPowerParameters buildInputs(GLMMTestFactory.Test test)
     {
         // build the inputs
-    	GLMMPowerParameters params = new GLMMPowerParameters();
+        GLMMPowerParameters params = new GLMMPowerParameters();
 
         // add tests
-    	params.addTest(test);
+        params.addTest(test);
 
         // add alpha values - bonferroni corrected for 6 comparisons
         params.addAlpha(0.05/6);
@@ -150,7 +151,7 @@ public class ConditionalMultivariateWithConfidenceLimitsTest {
 
         // build sigma matrix
         double [][] sigma = {{0.08380, 0.05020, 0.03560, 0.05330},
-       		 {0.05020, 0.05370, 0.03250, 0.03330},
+                {0.05020, 0.05370, 0.03250, 0.03330},
              {0.03560, 0.03250, 0.04410, 0.03860},
              {0.05330, 0.03330, 0.03860, 0.07220}};
         params.setSigmaError(new Array2DRowRealMatrix(sigma));
@@ -175,7 +176,7 @@ public class ConditionalMultivariateWithConfidenceLimitsTest {
         Factor regionFactor = new Factor(name, regions);
         factorList.add(regionFactor);
         params.setWithinSubjectContrast(
-        		OrthogonalPolynomials.withinSubjectContrast(factorList).getMainEffectContrast(regionFactor).getContrastMatrix());
+                OrthogonalPolynomials.withinSubjectContrast(factorList).getMainEffectContrast(regionFactor).getContrastMatrix());
 
         // parameters for confidence limits
         params.setConfidenceIntervalType(ConfidenceIntervalType.BETA_KNOWN_SIGMA_ESTIMATED);

@@ -1,8 +1,8 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -44,7 +44,7 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
     private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
     private static final int MAX_SAMPLE_SIZE = 100000;
     private static final int MIN_SAMPLE_SIZE =  2; // need df > 0
-    
+
     // function to be used with apache's built-in bisection solver
     private class SampleSizeFunction implements UnivariateFunction
     {
@@ -54,7 +54,7 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
         double alpha;
         double power;
         boolean twoTailed = false;
-        
+
         public SampleSizeFunction(double mu0, double muA, double sigma,
                 double alpha, double power, boolean twoTailed)
         {
@@ -65,7 +65,7 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
             this.power = power;
             this.twoTailed = twoTailed;
         }
-        
+
         public double value(double n)
         {
             try
@@ -92,45 +92,45 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
                 }
             }
             catch (Exception e)
-            {   
+            {
                 // we can't throw an exception here since the UnivariateRealFunction interface does
                 // not allow it.  So we return a large number to prevent BisectionSolver from using
                 // the n which caused to exception as a root
-                return MAX_SAMPLE_SIZE;  
+                return MAX_SAMPLE_SIZE;
             }
         }
     }
-    
+
     /**
      * Calculate detectable difference for the one sample Student's T test
-     * 
+     *
      * @see OneSampleStudentsTPowerParameters
      * @see OneSampleStudentsTPower
      * @param params one sample student's t input parameters
      * @return list of power objects containing detectable difference results
      */
-	@Override
-	public List<Power> getDetectableDifference(PowerParameters params)
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public List<Power> getDetectableDifference(PowerParameters params)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
     /**
      * Calculate power for the one sample Student's T test
-     * 
+     *
      * @see OneSampleStudentsTPowerParameters
      * @see OneSampleStudentsTPower
      * @param params one sample student's t input parameters
      * @return list of power objects containing detectable difference results
      */
-	@Override
-	public List<Power> getPower(PowerParameters params)
-	{
+    @Override
+    public List<Power> getPower(PowerParameters params)
+    {
         OneSampleStudentsTPowerParameters studentsTParams = (OneSampleStudentsTPowerParameters) params;
-        
+
         ArrayList<Power> results = new ArrayList<Power>();
-        	
+
         // calculate the power for either one or two tails
         for(Double alpha : studentsTParams.getAlphaList())
         {
@@ -142,7 +142,7 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
                     {
                         try
                         {
-                            results.add(calculatePower(alpha.doubleValue(), means.mu0, means.muA, 
+                            results.add(calculatePower(alpha.doubleValue(), means.mu0, means.muA,
                                     sigma.doubleValue(), sampleSize.intValue(), studentsTParams.isTwoTailed()));
                         }
                         catch (Exception me)
@@ -155,24 +155,24 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
         }
 
         return results;
-	}
+    }
 
     /**
      * Calculate sample size for the one sample Student's T test
-     * 
+     *
      * @see OneSampleStudentsTPowerParameters
      * @see OneSampleStudentsTPower
      * @param params one sample student's t input parameters
      * @return list of power objects containing detectable difference results
      */
-	@Override
-	public List<Power> getSampleSize(PowerParameters params)
-	{
-	    OneSampleStudentsTPowerParameters studentsTParams = (OneSampleStudentsTPowerParameters) params;
+    @Override
+    public List<Power> getSampleSize(PowerParameters params)
+    {
+        OneSampleStudentsTPowerParameters studentsTParams = (OneSampleStudentsTPowerParameters) params;
 
-	    ArrayList<Power> results = new ArrayList<Power>();
+        ArrayList<Power> results = new ArrayList<Power>();
 
-	    // calculate the sample size for either one or two tails
+        // calculate the sample size for either one or two tails
         for(Double alpha : studentsTParams.getAlphaList())
         {
             for(Double sigma: studentsTParams.getSigmaList())
@@ -181,32 +181,32 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
                 {
                     for(Double power : studentsTParams.getPowerList())
                     {
-	                    results.add(calculateSampleSize(alpha.doubleValue(), means.mu0, means.muA, 
-	                            sigma.doubleValue(), power.doubleValue(), studentsTParams.isTwoTailed()));
-	                }
-	            }
-	        }
-	    }
+                        results.add(calculateSampleSize(alpha.doubleValue(), means.mu0, means.muA,
+                                sigma.doubleValue(), power.doubleValue(), studentsTParams.isTwoTailed()));
+                    }
+                }
+            }
+        }
 
-	    return results;
-	}
+        return results;
+    }
 
     /**
      * Run a power simulation for the one sample student's t test
-     * 
+     *
      * @see OneSampleStudentsTPowerParameters
      * @see OneSampleStudentsTPower
      * @param params one sample student's t input parameters
      * @param iterations number of iterations to use for the simulation
      * @return list of power objects containing detectable difference results
      */
-	@Override
-	public List<Power> getSimulatedPower(PowerParameters params, int iterations)
-	{
+    @Override
+    public List<Power> getSimulatedPower(PowerParameters params, int iterations)
+    {
         OneSampleStudentsTPowerParameters studentsTParams = (OneSampleStudentsTPowerParameters) params;
-        
+
         ArrayList<Power> results = new ArrayList<Power>();
-        	
+
         // calculate the power for either one or two tails
         for(Double alpha : studentsTParams.getAlphaList())
         {
@@ -216,48 +216,48 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
                 {
                     for(Integer sampleSize : studentsTParams.getSampleSizeList())
                     {
-        				try
-        				{
-        					results.add(simulatePower(alpha.doubleValue(), means.mu0, means.muA,
-        							sigma.doubleValue(), sampleSize.intValue(), studentsTParams.isTwoTailed(), iterations));
-        				}
-        				catch (Exception me)
-        				{
-        					// TODO: how to handle this?
-        				}
-        			}
-        		}
-        	}
+                        try
+                        {
+                            results.add(simulatePower(alpha.doubleValue(), means.mu0, means.muA,
+                                    sigma.doubleValue(), sampleSize.intValue(), studentsTParams.isTwoTailed(), iterations));
+                        }
+                        catch (Exception me)
+                        {
+                            // TODO: how to handle this?
+                        }
+                    }
+                }
+            }
         }
 
         return results;
-	}
+    }
 
-	/**
-	 * Calculate power for the one sample student's t test
-	 * 
-	 * @see OneSampleStudentsTPower
-	 * @param alpha type I error
-	 * @param mu0 mean under the null hypothesis
-	 * @param muA mean under the alternative hypothesis
-	 * @param sigma standard deviation
-	 * @param sampleSize total sample size
-	 * @param isTwoTail if true, power will be calculated for a a two tailed test
-	 * @return power object
-	 * @throws MathException
-	 */
-	protected OneSampleStudentsTPower calculatePower(double alpha, double mu0, double muA, 
-			double sigma, int sampleSize, boolean isTwoTail)
-	{
-        // calculate the degrees of freedom 
+    /**
+     * Calculate power for the one sample student's t test
+     *
+     * @see OneSampleStudentsTPower
+     * @param alpha type I error
+     * @param mu0 mean under the null hypothesis
+     * @param muA mean under the alternative hypothesis
+     * @param sigma standard deviation
+     * @param sampleSize total sample size
+     * @param isTwoTail if true, power will be calculated for a a two tailed test
+     * @return power object
+     * @throws MathException
+     */
+    protected OneSampleStudentsTPower calculatePower(double alpha, double mu0, double muA,
+            double sigma, int sampleSize, boolean isTwoTail)
+    {
+        // calculate the degrees of freedom
         int df = sampleSize - 1;
-        // get the critical t for specified alpha level in H0 distribution (central T) 
+        // get the critical t for specified alpha level in H0 distribution (central T)
         StudentsT tdist = new StudentsT(df);
-    	// calculate the difference of means 
+        // calculate the difference of means
         double meanDiff = Math.abs(mu0 - muA);
         // the resulting power value
         double power = Double.NaN;
-        
+
         if (isTwoTail)
         {
             double tAlphaLower = tdist.inverseCdf(alpha/2);
@@ -267,34 +267,34 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
             power = nctdist.cdf(tAlphaLower) + 1 - nctdist.cdf(tAlphaUpper);
         }
         else
-        {        	
+        {
             double tAlpha = tdist.inverseCdf(alpha);
             double nonCentrality = -meanDiff*Math.sqrt(sampleSize)/sigma;
             NoncentralStudentsT nctdist = new NoncentralStudentsT(df, nonCentrality);
             power = nctdist.cdf(tAlpha);
         }
-        	
+
         return new OneSampleStudentsTPower(alpha, power, power, sampleSize, meanDiff, sigma);
-	
-	}
-    
-	 /**
-     * Calculate sample size for the one sample t test.  This function uses a bisection search algorithm 
+
+    }
+
+     /**
+     * Calculate sample size for the one sample t test.  This function uses a bisection search algorithm
      * to determine sample size.  The actual power is also calculated.
-     * 
-	 * @see OneSampleStudentsTPower
-	 * @param alpha type I error
-	 * @param mu0 mean under the null hypothesis
-	 * @param muA mean under the alternative hypothesis
-	 * @param sigma standard deviation
-	 * @param sampleSize total sample size
-	 * @param isTwoTail if true, power will be calculated for a a two tailed test
+     *
+     * @see OneSampleStudentsTPower
+     * @param alpha type I error
+     * @param mu0 mean under the null hypothesis
+     * @param muA mean under the alternative hypothesis
+     * @param sigma standard deviation
+     * @param sampleSize total sample size
+     * @param isTwoTail if true, power will be calculated for a a two tailed test
      * @return power object containing sample size results
      * @throws InvalidAlgorithmParameterException
      */
-	protected OneSampleStudentsTPower calculateSampleSize(double alpha, double mu0, double muA, 
-    		double sigma, double power, boolean isTwoTailed)
-	{
+    protected OneSampleStudentsTPower calculateSampleSize(double alpha, double mu0, double muA,
+            double sigma, double power, boolean isTwoTailed)
+    {
         /* validate the inputs */
         if (sigma < 0)
             throw new IllegalArgumentException("Invalid standard error: " + sigma);
@@ -302,10 +302,10 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
             throw new IllegalArgumentException("Invalid power: " + power);
         if (alpha <= 0 || alpha >= 1)
             throw new IllegalArgumentException("Invalid alpha level: " + alpha);
-        
+
         BisectionSolver solver = new BisectionSolver();
         SampleSizeFunction sampleSizeFunc = new SampleSizeFunction(mu0, muA, sigma, alpha, power, isTwoTailed);
-        
+
         try
         {
             int sampleSize = (int) Math.ceil(solver.solve(MAX_ITERATIONS,
@@ -318,33 +318,33 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
         {
             throw new IllegalArgumentException("Failed to calculate sample size: " + e.getMessage());
         }
-	}
-	
-	 /**
-     * Run a power simulation for the one sample t-test.  
-     * 
-	 * @see OneSampleStudentsTPower
-	 * @param alpha type I error
-	 * @param mu0 mean under the null hypothesis
-	 * @param muA mean under the alternative hypothesis
-	 * @param sigma standard deviation
-	 * @param sampleSize total sample size
-	 * @param isTwoTail if true, power will be calculated for a a two tailed test
-	 * @param simulationIterations number of iterations to run for the simulation
+    }
+
+     /**
+     * Run a power simulation for the one sample t-test.
+     *
+     * @see OneSampleStudentsTPower
+     * @param alpha type I error
+     * @param mu0 mean under the null hypothesis
+     * @param muA mean under the alternative hypothesis
+     * @param sigma standard deviation
+     * @param sampleSize total sample size
+     * @param isTwoTail if true, power will be calculated for a a two tailed test
+     * @param simulationIterations number of iterations to run for the simulation
      * @return power object containing sample size results
      * @throws InvalidAlgorithmParameterException
      */
-	protected OneSampleStudentsTPower simulatePower(double alpha, double mu0, double muA, 
-    		double sigma, int sampleSize, boolean isTwoTailed, int simulationIterations)
-	{
+    protected OneSampleStudentsTPower simulatePower(double alpha, double mu0, double muA,
+            double sigma, int sampleSize, boolean isTwoTailed, int simulationIterations)
+    {
         // calculate degrees of freedom
         int df = sampleSize-1;
-        // create a central t distribution 
+        // create a central t distribution
         StudentsT tdist = new StudentsT(df);
 
         // number of times the null hypothesis is correctly rejected during the simulation
         int rejections = 0;
-        
+
         if (isTwoTailed)
         {
             // run the simulation
@@ -360,7 +360,7 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
                 if (p <= alpha) rejections++;
             }
         }
-        else 
+        else
         {
             // run the simulation
             for(int i = 0; i < simulationIterations; i++)
@@ -375,10 +375,10 @@ public class OneSampleStudentsTPowerCalculator implements PowerCalculator
                 if (p <= alpha) rejections++;
             }
         }
-        
+
         double power = (double)rejections/(double)simulationIterations;
-        
+
         return new OneSampleStudentsTPower(alpha, power, power, sampleSize, Math.abs(mu0 - muA), sigma);
-	}
-    
+    }
+
 }
