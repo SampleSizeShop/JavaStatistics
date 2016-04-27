@@ -177,9 +177,9 @@ public class NonCentralityDistribution
             // calculate theta difference
 //            RealMatrix theta0 = params.getTheta();
             RealMatrix C = CFixedRand.getCombinedMatrix();
-//            RealMatrix B = params.getScaledBeta();
+//            RealMatrix beta = params.getScaledBeta();
 //            RealMatrix U = params.getWithinSubjectContrast();
-            // thetaHat = C * Beta * U
+            // thetaHat = C * beta * U
             RealMatrix thetaHat = C.multiply(beta.multiply(U));
             // thetaHat - thetaNull.
             RealMatrix thetaDiff = thetaHat.subtract(thetaNull);
