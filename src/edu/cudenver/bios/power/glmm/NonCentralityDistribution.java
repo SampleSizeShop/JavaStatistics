@@ -151,16 +151,15 @@ public class NonCentralityDistribution
         this.sigmaG = sigmaG;
 
         // calculate intermediate matrices
+//        RealMatrix FEssence = params.getDesignEssence().getFullDesignMatrixFixed();
         this.N = FEssence.getRowDimension() * perGroupN;
         this.exact = exact;
         try
         {
             // TODO: need to calculate H0, need to adjust H1 for Unirep
             // get design matrix for fixed parameters only
-//            RealMatrix F = params.getDesignEssence().getFullDesignMatrixFixed();
             qF = FEssence.getColumnDimension();
             a = CFixedRand.getCombinedMatrix().getRowDimension();
-//            N = F.getRowDimension();
             // get fixed contrasts
             RealMatrix Cfixed = CFixedRand.getFixedMatrix();
             RealMatrix CGaussian = CFixedRand.getRandomMatrix();
@@ -171,11 +170,10 @@ public class NonCentralityDistribution
             }
             //CF*FPFINV*CF`
             RealMatrix PPt = Cfixed.multiply(FtFinverse.scalarMultiply(1/(double) perGroupN)).multiply(Cfixed.transpose());
-           // RealMatrix PPt = Cfixed.multiply(FtFinverse).multiply(FEssence.transpose());
             T1 = new LUDecomposition(PPt).getSolver().getInverse();
             FT1 = new CholeskyDecomposition(T1).getL();
             // calculate theta difference
-//            RealMatrix theta0 = params.getTheta();
+//            RealMatrix thetaNull = params.getTheta();
             RealMatrix C = CFixedRand.getCombinedMatrix();
 //            RealMatrix beta = params.getScaledBeta();
 //            RealMatrix U = params.getWithinSubjectContrast();
