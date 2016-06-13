@@ -35,6 +35,7 @@ import edu.cudenver.bios.distribution.ChiSquareTerm;
 import edu.cudenver.bios.distribution.NonCentralFDistribution;
 import edu.cudenver.bios.distribution.WeightedSumOfNoncentralChiSquaresDistribution;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.matrix.MatrixUtilities;
 import edu.cudenver.bios.power.PowerErrorEnum;
 import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
@@ -171,6 +172,8 @@ public class NonCentralityDistribution
             //CF*FPFINV*CF`
             RealMatrix PPt = Cfixed.multiply(FtFinverse.scalarMultiply(1/(double) perGroupN)).multiply(Cfixed.transpose());
             T1 = new LUDecomposition(PPt).getSolver().getInverse();
+            // per Keith: mathematically, T1 must be symmetric at this point
+            MatrixUtilities.forceSymmetric(T1);
             FT1 = new CholeskyDecomposition(T1).getL();
             // calculate theta difference
 //            RealMatrix thetaNull = params.getTheta();
@@ -217,6 +220,7 @@ public class NonCentralityDistribution
         }
         catch (Exception e)
         {
+            e.printStackTrace(System.out);
             throw new PowerException(e.getMessage(),
                     PowerErrorEnum.INVALID_DISTRIBUTION_NONCENTRALITY_PARAMETER);
         }
