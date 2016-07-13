@@ -40,8 +40,7 @@ import junit.framework.TestCase;
  * @author Sarah Kreidler
  *
  */
-public class TestHotellingLawleyApproximateQuantile extends TestCase
-{
+public class TestHotellingLawleyApproximateQuantile extends TestCase {
     private static final String DATA_FILE =  "data" + File.separator + "TestHotellingLawleyApproximateQuantile.xml";
     private static final String OUTPUT_FILE = "text" + File.separator + "results" +
     File.separator + "HotellingLawleyApproximateQuantileOutput.tex";
@@ -74,14 +73,10 @@ public class TestHotellingLawleyApproximateQuantile extends TestCase
 
     private PowerChecker checker;
 
-    public void setUp()
-    {
-        try
-        {
+    public void setUp() {
+        try {
             checker = new PowerChecker(DATA_FILE, true);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.err.println("Setup failed: " + e.getMessage());
             fail();
         }
@@ -90,26 +85,25 @@ public class TestHotellingLawleyApproximateQuantile extends TestCase
     /**
      * Compare the calculated HLT approximate quantile powers against simulation
      */
-    public void testPower()
-    {
+    public void testPower() {
         // build the inputs
         double[] beta5 = {
                 0.4997025,
                 0.8075886,
                 1.097641};
-        GLMMPowerParameters params5 = buildValidMultivariateRandomInputs(beta5, 5);
+        GLMMPowerParameters params5 = validMultivariateRandomInputs(beta5, 5);
         double[] beta25 = {
                 0.1651525,
                 0.2623301,
                 0.3508015
         };
-        GLMMPowerParameters params25 = buildValidMultivariateRandomInputs(beta25, 25);
+        GLMMPowerParameters params25 = validMultivariateRandomInputs(beta25, 25);
         double[] beta50 = {
                 0.1141548,
                 0.1812892,
                 0.2423835
         };
-        GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
+        GLMMPowerParameters params50 = validMultivariateRandomInputs(beta50, 50);
 
         checker.checkPower(params5);
         checker.checkPower(params25);
@@ -117,31 +111,45 @@ public class TestHotellingLawleyApproximateQuantile extends TestCase
 
           // output the results
         try {
-            // clear the beta scale list and per group N since this is described in the
-            // study design section and may be confusing if we list all the beta scales
-            // twice.
-            params50.clearBetaScaleList();
-            params50.clearSampleSizeList();
             ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
             reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
             reportBuilder.createValidationReportAsLaTex(
                     OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION,
-                    params50, checker);
+                    validMultivariateRandomInputs(), checker);
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
-
 
         assertTrue(checker.isSASDeviationBelowTolerance());
         checker.reset();
     }
 
     /**
-     * Builds matrices for a multivariate GLM with a baseline covariate
-     * Note, this matrix set matches the values produced in Table II from Glueck&Muller
+     * Builds matrices for a multivariate GLM with a baseline covariate.
+     *
+     * <p>
+     * Note: this matrix set matches the values produced in Table II from Glueck&Muller.
+     *
+     * @return The power parameters reflecting the matrices.
      */
-    private GLMMPowerParameters buildValidMultivariateRandomInputs(double[] betaScaleList, int repn)
-    {
+    private GLMMPowerParameters validMultivariateRandomInputs() {
+        return validMultivariateRandomInputs(null, 0);
+    }
+
+    /**
+     * Builds matrices for a multivariate GLM with a baseline covariate, incorporating
+     * a beta scale list and a sample size.
+     *
+     * <p>
+     * Note: this matrix set matches the values produced in Table II from Glueck&Muller
+     *
+     * @param betaScaleList The beta scale list.
+     * @param repn          The sample size.
+     *
+     * @return The power parameters reflecting the matrices, the beta scale list, and the
+     *         sample size.
+     */
+    private GLMMPowerParameters validMultivariateRandomInputs(double[] betaScaleList, int repn) {
         GLMMPowerParameters params = new GLMMPowerParameters();
 
         // add quantile power method
@@ -154,19 +162,20 @@ public class TestHotellingLawleyApproximateQuantile extends TestCase
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
-        int P = 3;
-        int Q = 3;
         // create design matrix
-        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(Q));
+        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(3));
+
         // add sample size multipliers
         //  for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
-        params.addSampleSize(repn);
+        if (repn != 0) {
+            params.addSampleSize(repn);
+        }
+
         // build sigma G matrix
         double[][] sigmaG = {{1}};
         params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
 
         // build sigma Y matrix
-        double rho = 0.4;
         double [][] sigmaY = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         params.setSigmaOutcome(new Array2DRowRealMatrix(sigmaY));
 
@@ -181,8 +190,11 @@ public class TestHotellingLawleyApproximateQuantile extends TestCase
         double [][] beta = {{1,0,0,0},{0,2,0,0},{0,0,0,0}};
         double [][] betaRandom = {{1,1,1,1}};
         params.setBeta(new FixedRandomMatrix(beta, betaRandom, false));
+
         // add beta scale values
-        for(double betaScale: betaScaleList) params.addBetaScale(betaScale);
+        if (betaScaleList != null) {
+            for(double betaScale: betaScaleList) params.addBetaScale(betaScale);
+        }
 
         // build theta null matrix
         double [][] theta0 = {{0,0,0,0},{0,0,0,0}};
