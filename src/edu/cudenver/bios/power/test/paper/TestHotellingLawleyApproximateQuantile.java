@@ -70,6 +70,7 @@ public class TestHotellingLawleyApproximateQuantile extends TestCase {
             "\\hangindent2em\n\\hangafter=1\n Glueck, D. H., \\& Muller, K. E. (2003). " +
             "Adjusting power for a baseline covariate in linear models. \\emph{Statistics " +
             "in Medicine}, \\emph{22}(16), 2535-2551.\n\n";
+    private static final double TOLERANCE = 5e-5;
 
     private PowerChecker checker;
 
@@ -120,7 +121,7 @@ public class TestHotellingLawleyApproximateQuantile extends TestCase {
             System.err.println(e.getMessage());
         }
 
-        assertTrue(checker.isSASDeviationBelowTolerance());
+        assertTrue("results outside tolerance: " + TOLERANCE, checker.isSASDeviationBelowTolerance(TOLERANCE));
         checker.reset();
     }
 
