@@ -1,8 +1,8 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
- * Copyright (C) 2015 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -50,57 +50,57 @@ import static org.junit.Assert.fail;
 /**
  * Test case for approximate quantile power for the HLT.  Values should match
  * approximate median power values from Table II in Glueck & Muller 2003.
- * 
+ *
  * @author Sarah Kreidler
  *
  */
 public class HotellingLawleyApproximateQuantileTest {
 
-	private static final String DATA_FILE =  "TestHotellingLawleyApproximateQuantile.xml";
-	private static final String OUTPUT_FILE = "text" + File.separator + "results" + 
-	File.separator + "HotellingLawleyApproximateQuantileOutput.tex";
-	private static final String TITLE = "GLMM(F, g) Example 1. Median power for the " +
-			"Hotelling-Lawley Trace, using the Satterthwaite approximation";
-	private static final double[] ALPHA_LIST = {0.05};    
-	private static final double[] SIGMA_SCALE_LIST = {1};	
+    private static final String DATA_FILE =  "TestHotellingLawleyApproximateQuantile.xml";
+    private static final String OUTPUT_FILE = "text" + File.separator + "results" +
+    File.separator + "HotellingLawleyApproximateQuantileOutput.tex";
+    private static final String TITLE = "GLMM(F, g) Example 1. Median power for the " +
+            "Hotelling-Lawley Trace, using the Satterthwaite approximation";
+    private static final double[] ALPHA_LIST = {0.05};
+    private static final double[] SIGMA_SCALE_LIST = {1};
 
     private static final double TEST_TOLERANCE = 0.001;
 
     private PowerChecker checker;
 
     @Before
-	public void setUp() throws ParserConfigurationException, IOException, SAXException {
+    public void setUp() throws ParserConfigurationException, IOException, SAXException {
         List<GLMMPower> sasPowers = Utils.readSasPowers(DATA_FILE);
         checker = new PowerChecker(sasPowers, false);
-	}
-	
-	/**
-	 * Compare the calculated HLT approximate quantile powers against simulation
-	 */
+    }
+
+    /**
+     * Compare the calculated HLT approximate quantile powers against simulation
+     */
     @Test
-	public void testPower() throws IOException {
-		// build the inputs
+    public void testPower() throws IOException {
+        // build the inputs
         double[] beta5 = {
-				0.4997025,
-				0.8075886,
-				1.097641};
-		GLMMPowerParameters params5 = buildValidMultivariateRandomInputs(beta5, 5);
-		double[] beta25 = {
-				0.1651525,
-				0.2623301, 
-				0.3508015
-		};
-		GLMMPowerParameters params25 = buildValidMultivariateRandomInputs(beta25, 25);
-		double[] beta50 = {
-				0.1141548,
-				0.1812892,
-				0.2423835
-		};
-		GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
+                0.4997025,
+                0.8075886,
+                1.097641};
+        GLMMPowerParameters params5 = buildValidMultivariateRandomInputs(beta5, 5);
+        double[] beta25 = {
+                0.1651525,
+                0.2623301,
+                0.3508015
+        };
+        GLMMPowerParameters params25 = buildValidMultivariateRandomInputs(beta25, 25);
+        double[] beta50 = {
+                0.1141548,
+                0.1812892,
+                0.2423835
+        };
+        GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
 
         checker.checkPower(params5);
-		checker.checkPower(params25);
-		checker.checkPower(params50);
+        checker.checkPower(params25);
+        checker.checkPower(params50);
 
         // output the results
         // clear the beta scale list and per group N since this is described in the
@@ -111,71 +111,71 @@ public class HotellingLawleyApproximateQuantileTest {
         ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
         reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
 
-		assertTrue("results outside tolerance: " + TEST_TOLERANCE, checker.isSASDeviationBelowTolerance(TEST_TOLERANCE));
-		checker.reset();	
-	}
+        assertTrue("results outside tolerance: " + TEST_TOLERANCE, checker.isSASDeviationBelowTolerance(TEST_TOLERANCE));
+        checker.reset();
+    }
 
-	/**
-	 * Builds matrices for a multivariate GLM with a baseline covariate
-	 * Note, this matrix set matches the values produced in Table II from Glueck&Muller
-	 */
-	private GLMMPowerParameters buildValidMultivariateRandomInputs(double[] betaScaleList, int repn)
-	{
-		GLMMPowerParameters params = new GLMMPowerParameters();
+    /**
+     * Builds matrices for a multivariate GLM with a baseline covariate
+     * Note, this matrix set matches the values produced in Table II from Glueck&Muller
+     */
+    private GLMMPowerParameters buildValidMultivariateRandomInputs(double[] betaScaleList, int repn)
+    {
+        GLMMPowerParameters params = new GLMMPowerParameters();
 
-		// add quantile power method
-		params.addPowerMethod(PowerMethod.QUANTILE_POWER);
-		params.addQuantile(0.5);
-		
-		// add HLT as the statistical test
-		params.addTest(GLMMTestFactory.Test.HOTELLING_LAWLEY_TRACE);
+        // add quantile power method
+        params.addPowerMethod(PowerMethod.QUANTILE_POWER);
+        params.addQuantile(0.5);
 
-		// add alpha values
-		for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
+        // add HLT as the statistical test
+        params.addTest(GLMMTestFactory.Test.HOTELLING_LAWLEY_TRACE);
 
-		int P = 3;
-		int Q = 3;
-		// create design matrix
-		params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(Q));
-		// add sample size multipliers
-		//  for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
-		params.addSampleSize(repn);
-		// build sigma G matrix
-		double[][] sigmaG = {{1}};
-		params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
+        // add alpha values
+        for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
-		// build sigma Y matrix
-		double rho = 0.4;
-		double [][] sigmaY = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
-		params.setSigmaOutcome(new Array2DRowRealMatrix(sigmaY));
+        int P = 3;
+        int Q = 3;
+        // create design matrix
+        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(Q));
+        // add sample size multipliers
+        //  for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
+        params.addSampleSize(repn);
+        // build sigma G matrix
+        double[][] sigmaG = {{1}};
+        params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
 
-		// build sigma YG
-		double [][] sigmaYG = {{0.5},{0.5}, {0.5}, {0}};
-		params.setSigmaOutcomeGaussianRandom(new Array2DRowRealMatrix(sigmaYG));
+        // build sigma Y matrix
+        double rho = 0.4;
+        double [][] sigmaY = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
+        params.setSigmaOutcome(new Array2DRowRealMatrix(sigmaY));
 
-		// add sigma scale values
-		for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
+        // build sigma YG
+        double [][] sigmaYG = {{0.5},{0.5}, {0.5}, {0}};
+        params.setSigmaOutcomeGaussianRandom(new Array2DRowRealMatrix(sigmaYG));
 
-		// build beta matrix
-		double [][] beta = {{1,0,0,0},{0,2,0,0},{0,0,0,0}};
-		double [][] betaRandom = {{1,1,1,1}};
-		params.setBeta(new FixedRandomMatrix(beta, betaRandom, false));
-		// add beta scale values
-		for(double betaScale: betaScaleList) params.addBetaScale(betaScale);
+        // add sigma scale values
+        for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
 
-		// build theta null matrix
-		double [][] theta0 = {{0,0,0,0},{0,0,0,0}};
-		params.setTheta(new Array2DRowRealMatrix(theta0));
+        // build beta matrix
+        double [][] beta = {{1,0,0,0},{0,2,0,0},{0,0,0,0}};
+        double [][] betaRandom = {{1,1,1,1}};
+        params.setBeta(new FixedRandomMatrix(beta, betaRandom, false));
+        // add beta scale values
+        for(double betaScale: betaScaleList) params.addBetaScale(betaScale);
 
-		// build between subject contrast
-		double [][] between = {{-1,1,0}, {-1,0,1}};
-		double[][] betweenRandom = {{0}, {0}};
-		params.setBetweenSubjectContrast(new FixedRandomMatrix(between, betweenRandom, true));
+        // build theta null matrix
+        double [][] theta0 = {{0,0,0,0},{0,0,0,0}};
+        params.setTheta(new Array2DRowRealMatrix(theta0));
 
-		// build within subject contrast
-		double [][] within = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
-		params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
+        // build between subject contrast
+        double [][] between = {{-1,1,0}, {-1,0,1}};
+        double[][] betweenRandom = {{0}, {0}};
+        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, betweenRandom, true));
 
-		return params;     
-	}
+        // build within subject contrast
+        double [][] within = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
+        params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
+
+        return params;
+    }
 }
