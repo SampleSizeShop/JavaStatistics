@@ -1,7 +1,7 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
+ *
  * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
@@ -49,28 +49,28 @@ import static org.junit.Assert.assertTrue;
  */
 public class ConditionalOrthogonalPolynomial1FactorTest {
 
-	private static final String DATA_FILE =  "TestConditionalOrthogonalPolynomial1Factor.xml";
-	private static final String TITLE = "GLMM(F) Example 7. Power for a time by " +
-			"treatment interaction using orthogonal polynomial contrast for time";
+    private static final String DATA_FILE =  "TestConditionalOrthogonalPolynomial1Factor.xml";
+    private static final String TITLE = "GLMM(F) Example 7. Power for a time by " +
+            "treatment interaction using orthogonal polynomial contrast for time";
     private static final double TOLERANCE = 0.000001;
 
-	private PowerChecker checker;
-	private boolean verbose = false;
+    private PowerChecker checker;
+    private boolean verbose = false;
 
     @Before
     public void setUp() {
         List<GLMMPower> sasPowers = Utils.readSasPowers(DATA_FILE);
         checker = new PowerChecker(sasPowers, false);
     }
-	
+
     /**
      * Test GLMM(F) with polynomial contrasts in U matrix
      */
     @Test
     public void testPolynomial1Factor() {
-        // build the inputs        
+        // build the inputs
         GLMMPowerParameters params = new GLMMPowerParameters();
-        
+
         // add tests
         for(GLMMTestFactory.Test test: GLMMTestFactory.Test.values()) {
             params.addTest(test);
@@ -93,38 +93,38 @@ public class ConditionalOrthogonalPolynomial1FactorTest {
         double rho = 0.375;
         double var = 1.5;
         double [][] sigma = {
-        		{var,rho,rho,rho,rho},
-        		{rho,var,rho,rho,rho},
-        		{rho,rho,var,rho,rho},
-        		{rho,rho,rho,var,rho},
-        		{rho,rho,rho,rho,var}
+                {var,rho,rho,rho,rho},
+                {rho,var,rho,rho,rho},
+                {rho,rho,var,rho,rho},
+                {rho,rho,rho,var,rho},
+                {rho,rho,rho,rho,var}
         };
         params.setSigmaError(new Array2DRowRealMatrix(sigma));
         // add sigma scale values
         params.addSigmaScale(1);
-        
+
         // build design matrix
         params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(2));
         // add sample size multipliers
         params.addSampleSize(10);
         params.addSampleSize(20);
         params.addSampleSize(40);
-        
+
         // build between subject contrast
         double [][] between = {{1,-1}};
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
-        
+
         // build within subject contrast
         double[] times ={2, 4 ,6, 8, 10};
         String name = "times";
         ArrayList<Factor> factorList = new ArrayList<Factor>();
         Factor timeFactor = new Factor(name, times);
         factorList.add(timeFactor);
-        RealMatrix U = 
-        	OrthogonalPolynomials.withinSubjectContrast(factorList).getMainEffectContrast(timeFactor).getContrastMatrix();
+        RealMatrix U =
+            OrthogonalPolynomials.withinSubjectContrast(factorList).getMainEffectContrast(timeFactor).getContrastMatrix();
         if (verbose) printMatrix("U Matrix", U);
         params.setWithinSubjectContrast(U);
-        
+
         checker.checkPower(params);
 
         ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
@@ -132,21 +132,21 @@ public class ConditionalOrthogonalPolynomial1FactorTest {
         assertTrue("results outside tolerance: " + TOLERANCE, checker.isSASDeviationBelowTolerance(TOLERANCE));
     }
 
-	/**
-	 * Write the matrix to std out
-	 * @param m
-	 */
-	private void printMatrix(String title, RealMatrix m)
-	{
-		System.out.println(title);
-	    DecimalFormat Number = new DecimalFormat("#0.000");
-		for(int row = 0; row < m.getRowDimension(); row++)
-		{
-			for(int col= 0; col < m.getColumnDimension(); col++)
-			{
-				System.out.print(Number.format(m.getEntry(row, col)) + "\t");
-			}
-			System.out.print("\n");
-		}
-	}
+    /**
+     * Write the matrix to std out
+     * @param m
+     */
+    private void printMatrix(String title, RealMatrix m)
+    {
+        System.out.println(title);
+        DecimalFormat Number = new DecimalFormat("#0.000");
+        for(int row = 0; row < m.getRowDimension(); row++)
+        {
+            for(int col= 0; col < m.getColumnDimension(); col++)
+            {
+                System.out.print(Number.format(m.getEntry(row, col)) + "\t");
+            }
+            System.out.print("\n");
+        }
+    }
 }
