@@ -1,7 +1,7 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
+ *
  * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
@@ -93,7 +93,7 @@ public class ConditionalOrthogonalPolynomial3FactorTest {
 
 
     /**
-     * Test GLMM(F) with 1,2, and 3 Factor polynomial 
+     * Test GLMM(F) with 1,2, and 3 Factor polynomial
      * contrasts in C and U matrices
      */
     @Test
@@ -116,11 +116,11 @@ public class ConditionalOrthogonalPolynomial3FactorTest {
             betweenFactorList.add(factorA);
             betweenFactorList.add(factorB);
             betweenFactorList.add(factorC);
-            OrthogonalPolynomialContrastCollection withinSubjectContrasts = 
+            OrthogonalPolynomialContrastCollection withinSubjectContrasts =
                     OrthogonalPolynomials.withinSubjectContrast(withinFactorList);
-            OrthogonalPolynomialContrastCollection betweenSubjectContrasts = 
+            OrthogonalPolynomialContrastCollection betweenSubjectContrasts =
                     OrthogonalPolynomials.betweenSubjectContrast(betweenFactorList);
-            // run power for 1 factor contrasts		
+            // run power for 1 factor contrasts
             RealMatrix U = withinSubjectContrasts.getMainEffectContrast(factorD).getContrastMatrix();
             RealMatrix C = betweenSubjectContrasts.getMainEffectContrast(factorA).getContrastMatrix();
             RealMatrix thetaNull = MatrixUtils.getRealMatrixWithFilledValue(C.getRowDimension(),U.getColumnDimension(), 0);
@@ -152,7 +152,7 @@ public class ConditionalOrthogonalPolynomial3FactorTest {
                 appendMatrix("\\mathbf{C}'", C.transpose());
                 appendMatrix("\\mathbf{U}", U);
             }
-            
+
             // run power for 3 factor contrasts
             intFactors.clear();
             intFactors.add(factorD);
@@ -195,21 +195,21 @@ public class ConditionalOrthogonalPolynomial3FactorTest {
      * @return
      */
     private GLMMPowerParameters buildInputsWithoutContrasts()
-    {    	
+    {
         int Q = dataD.length * dataE.length * dataF.length;
         int P = dataA.length * dataB.length * dataC.length;
-        // build the inputs        
+        // build the inputs
         GLMMPowerParameters params = new GLMMPowerParameters();
 
         // add alpha values - bonferroni corrected for 6 comparisons
         params.addAlpha(0.05);
 
-        // build the design matrix 
+        // build the design matrix
         params.setDesignEssence(org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(Q));
         // add a concise representation of the design matrix to the alt matrix string
         matrixAltStringBuffer.append("\\begin{eqnarray*}\n");
-        matrixAltStringBuffer.append("\\underset{\\left("+ Q + 
-                "\\times" + Q + "\\right)}{\\text{Es}\\left(\\mathbf{X}\\right)} & = & I_{" 
+        matrixAltStringBuffer.append("\\underset{\\left("+ Q +
+                "\\times" + Q + "\\right)}{\\text{Es}\\left(\\mathbf{X}\\right)} & = & I_{"
                 + Q + "}\n");
         matrixAltStringBuffer.append("\\end{eqnarray*}\n");
         // build beta matrix
@@ -218,8 +218,8 @@ public class ConditionalOrthogonalPolynomial3FactorTest {
         params.setBeta(new FixedRandomMatrix(beta.getData(), null, false));
         // add latex to represent matrix
         matrixAltStringBuffer.append("\\begin{eqnarray*}\n");
-        matrixAltStringBuffer.append("\\underset{\\left("+ Q + 
-                "\\times" + P + "\\right)}{\\mathbf{B}} & = & " + 
+        matrixAltStringBuffer.append("\\underset{\\left("+ Q +
+                "\\times" + P + "\\right)}{\\mathbf{B}} & = & " +
                 "\\begin{bmatrix}1 & 0 & \\ldots & 0\\\\\n" +
                 "0 &  &  & \\vdots\\\\\n" +
                 "\\vdots &  &  & \\vdots\\\\\n" +
@@ -235,8 +235,8 @@ public class ConditionalOrthogonalPolynomial3FactorTest {
         double [][] theta0 = {{0,0,0,0}};
         params.setTheta(new Array2DRowRealMatrix(theta0));
         matrixAltStringBuffer.append("\\begin{eqnarray*}\n");
-        matrixAltStringBuffer.append("\\underset{\\left("+ 1 + 
-                "\\times" + 4 + "\\right)}{\\mathbf{\\Theta}_{0}} & = & " + 
+        matrixAltStringBuffer.append("\\underset{\\left("+ 1 +
+                "\\times" + 4 + "\\right)}{\\mathbf{\\Theta}_{0}} & = & " +
                 "\\begin{bmatrix}0 & 0 & 0 & 0\n" +
                 "\\end{bmatrix}\n");
         matrixAltStringBuffer.append("\\end{eqnarray*}\n");
@@ -247,8 +247,8 @@ public class ConditionalOrthogonalPolynomial3FactorTest {
         // add sigma scale values
         params.addSigmaScale(1);
         matrixAltStringBuffer.append("\\begin{eqnarray*}\n");
-        matrixAltStringBuffer.append("\\underset{\\left("+ P + 
-                "\\times" + P + "\\right)}{\\mathbf{\\Sigma}_{E}} & = & " + 
+        matrixAltStringBuffer.append("\\underset{\\left("+ P +
+                "\\times" + P + "\\right)}{\\mathbf{\\Sigma}_{E}} & = & " +
                 "\\begin{bmatrix}1 & 2 & 3 & \\ldots & " + P + "\n" +
                 "\\end{bmatrix} \\times I_{"+P+"}\n");
         matrixAltStringBuffer.append("\\end{eqnarray*}\n");
@@ -258,7 +258,7 @@ public class ConditionalOrthogonalPolynomial3FactorTest {
         //params.addSampleSize(2);
         return params;
     }
-    
+
     /**
      * Write a matrix in latex
      * @param section
@@ -269,8 +269,8 @@ public class ConditionalOrthogonalPolynomial3FactorTest {
             RealMatrix matrix) {
         matrixAltStringBuffer.append("\\begin{eqnarray*}\n");
         // add name label
-        matrixAltStringBuffer.append("\\underset{\\left("+ matrix.getRowDimension() + 
-                "\\times" + matrix.getColumnDimension() + "\\right)}{" + name + 
+        matrixAltStringBuffer.append("\\underset{\\left("+ matrix.getRowDimension() +
+                "\\times" + matrix.getColumnDimension() + "\\right)}{" + name +
                 "} & = & \\begin{bmatrix}");
         for(int r = 0; r < matrix.getRowDimension(); r++) {
             boolean first = true;
