@@ -64,7 +64,7 @@ public class HotellingLawleyApproximateQuantileTest {
     private static final double[] ALPHA_LIST = {0.05};
     private static final double[] SIGMA_SCALE_LIST = {1};
 
-    private static final double TEST_TOLERANCE = 0.001;
+    private static final double TOLERANCE = 0.001;
 
     private PowerChecker checker;
 
@@ -111,7 +111,7 @@ public class HotellingLawleyApproximateQuantileTest {
         ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
         reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
 
-        assertTrue("results outside tolerance: " + TEST_TOLERANCE, checker.isSASDeviationBelowTolerance(TEST_TOLERANCE));
+        assertTrue("results outside tolerance: " + TOLERANCE, checker.isSASDeviationBelowTolerance(TOLERANCE));
         checker.reset();
     }
 

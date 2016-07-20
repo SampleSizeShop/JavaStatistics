@@ -50,7 +50,7 @@ public class HotellingLawleyExactQuantileTest {
             "Hotelling-Lawley Trace, using Davies algorithm";
     private static final double[] ALPHA_LIST = {0.05};
     private static final double[] SIGMA_SCALE_LIST = {1};
-    private static final double TEST_TOLERANCE = 0.0001;
+    private static final double TOLERANCE = 0.0001;
 
     private PowerChecker checker;
 
@@ -97,7 +97,7 @@ public class HotellingLawleyExactQuantileTest {
             params50.clearSampleSizeList();
             ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
             reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
-        assertTrue(checker.isSASDeviationBelowTolerance(TEST_TOLERANCE));
+        assertTrue(checker.isSASDeviationBelowTolerance(TOLERANCE));
     }
 
     /**
