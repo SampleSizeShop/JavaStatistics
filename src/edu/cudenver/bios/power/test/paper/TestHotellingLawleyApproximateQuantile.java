@@ -2,7 +2,7 @@
  * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
  *
- * Copyright (C) 2010 Regents of the University of Colorado.
+ * Copyright (C) 2016 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -26,7 +26,7 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.MatrixUtils;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
+import edu.cudenver.bios.power.glmm.GLMMTestFactory;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.test.PowerChecker;
@@ -110,7 +110,7 @@ public class TestHotellingLawleyApproximateQuantile extends TestCase {
         checker.checkPower(params25);
         checker.checkPower(params50);
 
-          // output the results
+        // output the results
         try {
             ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
             reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
@@ -142,7 +142,7 @@ public class TestHotellingLawleyApproximateQuantile extends TestCase {
      * a beta scale list and a sample size.
      *
      * <p>
-     * Note: this matrix set matches the values produced in Table II from Glueck&Muller
+     * Note: this matrix set matches the values produced in Table II from Glueck&Muller.
      *
      * @param betaScaleList The beta scale list.
      * @param repn          The sample size.
@@ -158,7 +158,7 @@ public class TestHotellingLawleyApproximateQuantile extends TestCase {
         params.addQuantile(0.5);
 
         // add HLT as the statistical test
-        params.addTest(Test.HOTELLING_LAWLEY_TRACE);
+        params.addTest(GLMMTestFactory.Test.HOTELLING_LAWLEY_TRACE);
 
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
