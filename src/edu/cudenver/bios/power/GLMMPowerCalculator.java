@@ -979,6 +979,9 @@ public class GLMMPowerCalculator implements PowerCalculator
                 lowerBound++;
                 try {
                     glmmTest.setPerGroupSampleSize(lowerBound);
+                    if (nonCentralityDist != null) {
+                        nonCentralityDist.setPerGroupSampleSize(lowerBound);
+                    }
                     calculatedPower =
                             getPowerByType(glmmTest, nonCentralityDist, method, alpha, quantile);
                     // if we don't throw an exception, then we have a valid minimum
