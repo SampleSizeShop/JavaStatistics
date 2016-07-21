@@ -728,7 +728,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     private double getUnconditionalPower(GLMMTest glmmTest,
             NonCentralityDistribution nonCentralityDist, double alpha)
                     throws IllegalArgumentException
-                    {
+    {
         // get the approximate critical F value (central F) under the null hypothesis
         double Fcrit = glmmTest.getCriticalF(GLMMTest.DistributionType.POWER_NULL, alpha);
 
@@ -756,7 +756,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         {
             throw new IllegalArgumentException("Failed to integrate over non-centrality parameter: " + e.getMessage());
         }
-                    }
+    }
 
     /**
      * Calculate quantile power by determining a specified quantile
@@ -988,6 +988,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                     break;
                 } catch (Exception e) {
                     // just keep iterating until we find a minimum valid sample size
+                    logger.warn("Exception getting power by type: " + e.getMessage(), e);
                 }
             } while (lowerBound < upperN && !Thread.currentThread().isInterrupted());
             return new SampleSizeBound(lowerBound, calculatedPower);
