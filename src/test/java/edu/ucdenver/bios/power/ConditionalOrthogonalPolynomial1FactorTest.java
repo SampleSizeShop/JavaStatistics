@@ -129,7 +129,8 @@ public class ConditionalOrthogonalPolynomial1FactorTest {
 
         ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
         reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
-        assertTrue("results outside tolerance: " + TOLERANCE, checker.isSASDeviationBelowTolerance(TOLERANCE));
+        assertTrue("SAS deviation " + checker.getMaxSasDeviation() + " is not below tolerance " + TOLERANCE,
+                    checker.isSASDeviationBelowTolerance(TOLERANCE));
     }
 
     /**
