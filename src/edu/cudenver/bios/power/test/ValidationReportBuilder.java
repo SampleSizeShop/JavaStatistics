@@ -69,7 +69,7 @@ public class ValidationReportBuilder {
             "Summary statistics show the maximum absolute deviation between the power value calculated " +
             "by the JavaStatistics library and the results obtained from SAS or via simulation.  The table in " +
             "Section 3.3 shows the deviation values for each individual power comparison.  Deviations larger " +
-            "than $10^{-6}$ from SAS power values and $0.05$ for simulated power values are displayed in red.\n\n ";
+            "than $10^{-5}$ from SAS power values and $0.05$ for simulated power values are displayed in red.\n\n ";
     private static final String REFERENCES = "\\section*{References}\n\n" +
             "\\hangindent2em\n\\hangafter=1\n Glueck, D. H., \\& Muller, K. E. (2003). " +
             "Adjusting power for a baseline covariate in linear models. \\emph{Statistics " +
