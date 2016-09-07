@@ -48,7 +48,7 @@ public class MatrixUtilities {
      * @param rm    The RealMatrix.
      */
     public static void dump(String label, RealMatrix rm) {
-        System.out.println("== " + label);
+        System.out.println("== " + label + " (" + rm.getRowDimension() + " x " + rm.getColumnDimension() + ")");
 
         for (int i = 0, m = rm.getRowDimension(); i < m; ++ i) {
             System.out.print("  ");
