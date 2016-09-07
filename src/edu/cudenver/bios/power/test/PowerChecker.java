@@ -237,7 +237,7 @@ public class PowerChecker
         }
         catch (Exception e)
         {
-            System.err.println("Error in calculating power: " + e.getMessage());
+            e.printStackTrace(System.err);
         }
         long calcTime = System.currentTimeMillis() - startTime;
         if (verbose) System.out.println("Done.  Elapsed time: " +  ((double) calcTime / (double) 1000) + " seconds");
