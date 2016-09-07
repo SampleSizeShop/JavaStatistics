@@ -754,7 +754,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         }
         catch (Exception e)
         {
-            throw new IllegalArgumentException("Failed to integrate over non-centrality parameter: " + e.getMessage());
+            throw new IllegalArgumentException("Failed to integrate over non-centrality parameter", e);
         }
     }
 
