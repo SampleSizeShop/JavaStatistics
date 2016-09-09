@@ -798,6 +798,17 @@ public class GLMMPowerCalculator implements PowerCalculator
             double sigmaScale, double betaScale, double targetPower, double quantile)
                     throws PowerException {
 
+        if (method == PowerMethod.UNCONDITIONAL_POWER) {
+            GLMMPower power = new GLMMPower(test, alpha, targetPower, -1, -1,
+                    betaScale, sigmaScale, method, quantile, null);
+            power.setErrorMessage(
+                "We apologize; unconditional-power sample size calculations are temporarily disabled, for performance reasons. "
+              + "You may still request unconditional-power power calculations."
+            );
+            power.setErrorCode(PowerErrorEnum.POWER_METHOD_UNKNOWN);
+            return power;
+        }
+
         // rescale the beta and sigma matrices and create a test
         RealMatrix scaledBeta = params.getBeta().scalarMultiply(betaScale, true);
         RealMatrix scaledSigmaError = params.getSigmaError().scalarMultiply(sigmaScale);
