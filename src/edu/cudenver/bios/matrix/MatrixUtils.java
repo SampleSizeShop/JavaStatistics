@@ -455,16 +455,14 @@ public class MatrixUtils
      * The method determines if the given matrix is positive definite.
      * The matrix must be square.
      * @param matrix
-     * @param eigenTolerance is a double.  @see MatrixConstants.EIGEN_TOLERANCE
      * @return true if the matrix is positive definite.
      */
-    public static boolean isPositiveDefinite(RealMatrix matrix, double eigenTolerance){
+    public static boolean isPositiveDefinite(RealMatrix matrix){
         if( matrix == null || ! matrix.isSquare()){
             throw new IllegalArgumentException("Matrix must be non-null, " +
                     "square. ");
         }
-        double[] eigenValues = new EigenDecomposition(matrix, eigenTolerance)
-        .getRealEigenvalues();
+        double[] eigenValues = new EigenDecomposition(matrix).getRealEigenvalues();
 
         // if all eigenValues are positive, we return true
         boolean isPositiveDefinite = true;
