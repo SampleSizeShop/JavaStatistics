@@ -50,6 +50,8 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.parameters.PowerParameters;
 
+import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
+
 /**
  * Power calculator implementation for the general linear multivariate model
  *
@@ -541,7 +543,7 @@ public class GLMMPowerCalculator implements PowerCalculator
             // set the sigma error matrix to [sigmaY - sigmaYG * sigmaG-1 * sigmaGY]
             RealMatrix sigmaGY = sigmaYG.transpose();
             RealMatrix sigmaGInverse = new LUDecomposition(sigmaG).getSolver().getInverse();
-            params.setSigmaError(sigmaY.subtract(sigmaYG.multiply(sigmaGInverse.multiply(sigmaGY))));
+            params.setSigmaError(forceSymmetric(sigmaY.subtract(sigmaYG.multiply(sigmaGInverse.multiply(sigmaGY)))));
 
             // calculate the betaG matrix and fill in the placeholder row for the random predictor
             FixedRandomMatrix beta = params.getBeta();
