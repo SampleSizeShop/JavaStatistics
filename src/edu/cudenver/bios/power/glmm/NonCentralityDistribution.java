@@ -51,7 +51,6 @@ import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 public class NonCentralityDistribution
 {
     private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
-    private static final double TOLERANCE = 0.000000000001;
     private static final double ACCURACY = 0.001;
     // intermediate forms
     protected RealMatrix T1 = null;
@@ -194,7 +193,7 @@ public class NonCentralityDistribution
             // for a central F distribution.  The resulting F distribution is used as an approximation
             // for the distribution of the non-centrality parameter
             // See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details
-            EigenDecomposition sEigenDecomp = new EigenDecomposition(S, TOLERANCE);
+            EigenDecomposition sEigenDecomp = new EigenDecomposition(S);
             sEigenValues = sEigenDecomp.getRealEigenvalues();
             // calculate H0
             if (sEigenValues.length > 0) H0 = H1 * (1 - sEigenValues[0]);
