@@ -56,6 +56,8 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     protected int rankC = 0; // rank of C
     protected int rankU = 0; // rank of U
 
+    private double eigenTolerance = 1.0E-15;
+
     /* correction factors for sphericity
      * these differ for data analysis, power under the null and power under the alternative
      * also, the values depend on whether sigma is known or estimated
@@ -326,7 +328,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
 
         // get the eigen values of the normalized sigmaStar matrix
         sigmaStarEigenValues =
-            new EigenDecomposition(sigmaStar.scalarMultiply(1/sigmaStar.getTrace()), eigenTolerance).getRealEigenvalues();
+            new EigenDecomposition(sigmaStar.scalarMultiply(1/sigmaStar.getTrace())).getRealEigenvalues();
         if (sigmaStarEigenValues.length <= 0) throw new IllegalArgumentException("Failed to compute eigenvalues for sigma* matrix");
         Arrays.sort(sigmaStarEigenValues);
         // get the trace of sigma* and sigma* squared
