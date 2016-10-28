@@ -74,10 +74,13 @@ public class MatrixUtilities {
      *
      * @param rm The RealMatrix.
      *
+     * @return The same RealMatrix, modified if necessary
+     *         to be symmetric.
+     *
      * @throws NonSquareMatrixException if the RealMatrix is
      *                                  not square.
      */
-    public static void forceSymmetric(RealMatrix rm) {
+    public static RealMatrix forceSymmetric(RealMatrix rm) {
         int m = rm.getRowDimension();
         int n = rm.getColumnDimension();
 
@@ -92,5 +95,7 @@ public class MatrixUtilities {
                 rm.setEntry(j, i, value);
             }
         }
+
+        return rm;
     }
 }
