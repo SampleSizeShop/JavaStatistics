@@ -1002,7 +1002,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                     break;
                 } catch (Exception e) {
                     // just keep iterating until we find a minimum valid sample size
-                    logger.warn("Exception getting power by type: " + e.getMessage(), e);
+                    logger.info("Ignoring exception as we iterate to find a valid minimum:", e);
                 }
             } while (lowerBound < upperN && !Thread.currentThread().isInterrupted());
             return new SampleSizeBound(lowerBound, calculatedPower);
