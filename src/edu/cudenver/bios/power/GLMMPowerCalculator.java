@@ -82,8 +82,6 @@ public class GLMMPowerCalculator implements PowerCalculator
     // minimum difference still considered symmetric in Cholesky decomposition
     protected double symmetryThreshold =
             CholeskyDecomposition.DEFAULT_RELATIVE_SYMMETRY_THRESHOLD;
-    // eigen value decomposition tolerance
-    protected double eigenTolerance = 0.000000000001;
 
     private Logger logger = Logger.getLogger(getClass());
 
@@ -1653,14 +1651,4 @@ public class GLMMPowerCalculator implements PowerCalculator
     {
         this.symmetryThreshold = threshold;
     }
-
-    /**
-     * Set threshold for eigen value decomposition
-     * @param tolerance tolerance for eigen decomposition
-     */
-    public void setEigenTolerance(double tolerance)
-    {
-        this.eigenTolerance = tolerance;
-    }
-
 }
