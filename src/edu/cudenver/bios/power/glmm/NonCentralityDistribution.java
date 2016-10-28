@@ -40,6 +40,8 @@ import edu.cudenver.bios.power.PowerErrorEnum;
 import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
 
+import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
+
 /**
  * Class representing the distribution of the non-centrality parameter in
  * the general linear multivariate model.  Used by the GLMMPowerCalculator class
@@ -170,9 +172,7 @@ public class NonCentralityDistribution
             }
             //CF*FPFINV*CF`
             RealMatrix PPt = Cfixed.multiply(FtFinverse.scalarMultiply(1/(double) perGroupN)).multiply(Cfixed.transpose());
-            T1 = new LUDecomposition(PPt).getSolver().getInverse();
-            // per Keith: mathematically, T1 must be symmetric at this point
-            MatrixUtilities.forceSymmetric(T1);
+            T1 = forceSymmetric(new LUDecomposition(PPt).getSolver().getInverse());
             FT1 = new CholeskyDecomposition(T1).getL();
             // calculate theta difference
 //            RealMatrix thetaNull = params.getTheta();
