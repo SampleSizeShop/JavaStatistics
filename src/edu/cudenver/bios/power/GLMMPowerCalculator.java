@@ -528,6 +528,7 @@ public class GLMMPowerCalculator implements PowerCalculator
      */
     private void initialize(GLMMPowerParameters params)
     {
+        // TODO: why isn't this done in PowerResourceHelper.studyDesignToPowerParameters?
         // if no power methods are specified, add conditional as a default
         if (params.getPowerMethodList().size() <= 0)
             params.addPowerMethod(PowerMethod.CONDITIONAL_POWER);
