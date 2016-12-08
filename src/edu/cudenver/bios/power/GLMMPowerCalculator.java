@@ -803,8 +803,23 @@ public class GLMMPowerCalculator implements PowerCalculator
             GLMMPower power = new GLMMPower(test, alpha, targetPower, -1, -1,
                     betaScale, sigmaScale, method, quantile, null);
             power.setErrorMessage(
-                "We apologize; unconditional-power sample size calculations are temporarily disabled, for performance reasons. "
-              + "You may still request unconditional-power power calculations."
+                "We have temporarily disabled unconditional-power sample size calculations "
+              + "while we work on computational efficiency. "
+              + "There are two alternatives."
+              + "<ol>"
+              + "<li>"
+              + "You may perform an unconditional-power power calculation for a given sample size, "
+              + "and iterate until you find a sample size and unconditional power that work for your design."
+              + "</li>"
+              + "<li>"
+              + "You may calculate sample size using quantile power "
+              + "calculated at the median power (0.50th quantile) instead of unconditional power. "
+              + "As noted in Glueck and Muller (2003) "
+              + "(see <a href=\"http://samplesizeshop.org/education/related-publications/\">Related Publications</a>), "
+              + "quantile power is a very good approximation for unconditional power."
+              + "</li>"
+              + "</ol>"
+              + "Thank you for your patience while we repair this functionality."
             );
             power.setErrorCode(PowerErrorEnum.POWER_METHOD_UNKNOWN);
             return power;
