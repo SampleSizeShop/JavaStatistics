@@ -67,7 +67,7 @@ public class GLMMPowerCalculator implements PowerCalculator
             + " Thus the highest possible power is \u03B1 (alpha, the Type I error rate),"
             + " and no sample size can be large enough to achieve higher power.";
 
-    private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
+    private static final int MAX_ITERATIONS = 10000;
     private static final int STARTING_SAMPLE_SIZE = 1024;
     private static final int STARTING_BETA_SCALE = 10;
     private static final int SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL = 1000;
@@ -748,6 +748,7 @@ public class GLMMPowerCalculator implements PowerCalculator
             // create a noncentral F dist with non-centrality of H1
             NonCentralFDistribution fdist = new NonCentralFDistribution(ndf, ddf, h1);
             double integralResult = 0;
+            // TODO: can use of Integer.MAX_VALUE result in an endless loop?
             if (h1 != 0) integralResult = integrator.integrate(
                     Integer.MAX_VALUE, integrand, h0, h1);
 
@@ -858,8 +859,8 @@ public class GLMMPowerCalculator implements PowerCalculator
                     params.isNonCentralityCDFExact());
         }
 
-        // calculate the maximum valid per group N.  This avoids multiplication which exceeeds
-        // Integer.MAX_INT
+        // Calculate the maximum valid per group N.  This avoids multiplication which exceeeds
+        // Integer.MAX_VALUE.
         int maxPerGroupN =
                 Integer.MAX_VALUE / params.getDesignEssence().getRowDimension();
 
@@ -877,7 +878,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                     betaScale, sigmaScale, method, quantile, null);
             switch (upperBound.getError()) {
             case MAX_SAMPLE_SIZE_EXCEEDED:
-                power.setErrorMessage("Failed to find valid upper bound on sample size");
+                power.setErrorMessage("Failed to find valid upper bound on sample size.");
                 power.setErrorCode(PowerErrorEnum.MAX_SAMPLE_SIZE_EXCEEDED);
                 break;
             case SAMPLE_SIZE_UNDEFINED:
@@ -885,7 +886,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                 power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
                 break;
             case SAMPLE_SIZE_UNDEFINED_DUE_TO_EXCEPTION:
-                power.setErrorMessage("Sample size not well defined");
+                power.setErrorMessage("Sample size not well defined.");
                 power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
                 break;
             }
@@ -905,7 +906,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                     betaScale, sigmaScale, method, quantile, null);
             switch (lowerBound.getError()) {
             case MAX_SAMPLE_SIZE_EXCEEDED:
-                power.setErrorMessage("Failed to find valid lower bound on sample size");
+                power.setErrorMessage("Failed to find valid lower bound on sample size.");
                 power.setErrorCode(PowerErrorEnum.MAX_SAMPLE_SIZE_EXCEEDED);
                 break;
             case SAMPLE_SIZE_UNDEFINED:
@@ -913,7 +914,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                 power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
                 break;
             case SAMPLE_SIZE_UNDEFINED_DUE_TO_EXCEPTION:
-                power.setErrorMessage("Sample size not well defined");
+                power.setErrorMessage("Sample size not well defined.");
                 power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
                 break;
             }
@@ -1163,11 +1164,11 @@ public class GLMMPowerCalculator implements PowerCalculator
                         sigmaScale, method, quantile, null);
                 switch (upperBound.getError()) {
                 case MAX_BETA_SCALE_EXCEEDED:
-                    power.setErrorMessage("Failed to find valid upper bound on beta scale");
+                    power.setErrorMessage("Failed to find valid upper bound on beta scale.");
                     power.setErrorCode(PowerErrorEnum.MAX_BETA_SCALE_EXCEEDED);
                     break;
                 case BETA_SCALE_UNDEFINED:
-                    power.setErrorMessage("Beta scale not well defined for no difference");
+                    power.setErrorMessage("Beta scale not well defined for no difference.");
                     power.setErrorCode(PowerErrorEnum.BETA_SCALE_UNDEFINED);
                     break;
                 }

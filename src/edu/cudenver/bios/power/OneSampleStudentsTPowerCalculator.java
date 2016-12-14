@@ -41,7 +41,7 @@ import edu.cudenver.bios.power.parameters.OneSampleStudentsTPowerParameters.Mean
  */
 public class OneSampleStudentsTPowerCalculator implements PowerCalculator
 {
-    private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
+    private static final int MAX_ITERATIONS = 10000;
     private static final int MAX_SAMPLE_SIZE = 100000;
     private static final int MIN_SAMPLE_SIZE =  2; // need df > 0
 

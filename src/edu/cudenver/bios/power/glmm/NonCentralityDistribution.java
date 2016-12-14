@@ -51,7 +51,7 @@ import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
  */
 public class NonCentralityDistribution
 {
-    private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
+    private static final int MAX_ITERATIONS = 10000;
     private static final double ACCURACY = 0.001;
     // intermediate forms
     protected RealMatrix T1 = null;
