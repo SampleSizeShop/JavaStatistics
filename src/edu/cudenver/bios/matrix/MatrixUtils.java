@@ -31,6 +31,8 @@ import jsc.distributions.Normal;
 public class MatrixUtils
 {
 
+    private static final double EPSILON = 1e-12;
+
     /**
      * Creates a matrix of equal dimension but with all non-diagonal
      * elements set to 0
@@ -467,12 +469,36 @@ public class MatrixUtils
         // if all eigenValues are positive, we return true
         boolean isPositiveDefinite = true;
         for( int i = 0; i < eigenValues.length; i++){
-            if( eigenValues[i] <= 0){
+            if( eigenValues[i] <= - EPSILON){
                 isPositiveDefinite = false;
                 break;
             }
         }
         return isPositiveDefinite;
+    }
+
+    /**
+     * The method determines if the given matrix is positive semidefinite.
+     * The matrix must be square.
+     * @param matrix
+     * @return true if the matrix is positive semidefinite.
+     */
+    public static boolean isPositiveSemidefinite(RealMatrix matrix){
+        if( matrix == null || ! matrix.isSquare()){
+            throw new IllegalArgumentException("Matrix must be non-null, " +
+                    "square. ");
+        }
+        double[] eigenValues = new EigenDecomposition(matrix).getRealEigenvalues();
+
+        // if all eigenValues are nonnegative, we return true
+        boolean isPositiveSemidefinite = true;
+        for( int i = 0; i < eigenValues.length; i++){
+            if( eigenValues[i] < - EPSILON){
+                isPositiveSemidefinite = false;
+                break;
+            }
+        }
+        return isPositiveSemidefinite;
     }
 
 
