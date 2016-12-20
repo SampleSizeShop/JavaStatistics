@@ -62,10 +62,18 @@ import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
 public class GLMMPowerCalculator implements PowerCalculator
 {
     private static final String NO_MEAN_DIFFERENCE_MESSAGE =
-        "The null hypothesis is true: that is, all contrasts defined by the hypothesis have zero sums of squares."
-            + " (This may arise, for example, in a test of mean difference if the means are equal.)"
-            + " Thus the highest possible power is \u03B1 (alpha, the Type I error rate),"
-            + " and no sample size can be large enough to achieve higher power.";
+            "The null hypothesis is true: that is, all contrasts defined by the hypothesis have zero sums of squares. "
+        +   "(This may arise, for example, in a test of mean difference if the means are equal.) "
+        +   "Thus the highest possible power is \u03B1 (alpha, the Type I error rate), "
+        +   "and no sample size can be large enough to achieve higher power.";
+
+    private static final String SIGMA_ERROR_NOT_POSITIVE_SEMIDEFINITE_MESSAGE =
+            "Unfortunately, there is no solution for this combination of input parameters. "
+        +   "The error covariance matrix (\u03a3<sub>E</sub>) does not describe a valid "
+        +   "covariance structure (that is, it is not positive semidefinite). "
+        +   "Reducing the expected covariate-to-response correlations "
+        +   "will likely lead to a soluble combination."
+        ;
 
     private static final int MAX_ITERATIONS = 10000;
     private static final int STARTING_SAMPLE_SIZE = 1024;
@@ -542,7 +550,11 @@ public class GLMMPowerCalculator implements PowerCalculator
             // set the sigma error matrix to [sigmaY - sigmaYG * sigmaG-1 * sigmaGY]
             RealMatrix sigmaGY = sigmaYG.transpose();
             RealMatrix sigmaGInverse = new LUDecomposition(sigmaG).getSolver().getInverse();
-            params.setSigmaError(forceSymmetric(sigmaY.subtract(sigmaYG.multiply(sigmaGInverse.multiply(sigmaGY)))));
+            RealMatrix sigmaError = forceSymmetric(sigmaY.subtract(sigmaYG.multiply(sigmaGInverse.multiply(sigmaGY))));
+            if (! MatrixUtils.isPositiveSemidefinite(sigmaError)) {
+                throw new IllegalArgumentException(SIGMA_ERROR_NOT_POSITIVE_SEMIDEFINITE_MESSAGE);
+            }
+            params.setSigmaError(sigmaError);
 
             // calculate the betaG matrix and fill in the placeholder row for the random predictor
             FixedRandomMatrix beta = params.getBeta();
