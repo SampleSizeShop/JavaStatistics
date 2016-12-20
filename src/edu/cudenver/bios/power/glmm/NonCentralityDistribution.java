@@ -28,13 +28,13 @@ import org.apache.commons.math3.distribution.FDistribution;
 import org.apache.commons.math3.linear.CholeskyDecomposition;
 import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.linear.LUDecomposition;
-import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.distribution.ChiSquareTerm;
 import edu.cudenver.bios.distribution.NonCentralFDistribution;
 import edu.cudenver.bios.distribution.WeightedSumOfNoncentralChiSquaresDistribution;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.power.PowerErrorEnum;
 import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
@@ -51,6 +51,13 @@ import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
  */
 public class NonCentralityDistribution
 {
+    private static final String NOT_POSITIVE_DEFINITE =
+            "Unfortunately, there is no solution for this combination of input parameters. "
+        +   "A matrix that arose during the computation is not positive definite. "
+        +   "It may be possible to reduce expected covariate/response correlations "
+        +   "and obtain a soluble combination."
+        ;
+
     private static final int MAX_ITERATIONS = 10000;
     private static final double ACCURACY = 0.001;
     // intermediate forms
@@ -423,6 +430,9 @@ public class NonCentralityDistribution
     {
         // sigma* = U'*sigmaE*U
         RealMatrix sigmaStar = U.transpose().multiply(sigmaError).multiply(U);
+        if (! MatrixUtils.isPositiveDefinite(sigmaStar)) {
+            throw new IllegalArgumentException(NOT_POSITIVE_DEFINITE);
+        }
 
         if (test == Test.HOTELLING_LAWLEY_TRACE)
         {
@@ -437,7 +447,7 @@ public class NonCentralityDistribution
             double sigmaStarTrace = sigmaStar.getTrace();
             double sigmaStarSquaredTrace = sigmaStar.multiply(sigmaStar).getTrace();
             double epsilon = (sigmaStarTrace*sigmaStarTrace) / ((double) b * sigmaStarSquaredTrace);
-            RealMatrix identity = MatrixUtils.createRealIdentityMatrix(b);
+            RealMatrix identity = org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(b);
             return identity.scalarMultiply((double) b * epsilon / sigmaStarTrace);
         }
     }
