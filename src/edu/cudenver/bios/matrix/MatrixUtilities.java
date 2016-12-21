@@ -20,6 +20,7 @@
  */
 package edu.cudenver.bios.matrix;
 
+import java.util.Date;
 import org.apache.commons.math3.linear.NonSquareMatrixException;
 import org.apache.commons.math3.linear.RealMatrix;
 
@@ -48,17 +49,23 @@ public class MatrixUtilities {
      * @param rm    The RealMatrix.
      */
     public static void dump(String label, RealMatrix rm) {
-        System.out.println("== " + label + " (" + rm.getRowDimension() + " x " + rm.getColumnDimension() + ")");
+        System.out.print("== [" + new Date() + "] " + label + " ");
 
-        for (int i = 0, m = rm.getRowDimension(); i < m; ++ i) {
-            System.out.print("  ");
+        if (rm == null) {
+            System.out.println("(null)");
+        } else {
+            System.out.println("(" + rm.getRowDimension() + " x " + rm.getColumnDimension() + ")");
 
-            for (int j = 0, n = rm.getColumnDimension(); j < n; ++ j) {
-                System.out.print(rm.getEntry(i, j));
-                System.out.print(' ');
+            for (int i = 0, m = rm.getRowDimension(); i < m; ++ i) {
+                System.out.print("  ");
+
+                for (int j = 0, n = rm.getColumnDimension(); j < n; ++ j) {
+                    System.out.print(rm.getEntry(i, j));
+                    System.out.print(' ');
+                }
+
+                System.out.println();
             }
-
-            System.out.println();
         }
 
         System.out.println();
@@ -69,10 +76,13 @@ public class MatrixUtilities {
      *
      * @param rm The RealMatrix.
      *
+     * @return The same RealMatrix, modified if necessary
+     *         to be symmetric.
+     *
      * @throws NonSquareMatrixException if the RealMatrix is
      *                                  not square.
      */
-    public static void forceSymmetric(RealMatrix rm) {
+    public static RealMatrix forceSymmetric(RealMatrix rm) {
         int m = rm.getRowDimension();
         int n = rm.getColumnDimension();
 
@@ -87,5 +97,7 @@ public class MatrixUtilities {
                 rm.setEntry(j, i, value);
             }
         }
+
+        return rm;
     }
 }

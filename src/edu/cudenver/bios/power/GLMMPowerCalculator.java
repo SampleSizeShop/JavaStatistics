@@ -50,6 +50,8 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.parameters.PowerParameters;
 
+import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
+
 /**
  * Power calculator implementation for the general linear multivariate model
  *
@@ -60,12 +62,20 @@ import edu.cudenver.bios.power.parameters.PowerParameters;
 public class GLMMPowerCalculator implements PowerCalculator
 {
     private static final String NO_MEAN_DIFFERENCE_MESSAGE =
-        "The null hypothesis is true: that is, all contrasts defined by the hypothesis have zero sums of squares."
-            + " (This may arise, for example, in a test of mean difference if the means are equal.)"
-            + " Thus the highest possible power is \u03B1 (alpha, the Type I error rate),"
-            + " and no sample size can be large enough to achieve higher power.";
+            "The null hypothesis is true: that is, all contrasts defined by the hypothesis have zero sums of squares. "
+        +   "(This may arise, for example, in a test of mean difference if the means are equal.) "
+        +   "Thus the highest possible power is \u03B1 (alpha, the Type I error rate), "
+        +   "and no sample size can be large enough to achieve higher power.";
 
-    private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
+    private static final String SIGMA_ERROR_NOT_POSITIVE_SEMIDEFINITE_MESSAGE =
+            "Unfortunately, there is no solution for this combination of input parameters. "
+        +   "The error covariance matrix (\u03a3<sub>E</sub>) does not describe a valid "
+        +   "covariance structure (that is, it is not positive semidefinite). "
+        +   "Reducing the expected covariate-to-response correlations "
+        +   "will likely lead to a soluble combination."
+        ;
+
+    private static final int MAX_ITERATIONS = 10000;
     private static final int STARTING_SAMPLE_SIZE = 1024;
     private static final int STARTING_BETA_SCALE = 10;
     private static final int SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL = 1000;
@@ -80,8 +90,6 @@ public class GLMMPowerCalculator implements PowerCalculator
     // minimum difference still considered symmetric in Cholesky decomposition
     protected double symmetryThreshold =
             CholeskyDecomposition.DEFAULT_RELATIVE_SYMMETRY_THRESHOLD;
-    // eigen value decomposition tolerance
-    protected double eigenTolerance = 0.000000000001;
 
     private Logger logger = Logger.getLogger(getClass());
 
@@ -526,6 +534,7 @@ public class GLMMPowerCalculator implements PowerCalculator
      */
     private void initialize(GLMMPowerParameters params)
     {
+        // TODO: why isn't this done in PowerResourceHelper.studyDesignToPowerParameters?
         // if no power methods are specified, add conditional as a default
         if (params.getPowerMethodList().size() <= 0)
             params.addPowerMethod(PowerMethod.CONDITIONAL_POWER);
@@ -541,7 +550,11 @@ public class GLMMPowerCalculator implements PowerCalculator
             // set the sigma error matrix to [sigmaY - sigmaYG * sigmaG-1 * sigmaGY]
             RealMatrix sigmaGY = sigmaYG.transpose();
             RealMatrix sigmaGInverse = new LUDecomposition(sigmaG).getSolver().getInverse();
-            params.setSigmaError(sigmaY.subtract(sigmaYG.multiply(sigmaGInverse.multiply(sigmaGY))));
+            RealMatrix sigmaError = forceSymmetric(sigmaY.subtract(sigmaYG.multiply(sigmaGInverse.multiply(sigmaGY))));
+            if (! MatrixUtils.isPositiveSemidefinite(sigmaError)) {
+                throw new IllegalArgumentException(SIGMA_ERROR_NOT_POSITIVE_SEMIDEFINITE_MESSAGE);
+            }
+            params.setSigmaError(sigmaError);
 
             // calculate the betaG matrix and fill in the placeholder row for the random predictor
             FixedRandomMatrix beta = params.getBeta();
@@ -747,6 +760,7 @@ public class GLMMPowerCalculator implements PowerCalculator
             // create a noncentral F dist with non-centrality of H1
             NonCentralFDistribution fdist = new NonCentralFDistribution(ndf, ddf, h1);
             double integralResult = 0;
+            // TODO: can use of Integer.MAX_VALUE result in an endless loop?
             if (h1 != 0) integralResult = integrator.integrate(
                     Integer.MAX_VALUE, integrand, h0, h1);
 
@@ -802,8 +816,23 @@ public class GLMMPowerCalculator implements PowerCalculator
             GLMMPower power = new GLMMPower(test, alpha, targetPower, -1, -1,
                     betaScale, sigmaScale, method, quantile, null);
             power.setErrorMessage(
-                "We apologize; unconditional-power sample size calculations are temporarily disabled, for performance reasons. "
-              + "You may still request unconditional-power power calculations."
+                "We have temporarily disabled unconditional-power sample size calculations "
+              + "while we work on computational efficiency. "
+              + "There are two alternatives."
+              + "<ol>"
+              + "<li>"
+              + "You may perform an unconditional-power power calculation for a given sample size, "
+              + "and iterate until you find a sample size and unconditional power that work for your design."
+              + "</li>"
+              + "<li>"
+              + "You may calculate sample size using quantile power "
+              + "calculated at the median power (0.50th quantile) instead of unconditional power. "
+              + "As noted in Glueck and Muller (2003) "
+              + "(see <a href=\"http://samplesizeshop.org/education/related-publications/\">Related Publications</a>), "
+              + "quantile power is a very good approximation for unconditional power."
+              + "</li>"
+              + "</ol>"
+              + "Thank you for your patience while we repair this functionality."
             );
             power.setErrorCode(PowerErrorEnum.POWER_METHOD_UNKNOWN);
             return power;
@@ -842,8 +871,8 @@ public class GLMMPowerCalculator implements PowerCalculator
                     params.isNonCentralityCDFExact());
         }
 
-        // calculate the maximum valid per group N.  This avoids multiplication which exceeeds
-        // Integer.MAX_INT
+        // Calculate the maximum valid per group N.  This avoids multiplication which exceeeds
+        // Integer.MAX_VALUE.
         int maxPerGroupN =
                 Integer.MAX_VALUE / params.getDesignEssence().getRowDimension();
 
@@ -861,7 +890,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                     betaScale, sigmaScale, method, quantile, null);
             switch (upperBound.getError()) {
             case MAX_SAMPLE_SIZE_EXCEEDED:
-                power.setErrorMessage("Failed to find valid upper bound on sample size");
+                power.setErrorMessage("Failed to find valid upper bound on sample size.");
                 power.setErrorCode(PowerErrorEnum.MAX_SAMPLE_SIZE_EXCEEDED);
                 break;
             case SAMPLE_SIZE_UNDEFINED:
@@ -869,7 +898,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                 power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
                 break;
             case SAMPLE_SIZE_UNDEFINED_DUE_TO_EXCEPTION:
-                power.setErrorMessage("Sample size not well defined");
+                power.setErrorMessage("Sample size not well defined.");
                 power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
                 break;
             }
@@ -889,7 +918,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                     betaScale, sigmaScale, method, quantile, null);
             switch (lowerBound.getError()) {
             case MAX_SAMPLE_SIZE_EXCEEDED:
-                power.setErrorMessage("Failed to find valid lower bound on sample size");
+                power.setErrorMessage("Failed to find valid lower bound on sample size.");
                 power.setErrorCode(PowerErrorEnum.MAX_SAMPLE_SIZE_EXCEEDED);
                 break;
             case SAMPLE_SIZE_UNDEFINED:
@@ -897,7 +926,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                 power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
                 break;
             case SAMPLE_SIZE_UNDEFINED_DUE_TO_EXCEPTION:
-                power.setErrorMessage("Sample size not well defined");
+                power.setErrorMessage("Sample size not well defined.");
                 power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
                 break;
             }
@@ -999,7 +1028,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                     break;
                 } catch (Exception e) {
                     // just keep iterating until we find a minimum valid sample size
-                    logger.warn("Exception getting power by type: " + e.getMessage(), e);
+                    logger.info("Ignoring exception as we iterate to find a valid minimum:", e);
                 }
             } while (lowerBound < upperN && !Thread.currentThread().isInterrupted());
             return new SampleSizeBound(lowerBound, calculatedPower);
@@ -1147,11 +1176,11 @@ public class GLMMPowerCalculator implements PowerCalculator
                         sigmaScale, method, quantile, null);
                 switch (upperBound.getError()) {
                 case MAX_BETA_SCALE_EXCEEDED:
-                    power.setErrorMessage("Failed to find valid upper bound on beta scale");
+                    power.setErrorMessage("Failed to find valid upper bound on beta scale.");
                     power.setErrorCode(PowerErrorEnum.MAX_BETA_SCALE_EXCEEDED);
                     break;
                 case BETA_SCALE_UNDEFINED:
-                    power.setErrorMessage("Beta scale not well defined for no difference");
+                    power.setErrorMessage("Beta scale not well defined for no difference.");
                     power.setErrorCode(PowerErrorEnum.BETA_SCALE_UNDEFINED);
                     break;
                 }
@@ -1650,14 +1679,4 @@ public class GLMMPowerCalculator implements PowerCalculator
     {
         this.symmetryThreshold = threshold;
     }
-
-    /**
-     * Set threshold for eigen value decomposition
-     * @param tolerance tolerance for eigen decomposition
-     */
-    public void setEigenTolerance(double tolerance)
-    {
-        this.eigenTolerance = tolerance;
-    }
-
 }

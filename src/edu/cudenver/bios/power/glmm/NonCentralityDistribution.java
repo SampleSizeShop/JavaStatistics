@@ -28,17 +28,18 @@ import org.apache.commons.math3.distribution.FDistribution;
 import org.apache.commons.math3.linear.CholeskyDecomposition;
 import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.linear.LUDecomposition;
-import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.cudenver.bios.distribution.ChiSquareTerm;
 import edu.cudenver.bios.distribution.NonCentralFDistribution;
 import edu.cudenver.bios.distribution.WeightedSumOfNoncentralChiSquaresDistribution;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
-import edu.cudenver.bios.matrix.MatrixUtilities;
+import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.power.PowerErrorEnum;
 import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
+
+import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
 
 /**
  * Class representing the distribution of the non-centrality parameter in
@@ -50,8 +51,14 @@ import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
  */
 public class NonCentralityDistribution
 {
-    private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
-    private static final double TOLERANCE = 0.000000000001;
+    private static final String NOT_POSITIVE_DEFINITE =
+            "Unfortunately, there is no solution for this combination of input parameters. "
+        +   "A matrix that arose during the computation is not positive definite. "
+        +   "It may be possible to reduce expected covariate/response correlations "
+        +   "and obtain a soluble combination."
+        ;
+
+    private static final int MAX_ITERATIONS = 10000;
     private static final double ACCURACY = 0.001;
     // intermediate forms
     protected RealMatrix T1 = null;
@@ -171,9 +178,7 @@ public class NonCentralityDistribution
             }
             //CF*FPFINV*CF`
             RealMatrix PPt = Cfixed.multiply(FtFinverse.scalarMultiply(1/(double) perGroupN)).multiply(Cfixed.transpose());
-            T1 = new LUDecomposition(PPt).getSolver().getInverse();
-            // per Keith: mathematically, T1 must be symmetric at this point
-            MatrixUtilities.forceSymmetric(T1);
+            T1 = forceSymmetric(new LUDecomposition(PPt).getSolver().getInverse());
             FT1 = new CholeskyDecomposition(T1).getL();
             // calculate theta difference
 //            RealMatrix thetaNull = params.getTheta();
@@ -194,7 +199,7 @@ public class NonCentralityDistribution
             // for a central F distribution.  The resulting F distribution is used as an approximation
             // for the distribution of the non-centrality parameter
             // See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details
-            EigenDecomposition sEigenDecomp = new EigenDecomposition(S, TOLERANCE);
+            EigenDecomposition sEigenDecomp = new EigenDecomposition(S);
             sEigenValues = sEigenDecomp.getRealEigenvalues();
             // calculate H0
             if (sEigenValues.length > 0) H0 = H1 * (1 - sEigenValues[0]);
@@ -425,6 +430,9 @@ public class NonCentralityDistribution
     {
         // sigma* = U'*sigmaE*U
         RealMatrix sigmaStar = U.transpose().multiply(sigmaError).multiply(U);
+        if (! MatrixUtils.isPositiveDefinite(sigmaStar)) {
+            throw new IllegalArgumentException(NOT_POSITIVE_DEFINITE);
+        }
 
         if (test == Test.HOTELLING_LAWLEY_TRACE)
         {
@@ -439,7 +447,7 @@ public class NonCentralityDistribution
             double sigmaStarTrace = sigmaStar.getTrace();
             double sigmaStarSquaredTrace = sigmaStar.multiply(sigmaStar).getTrace();
             double epsilon = (sigmaStarTrace*sigmaStarTrace) / ((double) b * sigmaStarSquaredTrace);
-            RealMatrix identity = MatrixUtils.createRealIdentityMatrix(b);
+            RealMatrix identity = org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(b);
             return identity.scalarMultiply((double) b * epsilon / sigmaStarTrace);
         }
     }

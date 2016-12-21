@@ -42,7 +42,7 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
  */
 public class NonCentralFDistribution extends AbstractRealDistribution
 {
-    private static final int MAX_ITERATIONS = Integer.MAX_VALUE;
+    private static final int MAX_ITERATIONS = 10000;
     private static final int STARTING_F = 10;
 
     // supported approximation methods for the F distribution
