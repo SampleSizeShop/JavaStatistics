@@ -83,7 +83,7 @@ public class TestConditionalUnivariateWithConfidenceLimits extends TestCase
      * Compare 2 sample t-test results between JavaStatistics,
      * POWERLIB, and simulation
      */
-    public void testUnviariateWithConfidenceLimits()
+    public void testUnivariateWithConfidenceLimits()
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
 

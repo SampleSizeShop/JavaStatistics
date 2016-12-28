@@ -67,7 +67,7 @@ public class ConditionalUnivariateWithConfidenceLimitsTest {
      * POWERLIB, and simulation
      */
     @Test
-    public void testUnviariateWithConfidenceLimits()
+    public void testUnivariateWithConfidenceLimits()
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
 
