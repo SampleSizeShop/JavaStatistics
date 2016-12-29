@@ -1,7 +1,7 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
+ *
  * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
@@ -40,30 +40,30 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test case for exact unconditional power for the Unirep.  Values should match
  * exact unconditional power values from Table II in Glueck & Muller 2003.
- * 
+ *
  * @author Sarah Kreidler
  *
  */
 public class UnirepExactUnconditionalTest {
 
-    private static final double[] ALPHA_LIST = {0.05};    
-    private static final double[] SIGMA_SCALE_LIST = {1};	
+    private static final double[] ALPHA_LIST = {0.05};
+    private static final double[] SIGMA_SCALE_LIST = {1};
 
-	private static final String DATA_FILE =  "TestUnirepExactUnconditional.xml";
-	private static final String TITLE = "GLMM(F, g) Example 8. Unconditional " +
-			"power for the uncorrected univariate approach to repeated " +
-			"measures, Box, Geisser-Greenhouse, and Huynh-Feldt tests, " +
-			"using Davies algorithm";
+    private static final String DATA_FILE =  "TestUnirepExactUnconditional.xml";
+    private static final String TITLE = "GLMM(F, g) Example 8. Unconditional " +
+            "power for the uncorrected univariate approach to repeated " +
+            "measures, Box, Geisser-Greenhouse, and Huynh-Feldt tests, " +
+            "using Davies algorithm";
     private static final double TOLERANCE = 0.1;
 
-	private PowerChecker checker;
+    private PowerChecker checker;
 
     @Before
-	public void setUp() {
+    public void setUp() {
         List<GLMMPower> sasPowers = Utils.readSasPowers(DATA_FILE);
         checker = new PowerChecker(sasPowers, false);
-	}
-	
+    }
+
     /**
      * Compare the calculated Unirep exact unconditional powers against simulation
      */
@@ -71,41 +71,41 @@ public class UnirepExactUnconditionalTest {
     public void testPower()
     {
         // build the inputs
-    	double[] beta5 = {
-    			0.4997025,
-    	    	0.8075886,
-    	    	1.097641};
+        double[] beta5 = {
+                0.4997025,
+                0.8075886,
+                1.097641};
         GLMMPowerParameters params5 = buildValidMultivariateRandomInputs(beta5, 5);
         double[] beta25 = {
-            	0.1651525,
-            	0.2623301, 
-            	0.3508015
+                0.1651525,
+                0.2623301,
+                0.3508015
         };
         GLMMPowerParameters params25 = buildValidMultivariateRandomInputs(beta25, 25);
         double[] beta50 = {
-        		0.1141548,
-            	0.1812892,
-            	0.2423835
+                0.1141548,
+                0.1812892,
+                0.2423835
         };
         GLMMPowerParameters params50 = buildValidMultivariateRandomInputs(beta50, 50);
 
-		GLMMTestFactory.Test[] list = {
+        GLMMTestFactory.Test[] list = {
                 GLMMTestFactory.Test.UNIREP,
                 GLMMTestFactory.Test.UNIREP_BOX,
                 GLMMTestFactory.Test.UNIREP_GEISSER_GREENHOUSE,
                 GLMMTestFactory.Test.UNIREP_HUYNH_FELDT
         };
-		for(GLMMTestFactory.Test test : list) {
-			params5.clearTestList();
-			params5.addTest(test);
-			params25.clearTestList();
-			params25.addTest(test);
-			params50.clearTestList();
-			params50.addTest(test);
-			checker.checkPower(params5);
-			checker.checkPower(params25);
-			checker.checkPower(params50);
-		}
+        for(GLMMTestFactory.Test test : list) {
+            params5.clearTestList();
+            params5.addTest(test);
+            params25.clearTestList();
+            params25.addTest(test);
+            params50.clearTestList();
+            params50.addTest(test);
+            checker.checkPower(params5);
+            checker.checkPower(params25);
+            checker.checkPower(params50);
+        }
 
         // clear the beta scale list and per group N since this is described in the
         // study design section and may be confusing if we list all the beta scales
@@ -116,7 +116,7 @@ public class UnirepExactUnconditionalTest {
         reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
         assertTrue("results outside tolerance: " + TOLERANCE, checker.isSASDeviationBelowTolerance(TOLERANCE));
     }
-    
+
     /**
      * Builds matrices for a multivariate GLM with a baseline covariate
      * Note, this matrix set matches the values produced in Table II from Glueck&Muller
@@ -124,11 +124,11 @@ public class UnirepExactUnconditionalTest {
     private GLMMPowerParameters buildValidMultivariateRandomInputs(double[] betaScaleList, int repn)
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
-		params.setNonCentralityCDFExact(true);
+        params.setNonCentralityCDFExact(true);
 
         // add unconditional power methods and median unconditional
         params.addPowerMethod(PowerMethod.UNCONDITIONAL_POWER);
-        
+
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
@@ -151,14 +151,14 @@ public class UnirepExactUnconditionalTest {
 
         // add sigma scale values
         for(double sigmaScale: SIGMA_SCALE_LIST) params.addSigmaScale(sigmaScale);
-        
+
         // build beta matrix
         double [][] beta = {{1,0,0,0},{0,2,0,0},{0,0,0,0}};
         double [][] betaRandom = {{1,1,1,1}};
         params.setBeta(new FixedRandomMatrix(beta, betaRandom, false));
         // add beta scale values
         for(double betaScale: betaScaleList) params.addBetaScale(betaScale);
-        
+
         // build theta null matrix
         double [][] theta0 = {{0,0,0,0},{0,0,0,0}};
         params.setTheta(new Array2DRowRealMatrix(theta0));
@@ -167,11 +167,11 @@ public class UnirepExactUnconditionalTest {
         double [][] between = {{1,-1,0}, {1,0,-1}};
         double[][] betweenRandom = {{0}, {0}};
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, betweenRandom, true));
-        
+
         // build within subject contrast
         double [][] within = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
 
-        return params;     
+        return params;
     }
 }

@@ -1,7 +1,7 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
+ *
  * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test case for approximate quantile power for the UNIREP.  Values should match
  * approximate median power values from Table II in Glueck & Muller 2003.
- * 
+ *
  * @author Sarah Kreidler
  *
  */
@@ -47,8 +47,8 @@ public class UnirepApproximateQuantileTest {
 
     private static final double MEAN = 9.75;
     private static final double VARIANCE = 2.0;
-    private static final double[] ALPHA_LIST = {0.05};    
-    private static final double[] SIGMA_SCALE_LIST = {1};	
+    private static final double[] ALPHA_LIST = {0.05};
+    private static final double[] SIGMA_SCALE_LIST = {1};
 
     private static final String DATA_FILE =  "TestUnirepApproximateQuantile.xml";
     private static final String TITLE = "GLMM(F, g) Example 5. Median power for the " +
@@ -78,7 +78,7 @@ public class UnirepApproximateQuantileTest {
         GLMMPowerParameters params5 = buildValidMultivariateRandomInputs(beta5, 5);
         double[] beta25 = {
                 0.1651525,
-                0.2623301, 
+                0.2623301,
                 0.3508015
         };
         GLMMPowerParameters params25 = buildValidMultivariateRandomInputs(beta25, 25);
@@ -178,6 +178,6 @@ public class UnirepApproximateQuantileTest {
         double [][] within = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
 
-        return params;     
+        return params;
     }
 }
