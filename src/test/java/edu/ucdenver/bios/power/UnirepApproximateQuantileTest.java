@@ -27,12 +27,11 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.test.PowerChecker;
 import edu.cudenver.bios.power.test.ValidationReportBuilder;
+import java.util.List;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
@@ -45,8 +44,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class UnirepApproximateQuantileTest {
 
-    private static final double MEAN = 9.75;
-    private static final double VARIANCE = 2.0;
     private static final double[] ALPHA_LIST = {0.05};
     private static final double[] SIGMA_SCALE_LIST = {1};
 
@@ -69,7 +66,6 @@ public class UnirepApproximateQuantileTest {
     @Test
     public void testPower()
     {
-
         // build the inputs
         double[] beta5 = {
                 0.4997025,
@@ -93,16 +89,15 @@ public class UnirepApproximateQuantileTest {
                 GLMMTestFactory.Test.UNIREP,
                 GLMMTestFactory.Test.UNIREP_BOX,
                 GLMMTestFactory.Test.UNIREP_GEISSER_GREENHOUSE,
-                GLMMTestFactory.Test.UNIREP_HUYNH_FELDT};
-        for(GLMMTestFactory.Test test : list)
-        {
+                GLMMTestFactory.Test.UNIREP_HUYNH_FELDT
+        };
+        for(GLMMTestFactory.Test test : list) {
             params5.clearTestList();
             params5.addTest(test);
             params25.clearTestList();
             params25.addTest(test);
             params50.clearTestList();
             params50.addTest(test);
-
             checker.checkPower(params5);
             checker.checkPower(params25);
             checker.checkPower(params50);
@@ -126,16 +121,13 @@ public class UnirepApproximateQuantileTest {
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
 
-        // add quantile power method
+        // add quantile power method and median quantile
         params.addPowerMethod(PowerMethod.QUANTILE_POWER);
         params.addQuantile(0.5);
 
         // add alpha values
-        for(double alpha: ALPHA_LIST) {
-            params.addAlpha(alpha);
-        }
+        for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
-        int P = 3;
         int Q = 3;
         // create design matrix
         params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(Q));
@@ -147,7 +139,6 @@ public class UnirepApproximateQuantileTest {
         params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
 
         // build sigma Y matrix
-        double rho = 0.4;
         double [][] sigmaY = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         params.setSigmaOutcome(new Array2DRowRealMatrix(sigmaY));
 

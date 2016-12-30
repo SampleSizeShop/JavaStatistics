@@ -20,20 +20,16 @@
  */
 package edu.ucdenver.bios.power;
 
-import java.io.File;
-import java.util.List;
-
-import edu.cudenver.bios.power.GLMMPower;
-
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.MatrixUtils;
-
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.power.GLMMPower;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.test.PowerChecker;
 import edu.cudenver.bios.power.test.ValidationReportBuilder;
+import java.util.List;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.MatrixUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,12 +47,10 @@ public class UnirepExactQuantileTest {
     private static final double[] ALPHA_LIST = {0.05};
     private static final double[] SIGMA_SCALE_LIST = {1};
 
-
     private static final String DATA_FILE =  "TestUnirepExactQuantile.xml";
     private static final String TITLE = "GLMM(F, g) Example 6. Median power for the uncorrected " +
             "univariate approach to repeated measures, Box, Geisser-Greenhouse," +
             " and Huynh-Feldt tests, using Davies Algorithm";
-    private static final String AUTHOR = "Sarah Kreidler";
     private static final double TOLERANCE = 0.1;
     private PowerChecker checker;
 
@@ -97,8 +91,7 @@ public class UnirepExactQuantileTest {
                 GLMMTestFactory.Test.UNIREP_GEISSER_GREENHOUSE,
                 GLMMTestFactory.Test.UNIREP_HUYNH_FELDT
         };
-        for(GLMMTestFactory.Test test : list)
-        {
+        for(GLMMTestFactory.Test test : list) {
             params5.clearTestList();
             params5.addTest(test);
             params25.clearTestList();
@@ -129,14 +122,13 @@ public class UnirepExactQuantileTest {
         GLMMPowerParameters params = new GLMMPowerParameters();
         params.setNonCentralityCDFExact(true);
 
-        // add quantile power methods and median quantile
+        // add quantile power method and median quantile
         params.addPowerMethod(PowerMethod.QUANTILE_POWER);
         params.addQuantile(0.5);
 
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
-        int P = 3;
         int Q = 3;
         // create design matrix
         params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(Q));
@@ -148,7 +140,6 @@ public class UnirepExactQuantileTest {
         params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
 
         // build sigma Y matrix
-        double rho = 0.4;
         double [][] sigmaY = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         params.setSigmaOutcome(new Array2DRowRealMatrix(sigmaY));
 

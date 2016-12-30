@@ -27,18 +27,16 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.test.PowerChecker;
 import edu.cudenver.bios.power.test.ValidationReportBuilder;
+import java.util.List;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.util.List;
-
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test case for exact unconditional power for the Unirep.  Values should match
+ * Test case for exact unconditional power for the UNIREP.  Values should match
  * exact unconditional power values from Table II in Glueck & Muller 2003.
  *
  * @author Sarah Kreidler
@@ -55,7 +53,6 @@ public class UnirepExactUnconditionalTest {
             "measures, Box, Geisser-Greenhouse, and Huynh-Feldt tests, " +
             "using Davies algorithm";
     private static final double TOLERANCE = 0.1;
-
     private PowerChecker checker;
 
     @Before
@@ -65,7 +62,7 @@ public class UnirepExactUnconditionalTest {
     }
 
     /**
-     * Compare the calculated Unirep exact unconditional powers against simulation
+     * Compare the calculated UNIREP exact unconditional powers against simulation
      */
     @Test
     public void testPower()
@@ -126,16 +123,17 @@ public class UnirepExactUnconditionalTest {
         GLMMPowerParameters params = new GLMMPowerParameters();
         params.setNonCentralityCDFExact(true);
 
-        // add unconditional power methods and median unconditional
+        // add unconditional power method
         params.addPowerMethod(PowerMethod.UNCONDITIONAL_POWER);
 
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
+        int Q = 3;
         // create design matrix
-        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(3));
+        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(Q));
         // add sample size multipliers
-      //  for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
+        //  for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
         params.addSampleSize(repn);
         // build sigma G matrix
         double[][] sigmaG = {{1}};
