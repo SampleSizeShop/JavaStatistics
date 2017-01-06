@@ -238,7 +238,7 @@ public class GLMMPowerCalculator implements PowerCalculator
     }
 
     /**
-     * Class passed into Apache's TrapezoidIntegrator function to compute
+     * Class passed into Apache's SimpsonIntegrator function to compute
      * unconditional power
      */
     private class UnconditionalPowerIntegrand implements UnivariateFunction
@@ -325,16 +325,19 @@ public class GLMMPowerCalculator implements PowerCalculator
                                      */
                                     results.add(getPowerValue(params, test, method, alpha, sigmaScale, betaScale,
                                             sampleSize, quantile));
+                                    if (Thread.currentThread().isInterrupted()) {
+                                        return results;
+                                    }
                                 }
                                 qIdx++;
                             } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size() &&
-                                    !Thread.currentThread().isInterrupted());
+                                    qIdx < params.getQuantileList().size());
                         }
                     }
                 }
             }
         }
+
         return results;
     }
 
@@ -387,16 +390,19 @@ public class GLMMPowerCalculator implements PowerCalculator
                                      */
                                     results.add(getSampleSizeValue(params, test, method, alpha,
                                             sigmaScale, betaScale, power, quantile));
-                                    qIdx++;
+                                    if (Thread.currentThread().isInterrupted()) {
+                                        return results;
+                                    }
                                 }
+                                qIdx++;
                             } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size() &&
-                                    !Thread.currentThread().isInterrupted());
+                                    qIdx < params.getQuantileList().size());
                         }
                     }
                 }
             }
         }
+
         return results;
     }
 
@@ -453,11 +459,13 @@ public class GLMMPowerCalculator implements PowerCalculator
                                      */
                                     results.add(getSimulatedPowerValue(params, test, method, alpha,
                                             sigmaScale, betaScale, sampleSize, quantile, iterations));
+                                    if (Thread.currentThread().isInterrupted()) {
+                                        return results;
+                                    }
                                 }
                                 qIdx++;
                             } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size() &&
-                                    !Thread.currentThread().isInterrupted());
+                                    qIdx < params.getQuantileList().size());
                         }
                     }
                 }
@@ -515,16 +523,19 @@ public class GLMMPowerCalculator implements PowerCalculator
                                      */
                                     results.add(getDetectableDifferenceValue(params,
                                             test, method, alpha, sigmaScale, power, sampleSize, quantile));
+                                    if (Thread.currentThread().isInterrupted()) {
+                                        return results;
+                                    }
                                 }
                                 qIdx++;
                             } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size() &&
-                                    !Thread.currentThread().isInterrupted());
+                                    qIdx < params.getQuantileList().size());
                         }
                     }
                 }
             }
         }
+
         return results;
     }
 
@@ -1408,15 +1419,20 @@ public class GLMMPowerCalculator implements PowerCalculator
                                         params.getQuantileList().get(qIdx) : Double.NaN);
                                 for(Integer sampleSize : params.getSampleSizeList())
                                 {
-
-                                    results.add(getSimulatedPowerSampleValue(params,
-                                            test, method, alpha, sigmaScale, betaScale, sampleSize,
-                                            quantile, size));
-                                    qIdx++;
+                                    /*
+                                     * add the simulated power sample result to the list
+                                     * if a failure occurs, an error code and message are
+                                     * included with this object
+                                     */
+                                    results.add(getSimulatedPowerSampleValue(params, test, method, alpha,
+                                            sigmaScale, betaScale, sampleSize, quantile, size));
+                                    if (Thread.currentThread().isInterrupted()) {
+                                        return results;
+                                    }
                                 }
+                                qIdx++;
                             } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size() &&
-                                    !Thread.currentThread().isInterrupted());
+                                    qIdx < params.getQuantileList().size());
                         }
                     }
                 }
