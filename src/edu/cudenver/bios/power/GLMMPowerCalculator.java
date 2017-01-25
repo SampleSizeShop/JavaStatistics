@@ -21,6 +21,7 @@
 package edu.cudenver.bios.power;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.math3.analysis.UnivariateFunction;
@@ -90,6 +91,8 @@ public class GLMMPowerCalculator implements PowerCalculator
     // minimum difference still considered symmetric in Cholesky decomposition
     protected double symmetryThreshold =
             CholeskyDecomposition.DEFAULT_RELATIVE_SYMMETRY_THRESHOLD;
+
+    private static final List<Double> NO_QUANTILES = Collections.singletonList(Double.NaN);
 
     private Logger logger = Logger.getLogger(getClass());
 
@@ -301,23 +304,17 @@ public class GLMMPowerCalculator implements PowerCalculator
         ArrayList<Power> results = new ArrayList<Power>();
 
         // calculate the power for all variations of the study design
-        for(GLMMTestFactory.Test test : params.getTestList())
-        {
-            for(GLMMPowerParameters.PowerMethod method : params.getPowerMethodList())
-            {
-                for(Double alpha : params.getAlphaList())
-                {
-                    for(Double sigmaScale : params.getSigmaScaleList())
-                    {
-                        for(Double betaScale : params.getBetaScaleList())
-                        {
-                            int qIdx = 0;
-                            do
-                            {
-                                double quantile = (params.getQuantileList().size() > 0 ?
-                                        params.getQuantileList().get(qIdx) : Double.NaN);
-                                for(Integer sampleSize : params.getSampleSizeList())
-                                {
+        for (Test test: params.getTestList()) {
+            for (PowerMethod method: params.getPowerMethodList()) {
+                List<Double> quantileList = method == PowerMethod.QUANTILE_POWER
+                                                ? params.getQuantileList()
+                                                : NO_QUANTILES;
+
+                for (Double alpha: params.getAlphaList()) {
+                    for (Double sigmaScale: params.getSigmaScaleList()) {
+                        for (Double betaScale: params.getBetaScaleList()) {
+                            for (Double quantile: quantileList) {
+                                for (Integer sampleSize: params.getSampleSizeList()) {
                                     /*
                                      * add the power result to the list
                                      * if a failure occurs, an error code and message are
@@ -329,9 +326,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                                         return results;
                                     }
                                 }
-                                qIdx++;
-                            } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size());
+                            }
                         }
                     }
                 }
@@ -364,25 +359,18 @@ public class GLMMPowerCalculator implements PowerCalculator
         // list of power results
         ArrayList<Power> results = new ArrayList<Power>();
 
-        // calculate the power for either one or two tails
         // calculate the power for all variations of the study design
-        for(GLMMTestFactory.Test test : params.getTestList())
-        {
-            for(GLMMPowerParameters.PowerMethod method : params.getPowerMethodList())
-            {
-                for(Double alpha : params.getAlphaList())
-                {
-                    for(Double sigmaScale : params.getSigmaScaleList())
-                    {
-                        for(Double betaScale : params.getBetaScaleList())
-                        {
-                            int qIdx = 0;
-                            do
-                            {
-                                double quantile = (params.getQuantileList().size() > 0 ?
-                                        params.getQuantileList().get(qIdx) : Double.NaN);
-                                for(Double power : params.getPowerList())
-                                {
+        for (Test test: params.getTestList()) {
+            for (PowerMethod method: params.getPowerMethodList()) {
+                List<Double> quantileList = method == PowerMethod.QUANTILE_POWER
+                                                ? params.getQuantileList()
+                                                : NO_QUANTILES;
+
+                for (Double alpha: params.getAlphaList()) {
+                    for (Double sigmaScale: params.getSigmaScaleList()) {
+                        for (Double betaScale: params.getBetaScaleList()) {
+                            for (Double quantile: quantileList) {
+                                for (Double power: params.getPowerList()) {
                                     /*
                                      * add the sample size result to the list
                                      * if a failure occurs, an error code and message are
@@ -394,9 +382,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                                         return results;
                                     }
                                 }
-                                qIdx++;
-                            } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size());
+                            }
                         }
                     }
                 }
@@ -433,25 +419,18 @@ public class GLMMPowerCalculator implements PowerCalculator
         // list of power results
         ArrayList<Power> results = new ArrayList<Power>();
 
-        // simulate power for all variations of the study design
         // calculate the power for all variations of the study design
-        for(GLMMTestFactory.Test test : params.getTestList())
-        {
-            for(GLMMPowerParameters.PowerMethod method : params.getPowerMethodList())
-            {
-                for(Double alpha : params.getAlphaList())
-                {
-                    for(Double sigmaScale : params.getSigmaScaleList())
-                    {
-                        for(Double betaScale : params.getBetaScaleList())
-                        {
-                            int qIdx = 0;
-                            do
-                            {
-                                double quantile = (params.getQuantileList().size() > 0 ?
-                                        params.getQuantileList().get(qIdx) : Double.NaN);
-                                for(Integer sampleSize : params.getSampleSizeList())
-                                {
+        for (Test test: params.getTestList()) {
+            for (PowerMethod method: params.getPowerMethodList()) {
+                List<Double> quantileList = method == PowerMethod.QUANTILE_POWER
+                                                ? params.getQuantileList()
+                                                : NO_QUANTILES;
+
+                for (Double alpha: params.getAlphaList()) {
+                    for (Double sigmaScale: params.getSigmaScaleList()) {
+                        for (Double betaScale: params.getBetaScaleList()) {
+                            for (Double quantile: quantileList) {
+                                for (Integer sampleSize: params.getSampleSizeList()) {
                                     /*
                                      * add the simulated power result to the list
                                      * if a failure occurs, an error code and message are
@@ -463,9 +442,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                                         return results;
                                     }
                                 }
-                                qIdx++;
-                            } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size());
+                            }
                         }
                     }
                 }
@@ -499,23 +476,17 @@ public class GLMMPowerCalculator implements PowerCalculator
         ArrayList<Power> results = new ArrayList<Power>();
 
         // calculate the power for all variations of the study design
-        for(GLMMTestFactory.Test test : params.getTestList())
-        {
-            for(GLMMPowerParameters.PowerMethod method : params.getPowerMethodList())
-            {
-                for(Double alpha : params.getAlphaList())
-                {
-                    for(Double sigmaScale : params.getSigmaScaleList())
-                    {
-                        for(Integer sampleSize : params.getSampleSizeList())
-                        {
-                            int qIdx = 0;
-                            do
-                            {
-                                double quantile = (params.getQuantileList().size() > 0 ?
-                                        params.getQuantileList().get(qIdx) : Double.NaN);
-                                for(Double power : params.getPowerList())
-                                {
+        for (Test test: params.getTestList()) {
+            for (PowerMethod method: params.getPowerMethodList()) {
+                List<Double> quantileList = method == PowerMethod.QUANTILE_POWER
+                                                ? params.getQuantileList()
+                                                : NO_QUANTILES;
+
+                for (Double alpha: params.getAlphaList()) {
+                    for (Double sigmaScale: params.getSigmaScaleList()) {
+                        for (Integer sampleSize: params.getSampleSizeList()) {
+                            for (Double quantile: quantileList) {
+                                for (Double power: params.getPowerList()) {
                                     /*
                                      * add the detectable difference result to the list
                                      * if a failure occurs, an error code and message are
@@ -527,9 +498,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                                         return results;
                                     }
                                 }
-                                qIdx++;
-                            } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size());
+                            }
                         }
                     }
                 }
@@ -639,7 +608,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         else if (numRandom == 1)
         {
             // covariate (results not published for Wilk's Lambda or Pillai-Bartlett
-            for(Test test : params.getTestList())
+            for (Test test: params.getTestList())
             {
                 if (test != Test.HOTELLING_LAWLEY_TRACE && test != Test.UNIREP && test != Test.UNIREP_BOX &&
                         test != Test.UNIREP_GEISSER_GREENHOUSE && test != Test.UNIREP_HUYNH_FELDT)
@@ -1375,13 +1344,13 @@ public class GLMMPowerCalculator implements PowerCalculator
     }
 
     /**
-     * Returns a power sample for each combination of parameters for a
+     * Returns a simulated power sample for each combination of parameters for a
      * design with a random covariate (GLMM(F,g)).  Currently produces
      * a sample of size 1000
      *
      * @param params power parameters
      * @param size size of the sample
-     * @return list of power samples
+     * @return list of simulated power samples
      * @throws IllegalArgumentException
      */
     public List<SimulatedPower[]> getSimulatedPowerSample(GLMMPowerParameters params, int size)
@@ -1397,28 +1366,24 @@ public class GLMMPowerCalculator implements PowerCalculator
             throw new IllegalArgumentException("Power samples can only be generated for designs with random predictors");
         if (size <= 0) throw new IllegalArgumentException("Iterations must be positive");
 
-        // list of power results
+        // list of simulated power results
         ArrayList<SimulatedPower[]> results = new ArrayList<SimulatedPower[]>();
 
-        for(GLMMTestFactory.Test test : params.getTestList())
-        {
-            for(GLMMPowerParameters.PowerMethod method : params.getPowerMethodList())
-            {
+        // calculate the simulated power for all variations of the study design
+        for (Test test: params.getTestList()) {
+            for (PowerMethod method: params.getPowerMethodList()) {
                 // only generate samples for quantile or unconditional power
                 if (method == PowerMethod.CONDITIONAL_POWER) continue;
-                for(Double alpha : params.getAlphaList())
-                {
-                    for(Double sigmaScale : params.getSigmaScaleList())
-                    {
-                        for(Double betaScale : params.getBetaScaleList())
-                        {
-                            int qIdx = 0;
-                            do
-                            {
-                                double quantile = (params.getQuantileList().size() > 0 ?
-                                        params.getQuantileList().get(qIdx) : Double.NaN);
-                                for(Integer sampleSize : params.getSampleSizeList())
-                                {
+
+                List<Double> quantileList = method == PowerMethod.QUANTILE_POWER
+                                                ? params.getQuantileList()
+                                                : NO_QUANTILES;
+
+                for (Double alpha: params.getAlphaList()) {
+                    for (Double sigmaScale: params.getSigmaScaleList()) {
+                        for (Double betaScale: params.getBetaScaleList()) {
+                            for (Double quantile: quantileList) {
+                                for (Integer sampleSize: params.getSampleSizeList()) {
                                     /*
                                      * add the simulated power sample result to the list
                                      * if a failure occurs, an error code and message are
@@ -1430,9 +1395,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                                         return results;
                                     }
                                 }
-                                qIdx++;
-                            } while (method == PowerMethod.QUANTILE_POWER &&
-                                    qIdx < params.getQuantileList().size());
+                            }
                         }
                     }
                 }
