@@ -2,7 +2,7 @@
  * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
  *
- * Copyright (C) 2016 Regents of the University of Colorado.
+ * Copyright (C) 2017 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,7 +20,8 @@
  */
 package edu.cudenver.bios.matrix;
 
-import java.util.Date;
+import edu.cudenver.bios.utils.Supplier; // in Java 7
+//import java.util.function.Supplier; // in Java 8
 import org.apache.commons.math3.linear.NonSquareMatrixException;
 import org.apache.commons.math3.linear.RealMatrix;
 
@@ -34,6 +35,11 @@ import org.apache.commons.math3.linear.RealMatrix;
  */
 public class MatrixUtilities {
     /**
+     * The line separator.
+     */
+    private static final String EOL = System.getProperty("line.separator");
+
+    /**
      * Construct an instance of this class.
      *
      * <p>
@@ -43,32 +49,70 @@ public class MatrixUtilities {
     }
 
     /**
-     * Print a RealMatrix to standard out.
+     * Create a string representing the content of a RealMatrix,
+     * suitable for logging.
      *
-     * @param label A label to print first.
+     * @param label An optional label.
      * @param rm    The RealMatrix.
+     *
+     * @return The string.
      */
-    public static void dump(String label, RealMatrix rm) {
-        System.out.print("== [" + new Date() + "] " + label + " ");
+    public static String logMessage(String label, RealMatrix rm) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(EOL);
+
+        if (label != null) {
+            sb.append("  ")
+              .append(label)
+              .append(EOL);
+        }
 
         if (rm == null) {
-            System.out.println("(null)");
+            sb.append("   (null)");
+            sb.append(EOL);
         } else {
-            System.out.println("(" + rm.getRowDimension() + " x " + rm.getColumnDimension() + ")");
+            int m = rm.getRowDimension();
+            int n = rm.getColumnDimension();
 
-            for (int i = 0, m = rm.getRowDimension(); i < m; ++ i) {
-                System.out.print("  ");
+            sb.append("   (")
+              .append(m)
+              .append(" x ")
+              .append(n)
+              .append(")")
+              .append(EOL);
 
-                for (int j = 0, n = rm.getColumnDimension(); j < n; ++ j) {
-                    System.out.print(rm.getEntry(i, j));
-                    System.out.print(' ');
+            for (int i = 0; i < m; ++ i) {
+                sb.append("    ");
+
+                for (int j = 0; j < n; ++ j) {
+                    sb.append(rm.getEntry(i, j))
+                      .append(' ');
                 }
 
-                System.out.println();
+                sb.append(EOL);
             }
         }
 
-        System.out.println();
+        return sb.toString();
+    }
+
+    /**
+     * Given a label and a matrix, return a supplier of a
+     * log message for that label and matrix.
+     *
+     * @param label The label.
+     * @param rm    The matrix.
+     *
+     * @return The supplier.
+     */
+    public static Supplier<Object> logMessageSupplier(final String label, final RealMatrix rm) {
+        return new Supplier<Object>() {
+            @Override
+            public Object get() {
+                return logMessage(label, rm);
+            }
+        };
     }
 
     /**
