@@ -55,6 +55,17 @@ public class Logger {
     }
 
     /**
+     * Retrieve an instance of this class wrapping a logger.
+     *
+     * @param logger The logger.
+     *
+     * @return The instance.
+     */
+    public static Logger getLogger(org.apache.log4j.Logger logger) {
+        return new Logger(logger);
+    }
+
+    /**
      * Construct an instance of this class.
      *
      * @param logger The wrapped logger.
@@ -104,6 +115,50 @@ public class Logger {
     public void debug(Supplier<Object> supplier, Throwable t) {
         if (logger.isDebugEnabled()) {
             logger.debug(supplier == null ? null : supplier.get(), t);
+        }
+    }
+
+    /**
+     * Log a message object with the ERROR level.
+     *
+     * @param message The message object to log.
+     */
+    public void error(Object message) {
+        logger.error(message);
+    }
+
+    /**
+     * Log a message object with the ERROR level including the stack trace
+     * of the Throwable t passed as parameter.
+     *
+     * @param message The message object to log.
+     * @param t       The exception to log, including its stack trace.
+     */
+    public void error(Object message, Throwable t) {
+        logger.error(message, t);
+    }
+
+    /**
+     * Log a supplied message object with the ERROR level.
+     *
+     * @param supplier The supplier of the message object to log.
+     */
+    public void error(Supplier<Object> supplier) {
+        if (logger.isEnabledFor(Level.ERROR)) {
+            logger.error(supplier == null ? null : supplier.get());
+        }
+    }
+
+    /**
+     * Log a supplied message object with the ERROR level including the stack trace
+     * of the Throwable t passed as parameter.
+     *
+     * @param supplier The supplier of the message object to log.
+     * @param t        The exception to log, including its stack trace.
+     */
+    public void error(Supplier<Object> supplier, Throwable t) {
+        if (logger.isEnabledFor(Level.ERROR)) {
+            logger.error(supplier == null ? null : supplier.get(), t);
         }
     }
 
