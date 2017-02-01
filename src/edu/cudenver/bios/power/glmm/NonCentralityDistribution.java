@@ -34,10 +34,12 @@ import edu.cudenver.bios.distribution.ChiSquareTerm;
 import edu.cudenver.bios.distribution.NonCentralFDistribution;
 import edu.cudenver.bios.distribution.WeightedSumOfNoncentralChiSquaresDistribution;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.matrix.MatrixUtilities;
 import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.power.PowerErrorEnum;
 import edu.cudenver.bios.power.PowerException;
 import edu.cudenver.bios.power.glmm.GLMMTestFactory.Test;
+import edu.cudenver.bios.utils.Logger;
 
 import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
 
@@ -88,6 +90,7 @@ public class NonCentralityDistribution
     protected RealMatrix sigmaError;
     protected RealMatrix sigmaG;
 
+    private static final Logger LOGGER = Logger.getLogger(NonCentralityDistribution.class);
 
     /**
      * Function calculating the difference between the probability of a target quantile
@@ -126,6 +129,21 @@ public class NonCentralityDistribution
             RealMatrix sigmaError, RealMatrix sigmaG, boolean exact)
     throws PowerException
     {
+        debug("CREATING NonCentralityDistribution");
+        debug("begin parameters");
+        debug("test: " + test);
+        debug("FEssence:", FEssence);
+        debug("FtFinverse:", FtFinverse);
+        debug("perGroupN: " + perGroupN);
+        debug("CFixedRand:", CFixedRand.getCombinedMatrix());
+        debug("U:", U);
+        debug("thetaNull:", thetaNull);
+        debug("beta:", beta);
+        debug("sigmaError:", sigmaError);
+        debug("sigmaG:", sigmaG);
+        debug("exact: " + exact);
+        debug("end parameters");
+
         initialize(test, FEssence, FtFinverse, perGroupN, CFixedRand, U, thetaNull, beta,
                 sigmaError, sigmaG, exact);
     }
@@ -138,6 +156,8 @@ public class NonCentralityDistribution
             RealMatrix thetaNull, RealMatrix beta,
             RealMatrix sigmaError, RealMatrix sigmaG, boolean exact)
     throws PowerException {
+        debug("entering NonCentralityDistribution.initialize");
+
         // reset member variables
         this.T1 = null;
         this.FT1 = null;
@@ -167,38 +187,70 @@ public class NonCentralityDistribution
             // TODO: need to calculate H0, need to adjust H1 for Unirep
             // get design matrix for fixed parameters only
             qF = FEssence.getColumnDimension();
-            a = CFixedRand.getCombinedMatrix().getRowDimension();
+            // a = CFixedRand.getCombinedMatrix().getRowDimension();
+
             // get fixed contrasts
             RealMatrix Cfixed = CFixedRand.getFixedMatrix();
             RealMatrix CGaussian = CFixedRand.getRandomMatrix();
+
             // build intermediate terms h1, S
             if (FtFinverse == null)
             {
                 FtFinverse = new LUDecomposition(FEssence.transpose().multiply(FEssence)).getSolver().getInverse();
+                debug("FEssence", FEssence);
+                debug("FtFinverse = (FEssence transpose * FEssence) inverse", FtFinverse);
+            } else {
+                debug("FtFinverse", FtFinverse);
             }
-            //CF*FPFINV*CF`
+
             RealMatrix PPt = Cfixed.multiply(FtFinverse.scalarMultiply(1/(double) perGroupN)).multiply(Cfixed.transpose());
+            debug("Cfixed", Cfixed);
+            debug("n = " + perGroupN);
+            debug("PPt = Cfixed * FtF inverse * (1/n) * Cfixed transpose", PPt);
+
             T1 = forceSymmetric(new LUDecomposition(PPt).getSolver().getInverse());
+            debug("T1 = PPt inverse", T1);
+
             FT1 = new CholeskyDecomposition(T1).getL();
+            debug("FT1 = Cholesky decomposition (L) of T1", FT1);
+
             // calculate theta difference
 //            RealMatrix thetaNull = params.getTheta();
             RealMatrix C = CFixedRand.getCombinedMatrix();
 //            RealMatrix beta = params.getScaledBeta();
 //            RealMatrix U = params.getWithinSubjectContrast();
+
             // thetaHat = C * beta * U
             RealMatrix thetaHat = C.multiply(beta.multiply(U));
-            // thetaHat - thetaNull.
+            debug("C", C);
+            debug("beta", beta);
+            debug("U", U);
+            debug("thetaHat = C * beta * U", thetaHat);
+
+            // thetaDiff = thetaHat - thetaNull
             RealMatrix thetaDiff = thetaHat.subtract(thetaNull);
+            debug("thetaNull", thetaNull);
+            debug("thetaDiff = thetaHat - thetaNull", thetaDiff);
+
             // TODO: specific to HLT or UNIREP
             RealMatrix sigmaStarInverse = getSigmaStarInverse(U, sigmaError, test);
+            debug("sigmaStarInverse", sigmaStarInverse);
+
             RealMatrix H1matrix = thetaDiff.transpose().multiply(T1).multiply(thetaDiff).multiply(sigmaStarInverse);
+            debug("H1matrix = thetaDiff transpose * T1 * thetaDiff * sigmaStarInverse", H1matrix);
+
             H1 = H1matrix.getTrace();
-            // matrix which represents the non-centrality parameter as a linear combination of chi-squared r.v.'s
-            S = FT1.transpose().multiply(thetaDiff).multiply(sigmaStarInverse).multiply(thetaDiff.transpose()).multiply(FT1).scalarMultiply(1/H1);
-            // we use the S matrix to generate the F-critical, numerical df's, and denominator df's
+            debug("H1 = " + H1);
+
+            // Matrix which represents the non-centrality parameter as a linear combination of chi-squared r.v.'s.
+            S = FT1.transpose().multiply(thetaDiff).multiply(sigmaStarInverse).multiply(thetaDiff.transpose())
+                   .multiply(FT1).scalarMultiply(1/H1);
+            debug("S = FT1 transpose * thetaDiff * sigmaStar inverse * thetaDiff transpose * FT1 * (1/H1)", S);
+
+            // We use the S matrix to generate the F-critical, numerical df's, and denominator df's
             // for a central F distribution.  The resulting F distribution is used as an approximation
-            // for the distribution of the non-centrality parameter
-            // See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details
+            // for the distribution of the non-centrality parameter.
+            // See formulas 18-21 and A8,A10 from Glueck & Muller (2003) for details.
             EigenDecomposition sEigenDecomp = new EigenDecomposition(S);
             sEigenValues = sEigenDecomp.getRealEigenvalues();
             // calculate H0
@@ -211,6 +263,7 @@ public class NonCentralityDistribution
                 if (value > 0) sStar++;
             }
             // TODO: throw error if sStar is <= 0
+            // TODO: NO: throw error if sStar != sEigenValues.length instead???
             double stddevG = Math.sqrt(sigmaG.getEntry(0, 0));
             RealMatrix svec = sEigenDecomp.getVT();
             mzSq = svec.multiply(FT1.transpose()).multiply(CGaussian).scalarMultiply(1/stddevG);
@@ -222,10 +275,13 @@ public class NonCentralityDistribution
                     mzSq.setEntry(i, j, entry*entry); // TODO: is there an apache function to do this?
                 }
             }
+
+            debug("exiting NonCentralityDistribution.initialize normally");
         }
-        catch (Exception e)
+        catch (RuntimeException e)
         {
-            e.printStackTrace(System.out);
+            debug("exiting NonCentralityDistribution.initialize abnormally", e);
+
             throw new PowerException(e.getMessage(),
                     PowerErrorEnum.INVALID_DISTRIBUTION_NONCENTRALITY_PARAMETER);
         }
@@ -430,6 +486,12 @@ public class NonCentralityDistribution
     {
         // sigma* = U'*sigmaE*U
         RealMatrix sigmaStar = U.transpose().multiply(sigmaError).multiply(U);
+        debug("U", U);
+        debug("sigmaError", sigmaError);
+        debug("sigmaStar = U transpose * sigmaError * U", sigmaStar);
+
+        // TODO: force symmetric?
+
         if (! MatrixUtils.isPositiveDefinite(sigmaStar)) {
             throw new IllegalArgumentException(NOT_POSITIVE_DEFINITE);
         }
@@ -453,7 +515,7 @@ public class NonCentralityDistribution
     }
 
     /**
-     * Get the upper intergral bound
+     * Get the upper integral bound
      * @return H1
      */
     public double getH1()
@@ -462,11 +524,42 @@ public class NonCentralityDistribution
     }
 
     /**
-     * Get the lower intergral bound
+     * Get the lower integral bound
      * @return H0
      */
     public double getH0()
     {
         return H0;
+    }
+
+    /**
+     * A convenience method for debug logging of a message.
+     *
+     * @param message The message.
+     */
+    private static void debug(Object message) {
+        LOGGER.debug(message);
+    }
+
+    /**
+     * A convenience method for debug logging of a message
+     * and a throwable.
+     *
+     * @param message The message.
+     * @param t       The throwable.
+     */
+    private static void debug(Object message, Throwable t) {
+        LOGGER.debug(message, t);
+    }
+
+    /**
+     * A convenience method for debug logging of a matrix
+     * with a label.
+     *
+     * @param label      The label.
+     * @param realMatrix The matrix.
+     */
+    private static void debug(String label, RealMatrix realMatrix) {
+        LOGGER.debug(MatrixUtilities.logMessageSupplier(label, realMatrix));
     }
 }
