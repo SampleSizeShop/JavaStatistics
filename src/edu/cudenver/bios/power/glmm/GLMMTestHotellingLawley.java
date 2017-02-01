@@ -26,7 +26,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 
 /**
- * Implementation of the Hotelling Lawley Trace (HLT) test for the
+ * Implementation of the Hotelling-Lawley Trace (HLT) test for the
  * general linear multivariate model
  *
  * @author Sarah Kreidler
@@ -187,7 +187,7 @@ public class GLMMTestHotellingLawley extends GLMMTest
     throws IllegalArgumentException
     {
         if (!H.isSquare() || !E.isSquare() || H.getColumnDimension() != E.getRowDimension())
-            throw new IllegalArgumentException("Failed to compute Hotelling Lawley Trace: hypothesis and error matrices must be square and same dimensions");
+            throw new IllegalArgumentException("Failed to compute Hotelling-Lawley Trace: hypothesis and error matrices must be square and same dimensions");
 
         RealMatrix inverseE = new LUDecomposition(E).getSolver().getInverse();
         RealMatrix HinverseE = H.multiply(inverseE);
