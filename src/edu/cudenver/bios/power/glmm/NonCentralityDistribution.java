@@ -156,7 +156,7 @@ public class NonCentralityDistribution
             RealMatrix thetaNull, RealMatrix beta,
             RealMatrix sigmaError, RealMatrix sigmaG, boolean exact)
     throws PowerException {
-        debug("entering NonCentralityDistribution.initialize");
+        debug("entering initialize");
 
         // reset member variables
         this.T1 = null;
@@ -276,11 +276,11 @@ public class NonCentralityDistribution
                 }
             }
 
-            debug("exiting NonCentralityDistribution.initialize normally");
+            debug("exiting initialize normally");
         }
         catch (RuntimeException e)
         {
-            debug("exiting NonCentralityDistribution.initialize abnormally", e);
+            LOGGER.warn("exiting initialize abnormally", e);
 
             throw new PowerException(e.getMessage(),
                     PowerErrorEnum.INVALID_DISTRIBUTION_NONCENTRALITY_PARAMETER);
@@ -446,8 +446,10 @@ public class NonCentralityDistribution
                         (nuStarNegative*lambdaStarNegative)/(nuStarPositive*lambdaStarPositive));
             }
         }
-        catch (Exception e)
+        catch (RuntimeException e)
         {
+            LOGGER.warn("exiting cdf abnormally", e);
+
             throw new PowerException(e.getMessage(),
                     PowerErrorEnum.DISTRIBUTION_NONCENTRALITY_PARAMETER_CDF_FAILED);
         }
@@ -533,7 +535,7 @@ public class NonCentralityDistribution
     }
 
     /**
-     * A convenience method for debug logging of a message.
+     * A convenience method for DEBUG logging of a message.
      *
      * @param message The message.
      */
@@ -542,7 +544,7 @@ public class NonCentralityDistribution
     }
 
     /**
-     * A convenience method for debug logging of a message
+     * A convenience method for DEBUG logging of a message
      * and a throwable.
      *
      * @param message The message.
@@ -553,7 +555,7 @@ public class NonCentralityDistribution
     }
 
     /**
-     * A convenience method for debug logging of a matrix
+     * A convenience method for DEBUG logging of a matrix
      * with a label.
      *
      * @param label      The label.
