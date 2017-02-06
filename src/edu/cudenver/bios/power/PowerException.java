@@ -2,7 +2,7 @@
  * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
  *
- * Copyright (C) 2010 Regents of the University of Colorado.
+ * Copyright (C) 2017 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,19 +25,9 @@ package edu.cudenver.bios.power;
  * @author Sarah Kreidler
  *
  */
-public class PowerException extends Exception
-{
+public class PowerException extends Exception {
     static final long serialVersionUID = -1L;
-    protected PowerErrorEnum errorCode = null;
-
-    /**
-     * Constructor taking an error message
-     * @param msg
-     */
-    public PowerException(String msg)
-    {
-        super(msg);
-    }
+    protected PowerErrorEnum errorCode;
 
     /**
      * Constructor taking an error message and error code
@@ -50,20 +40,10 @@ public class PowerException extends Exception
     }
 
     /**
-     * Constructor taking a Throwable object
-     * @param e
-     */
-    public PowerException(Throwable e)
-    {
-        super(e);
-    }
-
-    /**
      * Get the error code for this exception
      * @return error code
      */
     public PowerErrorEnum getErrorCode() {
         return errorCode;
     }
-
 }
