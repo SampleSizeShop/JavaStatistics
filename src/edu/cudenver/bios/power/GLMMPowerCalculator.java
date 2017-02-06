@@ -32,10 +32,10 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.apache.commons.math3.stat.StatUtils;
-import org.apache.log4j.Logger;
 
 import edu.cudenver.bios.distribution.NonCentralFDistribution;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
+import edu.cudenver.bios.matrix.MatrixUtilities;
 import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.matrix.RandomErrorMatrix;
 import edu.cudenver.bios.power.DetectableDifferenceBound.DetectableDifferenceError;
@@ -50,8 +50,12 @@ import edu.cudenver.bios.power.glmm.NonCentralityDistribution;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.parameters.PowerParameters;
+import edu.cudenver.bios.utils.Logger;
+import edu.cudenver.bios.utils.Supplier;
 
 import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
+
+import java.math.BigInteger;
 
 /**
  * Power calculator implementation for the general linear multivariate model
@@ -62,6 +66,8 @@ import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
  */
 public class GLMMPowerCalculator implements PowerCalculator
 {
+    private BigInteger numberOfEvaluations;
+
     private static final String NO_MEAN_DIFFERENCE_MESSAGE =
             "The null hypothesis is true: that is, all contrasts defined by the hypothesis have zero sums of squares. "
         +   "(This may arise, for example, in a test of mean difference if the means are equal.) "
@@ -77,6 +83,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         ;
 
     private static final int MAX_ITERATIONS = 10000;
+    private static final int MAX_EVALUATIONS = 1500000;
     private static final int STARTING_SAMPLE_SIZE = 1024;
     private static final int STARTING_BETA_SCALE = 10;
     private static final int SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL = 1000;
@@ -94,7 +101,7 @@ public class GLMMPowerCalculator implements PowerCalculator
 
     private static final List<Double> NO_QUANTILES = Collections.singletonList(Double.NaN);
 
-    private Logger logger = Logger.getLogger(getClass());
+    private static final Logger LOGGER = Logger.getLogger(GLMMPowerCalculator.class);
 
     public class SimulatedPower
     {
@@ -262,6 +269,8 @@ public class GLMMPowerCalculator implements PowerCalculator
 
         public double value(double t)
         {
+            numberOfEvaluations = numberOfEvaluations.add(BigInteger.ONE);
+
             NonCentralFDistribution FdistTerm1 = new NonCentralFDistribution(ndf, ddf, t);
             NonCentralFDistribution FdistTerm2 = new NonCentralFDistribution(ndf+2, ddf, t);
 
@@ -514,6 +523,8 @@ public class GLMMPowerCalculator implements PowerCalculator
      */
     private void initialize(GLMMPowerParameters params)
     {
+        debug("entering initialize");
+
         // TODO: why isn't this done in PowerResourceHelper.studyDesignToPowerParameters?
         // if no power methods are specified, add conditional as a default
         if (params.getPowerMethodList().size() <= 0)
@@ -521,16 +532,27 @@ public class GLMMPowerCalculator implements PowerCalculator
 
         // update the sigma error if we have a baseline covariate
         RealMatrix sigmaG = params.getSigmaGaussianRandom();
+        debug("sigmaG", sigmaG);
+
         RealMatrix sigmaY = params.getSigmaOutcome();
+        debug("sigmaY", sigmaY);
+
         RealMatrix sigmaYG = params.getSigmaOutcomeGaussianRandom();
-        int numRandom =
-                (sigmaG != null ? sigmaG.getRowDimension() : 0);
+        debug("sigmaYG", sigmaYG);
+
+        int numRandom = sigmaG != null ? sigmaG.getRowDimension() : 0;
         if (numRandom == 1)
         {
             // set the sigma error matrix to [sigmaY - sigmaYG * sigmaG-1 * sigmaGY]
             RealMatrix sigmaGY = sigmaYG.transpose();
+            debug("sigmaYG transpose", sigmaGY);
+
             RealMatrix sigmaGInverse = new LUDecomposition(sigmaG).getSolver().getInverse();
+            debug("sigmaG inverse", sigmaGInverse);
+
             RealMatrix sigmaError = forceSymmetric(sigmaY.subtract(sigmaYG.multiply(sigmaGInverse.multiply(sigmaGY))));
+            debug("sigmaError = sigmaY - sigmaYG * sigmaG inverse * sigmaYG transpose", sigmaError);
+
             if (! MatrixUtils.isPositiveSemidefinite(sigmaError)) {
                 throw new IllegalArgumentException(SIGMA_ERROR_NOT_POSITIVE_SEMIDEFINITE_MESSAGE);
             }
@@ -539,7 +561,10 @@ public class GLMMPowerCalculator implements PowerCalculator
             // calculate the betaG matrix and fill in the placeholder row for the random predictor
             FixedRandomMatrix beta = params.getBeta();
             beta.updateRandomMatrix(sigmaGInverse.multiply(sigmaGY));
+            debug("beta with random part updated to sigmaG inverse * sigmaYG transpose", beta.getCombinedMatrix());
         }
+
+        debug("exiting initialize");
     }
 
     /**
@@ -719,6 +744,8 @@ public class GLMMPowerCalculator implements PowerCalculator
         return (1 - nonCentralFDist.cdf(Fcrit));
     }
 
+    private static final double LOG2 = Math.log(2);
+
     /**
      * Calculate power by integrating over all possible values of the
      * non-centrality parameter.  Best used for designs with a
@@ -726,39 +753,65 @@ public class GLMMPowerCalculator implements PowerCalculator
      *
      * @param params GLMM input parameters
      * @return unconditional power
-     * @throws IllegalArgumentException
+     * @throws PowerException
      */
-    private double getUnconditionalPower(GLMMTest glmmTest,
-            NonCentralityDistribution nonCentralityDist, double alpha)
-                    throws IllegalArgumentException
-    {
+    private double getUnconditionalPower(GLMMTest glmmTest, NonCentralityDistribution nonCentralityDist, double alpha)
+            throws PowerException {
         // get the approximate critical F value (central F) under the null hypothesis
         double Fcrit = glmmTest.getCriticalF(GLMMTest.DistributionType.POWER_NULL, alpha);
 
         // get the distribution of the noncentrality parameter
         double ndf = glmmTest.getNumeratorDF(GLMMTest.DistributionType.POWER_ALTERNATIVE);
         double ddf = glmmTest.getDenominatorDF(GLMMTest.DistributionType.POWER_ALTERNATIVE);
+
+        debug("Fcrit = " + Fcrit + ", ndf = " + ndf + ", ddf = " + ddf);
+
         double h1 = nonCentralityDist.getH1();
         double h0 = nonCentralityDist.getH0();
-        // integrate over all value of non-centrality parameter from h0 to h1
-        UnconditionalPowerIntegrand integrand =
-                new UnconditionalPowerIntegrand(nonCentralityDist, Fcrit, ndf, ddf);
-        //        TrapezoidIntegrator integrator = new TrapezoidIntegrator();
-        SimpsonIntegrator integrator = new SimpsonIntegrator();
-        try
-        {
+
+        debug("h0 = " + h0 + ", h1 = " + h1);
+
+        try {
+            if (h1 < h0) {
+                throw new IllegalArgumentException("Integration bounds are " + h0 + " and " + h1 + ".");
+            }
+
+            double integralResult;
+
+            numberOfEvaluations = BigInteger.ZERO;
+
+            if (h1 > h0) {
+                // integrate over all values of non-centrality parameter from h0 to h1
+                SimpsonIntegrator integrator = new SimpsonIntegrator();
+                UnconditionalPowerIntegrand integrand = new UnconditionalPowerIntegrand(nonCentralityDist, Fcrit, ndf, ddf);
+
+                integralResult = integrator.integrate(MAX_EVALUATIONS, integrand, h0, h1);
+            } else {
+                integralResult = 0;
+            }
+
+            final double I = integralResult;
+
+            debug(new Supplier<Object>() {
+                @Override
+                public Object get() {
+                    return
+                        "done with integration: "
+                      + "result = " + I + ", "
+                      + "number of evaluations = " + numberOfEvaluations + ", "
+                      + "log = " + (int) (Math.log(numberOfEvaluations.longValue() - 3)/LOG2 + 0.5);
+                }
+            });
+
             // create a noncentral F dist with non-centrality of H1
             NonCentralFDistribution fdist = new NonCentralFDistribution(ndf, ddf, h1);
-            double integralResult = 0;
-            // TODO: can use of Integer.MAX_VALUE result in an endless loop?
-            if (h1 != 0) integralResult = integrator.integrate(
-                    Integer.MAX_VALUE, integrand, h0, h1);
 
             return (1 - fdist.cdf(Fcrit) - 0.5*integralResult);
-        }
-        catch (Exception e)
-        {
-            throw new IllegalArgumentException("Failed to integrate over non-centrality parameter", e);
+        } catch (RuntimeException e) {
+            LOGGER.warn("exiting getUnconditionalPower abnormally", e);
+
+            throw new PowerException(e.getMessage(),
+                    PowerErrorEnum.INTEGRATION_OVER_DISTRIBUTION_NONCENTRALITY_PARAMETER_FAILED);
         }
     }
 
@@ -1018,7 +1071,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                     break;
                 } catch (Exception e) {
                     // just keep iterating until we find a minimum valid sample size
-                    logger.info("Ignoring exception as we iterate to find a valid minimum:", e);
+                    LOGGER.info("Ignoring exception as we iterate to find a valid minimum:", e);
                 }
             } while (lowerBound < upperN && !Thread.currentThread().isInterrupted());
             return new SampleSizeBound(lowerBound, calculatedPower);
@@ -1082,7 +1135,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                 currentPower = getPowerByType(glmmTest, nonCentralityDist, method, alpha, quantile);
             } catch (Exception e) {
                 // ignore steps which yield invalid degrees of freedom
-                logger.warn("Exception getting power by type: " + e.getMessage(), e);
+                LOGGER.warn("exception getting power by type", e);
                 return new SampleSizeBound(-1, alpha, SampleSizeError.SAMPLE_SIZE_UNDEFINED_DUE_TO_EXCEPTION);
             }
         } while (currentPower <= targetPower && upperBound < maxPerGroupN &&
@@ -1630,23 +1683,26 @@ public class GLMMPowerCalculator implements PowerCalculator
      * @return
      */
     private double getPowerByType(GLMMTest glmmTest, NonCentralityDistribution nonCentralityDist,
-            PowerMethod method, double alpha, double quantile)
-    {
+                                    PowerMethod method, double alpha, double quantile)
+            throws PowerException {
         // calculate the power
-        double power = Double.NaN;
-        switch (method)
-        {
+        double power;
+
+        switch (method) {
         case QUANTILE_POWER:
             power = getQuantilePower(glmmTest, nonCentralityDist, alpha, quantile);
             break;
+
         case UNCONDITIONAL_POWER:
             power = getUnconditionalPower(glmmTest, nonCentralityDist, alpha);
             break;
+
         case CONDITIONAL_POWER:
         default:
             power = getConditionalPower(glmmTest, alpha);
             break;
         }
+
         return power;
     }
 
@@ -1667,5 +1723,34 @@ public class GLMMPowerCalculator implements PowerCalculator
     public void setSymmetryThreshold(double threshold)
     {
         this.symmetryThreshold = threshold;
+    }
+
+    /**
+     * A convenience method for DEBUG logging of a message.
+     *
+     * @param message The message.
+     */
+    private static void debug(Object message) {
+        LOGGER.debug(message);
+    }
+
+    /**
+     * A convenience method for DEBUG logging of a supplied message.
+     *
+     * @param supplier The message supplier.
+     */
+    private static void debug(Supplier<Object> supplier) {
+        LOGGER.debug(supplier);
+    }
+
+    /**
+     * A convenience method for DEBUG logging of a matrix
+     * with a label.
+     *
+     * @param label      The label.
+     * @param realMatrix The matrix.
+     */
+    private static void debug(String label, RealMatrix realMatrix) {
+        LOGGER.debug(MatrixUtilities.logMessageSupplier(label, realMatrix));
     }
 }
