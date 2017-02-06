@@ -2,7 +2,7 @@
  * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
  *
- * Copyright (C) 2015 Regents of the University of Colorado.
+ * Copyright (C) 2017 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -560,8 +560,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         RealMatrix sigmaG = params.getSigmaGaussianRandom();
         RealMatrix sigmaY = params.getSigmaOutcome();
         RealMatrix sigmaYG = params.getSigmaOutcomeGaussianRandom();
-        int numRandom =
-                (sigmaG != null ? sigmaG.getRowDimension() : 0);
+        int numRandom = sigmaG != null ? sigmaG.getRowDimension() : 0;
 
         // only allow at most 1 random predictor
         // TODO: handle multiple random predictors
@@ -602,8 +601,13 @@ public class GLMMPowerCalculator implements PowerCalculator
                         PowerErrorEnum.MATRIX_NONSQUARE_SIGMA_E);
             if (U.getRowDimension() != sigmaE.getRowDimension())
                 throw new PowerException(
-                        "Within subject contrast does not conform with sigma matrix",
-                        PowerErrorEnum.MATRIX_CONFORMANCE_U_SIGMA_E);
+                        "Within subject contrast matrix "
+                      + "(" + U.getRowDimension() + " x " + U.getColumnDimension() + ")"
+                      + " does not conform with "
+                      + "sigma matrix "
+                      + "(" + sigmaE.getRowDimension() + " x " + sigmaE.getColumnDimension() + ")",
+                        PowerErrorEnum.MATRIX_CONFORMANCE_U_SIGMA_E
+                      );
         }
         else if (numRandom == 1)
         {
@@ -629,8 +633,14 @@ public class GLMMPowerCalculator implements PowerCalculator
 
             // check conformance
             if (U.getRowDimension() != sigmaY.getRowDimension())
-                throw new PowerException("Within subject contrast does not conform with sigma matrix",
-                        PowerErrorEnum.MATRIX_CONFORMANCE_U_SIGMA_Y);
+                throw new PowerException(
+                        "Within subject contrast matrix "
+                      + "(" + U.getRowDimension() + " x " + U.getColumnDimension() + ")"
+                      + " does not conform with "
+                      + "sigma matrix "
+                      + "(" + sigmaY.getRowDimension() + " x " + sigmaY.getColumnDimension() + ")",
+                        PowerErrorEnum.MATRIX_CONFORMANCE_U_SIGMA_Y
+                      );
             if (sigmaG.getRowDimension() != sigmaYG.getColumnDimension())
                 throw new PowerException("Outcome / Gaussian predictor covariance " +
                         "matrix does not conform with variance matrix for the gaussian predictor",
@@ -647,10 +657,10 @@ public class GLMMPowerCalculator implements PowerCalculator
 
         // check dimensionality
         if (C.getColumnDimension() != beta.getRowDimension())
-            throw new PowerException("Between subject contrast does not conform with beta matrix",
+            throw new PowerException("Between subject contrast matrix does not conform with beta matrix",
                     PowerErrorEnum.MATRIX_CONFORMANCE_C_BETA);
         if (beta.getColumnDimension() != U.getRowDimension())
-            throw new PowerException("Within subject contrast does not conform with beta matrix",
+            throw new PowerException("Within subject contrast matrix does not conform with beta matrix",
                     PowerErrorEnum.MATRIX_CONFORMANCE_BETA_U);
         if ((XEssence.getColumnDimension() != beta.getRowDimension() && numRandom == 0) ||
                 (XEssence.getColumnDimension() + 1 != beta.getRowDimension() && numRandom > 0))
