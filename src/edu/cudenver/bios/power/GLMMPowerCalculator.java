@@ -83,7 +83,7 @@ public class GLMMPowerCalculator implements PowerCalculator
         ;
 
     private static final int MAX_ITERATIONS = 10000;
-    private static final int MAX_EVALUATIONS = 1500000;
+    private static final int MAX_EVALUATIONS = 2097155; // 2^21 + 3; smallest needed for unit tests to pass
     private static final int STARTING_SAMPLE_SIZE = 1024;
     private static final int STARTING_BETA_SCALE = 10;
     private static final int SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL = 1000;
