@@ -89,6 +89,10 @@ public class GLMMPowerCalculator implements PowerCalculator
     private static final int SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL = 1000;
     private static final double EPSILON = 1e-12;
 
+    // The largest sample size for which we will agree to perform a power calculation
+    // using the unconditional power method. (Beyond this, performance may suffer.)
+    private static final int MAX_SAMPLE_SIZE_FOR_UNCONDITIONAL_POWER = 100;
+
     // seed for random column generation
     private int seed = 1234;
     // accuracy thresholds
@@ -1523,6 +1527,25 @@ public class GLMMPowerCalculator implements PowerCalculator
     private GLMMPower getPowerValue(GLMMPowerParameters params,
             Test test, PowerMethod method, double alpha,
             double sigmaScale, double betaScale, int sampleSize, double quantile) {
+        if (method == PowerMethod.UNCONDITIONAL_POWER && sampleSize > MAX_SAMPLE_SIZE_FOR_UNCONDITIONAL_POWER) {
+            GLMMPower power = new GLMMPower(test, alpha, -1, -1,
+                    MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize), betaScale,
+                    sigmaScale, method, quantile, null);
+            power.setErrorMessage(
+                "For unconditional-power power calculations, we require that the Smallest "
+              + "Group Size not exceed " + MAX_SAMPLE_SIZE_FOR_UNCONDITIONAL_POWER + ", for "
+              + "performance reasons. "
+              + "If your Smallest Group Size does exceed " + MAX_SAMPLE_SIZE_FOR_UNCONDITIONAL_POWER + ", "
+              + "you may instead calculate power using quantile power "
+              + "calculated at the median power (0.50th quantile) instead of unconditional power. "
+              + "As noted in Glueck and Muller (2003) "
+              + "(see <a href=\"http://samplesizeshop.org/education/related-publications/\">Related Publications</a>), "
+              + "quantile power is a very good approximation for unconditional power."
+            );
+            power.setErrorCode(PowerErrorEnum.POWER_METHOD_UNKNOWN);
+            return power;
+        }
+
         GLMMPowerConfidenceInterval ci = null;
 
         try {
