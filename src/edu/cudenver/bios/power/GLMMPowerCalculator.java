@@ -863,12 +863,12 @@ public class GLMMPowerCalculator implements PowerCalculator
             GLMMPower power = new GLMMPower(test, alpha, targetPower, -1, -1,
                     betaScale, sigmaScale, method, quantile, null);
             power.setErrorMessage(
-                "We have temporarily disabled unconditional-power sample size calculations "
+                "We have temporarily disabled sample size calculations using the unconditional power method "
               + "while we work on computational efficiency. "
               + "There are two alternatives."
               + "<ol>"
               + "<li>"
-              + "You may perform an unconditional-power power calculation for a given sample size, "
+              + "You may perform a power calculation for a given sample size, "
               + "and iterate until you find a sample size and unconditional power that work for your design."
               + "</li>"
               + "<li>"
@@ -1532,7 +1532,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                     MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize), betaScale,
                     sigmaScale, method, quantile, null);
             power.setErrorMessage(
-                "For unconditional-power power calculations, we require that the Smallest "
+                "For power calculations using the unconditional power method, we require that the Smallest "
               + "Group Size not exceed " + MAX_SAMPLE_SIZE_FOR_UNCONDITIONAL_POWER + ", for "
               + "performance reasons. "
               + "If your Smallest Group Size does exceed " + MAX_SAMPLE_SIZE_FOR_UNCONDITIONAL_POWER + ", "
