@@ -288,7 +288,7 @@ public class GLMMPower extends Power implements Serializable
             buffer.append("' powerMethod='");
             buffer.append(powerMethod);
         }
-        if (quantile != Double.NaN)
+        if (!Double.isNaN(quantile))
         {
             buffer.append("' quantile='");
             buffer.append(quantile);

@@ -147,7 +147,7 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
             expectedEpsilon = (1/(double)rankU)*(expT1/expT2);
         }
         // ensure that expected value is within bounds 1/b to 1
-        if (expectedEpsilon != Double.NaN)
+        if (!Double.isNaN(expectedEpsilon))
         {
             if (expectedEpsilon < 1/rankU)
             {

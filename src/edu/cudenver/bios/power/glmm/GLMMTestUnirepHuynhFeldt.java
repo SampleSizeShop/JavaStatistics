@@ -139,7 +139,7 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
         }
 
         // ensure that expected value is within bounds 1/b to 1
-        if (expectedEpsilon != Double.NaN)
+        if (!Double.isNaN(expectedEpsilon))
         {
             if (expectedEpsilon < 1/b)
             {
