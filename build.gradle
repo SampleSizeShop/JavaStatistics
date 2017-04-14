@@ -3,7 +3,7 @@ apply plugin: 'maven'
 
 group = 'org.samplesizeshop'
 archivesBaseName = 'javastatistics'
-version = '1.2.11.0'
+version = '1.2.12.0'
 buildDir = 'target'
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
