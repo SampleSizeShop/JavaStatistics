@@ -1,8 +1,8 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
- * Copyright (C) 2015 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,27 +27,25 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.test.PowerChecker;
 import edu.cudenver.bios.power.test.ValidationReportBuilder;
+import java.util.List;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
 /**
  * Test case for approximate unconditional power for the UNIREP.  Values should match
  * approximate unconditional power values from Table II in Glueck & Muller 2003.
- * 
+ *
  * @author Sarah Kreidler
  *
  */
 public class UnirepApproximateUnconditionalTest {
 
-    private static final double[] ALPHA_LIST = {0.05};    
-    private static final double[] SIGMA_SCALE_LIST = {1};	
-
+    private static final double[] ALPHA_LIST = {0.05};
+    private static final double[] SIGMA_SCALE_LIST = {1};
 
     private static final String DATA_FILE =  "TestUnirepApproximateUnconditional.xml";
     private static final String TITLE = "GLMM(F, g) Example 7. Unconditional " +
@@ -55,7 +53,6 @@ public class UnirepApproximateUnconditionalTest {
             "measures, Box, Geisser-Greenhouse, and Huynh-Feldt tests, " +
             "using the Satterthwaite approximation";
     private static final double TOLERANCE = 0.1;
-
     private PowerChecker checker;
 
     @Before
@@ -78,7 +75,7 @@ public class UnirepApproximateUnconditionalTest {
         GLMMPowerParameters params5 = buildValidMultivariateRandomInputs(beta5, 5);
         double[] beta25 = {
                 0.1651525,
-                0.2623301, 
+                0.2623301,
                 0.3508015
         };
         GLMMPowerParameters params25 = buildValidMultivariateRandomInputs(beta25, 25);
@@ -119,7 +116,7 @@ public class UnirepApproximateUnconditionalTest {
 
     /**
      * Builds matrices for a multivariate GLM with a baseline covariate
-     * This matrix set matches the values produced in Table II from Glueck&Muller
+     * Note, this matrix set matches the values produced in Table II from Glueck&Muller
      */
     private GLMMPowerParameters buildValidMultivariateRandomInputs(double[] betaScaleList, int repn)
     {
@@ -131,7 +128,6 @@ public class UnirepApproximateUnconditionalTest {
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
-        int P = 3;
         int Q = 3;
         // create design matrix
         params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(Q));
@@ -143,7 +139,6 @@ public class UnirepApproximateUnconditionalTest {
         params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
 
         // build sigma Y matrix
-        double rho = 0.4;
         double [][] sigmaY = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         params.setSigmaOutcome(new Array2DRowRealMatrix(sigmaY));
 
@@ -174,6 +169,6 @@ public class UnirepApproximateUnconditionalTest {
         double [][] within = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
 
-        return params;     
+        return params;
     }
 }

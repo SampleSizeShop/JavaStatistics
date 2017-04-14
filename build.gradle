@@ -52,14 +52,19 @@ sourceSets {
             srcDir 'src/test/java'
             exclude 'src/edu/cudenver/bios/power/test/general/**'
         }
+        resources {
+            srcDir 'config'
+        }
     }
-
     paper {
         java {
             srcDir 'src'
             include '**/power/test/**'
             compileClasspath = sourceSets.main.output + configurations.paper
             runtimeClasspath = output + compileClasspath
+        }
+        resources {
+            srcDir 'config'
         }
     }
 }

@@ -18,32 +18,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package edu.cudenver.bios.power;
+package edu.cudenver.bios.utils;
 
 /**
- * Generic Exception class for power calculations
- * @author Sarah Kreidler
- *
+ * An interface for suppliers of results; cribbed from Java 8.
  */
-public class PowerException extends Exception {
-    static final long serialVersionUID = -1L;
-    protected PowerErrorEnum errorCode;
-
+public interface Supplier<T> {
     /**
-     * Constructor taking an error message and error code
-     * @param msg
+     * Gets a result.
+     *
+     * @return a result
      */
-    public PowerException(String msg, PowerErrorEnum errorCode)
-    {
-        super(msg);
-        this.errorCode = errorCode;
-    }
-
-    /**
-     * Get the error code for this exception
-     * @return error code
-     */
-    public PowerErrorEnum getErrorCode() {
-        return errorCode;
-    }
+    T get();
 }

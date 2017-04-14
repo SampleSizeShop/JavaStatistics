@@ -1,7 +1,7 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
+ *
  * Copyright (C) 2015 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
@@ -27,28 +27,25 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.test.PowerChecker;
 import edu.cudenver.bios.power.test.ValidationReportBuilder;
+import java.util.List;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
 /**
  * Test case for approximate quantile power for the UNIREP.  Values should match
  * approximate median power values from Table II in Glueck & Muller 2003.
- * 
+ *
  * @author Sarah Kreidler
  *
  */
 public class UnirepApproximateQuantileTest {
 
-    private static final double MEAN = 9.75;
-    private static final double VARIANCE = 2.0;
-    private static final double[] ALPHA_LIST = {0.05};    
-    private static final double[] SIGMA_SCALE_LIST = {1};	
+    private static final double[] ALPHA_LIST = {0.05};
+    private static final double[] SIGMA_SCALE_LIST = {1};
 
     private static final String DATA_FILE =  "TestUnirepApproximateQuantile.xml";
     private static final String TITLE = "GLMM(F, g) Example 5. Median power for the " +
@@ -69,7 +66,6 @@ public class UnirepApproximateQuantileTest {
     @Test
     public void testPower()
     {
-
         // build the inputs
         double[] beta5 = {
                 0.4997025,
@@ -78,7 +74,7 @@ public class UnirepApproximateQuantileTest {
         GLMMPowerParameters params5 = buildValidMultivariateRandomInputs(beta5, 5);
         double[] beta25 = {
                 0.1651525,
-                0.2623301, 
+                0.2623301,
                 0.3508015
         };
         GLMMPowerParameters params25 = buildValidMultivariateRandomInputs(beta25, 25);
@@ -93,16 +89,15 @@ public class UnirepApproximateQuantileTest {
                 GLMMTestFactory.Test.UNIREP,
                 GLMMTestFactory.Test.UNIREP_BOX,
                 GLMMTestFactory.Test.UNIREP_GEISSER_GREENHOUSE,
-                GLMMTestFactory.Test.UNIREP_HUYNH_FELDT};
-        for(GLMMTestFactory.Test test : list)
-        {
+                GLMMTestFactory.Test.UNIREP_HUYNH_FELDT
+        };
+        for(GLMMTestFactory.Test test : list) {
             params5.clearTestList();
             params5.addTest(test);
             params25.clearTestList();
             params25.addTest(test);
             params50.clearTestList();
             params50.addTest(test);
-
             checker.checkPower(params5);
             checker.checkPower(params25);
             checker.checkPower(params50);
@@ -126,16 +121,13 @@ public class UnirepApproximateQuantileTest {
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
 
-        // add quantile power method
+        // add quantile power method and median quantile
         params.addPowerMethod(PowerMethod.QUANTILE_POWER);
         params.addQuantile(0.5);
 
         // add alpha values
-        for(double alpha: ALPHA_LIST) {
-            params.addAlpha(alpha);
-        }
+        for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 
-        int P = 3;
         int Q = 3;
         // create design matrix
         params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(Q));
@@ -147,7 +139,6 @@ public class UnirepApproximateQuantileTest {
         params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
 
         // build sigma Y matrix
-        double rho = 0.4;
         double [][] sigmaY = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         params.setSigmaOutcome(new Array2DRowRealMatrix(sigmaY));
 
@@ -178,6 +169,6 @@ public class UnirepApproximateQuantileTest {
         double [][] within = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
 
-        return params;     
+        return params;
     }
 }

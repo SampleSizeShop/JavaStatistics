@@ -131,6 +131,7 @@ public class NonCentralFDistribution extends AbstractRealDistribution
     public NonCentralFDistribution(double numeratorDegreesOfFreedom,
             double denominatorDegreesOfFreedom, double nonCentralityParameter)
     {
+        super(null);
         ndf = numeratorDegreesOfFreedom;
         ddf = denominatorDegreesOfFreedom;
         nonCentrality = nonCentralityParameter;
@@ -358,12 +359,14 @@ public class NonCentralFDistribution extends AbstractRealDistribution
     }
 
     @Override
+    @Deprecated
     public boolean isSupportLowerBoundInclusive() {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
+    @Deprecated
     public boolean isSupportUpperBoundInclusive() {
         // TODO Auto-generated method stub
         return false;
