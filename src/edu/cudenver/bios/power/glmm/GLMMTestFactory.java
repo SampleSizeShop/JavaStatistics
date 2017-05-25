@@ -36,11 +36,9 @@ import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateEpsilonApproximation;
  * @author Sarah Kreidler
  *
  */
-public class GLMMTestFactory
-{
+public class GLMMTestFactory {
     // the type of statistical test to use
-    public enum Test
-    {
+    public enum Test {
         UNIREP,
         UNIREP_BOX,
         UNIREP_GEISSER_GREENHOUSE,
@@ -54,10 +52,8 @@ public class GLMMTestFactory
             FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
             UnivariateEpsilonApproximation epsilonMethod,
             RealMatrix X, RealMatrix XtXinverse, int rank,
-            RealMatrix Y, RealMatrix C, RealMatrix U, RealMatrix thetaNull)
-    {
-        switch (test)
-        {
+            RealMatrix Y, RealMatrix C, RealMatrix U, RealMatrix thetaNull) {
+        switch (test) {
         case UNIREP:
             return new GLMMTestUnivariateRepeatedMeasures(fMethod, cdfMethod, epsilonMethod,
                     X, XtXinverse, rank, Y, C, U, thetaNull);
@@ -86,15 +82,13 @@ public class GLMMTestFactory
 
 
     public static GLMMTest createGLMMTestForPower(Test test,
-            FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
-            UnivariateEpsilonApproximation epsilonMethod,
-            RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
-            FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull,
-            RealMatrix beta, RealMatrix sigmaError, int nuForEstimatedSigma)
-    throws PowerException
-    {
-        switch (test)
-        {
+                FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
+                UnivariateEpsilonApproximation epsilonMethod,
+                RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
+                FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull,
+                RealMatrix beta, RealMatrix sigmaError, int nuForEstimatedSigma)
+            throws PowerException {
+        switch (test) {
         case UNIREP:
             return new GLMMTestUnivariateRepeatedMeasures(fMethod, cdfMethod, epsilonMethod,
                     Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
