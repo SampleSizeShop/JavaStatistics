@@ -33,6 +33,9 @@ import edu.cudenver.bios.matrix.FixedRandomMatrix;
  */
 public abstract class GLMMTest
 {
+    private static final String OVERFLOW_ERROR_MESSAGE =
+        "Sorry, an overflow occurred. Please try reducing the smallest group size.";
+
     // type of approximation to use for unirep
     public enum UnivariateCdfApproximation
     {
@@ -135,14 +138,18 @@ public abstract class GLMMTest
     {
         this.fMethod = fMethod;
         this.Xessence = Xessence;
-        this.XtXInverse =  XtXInverse;
-        this.totalN =  Xessence.getRowDimension() * perGroupN;
+        this.XtXInverse = XtXInverse;
+        int xrd = Xessence.getRowDimension();
+        if (xrd != 0 && perGroupN > Integer.MAX_VALUE/xrd) {
+            throw new GLMMTestException(OVERFLOW_ERROR_MESSAGE);
+        }
+        this.totalN = (double) xrd * perGroupN;
         this.rank = rank;
         this.CFixed = C.getFixedMatrix();
         this.C = C.getCombinedMatrix();
-        this.U =  U;
-        this.thetaNull =  thetaNull;
-        this.beta =  beta;
+        this.U = U;
+        this.thetaNull = thetaNull;
+        this.beta = beta;
         this.sigmaError = sigmaError;
 
         // check if uni/multivariate design
@@ -173,18 +180,18 @@ public abstract class GLMMTest
     {
         this.fMethod = fMethod;
         this.Xessence = null;
-        this.XtXInverse =  XtXInverse;
+        this.XtXInverse = XtXInverse;
         if (this.XtXInverse == null)
         {
             this.XtXInverse =
                 new LUDecomposition(X.transpose().multiply(X)).getSolver().getInverse();
         }
-        this.totalN =  X.getRowDimension();
+        this.totalN = X.getRowDimension();
         this.rank = rank;
         this.C = C;
-        this.U =  U;
-        this.thetaNull =  thetaNull;
-        this.beta =  this.XtXInverse.multiply(X.transpose()).multiply(Y);
+        this.U = U;
+        this.thetaNull = thetaNull;
+        this.beta = this.XtXInverse.multiply(X.transpose()).multiply(Y);
         RealMatrix YHat = X.multiply(this.beta);
         RealMatrix Ydiff = Y.subtract(YHat);
         this.sigmaError = (Ydiff.transpose().multiply(Ydiff)).scalarMultiply(((double) 1/(double) (totalN - rank)));
@@ -203,7 +210,15 @@ public abstract class GLMMTest
      */
     public void setPerGroupSampleSize(int perGroupN)
     {
-        this.totalN = Xessence.getRowDimension() * perGroupN;
+        int xrd = Xessence.getRowDimension();
+        // TODO: do we ever get here with values that can cause integer overflow,
+        //       and if so, does it matter??
+        /*
+        if (xrd != 0 && perGroupN > Integer.MAX_VALUE/xrd) {
+            throw new GLMMTestException(OVERFLOW_ERROR_MESSAGE);
+        }
+        */
+        this.totalN = (double) xrd * perGroupN;
         RealMatrix cxxcEssence = null;
         if (CFixed != null)
             cxxcEssence = CFixed.multiply((XtXInverse).multiply(CFixed.transpose()));
@@ -342,5 +357,19 @@ public abstract class GLMMTest
      */
     public RealMatrix getBeta() {
         return beta;
+    }
+
+    /**
+     * A runtime exception this class may throw.
+     */
+    public static final class GLMMTestException extends RuntimeException {
+        /**
+         * Construct an instance of this class.
+         *
+         * @param message The exception message.
+         */
+        public GLMMTestException(String message) {
+            super(message);
+        }
     }
 }

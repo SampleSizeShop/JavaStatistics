@@ -88,38 +88,42 @@ public class GLMMTestFactory {
                 FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull,
                 RealMatrix beta, RealMatrix sigmaError, int nuForEstimatedSigma)
             throws PowerException {
-        switch (test) {
-        case UNIREP:
-            return new GLMMTestUnivariateRepeatedMeasures(fMethod, cdfMethod, epsilonMethod,
-                    Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
-                    beta, sigmaError, nuForEstimatedSigma);
-        case UNIREP_BOX:
-            return new GLMMTestUnirepBox(fMethod, cdfMethod, epsilonMethod,
-                    Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
-                    beta, sigmaError, nuForEstimatedSigma);
-        case UNIREP_GEISSER_GREENHOUSE:
-            return new GLMMTestUnirepGeisserGreenhouse(fMethod, cdfMethod, epsilonMethod,
-                    Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
-                    beta, sigmaError, nuForEstimatedSigma);
-        case UNIREP_HUYNH_FELDT:
-            return new GLMMTestUnirepHuynhFeldt(fMethod, cdfMethod, epsilonMethod,
-                    Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
-                    beta, sigmaError, nuForEstimatedSigma);
-        case WILKS_LAMBDA:
-            return new GLMMTestWilksLambda(fMethod,
-                    Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
-                    beta, sigmaError);
-        case HOTELLING_LAWLEY_TRACE:
-            return new GLMMTestHotellingLawley(fMethod,
-                    Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
-                    beta, sigmaError);
-        case PILLAI_BARTLETT_TRACE:
-            return new GLMMTestPillaiBartlett(fMethod,
-                    Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
-                    beta, sigmaError);
-        default:
-            throw new PowerException("Unknown GLMM test statistic",
-                    PowerErrorEnum.UNKNOWN_TEST_REQUESTED);
+        try {
+            switch (test) {
+            case UNIREP:
+                return new GLMMTestUnivariateRepeatedMeasures(fMethod, cdfMethod, epsilonMethod,
+                        Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
+                        beta, sigmaError, nuForEstimatedSigma);
+            case UNIREP_BOX:
+                return new GLMMTestUnirepBox(fMethod, cdfMethod, epsilonMethod,
+                        Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
+                        beta, sigmaError, nuForEstimatedSigma);
+            case UNIREP_GEISSER_GREENHOUSE:
+                return new GLMMTestUnirepGeisserGreenhouse(fMethod, cdfMethod, epsilonMethod,
+                        Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
+                        beta, sigmaError, nuForEstimatedSigma);
+            case UNIREP_HUYNH_FELDT:
+                return new GLMMTestUnirepHuynhFeldt(fMethod, cdfMethod, epsilonMethod,
+                        Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
+                        beta, sigmaError, nuForEstimatedSigma);
+            case WILKS_LAMBDA:
+                return new GLMMTestWilksLambda(fMethod,
+                        Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
+                        beta, sigmaError);
+            case HOTELLING_LAWLEY_TRACE:
+                return new GLMMTestHotellingLawley(fMethod,
+                        Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
+                        beta, sigmaError);
+            case PILLAI_BARTLETT_TRACE:
+                return new GLMMTestPillaiBartlett(fMethod,
+                        Xessence, XtXInverse, perGroupN, rank, C, U, thetaNull,
+                        beta, sigmaError);
+            default:
+                throw new PowerException("Unknown GLMM test statistic",
+                        PowerErrorEnum.UNKNOWN_TEST_REQUESTED);
+        }
+        } catch (GLMMTest.GLMMTestException e) {
+            throw new PowerException(e.getMessage(), PowerErrorEnum.GLMMTEST_CONSTRUCTION_FAILED);
         }
     }
 }
