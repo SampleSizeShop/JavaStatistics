@@ -111,7 +111,7 @@ public class NonCentralityDistribution
             try {
                 return cdf(n) - quantile;
             } catch (PowerException pe) {
-                return Double.NaN;
+                throw new IllegalArgumentException(pe.getMessage(), pe);
             }
         }
     }
