@@ -71,7 +71,7 @@ public class NonCentralityDistribution
     protected double H0 = 0;
     int qF;
     int a;
-    int N;
+    double N;
     double[] sEigenValues;
     int sStar = 0;
     // indicates if an "exact" cdf should be calculated via Davie's algorithm or
@@ -180,7 +180,9 @@ public class NonCentralityDistribution
 
         // calculate intermediate matrices
 //        RealMatrix FEssence = params.getDesignEssence().getFullDesignMatrixFixed();
-        this.N = FEssence.getRowDimension() * perGroupN;
+        // TODO: do we ever get here with values that can cause integer overflow,
+        //       and if so, does it matter??
+        this.N = (double) FEssence.getRowDimension() * perGroupN;
         this.exact = exact;
         try
         {
