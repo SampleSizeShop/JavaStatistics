@@ -422,7 +422,7 @@ public class NonCentralityDistribution
                 else if (lastPositiveNoncentrality == 0 && lastNegativeNoncentrality > 0)
                 {
                     // handle special case: CGaussian = 1
-                    NonCentralFDistribution nonCentralFDist = new NonCentralFDistribution(1,Nstar, lastNegativeNoncentrality);
+                    NonCentralFDistribution nonCentralFDist = new NonCentralFDistribution(1, Nstar, lastNegativeNoncentrality);
                     return 1 - nonCentralFDist.cdf(1/Fstar);
                 }
             }
