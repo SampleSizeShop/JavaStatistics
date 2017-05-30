@@ -181,7 +181,7 @@ public class NonCentralityDistribution
         // calculate intermediate matrices
 //        RealMatrix FEssence = params.getDesignEssence().getFullDesignMatrixFixed();
         // TODO: do we ever get here with values that can cause integer overflow,
-        //       and if so, does it matter??
+        //       and if so, does it matter?
         this.N = (double) FEssence.getRowDimension() * perGroupN;
         this.exact = exact;
         try

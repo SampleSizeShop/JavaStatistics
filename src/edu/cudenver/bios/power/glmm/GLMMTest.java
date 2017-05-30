@@ -212,7 +212,7 @@ public abstract class GLMMTest
     {
         int xrd = Xessence.getRowDimension();
         // TODO: do we ever get here with values that can cause integer overflow,
-        //       and if so, does it matter??
+        //       and if so, does it matter?
         /*
         if (xrd != 0 && perGroupN > Integer.MAX_VALUE/xrd) {
             throw new GLMMTestException(OVERFLOW_ERROR_MESSAGE);
