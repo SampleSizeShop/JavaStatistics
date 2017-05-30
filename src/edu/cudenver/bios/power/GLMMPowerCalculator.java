@@ -534,20 +534,20 @@ public class GLMMPowerCalculator implements PowerCalculator
         if (params.getPowerMethodList().size() <= 0)
             params.addPowerMethod(PowerMethod.CONDITIONAL_POWER);
 
-        // update the sigma error if we have a baseline covariate
+        // update sigma error and beta if we have a baseline covariate
         RealMatrix sigmaG = params.getSigmaGaussianRandom();
         debug("sigmaG", sigmaG);
-
-        RealMatrix sigmaY = params.getSigmaOutcome();
-        debug("sigmaY", sigmaY);
-
-        RealMatrix sigmaYG = params.getSigmaOutcomeGaussianRandom();
-        debug("sigmaYG", sigmaYG);
 
         int numRandom = sigmaG != null ? sigmaG.getRowDimension() : 0;
         if (numRandom == 1)
         {
             // set the sigma error matrix to [sigmaY - sigmaYG * sigmaG-1 * sigmaGY]
+            RealMatrix sigmaY = params.getSigmaOutcome();
+            debug("sigmaY", sigmaY);
+
+            RealMatrix sigmaYG = params.getSigmaOutcomeGaussianRandom();
+            debug("sigmaYG", sigmaYG);
+
             RealMatrix sigmaGY = sigmaYG.transpose();
             debug("sigmaYG transpose", sigmaGY);
 
