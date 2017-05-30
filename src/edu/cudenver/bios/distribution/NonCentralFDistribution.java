@@ -42,6 +42,9 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
  */
 public class NonCentralFDistribution extends AbstractRealDistribution
 {
+    private static final double ONE_THIRD  = 1.0/3;
+    private static final double TWO_THIRDS = 2.0/3;
+
     private static final int MAX_ITERATIONS = 10000;
     private static final int STARTING_F = 10;
 
@@ -185,15 +188,11 @@ public class NonCentralFDistribution extends AbstractRealDistribution
             if (TikuFcrit <= 0) return 0;
             return nonCentralF.cdf(TikuFcrit);
         case NORMAL_APPROXIMATION:
-            double p1 = 1 / 3;
-            double p2 = -2;
-            double p3 = 1 / 2;
-            double p4 = 2 / 3;
-            double arg1 = ((ndf * Fcritical) / (ndf + nonCentrality));
-            double arg2 = (2 / 9) * (ndf + (2 * nonCentrality)) * (Math.pow(ndf + nonCentrality, p2));
-            double arg3 = (2 / 9) * (1 / ddf);
-            double numZ = Math.pow(arg1, p1) - (arg3 * Math.pow(arg1, p1)) - (1 - arg2);
-            double denZ =  Math.pow((arg2 + arg3 * Math.pow(arg1, p4)), p3);
+            double arg1 = ndf * Fcritical / (ndf + nonCentrality);
+            double arg2 = 2 * (ndf + 2 * nonCentrality) * Math.pow(ndf + nonCentrality, -2) / 9;
+            double arg3 = 2 / (9 * ddf);
+            double numZ = Math.pow(arg1, ONE_THIRD) - arg3 * Math.pow(arg1, ONE_THIRD) - 1 + arg2;
+            double denZ = Math.pow(arg2 + arg3 * Math.pow(arg1, TWO_THIRDS), 0.5);
             double zScore = numZ / denZ;
             double absZScore = Math.abs(zScore);
             if (absZScore < 6)
