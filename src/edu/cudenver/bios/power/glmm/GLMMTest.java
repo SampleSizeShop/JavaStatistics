@@ -247,7 +247,13 @@ public abstract class GLMMTest
 
         // get the p-value from a central F distribution
         double ndf = getNumeratorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
+        if (Double.isNaN(ndf)) {
+            throw new IllegalArgumentException("numerator DF is NaN");
+        }
         double ddf = getDenominatorDF(GLMMTest.DistributionType.DATA_ANALYSIS_NULL);
+        if (Double.isNaN(ddf)) {
+            throw new IllegalArgumentException("denominator DF is NaN");
+        }
 
         FDistribution fdist = new FDistribution(ndf, ddf);
         double pvalue = 1 - fdist.cumulativeProbability(fobs);
@@ -268,7 +274,13 @@ public abstract class GLMMTest
     throws IllegalArgumentException
     {
         double ndf = getNumeratorDF(type);
+        if (Double.isNaN(ndf)) {
+            throw new IllegalArgumentException("numerator DF is NaN");
+        }
         double ddf = getDenominatorDF(type);
+        if (Double.isNaN(ddf)) {
+            throw new IllegalArgumentException("denominator DF is NaN");
+        }
 
         FDistribution centralFDist = new FDistribution(ndf, ddf);
         double fcrit = centralFDist.inverseCumulativeProbability(1 - alpha);
