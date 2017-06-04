@@ -45,10 +45,10 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
             UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
             RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
             FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull,
-            RealMatrix beta, RealMatrix sigmaError, int nuForEstimatedSigma)
+            RealMatrix beta, RealMatrix sigmaError, int nuEst)
     {
         super(fMethod, cdfMethod, epsilonMethod, Xessence, XtXInverse, perGroupN, rank,
-                C, U, thetaNull, beta, sigmaError, nuForEstimatedSigma);
+                C, U, thetaNull, beta, sigmaError, nuEst);
     }
 
     /**
