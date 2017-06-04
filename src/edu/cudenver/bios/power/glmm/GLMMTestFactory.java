@@ -80,7 +80,6 @@ public class GLMMTestFactory {
         }
     }
 
-
     public static GLMMTest createGLMMTestForPower(Test test,
                 FApproximation fMethod, UnivariateCdfApproximation cdfMethod,
                 UnivariateEpsilonApproximation epsilonMethod,
@@ -121,8 +120,8 @@ public class GLMMTestFactory {
             default:
                 throw new PowerException("Unknown GLMM test statistic",
                         PowerErrorEnum.UNKNOWN_TEST_REQUESTED);
-        }
-        } catch (GLMMTest.GLMMTestException e) {
+            }
+        } catch (GLMMTest.GLMMTestException | GLMMTestUnivariateRepeatedMeasures.NoHdlssSupportException e) {
             throw new PowerException(e.getMessage(), PowerErrorEnum.GLMMTEST_CONSTRUCTION_FAILED);
         }
     }

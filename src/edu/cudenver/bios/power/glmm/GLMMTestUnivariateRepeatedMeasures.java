@@ -47,7 +47,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     // if sigma is estimated, then this value will be set to totalN_est - rank_est
     // where totalN_est is the sample size for the data set from which sigma was estimated
     // and rank_est is the rank of the design matrix in the data set used for estimation
-    protected int nuEst =  0;
+    protected final int nuEst;
     // cache some of the eigenvalue information for use in the GG and Huynh-Feldt
     protected ArrayList<EigenValueMultiplicityPair> distinctSigmaStarEigenValues = new ArrayList<EigenValueMultiplicityPair>();
     protected double[] sigmaStarEigenValues = null;
@@ -145,6 +145,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         super(fMethod, X, XtXInverse, rank, Y,  C, U, thetaNull);
         this.cdfMethod = cdfMethod;
         this.epsilonMethod = epsilonMethod;
+        this.nuEst = 0;
         // verify that U is orthonormal to an identity matrix
         // if not, build an orthonormal U from the specified U matrix
         createOrthonormalU();
@@ -320,6 +321,10 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         rankC = new SingularValueDecomposition(C).getRank();
         rankU = new SingularValueDecomposition(U).getRank();
 
+        if (nuEst > 0 && rankU > nuEst) {
+            throw new NoHdlssSupportException(rankU, nuEst);
+        }
+
         // get the sigmaStar matrix: U' *sigmaError * U
        RealMatrix  sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
 
@@ -480,5 +485,30 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     public double getConfidenceLimitsDegreesOfFreedom()
     {
         return rankU * nuEst * powerAlternativeDDFCorrection / noncentralityCorrection;
+    }
+
+    /**
+     * Exception reflecting the fact that support for the so-called
+     * "high dimension, low sample size" category does not exist yet.
+     */
+    public static class NoHdlssSupportException extends RuntimeException {
+        private static final String MESSAGE =
+              "The rank of the within-participant contrast matrix (%d) "
+            + "exceeds the error degrees of freedom (%d). This puts this "
+            + "study design into the HDLSS (high dimension, low sample size) "
+            + "category, which GLIMMPSE does not yet support. "
+            + "In Options > Confidence Intervals, please either increase "
+            + "Total sample size, decrease Rank of the design matrix, "
+            + "or both.";
+
+        /**
+         * Construct an instance of this class.
+         *
+         * @param rankU The rank of the U matrix.
+         * @param nuEst The error degrees of freedom.
+         */
+        public NoHdlssSupportException(int rankU, int nuEst) {
+            super(String.format(MESSAGE, rankU, nuEst));
+        }
     }
 }
