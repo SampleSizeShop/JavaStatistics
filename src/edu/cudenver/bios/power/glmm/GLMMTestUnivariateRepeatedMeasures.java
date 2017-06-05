@@ -34,6 +34,8 @@ import edu.cudenver.bios.matrix.GramSchmidtOrthonormalization;
 import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
 
+import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
+
 /**
  * Implementation of the uncorreected univariate approach to repeated measures test
  * (UNIREP) for the general linear multivariate model.  This is also the base class
@@ -226,7 +228,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         double b = U.getColumnDimension();
         RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares();
         // TODO: cache sig star, lam bar
-        RealMatrix sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
+        RealMatrix sigmaStar = forceSymmetric(U.transpose().multiply(sigmaError.multiply(U)));
         double lambdaBar = sigmaStar.getTrace() / rankU;
 
         return (hypothesisSumOfSquares.getTrace() / (lambdaBar / noncentralityCorrection));
@@ -325,11 +327,8 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
             throw new NoHdlssSupportException(rankU, nuEst);
         }
 
-        // get the sigmaStar matrix: U' *sigmaError * U
-       RealMatrix  sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
-
-        // ensure symmetry
-        sigmaStar = sigmaStar.add(sigmaStar.transpose()).scalarMultiply(0.5);
+        // get the sigmaStar matrix: U' * sigmaError * U
+        RealMatrix sigmaStar = forceSymmetric(U.transpose().multiply(sigmaError.multiply(U)));
 
         // get the eigen values of the normalized sigmaStar matrix
         sigmaStarEigenValues =

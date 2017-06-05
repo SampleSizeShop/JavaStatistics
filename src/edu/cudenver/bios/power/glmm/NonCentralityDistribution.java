@@ -489,12 +489,10 @@ public class NonCentralityDistribution
     private RealMatrix getSigmaStarInverse(RealMatrix U, RealMatrix sigmaError, Test test)
     {
         // sigma* = U'*sigmaE*U
-        RealMatrix sigmaStar = U.transpose().multiply(sigmaError).multiply(U);
+        RealMatrix sigmaStar = forceSymmetric(U.transpose().multiply(sigmaError).multiply(U));
         debug("U", U);
         debug("sigmaError", sigmaError);
         debug("sigmaStar = U transpose * sigmaError * U", sigmaStar);
-
-        // TODO: force symmetric?
 
         if (! MatrixUtils.isPositiveDefinite(sigmaStar)) {
             throw new IllegalArgumentException(NOT_POSITIVE_DEFINITE);
