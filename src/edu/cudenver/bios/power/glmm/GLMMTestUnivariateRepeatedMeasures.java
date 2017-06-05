@@ -498,8 +498,9 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
             + "study design into the HDLSS (high dimension, low sample size) "
             + "category, which GLIMMPSE does not yet support. "
             + "In Options > Confidence Intervals, please either increase "
-            + "Total sample size, decrease Rank of the design matrix, "
-            + "or both.";
+            + "&#8220;Total sample size&#8221;, decrease &#8220;Rank of "
+            + "the design matrix&#8221;, or both; or else check "
+            + "&#8220;Don't include confidence intervals for power&#8221;.";
 
         /**
          * Construct an instance of this class.
