@@ -396,7 +396,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
                     2 * nuEst * sigStarSqTrace +
                     2 * multiplier * H.getTrace() * sigStarTrace / rankC);
             double denominator = nuEst * (nuEst*nuEst*sigStarSqTrace - nuEst *sigStarTrace*sigStarTrace +
-                    2 *multiplier * sigStarHTrace / rankC);
+                    2 * multiplier * sigStarHTrace / rankC);
 
             epsilonTildeN = numerator / ( rankU *denominator);
 
