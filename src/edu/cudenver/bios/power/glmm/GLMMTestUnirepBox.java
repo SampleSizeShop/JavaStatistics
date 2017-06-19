@@ -1,8 +1,8 @@
 /*
- * Java Statistics.  A java library providing power/sample size estimation for 
+ * Java Statistics.  A java library providing power/sample size estimation for
  * the general linear model.
- * 
- * Copyright (C) 2010 Regents of the University of Colorado.  
+ *
+ * Copyright (C) 2010 Regents of the University of Colorado.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,9 +25,9 @@ import org.apache.commons.math3.linear.RealMatrix;
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 
 /**
- * Implementation of the univariate approach to repeated measures test 
- * with Box correction (UNIREP-Box) for the general linear multivariate model. 
- * 
+ * Implementation of the univariate approach to repeated measures test
+ * with Box correction (UNIREP-Box) for the general linear multivariate model.
+ *
  * @see GLMMTestUnivariateRepeatedMeasures
  * @author Sarah Kreidler
  *
@@ -35,53 +35,53 @@ import edu.cudenver.bios.matrix.FixedRandomMatrix;
 public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
 {
     double unirepEpsilonExpectedValue = Double.NaN;
-    
-	/**
-	 * Create a UNIREP-Box test object for the specified parameters
-	 * @param params GLMM input parameters
-	 */
-    public GLMMTestUnirepBox(FApproximation fMethod, 
-    		UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
-    		RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
-    		FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull, 
-    		RealMatrix beta, RealMatrix sigmaError, int nuEst)
+
+    /**
+     * Create a UNIREP-Box test object for the specified parameters
+     * @param params GLMM input parameters
+     */
+    public GLMMTestUnirepBox(FApproximation fMethod,
+            UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
+            RealMatrix Xessence, RealMatrix XtXInverse, int perGroupN, int rank,
+            FixedRandomMatrix C, RealMatrix U, RealMatrix thetaNull,
+            RealMatrix beta, RealMatrix sigmaError, int nuEst)
     {
         // unirep base class will calculate epsilon for box correction
         super(fMethod, cdfMethod, epsilonMethod, Xessence, XtXInverse, perGroupN, rank,
-        		C, U, thetaNull, beta, sigmaError, nuEst);
+                C, U, thetaNull, beta, sigmaError, nuEst);
     }
-    
-	/**
-	 * Create a UNIREP test object for data analysis
-	 * @param params GLMM input parameters
-	 */
-    public GLMMTestUnirepBox(FApproximation fMethod, 
-    		UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
-    		RealMatrix X, RealMatrix XtXInverse, int rank, RealMatrix Y,
-    		RealMatrix C, RealMatrix U, RealMatrix thetaNull)
+
+    /**
+     * Create a UNIREP test object for data analysis
+     * @param params GLMM input parameters
+     */
+    public GLMMTestUnirepBox(FApproximation fMethod,
+            UnivariateCdfApproximation cdfMethod, UnivariateEpsilonApproximation epsilonMethod,
+            RealMatrix X, RealMatrix XtXInverse, int rank, RealMatrix Y,
+            RealMatrix C, RealMatrix U, RealMatrix thetaNull)
     {
         super(fMethod, cdfMethod, epsilonMethod, X, XtXInverse, rank, Y,  C, U, thetaNull);
     }
-    
+
     /**
-     * Calculate the correction factors for numerator degrees of 
+     * Calculate the correction factors for numerator degrees of
      * freedom for data analysis, power under the null and power
      * under the alternative
      */
     @Override
     protected void calculateNDFCorrection()
     {
-    	//double b = (double) U.getColumnDimension();
+        //double b = (double) U.getColumnDimension();
         dataAnalysisNDFCorrection = 1.0/rankU;
         powerNullNDFCorrection = 1.0/rankU;
         if (nuEst <= 0)
-        	powerAlternativeNDFCorrection = epsilonN;
+            powerAlternativeNDFCorrection = epsilonN;
         else
-        	powerAlternativeNDFCorrection = epsilonTildeN;
+            powerAlternativeNDFCorrection = epsilonTildeN;
     }
-    
+
     /**
-     * Calculate the correction factors for denominator degrees of 
+     * Calculate the correction factors for denominator degrees of
      * freedom for data analysis, power under the null and power
      * under the alternative
      */
@@ -92,18 +92,18 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
         powerNullDDFCorrection = 1.0/rankU;
         powerAlternativeDDFCorrection = epsilonD;
     }
-    
+
     /**
-     * Calculate the correction factors for noncentrality 
+     * Calculate the correction factors for noncentrality
      * parameter.  This is only relevant for power under the alternative.
      */
     @Override
     protected void calculateNoncentralityCorrection()
     {
-    	if (nuEst <= 0)
-    		noncentralityCorrection = epsilonN;
-    	else
-    		noncentralityCorrection = epsilonTildeN;
+        if (nuEst <= 0)
+            noncentralityCorrection = epsilonN;
+        else
+            noncentralityCorrection = epsilonTildeN;
     }
 
 }
