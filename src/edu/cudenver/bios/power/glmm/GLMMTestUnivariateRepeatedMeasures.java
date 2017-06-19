@@ -118,6 +118,9 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     {
         super(fMethod, Xessence, XtXInverse, perGroupN, rank,
                 C, U, thetaNull, beta, sigmaError);
+        if (nuEst < 0) {
+            throw new IllegalArgumentException("nuEst cannot be negative");
+        }
         this.cdfMethod = cdfMethod;
         this.epsilonMethod = epsilonMethod;
         this.nuEst = nuEst;
@@ -445,7 +448,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     {
         dataAnalysisNDFCorrection = 1;
         powerNullNDFCorrection = 1;
-        if (nuEst <= 0)
+        if (nuEst == 0)
             powerAlternativeNDFCorrection = epsilonN;
         else
             powerAlternativeNDFCorrection = epsilonTildeN;
@@ -469,7 +472,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
      */
     protected void calculateNoncentralityCorrection()
     {
-        if (nuEst <= 0)
+        if (nuEst == 0)
             noncentralityCorrection = epsilonN;
         else
             noncentralityCorrection = epsilonTildeN;
@@ -495,7 +498,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
               "The rank of the within-participant contrast matrix (%d) "
             + "exceeds the error degrees of freedom (%d). This puts this "
             + "study design into the HDLSS (high dimension, low sample size) "
-            + "category, which GLIMMPSE does not yet support. "
+            + "category, which we do not yet support. "
             + "In Options > Confidence Intervals, please either increase "
             + "&#8220;Total sample size&#8221;, decrease &#8220;Rank of "
             + "the design matrix&#8221;, or both; or else check "

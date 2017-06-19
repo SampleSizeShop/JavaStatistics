@@ -74,7 +74,7 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
         //double b = (double) U.getColumnDimension();
         dataAnalysisNDFCorrection = 1.0/rankU;
         powerNullNDFCorrection = 1.0/rankU;
-        if (nuEst <= 0)
+        if (nuEst == 0)
             powerAlternativeNDFCorrection = epsilonN;
         else
             powerAlternativeNDFCorrection = epsilonTildeN;
@@ -100,7 +100,7 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
     @Override
     protected void calculateNoncentralityCorrection()
     {
-        if (nuEst <= 0)
+        if (nuEst == 0)
             noncentralityCorrection = epsilonN;
         else
             noncentralityCorrection = epsilonTildeN;

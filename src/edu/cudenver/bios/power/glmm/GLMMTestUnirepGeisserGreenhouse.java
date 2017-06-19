@@ -169,7 +169,7 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     protected void calculateNDFCorrection()
     {
         dataAnalysisNDFCorrection = epsilonD;
-        if (nuEst <= 0)
+        if (nuEst == 0)
         {
             powerNullNDFCorrection = expectedEpsilon;
             powerAlternativeNDFCorrection = epsilonN;
@@ -191,7 +191,7 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     {
         dataAnalysisDDFCorrection = epsilonD;
         powerAlternativeDDFCorrection = epsilonD;
-        if (nuEst <= 0)
+        if (nuEst == 0)
             powerNullDDFCorrection = expectedEpsilon;
         else
             powerNullDDFCorrection = epsilonD;
@@ -205,7 +205,7 @@ public class GLMMTestUnirepGeisserGreenhouse extends GLMMTestUnivariateRepeatedM
     @Override
     protected void calculateNoncentralityCorrection()
     {
-        if (nuEst <= 0)
+        if (nuEst == 0)
             noncentralityCorrection = epsilonN;
         else
             noncentralityCorrection = epsilonTildeN;

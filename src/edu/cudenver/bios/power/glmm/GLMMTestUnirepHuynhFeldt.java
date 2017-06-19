@@ -162,7 +162,7 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
     protected void calculateNDFCorrection()
     {
         dataAnalysisNDFCorrection = epsilonD;
-        if (nuEst <= 0)
+        if (nuEst == 0)
         {
             powerNullNDFCorrection = expectedEpsilon;
             powerAlternativeNDFCorrection = epsilonN;
@@ -185,7 +185,7 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
     {
         dataAnalysisDDFCorrection = epsilonD;
            powerAlternativeDDFCorrection = epsilonD;
-        if (nuEst <= 0)
+        if (nuEst == 0)
         {
             powerNullDDFCorrection = expectedEpsilon;
         }
@@ -203,7 +203,7 @@ public class GLMMTestUnirepHuynhFeldt extends GLMMTestUnivariateRepeatedMeasures
     @Override
     protected void calculateNoncentralityCorrection()
     {
-        if (nuEst <= 0)
+        if (nuEst == 0)
             noncentralityCorrection = epsilonN;
         else
             noncentralityCorrection = epsilonTildeN;

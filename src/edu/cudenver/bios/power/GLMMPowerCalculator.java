@@ -72,7 +72,8 @@ public class GLMMPowerCalculator implements PowerCalculator
             "The null hypothesis is true: that is, all contrasts defined by the hypothesis have zero sums of squares. "
         +   "(This may arise, for example, in a test of mean difference if the means are equal.) "
         +   "Thus the highest possible power is \u03B1 (alpha, the Type I error rate), "
-        +   "and no sample size can be large enough to achieve higher power.";
+        +   "and no sample size can be large enough to achieve higher power."
+        ;
 
     private static final String SIGMA_ERROR_NOT_POSITIVE_SEMIDEFINITE_MESSAGE =
             "Unfortunately, there is no solution for this combination of input parameters. "
@@ -80,6 +81,12 @@ public class GLMMPowerCalculator implements PowerCalculator
         +   "covariance structure (that is, it is not positive semidefinite). "
         +   "Reducing the expected covariate-to-response correlations "
         +   "will likely lead to a soluble combination."
+        ;
+
+    private static final String NEGATIVE_NU_EST_MESSAGE =
+            "For confidence interval calculation, the total sample size must be greater than "
+        +   "the rank of the design matrix. "
+        +   "Please revisit the Options > Confidence Intervals page and make it so."
         ;
 
     private static final int MAX_ITERATIONS = 10000;
@@ -579,6 +586,11 @@ public class GLMMPowerCalculator implements PowerCalculator
     protected void validateMatrices(GLMMPowerParameters params)
             throws PowerException
     {
+        if (params.getConfidenceIntervalType() != ConfidenceIntervalType.NONE
+                && params.getSampleSizeForEstimates() <= params.getDesignMatrixRankForEstimates()) {
+            throw new PowerException(NEGATIVE_NU_EST_MESSAGE, PowerErrorEnum.POWER_CI_NEGATIVE_NU_EST);
+        }
+
         // convenience variables
         RealMatrix beta = params.getBeta().getCombinedMatrix();
         RealMatrix theta0 = params.getTheta();
