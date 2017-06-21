@@ -90,9 +90,14 @@ public class GLMMPowerCalculator implements PowerCalculator
         ;
 
     private static final int MAX_ITERATIONS = 10000;
-    private static final int MAX_EVALUATIONS = 2097155; // 2^21 + 3; smallest needed for unit tests to pass
-    private static final int STARTING_SAMPLE_SIZE = 1024;
+
+    private static final int MAX_EVALUATIONS = 0x200003; // 2^21 + 3: smallest needed for unit tests to pass
+
+    private static final int STARTING_SAMPLE_SIZE = 0x400;     // 2^10
+    private static final int MAX_SAMPLE_SIZE      = 0x2000000; // 2^25: largest for which performance is good
+
     private static final int STARTING_BETA_SCALE = 10;
+
     private static final int SIMULATION_ITERATIONS_QUANTILE_UNCONDITIONAL = 1000;
     private static final double EPSILON = 1e-12;
 
@@ -930,10 +935,11 @@ public class GLMMPowerCalculator implements PowerCalculator
                     params.isNonCentralityCDFExact());
         }
 
-        // Calculate the maximum valid per group N.  This avoids multiplication which exceeeds
-        // Integer.MAX_VALUE.
-        int maxPerGroupN =
-                Integer.MAX_VALUE / params.getDesignEssence().getRowDimension();
+        // Calculate the maximum valid per group N. This avoids multiplication which exceeeds
+        // Integer.MAX_VALUE. Moreover, by limiting to MAX_SAMPLE_SIZE, we avoid calculations
+        // that take many seconds to complete.
+        int designEssenceRows = params.getDesignEssence().getRowDimension();
+        int maxPerGroupN = Math.min(Integer.MAX_VALUE/designEssenceRows, MAX_SAMPLE_SIZE);
 
         /*
          * find the upper bound on sample size.  That is,
@@ -949,7 +955,12 @@ public class GLMMPowerCalculator implements PowerCalculator
                     betaScale, sigmaScale, method, quantile, null);
             switch (upperBound.getError()) {
             case MAX_SAMPLE_SIZE_EXCEEDED:
-                power.setErrorMessage("Failed to find valid upper bound on sample size.");
+                power.setErrorMessage(
+                 // TODO: is the following expression correct?
+                 // "The total sample size for this case would exceed " + (maxPerGroupN * designEssenceRows) + ". "
+                    "The total sample size for this case would be unreasonably large. "
+                  + "For performance reasons, we are not computing its exact value."
+                );
                 power.setErrorCode(PowerErrorEnum.MAX_SAMPLE_SIZE_EXCEEDED);
                 break;
             case SAMPLE_SIZE_UNDEFINED:
@@ -969,28 +980,10 @@ public class GLMMPowerCalculator implements PowerCalculator
          *  We search for a lower bound since the F approximations
          *  may be unstable for very small samples
          */
-        SampleSizeBound  lowerBound = getSampleSizeLowerBound(glmmTest, nonCentralityDist,
+        // TODO: isn't the lower bound just half of the upper bound?????
+        SampleSizeBound lowerBound = getSampleSizeLowerBound(glmmTest, nonCentralityDist,
                 method, upperBound, alpha, quantile);
-        if (lowerBound.getError() != null) {
-            GLMMPower power = new GLMMPower(test, alpha, targetPower,
-                    lowerBound.getActualPower(), lowerBound.getSampleSize(),
-                    betaScale, sigmaScale, method, quantile, null);
-            switch (lowerBound.getError()) {
-            case MAX_SAMPLE_SIZE_EXCEEDED:
-                power.setErrorMessage("Failed to find valid lower bound on sample size.");
-                power.setErrorCode(PowerErrorEnum.MAX_SAMPLE_SIZE_EXCEEDED);
-                break;
-            case SAMPLE_SIZE_UNDEFINED:
-                power.setErrorMessage(NO_MEAN_DIFFERENCE_MESSAGE);
-                power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
-                break;
-            case SAMPLE_SIZE_UNDEFINED_DUE_TO_EXCEPTION:
-                power.setErrorMessage("Sample size not well defined.");
-                power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
-                break;
-            }
-            return power;
-        }
+        assert lowerBound.getError() == null;
 
         /*
          * At this point we have valid boundaries for searching.
@@ -1001,9 +994,8 @@ public class GLMMPowerCalculator implements PowerCalculator
          * 3. The upper bound != lower bound and lower bound is less than the required power.
          * In this case we bisection search
          */
-        double calculatedPower = 0.0;
-        int perGroupSampleSize = -1;
-        GLMMPowerConfidenceInterval ci = null;
+        double calculatedPower;
+        int perGroupSampleSize;
 
         if (upperBound.getSampleSize() == lowerBound.getSampleSize()) {
             // case 1
@@ -1028,15 +1020,16 @@ public class GLMMPowerCalculator implements PowerCalculator
         }
 
         // build a confidence interval if requested
-        if (params.getConfidenceIntervalType() !=
-                ConfidenceIntervalType.NONE)
-        {
+        GLMMPowerConfidenceInterval ci;
+        if (params.getConfidenceIntervalType() != ConfidenceIntervalType.NONE) {
             ci = new GLMMPowerConfidenceInterval(params.getConfidenceIntervalType(),
                     params.getAlphaLowerConfidenceLimit(),
                     params.getAlphaUpperConfidenceLimit(),
                     params.getSampleSizeForEstimates(),
                     params.getDesignMatrixRankForEstimates(),
                     alpha, glmmTest);
+        } else {
+            ci = null;
         }
 
         return new GLMMPower(test, alpha, targetPower, calculatedPower,
@@ -1057,6 +1050,8 @@ public class GLMMPowerCalculator implements PowerCalculator
     private SampleSizeBound getSampleSizeLowerBound(GLMMTest glmmTest,
             NonCentralityDistribution nonCentralityDist, PowerMethod method,
             SampleSizeBound upperBound, double alpha, double quantile) {
+        assert upperBound.getError() == null;
+
         int upperN = upperBound.getSampleSize();
         if (upperN <= 2) {
             /* If the upper bound is 2, then there is no smaller sample size
@@ -1066,8 +1061,7 @@ public class GLMMPowerCalculator implements PowerCalculator
              *  In either case, we just return a lower bound equivalent to the
              *  upper bound
              */
-            return new SampleSizeBound(upperN, upperBound.getActualPower(),
-                    upperBound.getError());
+            return new SampleSizeBound(upperN, upperBound.getActualPower());
         } else {
             /* we have a valid upper bound, so search for the smallest valid sample
              * size for this design */
@@ -1081,8 +1075,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                     if (nonCentralityDist != null) {
                         nonCentralityDist.setPerGroupSampleSize(lowerBound);
                     }
-                    calculatedPower =
-                            getPowerByType(glmmTest, nonCentralityDist, method, alpha, quantile);
+                    calculatedPower = getPowerByType(glmmTest, nonCentralityDist, method, alpha, quantile);
                     // if we don't throw an exception, then we have a valid minimum
                     break;
                 } catch (Exception e) {
@@ -1090,6 +1083,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                     LOGGER.info("Ignoring exception as we iterate to find a valid minimum:", e);
                 }
             } while (lowerBound < upperN && !Thread.currentThread().isInterrupted());
+
             return new SampleSizeBound(lowerBound, calculatedPower);
         }
     }
@@ -1134,13 +1128,11 @@ public class GLMMPowerCalculator implements PowerCalculator
 
         // otherwise, keep ramping up sample size until we exceed the desired power
         int upperBound = STARTING_SAMPLE_SIZE;
-        int prevBound;
-        double currentPower = 0.0;
+        double currentPower;
         do {
-            prevBound = upperBound;
-            upperBound *= 2;
+            upperBound += upperBound;
             // check for overflows
-            if (upperBound > maxPerGroupN || upperBound < prevBound) {
+            if (upperBound > maxPerGroupN) {
                 upperBound = maxPerGroupN;
             }
             try {
@@ -1154,8 +1146,7 @@ public class GLMMPowerCalculator implements PowerCalculator
                 LOGGER.warn("exception getting power by type", e);
                 return new SampleSizeBound(-1, alpha, SampleSizeError.SAMPLE_SIZE_UNDEFINED_DUE_TO_EXCEPTION);
             }
-        } while (currentPower <= targetPower && upperBound < maxPerGroupN &&
-                !Thread.currentThread().isInterrupted());
+        } while (currentPower <= targetPower && upperBound < maxPerGroupN && !Thread.currentThread().isInterrupted());
         if (currentPower < targetPower) {
             // no sample size meets the criteria, so return an error
             return new SampleSizeBound(-1, alpha, SampleSizeError.MAX_SAMPLE_SIZE_EXCEEDED);
@@ -1301,8 +1292,7 @@ public class GLMMPowerCalculator implements PowerCalculator
             } catch (Exception e) {
                 // ignore steps which yield invalid degrees of freedom
             }
-        } while (currentPower <= targetPower && upperBound <= Double.MAX_VALUE &&
-                !Thread.currentThread().isInterrupted());
+        } while (currentPower <= targetPower && upperBound <= Double.MAX_VALUE && !Thread.currentThread().isInterrupted());
         if (currentPower < targetPower) {
             // no sample size meets the criteria, so return an error
             return new DetectableDifferenceBound(Double.NaN, alpha,
