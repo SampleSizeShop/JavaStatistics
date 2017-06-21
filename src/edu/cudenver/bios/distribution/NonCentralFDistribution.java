@@ -45,6 +45,13 @@ public class NonCentralFDistribution extends AbstractRealDistribution
     private static final double ONE_THIRD  = 1.0/3;
     private static final double TWO_THIRDS = 2.0/3;
 
+    private static final double TEN_TO_THE_0_POINT_6 = Math.pow(10, 0.6);
+    private static final double TEN_TO_THE_4_POINT_4 = Math.pow(10, 4.4);
+    private static final double TEN_TO_THE_5_POINT_4 = Math.pow(10, 5.4);
+    private static final double TEN_TO_THE_6_POINT_0 = Math.pow(10, 6.0);
+    private static final double TEN_TO_THE_6_POINT_4 = Math.pow(10, 6.4);
+    private static final double TEN_TO_THE_9_POINT_2 = Math.pow(10, 9.2);
+
     private static final int MAX_ITERATIONS = 10000;
     private static final int STARTING_F = 10;
 
@@ -140,17 +147,17 @@ public class NonCentralFDistribution extends AbstractRealDistribution
         nonCentrality = nonCentralityParameter;
 
         // set the method of approximation and initialize appropriately
-        if ((ndf < Math.pow(10, 4.4) && ddf < Math.pow(10, 5.4) &&
-                this.nonCentrality < Math.pow(10, 6.4)) ||
-                (ndf < Math.pow(10, 6) && ddf < 10 && nonCentrality <= Math.pow(10, 6)))
+        if ((ndf < TEN_TO_THE_4_POINT_4 && ddf < TEN_TO_THE_5_POINT_4 &&
+                this.nonCentrality < TEN_TO_THE_6_POINT_4) ||
+                (ndf < TEN_TO_THE_6_POINT_0 && ddf < 10 && nonCentrality <= TEN_TO_THE_6_POINT_0))
         {
             // cdf valid in these ranges
             method = FMethod.CDF;
             nonCentralF = new NoncentralFishersF(ndf, ddf, nonCentrality);
         }
-        else if (ndf < Math.pow(10, 9.2) && ndf >= 1 &&
-                ddf < Math.pow(10, 9.2) && ddf > Math.pow(10, 0.6) &&
-                this.nonCentrality < Math.pow(10, 6.4))
+        else if (ndf < TEN_TO_THE_9_POINT_2 && ndf >= 1 &&
+                ddf < TEN_TO_THE_9_POINT_2 && ddf > TEN_TO_THE_0_POINT_6 &&
+                this.nonCentrality < TEN_TO_THE_6_POINT_4)
         {
             // use Tiku approximation for extreme ndf values
             method = FMethod.TIKU_APPROXIMATION;
