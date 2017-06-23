@@ -71,7 +71,6 @@ public class GLMMTestUnirepBox extends GLMMTestUnivariateRepeatedMeasures
     @Override
     protected void calculateNDFCorrection()
     {
-        //double b = (double) U.getColumnDimension();
         dataAnalysisNDFCorrection = 1.0/rankU;
         powerNullNDFCorrection = 1.0/rankU;
         if (nuEst == 0)
