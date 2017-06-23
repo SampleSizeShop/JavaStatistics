@@ -74,22 +74,24 @@ public class GLMMTestHotellingLawley extends GLMMTest
         double a = (double) C.getRowDimension();
         // b = #columns in within subject contrast matrix
         double b = (double) U.getColumnDimension();
-        // minimum of a and b dimensions
-        double s = (a < b) ? a : b;
 
-        double df = Double.NaN;
+        double df;
         if (fMethod == FApproximation.PILLAI_ONE_MOMENT ||
                 fMethod == FApproximation.PILLAI_ONE_MOMENT_OMEGA_MULT)
         {
-            df = s * ((totalN - rank) - b -1) + 2;
+            // minimum of a and b dimensions
+            double s = (a < b) ? a : b;
+
+            df = s * ((totalN - rank) - b - 1) + 2;
         }
         else
         {
             double t1 = (totalN - rank) * (totalN - rank) - (totalN - rank) * (2 * b + 3) + b * (b + 3);
-            double t2 = ((totalN - rank) * (a  + b + 1) - (a + 2 * b + b * b - 1));
+            double t2 = (totalN - rank) * (a + b + 1) - (a + 2 * b + b * b - 1);
+
             df = 4 + (a * b + 2) * (t1/t2);
         }
-        // TODO Auto-generated method stub
+
         return df;
     }
 
@@ -114,7 +116,7 @@ public class GLMMTestHotellingLawley extends GLMMTest
         double a = C.getRowDimension();
         // b = #columns in within subject contrast matrix, U
         double b = U.getColumnDimension();
-       // minimum of a and b dimensions
+        // minimum of a and b dimensions
         double s = (a < b) ? a : b;
 
         double HLT = getHotellingLawleyTrace(hypothesisSumOfSquares, errorSumOfSquares);
