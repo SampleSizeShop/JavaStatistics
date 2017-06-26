@@ -873,9 +873,7 @@ public class GLMMPowerCalculator implements PowerCalculator
      */
     private GLMMPower getSampleSizeValue(GLMMPowerParameters params,
             Test test, PowerMethod method, double alpha,
-            double sigmaScale, double betaScale, double targetPower, double quantile)
-                    throws PowerException {
-
+            double sigmaScale, double betaScale, double targetPower, double quantile) {
         if (method == PowerMethod.UNCONDITIONAL_POWER) {
             GLMMPower power = new GLMMPower(test, alpha, targetPower, -1, -1,
                     betaScale, sigmaScale, method, quantile, null);
@@ -902,139 +900,147 @@ public class GLMMPowerCalculator implements PowerCalculator
             return power;
         }
 
-        // rescale the beta and sigma matrices and create a test
-        RealMatrix scaledBeta = params.getBeta().scalarMultiply(betaScale, true);
-        RealMatrix scaledSigmaError = params.getSigmaError().scalarMultiply(sigmaScale);
-        GLMMTest glmmTest = GLMMTestFactory.createGLMMTestForPower(test,
-                params.getFApproximationMethod(test),
-                params.getUnivariateCdfMethod(test),
-                params.getUnivariateEpsilonMethod(test),
-                params.getDesignEssence(),
-                params.getXtXInverse(),
-                STARTING_SAMPLE_SIZE,
-                params.getDesignRank(),
-                params.getBetweenSubjectContrast(),
-                params.getWithinSubjectContrast(),
-                params.getTheta(),
-                scaledBeta, scaledSigmaError,
-                (params.getConfidenceIntervalType() != ConfidenceIntervalType.NONE ?
-                        params.getSampleSizeForEstimates() - params.getDesignMatrixRankForEstimates(): 0));
-
-        // calculate the noncentrality distribution
-        NonCentralityDistribution nonCentralityDist = null;
-        if (method != PowerMethod.CONDITIONAL_POWER) {
-            nonCentralityDist = new NonCentralityDistribution(test,
+        try {
+            // rescale the beta and sigma matrices and create a test
+            RealMatrix scaledBeta = params.getBeta().scalarMultiply(betaScale, true);
+            RealMatrix scaledSigmaError = params.getSigmaError().scalarMultiply(sigmaScale);
+            GLMMTest glmmTest = GLMMTestFactory.createGLMMTestForPower(test,
+                    params.getFApproximationMethod(test),
+                    params.getUnivariateCdfMethod(test),
+                    params.getUnivariateEpsilonMethod(test),
                     params.getDesignEssence(),
                     params.getXtXInverse(),
                     STARTING_SAMPLE_SIZE,
+                    params.getDesignRank(),
                     params.getBetweenSubjectContrast(),
                     params.getWithinSubjectContrast(),
                     params.getTheta(),
                     scaledBeta, scaledSigmaError,
-                    params.getSigmaGaussianRandom(),
-                    params.isNonCentralityCDFExact());
-        }
+                    (params.getConfidenceIntervalType() != ConfidenceIntervalType.NONE ?
+                            params.getSampleSizeForEstimates() - params.getDesignMatrixRankForEstimates(): 0));
 
-        // Calculate the maximum valid per group N. This avoids multiplication which exceeeds
-        // Integer.MAX_VALUE. Moreover, by limiting to MAX_SAMPLE_SIZE, we avoid calculations
-        // that take many seconds to complete.
-        int designEssenceRows = params.getDesignEssence().getRowDimension();
-        int maxPerGroupN = Math.min(Integer.MAX_VALUE/designEssenceRows, MAX_SAMPLE_SIZE);
-
-        /*
-         * find the upper bound on sample size.  That is,
-         * find a sample size which produces power greater than or
-         * equal to the desired power.
-         * If an error occurs, we set an error code in the power result
-         */
-        SampleSizeBound upperBound = getSampleSizeUpperBound(glmmTest, nonCentralityDist,
-                method, targetPower, alpha, quantile, maxPerGroupN);
-        if (upperBound.getError() != null) {
-            GLMMPower power = new GLMMPower(test, alpha, targetPower,
-                    upperBound.getActualPower(), upperBound.getSampleSize(),
-                    betaScale, sigmaScale, method, quantile, null);
-            switch (upperBound.getError()) {
-            case MAX_SAMPLE_SIZE_EXCEEDED:
-                power.setErrorMessage(
-                 // TODO: is the following expression correct?
-                 // "The total sample size for this case would exceed " + (maxPerGroupN * designEssenceRows) + ". "
-                    "The total sample size for this case would be unreasonably large. "
-                  + "For performance reasons, we are not computing its exact value."
-                );
-                power.setErrorCode(PowerErrorEnum.MAX_SAMPLE_SIZE_EXCEEDED);
-                break;
-            case SAMPLE_SIZE_UNDEFINED:
-                power.setErrorMessage(NO_MEAN_DIFFERENCE_MESSAGE);
-                power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
-                break;
-            case SAMPLE_SIZE_UNDEFINED_DUE_TO_EXCEPTION:
-                power.setErrorMessage("Sample size not well defined.");
-                power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
-                break;
+            // calculate the noncentrality distribution
+            NonCentralityDistribution nonCentralityDist = null;
+            if (method != PowerMethod.CONDITIONAL_POWER) {
+                nonCentralityDist = new NonCentralityDistribution(test,
+                        params.getDesignEssence(),
+                        params.getXtXInverse(),
+                        STARTING_SAMPLE_SIZE,
+                        params.getBetweenSubjectContrast(),
+                        params.getWithinSubjectContrast(),
+                        params.getTheta(),
+                        scaledBeta, scaledSigmaError,
+                        params.getSigmaGaussianRandom(),
+                        params.isNonCentralityCDFExact());
             }
-            return power;
+
+            // Calculate the maximum valid per group N. This avoids multiplication which exceeeds
+            // Integer.MAX_VALUE. Moreover, by limiting to MAX_SAMPLE_SIZE, we avoid calculations
+            // that take many seconds to complete.
+            int designEssenceRows = params.getDesignEssence().getRowDimension();
+            int maxPerGroupN = Math.min(Integer.MAX_VALUE/designEssenceRows, MAX_SAMPLE_SIZE);
+
+            /*
+             * find the upper bound on sample size.  That is,
+             * find a sample size which produces power greater than or
+             * equal to the desired power.
+             * If an error occurs, we set an error code in the power result
+             */
+            SampleSizeBound upperBound = getSampleSizeUpperBound(glmmTest, nonCentralityDist,
+                    method, targetPower, alpha, quantile, maxPerGroupN);
+            if (upperBound.getError() != null) {
+                GLMMPower power = new GLMMPower(test, alpha, targetPower,
+                        upperBound.getActualPower(), upperBound.getSampleSize(),
+                        betaScale, sigmaScale, method, quantile, null);
+                switch (upperBound.getError()) {
+                case MAX_SAMPLE_SIZE_EXCEEDED:
+                    power.setErrorMessage(
+                     // TODO: is the following expression correct?
+                     // "The total sample size for this case would exceed " + (maxPerGroupN * designEssenceRows) + ". "
+                        "The total sample size for this case would be unreasonably large. "
+                      + "For performance reasons, we are not computing its exact value."
+                    );
+                    power.setErrorCode(PowerErrorEnum.MAX_SAMPLE_SIZE_EXCEEDED);
+                    break;
+                case SAMPLE_SIZE_UNDEFINED:
+                    power.setErrorMessage(NO_MEAN_DIFFERENCE_MESSAGE);
+                    power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
+                    break;
+                case SAMPLE_SIZE_UNDEFINED_DUE_TO_EXCEPTION:
+                    power.setErrorMessage("Sample size not well defined.");
+                    power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
+                    break;
+                }
+                return power;
+            }
+
+            /*
+             *  find the lower bound on sample size
+             *  We search for a lower bound since the F approximations
+             *  may be unstable for very small samples
+             */
+            // TODO: isn't the lower bound just half of the upper bound?????
+            SampleSizeBound lowerBound = getSampleSizeLowerBound(glmmTest, nonCentralityDist,
+                    method, upperBound, alpha, quantile);
+            assert lowerBound.getError() == null;
+
+            /*
+             * At this point we have valid boundaries for searching.
+             * There are two possible scenarios
+             * 1. The upper bound == lower bound.
+             * 2. The upper bound != lower bound and lower bound exceeds required power.
+             * In this case we just take the value at the lower bound.
+             * 3. The upper bound != lower bound and lower bound is less than the required power.
+             * In this case we bisection search
+             */
+            double calculatedPower;
+            int perGroupSampleSize;
+
+            if (upperBound.getSampleSize() == lowerBound.getSampleSize()) {
+                // case 1
+                calculatedPower = upperBound.getActualPower();
+                perGroupSampleSize = upperBound.getSampleSize();
+            } else if (lowerBound.getActualPower() >= targetPower) {
+                // case 2
+                calculatedPower = lowerBound.getActualPower();
+                perGroupSampleSize = lowerBound.getSampleSize();
+            } else {
+                // case 3, bisection search time!
+                // create a bisection search function to find the best per group sample size
+                BisectionSolver solver =  new BisectionSolver();
+                SampleSizeFunction sampleSizeFunc = new SampleSizeFunction(glmmTest, nonCentralityDist,
+                        method, targetPower, alpha, quantile);
+                double solution = solver.solve(MAX_ITERATIONS, sampleSizeFunc,
+                        lowerBound.getSampleSize(), upperBound.getSampleSize());
+                perGroupSampleSize = (int) Math.rint(solution); // see https://samplesizeshop.atlassian.net/browse/SSS-120
+                glmmTest.setPerGroupSampleSize(perGroupSampleSize);
+                if (nonCentralityDist != null) nonCentralityDist.setPerGroupSampleSize(perGroupSampleSize);
+                calculatedPower = getPowerByType(glmmTest, nonCentralityDist, method, alpha, quantile);
+            }
+
+            // build a confidence interval if requested
+            GLMMPowerConfidenceInterval ci;
+            if (params.getConfidenceIntervalType() != ConfidenceIntervalType.NONE) {
+                ci = new GLMMPowerConfidenceInterval(params.getConfidenceIntervalType(),
+                        params.getAlphaLowerConfidenceLimit(),
+                        params.getAlphaUpperConfidenceLimit(),
+                        params.getSampleSizeForEstimates(),
+                        params.getDesignMatrixRankForEstimates(),
+                        alpha, glmmTest);
+            } else {
+                ci = null;
+            }
+
+            return new GLMMPower(test, alpha, targetPower, calculatedPower,
+                    MatrixUtils.getTotalSampleSize(params.getDesignEssence(), perGroupSampleSize),
+                    betaScale, sigmaScale, method, quantile, ci);
+        } catch (PowerException pe) {
+            GLMMPower powerValue = new GLMMPower(test, alpha, targetPower, -1, -1,
+                    betaScale, sigmaScale, method, quantile, null);
+            powerValue.setErrorCode(pe.getErrorCode());
+            powerValue.setErrorMessage(pe.getMessage());
+            return powerValue;
         }
-
-        /*
-         *  find the lower bound on sample size
-         *  We search for a lower bound since the F approximations
-         *  may be unstable for very small samples
-         */
-        // TODO: isn't the lower bound just half of the upper bound?????
-        SampleSizeBound lowerBound = getSampleSizeLowerBound(glmmTest, nonCentralityDist,
-                method, upperBound, alpha, quantile);
-        assert lowerBound.getError() == null;
-
-        /*
-         * At this point we have valid boundaries for searching.
-         * There are two possible scenarios
-         * 1. The upper bound == lower bound.
-         * 2. The upper bound != lower bound and lower bound exceeds required power.
-         * In this case we just take the value at the lower bound.
-         * 3. The upper bound != lower bound and lower bound is less than the required power.
-         * In this case we bisection search
-         */
-        double calculatedPower;
-        int perGroupSampleSize;
-
-        if (upperBound.getSampleSize() == lowerBound.getSampleSize()) {
-            // case 1
-            calculatedPower = upperBound.getActualPower();
-            perGroupSampleSize = upperBound.getSampleSize();
-        } else if (lowerBound.getActualPower() >= targetPower) {
-            // case 2
-            calculatedPower = lowerBound.getActualPower();
-            perGroupSampleSize = lowerBound.getSampleSize();
-        } else {
-            // case 3, bisection search time!
-            // create a bisection search function to find the best per group sample size
-            BisectionSolver solver =  new BisectionSolver();
-            SampleSizeFunction sampleSizeFunc = new SampleSizeFunction(glmmTest, nonCentralityDist,
-                    method, targetPower, alpha, quantile);
-            double solution = solver.solve(MAX_ITERATIONS, sampleSizeFunc,
-                    lowerBound.getSampleSize(), upperBound.getSampleSize());
-            perGroupSampleSize = (int) Math.rint(solution); // see https://samplesizeshop.atlassian.net/browse/SSS-120
-            glmmTest.setPerGroupSampleSize(perGroupSampleSize);
-            if (nonCentralityDist != null) nonCentralityDist.setPerGroupSampleSize(perGroupSampleSize);
-            calculatedPower = getPowerByType(glmmTest, nonCentralityDist, method, alpha, quantile);
-        }
-
-        // build a confidence interval if requested
-        GLMMPowerConfidenceInterval ci;
-        if (params.getConfidenceIntervalType() != ConfidenceIntervalType.NONE) {
-            ci = new GLMMPowerConfidenceInterval(params.getConfidenceIntervalType(),
-                    params.getAlphaLowerConfidenceLimit(),
-                    params.getAlphaUpperConfidenceLimit(),
-                    params.getSampleSizeForEstimates(),
-                    params.getDesignMatrixRankForEstimates(),
-                    alpha, glmmTest);
-        } else {
-            ci = null;
-        }
-
-        return new GLMMPower(test, alpha, targetPower, calculatedPower,
-                MatrixUtils.getTotalSampleSize(params.getDesignEssence(), perGroupSampleSize),
-                betaScale, sigmaScale, method, quantile, ci);
     }
 
     /**
@@ -1245,22 +1251,22 @@ public class GLMMPowerCalculator implements PowerCalculator
         if (nonCentralityDist != null) nonCentralityDist.setBeta(scaledBeta);
         calculatedPower = getPowerByType(glmmTest, nonCentralityDist, method,  alpha, quantile);
 
-        // get a confidence interval if requested
-        GLMMPowerConfidenceInterval ci = null;
-        if (params.getConfidenceIntervalType() !=
-                ConfidenceIntervalType.NONE)
-        {
+        // build a confidence interval if requested
+        GLMMPowerConfidenceInterval ci;
+        if (params.getConfidenceIntervalType() != ConfidenceIntervalType.NONE) {
             ci = new GLMMPowerConfidenceInterval(params.getConfidenceIntervalType(),
                     params.getAlphaLowerConfidenceLimit(),
                     params.getAlphaUpperConfidenceLimit(),
                     params.getSampleSizeForEstimates(),
                     params.getDesignMatrixRankForEstimates(),
                     alpha, glmmTest);
+        } else {
+            ci = null;
         }
 
         return new GLMMPower(test, alpha, targetPower, calculatedPower,
-                MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize), betaScale,
-                sigmaScale, method, quantile, ci);
+                MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize),
+                betaScale, sigmaScale, method, quantile, ci);
     }
 
     /**
@@ -1531,8 +1537,8 @@ public class GLMMPowerCalculator implements PowerCalculator
             double sigmaScale, double betaScale, int sampleSize, double quantile) {
         if (method == PowerMethod.UNCONDITIONAL_POWER && sampleSize > MAX_SAMPLE_SIZE_FOR_UNCONDITIONAL_POWER) {
             GLMMPower power = new GLMMPower(test, alpha, -1, -1,
-                    MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize), betaScale,
-                    sigmaScale, method, quantile, null);
+                    MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize),
+                    betaScale, sigmaScale, method, quantile, null);
             power.setErrorMessage(
                 "For power calculations using the unconditional power method, we require that the Smallest "
               + "Group Size not exceed " + MAX_SAMPLE_SIZE_FOR_UNCONDITIONAL_POWER + ", for "
@@ -1547,8 +1553,6 @@ public class GLMMPowerCalculator implements PowerCalculator
             power.setErrorCode(PowerErrorEnum.POWER_METHOD_UNKNOWN);
             return power;
         }
-
-        GLMMPowerConfidenceInterval ci = null;
 
         try {
             RealMatrix scaledBeta = params.getBeta().scalarMultiply(betaScale, true);
@@ -1572,8 +1576,8 @@ public class GLMMPowerCalculator implements PowerCalculator
             // power is always alpha
             if (noMeanDifference(glmmTest)) {
                 GLMMPower power = new GLMMPower(test, alpha, alpha, alpha,
-                                   MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize), betaScale,
-                                   sigmaScale, method, quantile, ci);
+                                   MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize),
+                                   betaScale, sigmaScale, method, quantile, null);
                 power.setErrorMessage(NO_MEAN_DIFFERENCE_MESSAGE);
                 power.setErrorCode(PowerErrorEnum.SAMPLE_SIZE_UNDEFINED);
                 return power;
@@ -1597,26 +1601,26 @@ public class GLMMPowerCalculator implements PowerCalculator
             // calculate the power
             double power = getPowerByType(glmmTest, nonCentralityDist, method, alpha, quantile);
 
-            // build the confidence interval if requested
-            if (params.getConfidenceIntervalType() !=
-                    ConfidenceIntervalType.NONE)
-            {
+            // build a confidence interval if requested
+            GLMMPowerConfidenceInterval ci;
+            if (params.getConfidenceIntervalType() != ConfidenceIntervalType.NONE) {
                 ci = new GLMMPowerConfidenceInterval(params.getConfidenceIntervalType(),
                         params.getAlphaLowerConfidenceLimit(),
                         params.getAlphaUpperConfidenceLimit(),
                         params.getSampleSizeForEstimates(),
                         params.getDesignMatrixRankForEstimates(),
                         alpha, glmmTest);
-
+            } else {
+                ci = null;
             }
-            return new GLMMPower(test, alpha, power, power,
-                    MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize), betaScale,
-                    sigmaScale, method, quantile, ci);
 
+            return new GLMMPower(test, alpha, power, power,
+                    MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize),
+                    betaScale, sigmaScale, method, quantile, ci);
         } catch (PowerException pe) {
             GLMMPower powerValue = new GLMMPower(test, alpha, -1, -1,
-                    MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize), betaScale,
-                    sigmaScale, method, quantile, ci);
+                    MatrixUtils.getTotalSampleSize(params.getDesignEssence(), sampleSize),
+                    betaScale, sigmaScale, method, quantile, null);
             powerValue.setErrorCode(pe.getErrorCode());
             powerValue.setErrorMessage(pe.getMessage());
             return powerValue;
