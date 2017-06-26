@@ -327,9 +327,12 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     protected void calculateEpsilon()
     {
         distinctSigmaStarEigenValues.clear();
+
+        // TODO: why not compute these in the constructors?
         rankC = new SingularValueDecomposition(C).getRank();
         rankU = new SingularValueDecomposition(U).getRank();
 
+        // TODO: why not check this in the constructors?
         if (nuEst > 0 && rankU > nuEst) {
             throw new NoHdlssSupportException(rankU, nuEst);
         }
