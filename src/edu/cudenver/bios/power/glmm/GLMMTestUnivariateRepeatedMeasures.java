@@ -31,8 +31,10 @@ import org.apache.commons.math3.util.Precision;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.GramSchmidtOrthonormalization;
+import edu.cudenver.bios.matrix.MatrixUtilities;
 import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
+import edu.cudenver.bios.utils.Logger;
 
 import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
 
@@ -46,6 +48,8 @@ import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
  */
 public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
 {
+    private static final Logger LOGGER = Logger.getLogger(GLMMTestUnivariateRepeatedMeasures.class);
+
     // if sigma is estimated, then this value will be set to totalN_est - rank_est
     // where totalN_est is the sample size for the data set from which sigma was estimated
     // and rank_est is the rank of the design matrix in the data set used for estimation
@@ -420,22 +424,24 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         RealMatrix diffFromIdentity =
             UtU.subtract(org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(UtU.getRowDimension()));
 
-        // get maximum value in U'U
+        // get maximum absolute value in U'U
         double maxValue = Double.NEGATIVE_INFINITY;
         for(int r = 0; r < diffFromIdentity.getRowDimension(); r++)
         {
             for(int c = 0; c < diffFromIdentity.getColumnDimension(); c++)
             {
-                double entryVal = diffFromIdentity.getEntry(r, c);
+                double entryVal = Math.abs(diffFromIdentity.getEntry(r, c));
                 if (entryVal > maxValue) maxValue = entryVal;
             }
         }
 
         if (maxValue > Precision.SAFE_MIN)
         {
-            // U matrix deviates from Identity, so create one that is orthonormal
-            RealMatrix Utmp = new GramSchmidtOrthonormalization(U).getQ();
-            U = Utmp;
+            // U'U matrix deviates from identity, so create a U matrix that is orthonormal
+            // TODO: thus UNIREP tests may use a different U matrix than HLT/PBT/WLR tests???
+            // TODO: displayed matrix results are incorrect now?
+            U = new GramSchmidtOrthonormalization(U).getQ();
+            debug("U replaced by orthonormal", U);
         }
     }
 
@@ -487,6 +493,17 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     public double getConfidenceLimitsDegreesOfFreedom()
     {
         return rankU * nuEst * powerAlternativeDDFCorrection / noncentralityCorrection;
+    }
+
+    /**
+     * A convenience method for DEBUG logging of a matrix
+     * with a label.
+     *
+     * @param label      The label.
+     * @param realMatrix The matrix.
+     */
+    private static void debug(String label, RealMatrix realMatrix) {
+        LOGGER.debug(MatrixUtilities.logMessageSupplier(label, realMatrix));
     }
 
     /**
