@@ -23,6 +23,7 @@ package edu.cudenver.bios.power;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.integration.SimpsonIntegrator;
@@ -51,7 +52,6 @@ import edu.cudenver.bios.power.parameters.GLMMPowerParameters;
 import edu.cudenver.bios.power.parameters.GLMMPowerParameters.PowerMethod;
 import edu.cudenver.bios.power.parameters.PowerParameters;
 import edu.cudenver.bios.utils.Logger;
-import edu.cudenver.bios.utils.Supplier;
 
 import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
 

@@ -20,8 +20,7 @@
  */
 package edu.cudenver.bios.matrix;
 
-import edu.cudenver.bios.utils.Supplier; // in Java 7
-//import java.util.function.Supplier; // in Java 8
+import java.util.function.Supplier;
 import org.apache.commons.math3.linear.NonSquareMatrixException;
 import org.apache.commons.math3.linear.RealMatrix;
 

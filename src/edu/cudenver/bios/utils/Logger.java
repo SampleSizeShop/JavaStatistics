@@ -20,7 +20,7 @@
  */
 package edu.cudenver.bios.utils;
 
-//import java.util.function.Supplier; // in Java 8
+import java.util.function.Supplier;
 import org.apache.log4j.Level;
 
 /**
