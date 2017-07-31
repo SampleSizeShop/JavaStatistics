@@ -166,8 +166,8 @@ public class NonCentralFDistribution extends AbstractRealDistribution
                 (ndf + 3 * nonCentrality) * Math.pow(ddf - 2, 2);
             double TikuK = Math.pow(ndf + nonCentrality, 2) +
                 (ddf - 2) * (ndf + 2 * nonCentrality);
-            double TikuNdf = Math.floor(0.5 * (ddf - 2)*(Math.sqrt((TikuH*TikuH) /
-                    ((TikuH*TikuH) - 4 * Math.pow(TikuK, 3))) - 1));
+            double TikuNdf = 0.5 * (ddf - 2)*(Math.sqrt((TikuH*TikuH) /
+                    ((TikuH*TikuH) - 4 * Math.pow(TikuK, 3))) - 1);
             TikuC = (TikuNdf / ndf) / (2 * TikuNdf + ddf - 2) * (TikuH / TikuK);
             TikuB = - ddf / (ddf - 2) * (TikuC - 1 - nonCentrality / ndf);
             nonCentralF = new NoncentralFishersF(TikuNdf, ddf, 0);
