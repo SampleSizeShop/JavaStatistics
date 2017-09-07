@@ -42,6 +42,16 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
  */
 public class NonCentralFDistribution extends AbstractRealDistribution
 {
+    private static final double ONE_THIRD  = 1.0/3;
+    private static final double TWO_THIRDS = 2.0/3;
+
+    private static final double TEN_TO_THE_0_POINT_6 = Math.pow(10, 0.6);
+    private static final double TEN_TO_THE_4_POINT_4 = Math.pow(10, 4.4);
+    private static final double TEN_TO_THE_5_POINT_4 = Math.pow(10, 5.4);
+    private static final double TEN_TO_THE_6_POINT_0 = Math.pow(10, 6.0);
+    private static final double TEN_TO_THE_6_POINT_4 = Math.pow(10, 6.4);
+    private static final double TEN_TO_THE_9_POINT_2 = Math.pow(10, 9.2);
+
     private static final int MAX_ITERATIONS = 10000;
     private static final int STARTING_F = 10;
 
@@ -137,17 +147,17 @@ public class NonCentralFDistribution extends AbstractRealDistribution
         nonCentrality = nonCentralityParameter;
 
         // set the method of approximation and initialize appropriately
-        if ((ndf < Math.pow(10, 4.4) && ddf < Math.pow(10, 5.4) &&
-                this.nonCentrality < Math.pow(10, 6.4)) ||
-                (ndf < Math.pow(10, 6) && ddf < 10 && nonCentrality <= Math.pow(10, 6)))
+        if ((ndf < TEN_TO_THE_4_POINT_4 && ddf < TEN_TO_THE_5_POINT_4 &&
+                this.nonCentrality < TEN_TO_THE_6_POINT_4) ||
+                (ndf < TEN_TO_THE_6_POINT_0 && ddf < 10 && nonCentrality <= TEN_TO_THE_6_POINT_0))
         {
             // cdf valid in these ranges
             method = FMethod.CDF;
             nonCentralF = new NoncentralFishersF(ndf, ddf, nonCentrality);
         }
-        else if (ndf < Math.pow(10, 9.2) && ndf >= 1 &&
-                ddf < Math.pow(10, 9.2) && ddf > Math.pow(10, 0.6) &&
-                this.nonCentrality < Math.pow(10, 6.4))
+        else if (ndf < TEN_TO_THE_9_POINT_2 && ndf >= 1 &&
+                ddf < TEN_TO_THE_9_POINT_2 && ddf > TEN_TO_THE_0_POINT_6 &&
+                this.nonCentrality < TEN_TO_THE_6_POINT_4)
         {
             // use Tiku approximation for extreme ndf values
             method = FMethod.TIKU_APPROXIMATION;
@@ -156,8 +166,8 @@ public class NonCentralFDistribution extends AbstractRealDistribution
                 (ndf + 3 * nonCentrality) * Math.pow(ddf - 2, 2);
             double TikuK = Math.pow(ndf + nonCentrality, 2) +
                 (ddf - 2) * (ndf + 2 * nonCentrality);
-            double TikuNdf = Math.floor(0.5 * (ddf - 2)*(Math.sqrt((TikuH*TikuH) /
-                    ((TikuH*TikuH) - 4 * Math.pow(TikuK, 3))) - 1));
+            double TikuNdf = 0.5 * (ddf - 2)*(Math.sqrt((TikuH*TikuH) /
+                    ((TikuH*TikuH) - 4 * Math.pow(TikuK, 3))) - 1);
             TikuC = (TikuNdf / ndf) / (2 * TikuNdf + ddf - 2) * (TikuH / TikuK);
             TikuB = - ddf / (ddf - 2) * (TikuC - 1 - nonCentrality / ndf);
             nonCentralF = new NoncentralFishersF(TikuNdf, ddf, 0);
@@ -185,15 +195,11 @@ public class NonCentralFDistribution extends AbstractRealDistribution
             if (TikuFcrit <= 0) return 0;
             return nonCentralF.cdf(TikuFcrit);
         case NORMAL_APPROXIMATION:
-            double p1 = 1 / 3;
-            double p2 = -2;
-            double p3 = 1 / 2;
-            double p4 = 2 / 3;
-            double arg1 = ((ndf * Fcritical) / (ndf + nonCentrality));
-            double arg2 = (2 / 9) * (ndf + (2 * nonCentrality)) * (Math.pow(ndf + nonCentrality, p2));
-            double arg3 = (2 / 9) * (1 / ddf);
-            double numZ = Math.pow(arg1, p1) - (arg3 * Math.pow(arg1, p1)) - (1 - arg2);
-            double denZ =  Math.pow((arg2 + arg3 * Math.pow(arg1, p4)), p3);
+            double arg1 = ndf * Fcritical / (ndf + nonCentrality);
+            double arg2 = 2 * (ndf + 2 * nonCentrality) * Math.pow(ndf + nonCentrality, -2) / 9;
+            double arg3 = 2 / (9 * ddf);
+            double numZ = Math.pow(arg1, ONE_THIRD) - arg3 * Math.pow(arg1, ONE_THIRD) - 1 + arg2;
+            double denZ = Math.pow(arg2 + arg3 * Math.pow(arg1, TWO_THIRDS), 0.5);
             double zScore = numZ / denZ;
             double absZScore = Math.abs(zScore);
             if (absZScore < 6)

@@ -31,8 +31,12 @@ import org.apache.commons.math3.util.Precision;
 
 import edu.cudenver.bios.matrix.FixedRandomMatrix;
 import edu.cudenver.bios.matrix.GramSchmidtOrthonormalization;
+import edu.cudenver.bios.matrix.MatrixUtilities;
 import edu.cudenver.bios.matrix.MatrixUtils;
 import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
+import edu.cudenver.bios.utils.Logger;
+
+import static edu.cudenver.bios.matrix.MatrixUtilities.forceSymmetric;
 
 /**
  * Implementation of the uncorreected univariate approach to repeated measures test
@@ -44,10 +48,12 @@ import edu.cudenver.bios.power.glmm.GLMMTest.UnivariateCdfApproximation;
  */
 public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
 {
+    private static final Logger LOGGER = Logger.getLogger(GLMMTestUnivariateRepeatedMeasures.class);
+
     // if sigma is estimated, then this value will be set to totalN_est - rank_est
     // where totalN_est is the sample size for the data set from which sigma was estimated
     // and rank_est is the rank of the design matrix in the data set used for estimation
-    protected int nuEst =  0;
+    protected final int nuEst;
     // cache some of the eigenvalue information for use in the GG and Huynh-Feldt
     protected ArrayList<EigenValueMultiplicityPair> distinctSigmaStarEigenValues = new ArrayList<EigenValueMultiplicityPair>();
     protected double[] sigmaStarEigenValues = null;
@@ -116,6 +122,9 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     {
         super(fMethod, Xessence, XtXInverse, perGroupN, rank,
                 C, U, thetaNull, beta, sigmaError);
+        if (nuEst < 0) {
+            throw new IllegalArgumentException("nuEst cannot be negative");
+        }
         this.cdfMethod = cdfMethod;
         this.epsilonMethod = epsilonMethod;
         this.nuEst = nuEst;
@@ -145,6 +154,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         super(fMethod, X, XtXInverse, rank, Y,  C, U, thetaNull);
         this.cdfMethod = cdfMethod;
         this.epsilonMethod = epsilonMethod;
+        this.nuEst = 0;
         // verify that U is orthonormal to an identity matrix
         // if not, build an orthonormal U from the specified U matrix
         createOrthonormalU();
@@ -225,7 +235,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         double b = U.getColumnDimension();
         RealMatrix hypothesisSumOfSquares = getHypothesisSumOfSquares();
         // TODO: cache sig star, lam bar
-        RealMatrix sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
+        RealMatrix sigmaStar = forceSymmetric(U.transpose().multiply(sigmaError.multiply(U)));
         double lambdaBar = sigmaStar.getTrace() / rankU;
 
         return (hypothesisSumOfSquares.getTrace() / (lambdaBar / noncentralityCorrection));
@@ -317,14 +327,18 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     protected void calculateEpsilon()
     {
         distinctSigmaStarEigenValues.clear();
+
+        // TODO: why not compute these in the constructors?
         rankC = new SingularValueDecomposition(C).getRank();
         rankU = new SingularValueDecomposition(U).getRank();
 
-        // get the sigmaStar matrix: U' *sigmaError * U
-       RealMatrix  sigmaStar = U.transpose().multiply(sigmaError.multiply(U));
+        // TODO: why not check this in the constructors?
+        if (nuEst > 0 && rankU > nuEst) {
+            throw new NoHdlssSupportException(rankU, nuEst);
+        }
 
-        // ensure symmetry
-        sigmaStar = sigmaStar.add(sigmaStar.transpose()).scalarMultiply(0.5);
+        // get the sigmaStar matrix: U' * sigmaError * U
+        RealMatrix sigmaStar = forceSymmetric(U.transpose().multiply(sigmaError.multiply(U)));
 
         // get the eigen values of the normalized sigmaStar matrix
         sigmaStarEigenValues =
@@ -391,7 +405,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
                     2 * nuEst * sigStarSqTrace +
                     2 * multiplier * H.getTrace() * sigStarTrace / rankC);
             double denominator = nuEst * (nuEst*nuEst*sigStarSqTrace - nuEst *sigStarTrace*sigStarTrace +
-                    2 *multiplier * sigStarHTrace / rankC);
+                    2 * multiplier * sigStarHTrace / rankC);
 
             epsilonTildeN = numerator / ( rankU *denominator);
 
@@ -413,22 +427,24 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
         RealMatrix diffFromIdentity =
             UtU.subtract(org.apache.commons.math3.linear.MatrixUtils.createRealIdentityMatrix(UtU.getRowDimension()));
 
-        // get maximum value in U'U
+        // get maximum absolute value in U'U
         double maxValue = Double.NEGATIVE_INFINITY;
         for(int r = 0; r < diffFromIdentity.getRowDimension(); r++)
         {
             for(int c = 0; c < diffFromIdentity.getColumnDimension(); c++)
             {
-                double entryVal = diffFromIdentity.getEntry(r, c);
+                double entryVal = Math.abs(diffFromIdentity.getEntry(r, c));
                 if (entryVal > maxValue) maxValue = entryVal;
             }
         }
 
         if (maxValue > Precision.SAFE_MIN)
         {
-            // U matrix deviates from Identity, so create one that is orthonormal
-            RealMatrix Utmp = new GramSchmidtOrthonormalization(U).getQ();
-            U = Utmp;
+            // U'U matrix deviates from identity, so create a U matrix that is orthonormal
+            // TODO: thus UNIREP tests may use a different U matrix than HLT/PBT/WLR tests???
+            // TODO: displayed matrix results are incorrect now?
+            U = new GramSchmidtOrthonormalization(U).getQ();
+            debug("U replaced by orthonormal", U);
         }
     }
 
@@ -441,7 +457,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     {
         dataAnalysisNDFCorrection = 1;
         powerNullNDFCorrection = 1;
-        if (nuEst <= 0)
+        if (nuEst == 0)
             powerAlternativeNDFCorrection = epsilonN;
         else
             powerAlternativeNDFCorrection = epsilonTildeN;
@@ -465,7 +481,7 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
      */
     protected void calculateNoncentralityCorrection()
     {
-        if (nuEst <= 0)
+        if (nuEst == 0)
             noncentralityCorrection = epsilonN;
         else
             noncentralityCorrection = epsilonTildeN;
@@ -480,5 +496,42 @@ public class GLMMTestUnivariateRepeatedMeasures extends GLMMTest
     public double getConfidenceLimitsDegreesOfFreedom()
     {
         return rankU * nuEst * powerAlternativeDDFCorrection / noncentralityCorrection;
+    }
+
+    /**
+     * A convenience method for DEBUG logging of a matrix
+     * with a label.
+     *
+     * @param label      The label.
+     * @param realMatrix The matrix.
+     */
+    private static void debug(String label, RealMatrix realMatrix) {
+        LOGGER.debug(MatrixUtilities.logMessageSupplier(label, realMatrix));
+    }
+
+    /**
+     * Exception reflecting the fact that support for the so-called
+     * "high dimension, low sample size" category does not exist yet.
+     */
+    public static class NoHdlssSupportException extends RuntimeException {
+        private static final String MESSAGE =
+              "The rank of the within-participant contrast matrix (%d) "
+            + "exceeds the error degrees of freedom (%d). This puts this "
+            + "study design into the HDLSS (high dimension, low sample size) "
+            + "category, which we do not yet support. "
+            + "In Options > Confidence Intervals, please either increase "
+            + "&#8220;Total sample size&#8221;, decrease &#8220;Rank of "
+            + "the design matrix&#8221;, or both; or else check "
+            + "&#8220;Don't include confidence intervals for power&#8221;.";
+
+        /**
+         * Construct an instance of this class.
+         *
+         * @param rankU The rank of the U matrix.
+         * @param nuEst The error degrees of freedom.
+         */
+        public NoHdlssSupportException(int rankU, int nuEst) {
+            super(String.format(MESSAGE, rankU, nuEst));
+        }
     }
 }

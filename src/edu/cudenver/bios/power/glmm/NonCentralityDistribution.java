@@ -71,7 +71,7 @@ public class NonCentralityDistribution
     protected double H0 = 0;
     int qF;
     int a;
-    int N;
+    double N;
     double[] sEigenValues;
     int sStar = 0;
     // indicates if an "exact" cdf should be calculated via Davie's algorithm or
@@ -111,7 +111,7 @@ public class NonCentralityDistribution
             try {
                 return cdf(n) - quantile;
             } catch (PowerException pe) {
-                return Double.NaN;
+                throw new IllegalArgumentException(pe.getMessage(), pe);
             }
         }
     }
@@ -180,7 +180,9 @@ public class NonCentralityDistribution
 
         // calculate intermediate matrices
 //        RealMatrix FEssence = params.getDesignEssence().getFullDesignMatrixFixed();
-        this.N = FEssence.getRowDimension() * perGroupN;
+        // TODO: do we ever get here with values that can cause integer overflow,
+        //       and if so, does it matter?
+        this.N = (double) FEssence.getRowDimension() * perGroupN;
         this.exact = exact;
         try
         {
@@ -420,7 +422,7 @@ public class NonCentralityDistribution
                 else if (lastPositiveNoncentrality == 0 && lastNegativeNoncentrality > 0)
                 {
                     // handle special case: CGaussian = 1
-                    NonCentralFDistribution nonCentralFDist = new NonCentralFDistribution(1,Nstar, lastNegativeNoncentrality);
+                    NonCentralFDistribution nonCentralFDist = new NonCentralFDistribution(1, Nstar, lastNegativeNoncentrality);
                     return 1 - nonCentralFDist.cdf(1/Fstar);
                 }
             }
@@ -487,12 +489,10 @@ public class NonCentralityDistribution
     private RealMatrix getSigmaStarInverse(RealMatrix U, RealMatrix sigmaError, Test test)
     {
         // sigma* = U'*sigmaE*U
-        RealMatrix sigmaStar = U.transpose().multiply(sigmaError).multiply(U);
+        RealMatrix sigmaStar = forceSymmetric(U.transpose().multiply(sigmaError).multiply(U));
         debug("U", U);
         debug("sigmaError", sigmaError);
         debug("sigmaStar = U transpose * sigmaError * U", sigmaStar);
-
-        // TODO: force symmetric?
 
         if (! MatrixUtils.isPositiveDefinite(sigmaStar)) {
             throw new IllegalArgumentException(NOT_POSITIVE_DEFINITE);
