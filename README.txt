@@ -92,7 +92,7 @@ edu.cudenver.bios.power.test.published
 There are associated SAS (requires SAS 9.2 or higher) programs in the 
 ${JAVASTATISTICS_HOME}/sas/code directory which run the equivalent
 SAS/IML implementation of the test cases.  The SAS test cases produce
-XML in ${JAVASTATISTICS_HOME}/sas/data which are then read by the
+XML in ${JAVASTATISTICS_HOME}/sas/data which brew install are then read by the
 Java unit tests.
 
 The following test cases are available:

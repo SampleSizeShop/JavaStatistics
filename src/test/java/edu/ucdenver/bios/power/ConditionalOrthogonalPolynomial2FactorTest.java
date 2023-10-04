@@ -92,7 +92,7 @@ public class ConditionalOrthogonalPolynomial2FactorTest {
 	public void testTwoFactorContrastMullerBarton()
 	{
 		List<GLMMPower> sasPowers = Utils.readSasPowers(MB_DATA_FILE);
-		PowerChecker checker = new PowerChecker(sasPowers, false);
+		PowerChecker checker = new PowerChecker(sasPowers, true);
 		checker.setSymmetryThreshold(1.0E-14);
 
 		// set up the matrices and approximation method
@@ -122,7 +122,7 @@ public class ConditionalOrthogonalPolynomial2FactorTest {
 	@Test
 	public void testTwoFactorContrastMullerEdwardsSimpsonTaylor() {
 		List<GLMMPower> sasPowers = Utils.readSasPowers(MEST_DATA_FILE);
-		PowerChecker checker = new PowerChecker(sasPowers, false);
+		PowerChecker checker = new PowerChecker(sasPowers, true);
 		checker.setSymmetryThreshold(1.0E-14);
 		
 		// set up the matrices and approximation method
@@ -207,7 +207,7 @@ public class ConditionalOrthogonalPolynomial2FactorTest {
 
         // output the results
 		ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
-		reportBuilder.createValidationReportAsStdout(checker, title, false);
+		reportBuilder.createValidationReportAsStdout(checker, title, true);
 
 		assertTrue("results outside tolerance: " + TOLERANCE, checker.isSASDeviationBelowTolerance(TOLERANCE));
 	}

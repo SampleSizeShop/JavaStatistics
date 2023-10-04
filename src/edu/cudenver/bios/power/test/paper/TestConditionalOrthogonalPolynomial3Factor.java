@@ -193,7 +193,7 @@ public class TestConditionalOrthogonalPolynomial3Factor extends TestCase
                 params.addTest(test);
             }
             ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
-            reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+            reportBuilder.createValidationReportAsStdout(checker, TITLE, true);
             reportBuilder.createValidationReportAsLaTex(
                     OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
                     params, matrixAltStringBuffer.toString(), checker);

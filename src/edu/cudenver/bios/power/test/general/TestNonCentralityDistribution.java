@@ -82,6 +82,21 @@ public class TestNonCentralityDistribution extends TestCase
                             params.getSigmaGaussianRandom(),
                             false);
 
+            System.out.println("getDesignEssence: " +params.getDesignEssence());
+            System.out.println("Quantile: " +null);
+            System.out.println("perGroupN: " +perGroupN);
+            System.out.println("getBetweenSubjectContrast fix: " +params.getBetweenSubjectContrast().getFixedMatrix());
+            System.out.println("getBetweenSubjectContrast rand: " +params.getBetweenSubjectContrast().getRandomMatrix());
+            System.out.println("getWithinSubjectContrast: " +params.getWithinSubjectContrast());
+            System.out.println("getTheta: " +params.getTheta());
+            System.out.println("getBeta: " +params.getBeta().scalarMultiply(betaScale, true));
+            System.out.println("getSigmaError: " +params.getSigmaError().scalarMultiply(sigmaScale));
+            System.out.println("getSigmaGaussianRandom: " +params.getSigmaGaussianRandom());
+            System.out.println("Exact: " +false);
+
+            System.out.println("H0:" + ncd.getH0());
+            System.out.println("H1:" + ncd.getH1());
+
             for(double crit = 1; crit < 15; crit++)
             {
                 double prob = ncd.cdf(crit);
@@ -102,7 +117,8 @@ public class TestNonCentralityDistribution extends TestCase
         Test test = params.getTestList().get(0);
         try {
             NonCentralityDistribution ncd =
-                    new NonCentralityDistribution(test, params.getDesignEssence(),
+                    new NonCentralityDistribution(test,
+                            params.getDesignEssence(),
                             null,
                             perGroupN,
                             params.getBetweenSubjectContrast(),
@@ -112,6 +128,17 @@ public class TestNonCentralityDistribution extends TestCase
                             params.getSigmaError().scalarMultiply(sigmaScale),
                             params.getSigmaGaussianRandom(),
                             false);
+
+            System.out.println("getDesignEssence: " +params.getDesignEssence());
+            System.out.println("Quantile: " +null);
+            System.out.println("perGroupN: " +perGroupN);
+            System.out.println("getBetweenSubjectContrast: " +params.getBetweenSubjectContrast());
+            System.out.println("getWithinSubjectContrast: " +params.getWithinSubjectContrast());
+            System.out.println("getTheta: " +params.getTheta());
+            System.out.println("getBeta: " +params.getBeta().scalarMultiply(betaScale, true));
+            System.out.println("getSigmaError: " +params.getSigmaError().scalarMultiply(sigmaScale));
+            System.out.println("getSigmaGaussianRandom: " +params.getSigmaGaussianRandom());
+            System.out.println("Exact: " +false);
 
             for(double w = 0.10; w < 1.05; w += 0.1)
             {

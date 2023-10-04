@@ -70,7 +70,7 @@ public class ConditionalTwoSampleTTestTest {
     @Before
 	public void setUp() {
         List<GLMMPower> sasPowers = Utils.readSasPowers(DATA_FILE);
-        checker = new PowerChecker(sasPowers, false);
+        checker = new PowerChecker(sasPowers, true);
 	}
 
     /**

@@ -60,7 +60,7 @@ public class ConditionalOrthogonalPolynomial1FactorTest {
     @Before
     public void setUp() {
         List<GLMMPower> sasPowers = Utils.readSasPowers(DATA_FILE);
-        checker = new PowerChecker(sasPowers, false);
+        checker = new PowerChecker(sasPowers, true);
     }
 
     /**
@@ -128,7 +128,7 @@ public class ConditionalOrthogonalPolynomial1FactorTest {
         checker.checkPower(params);
 
         ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
-        reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+        reportBuilder.createValidationReportAsStdout(checker, TITLE, true);
         assertTrue("SAS deviation " + checker.getMaxSasDeviation() + " is not below tolerance " + TOLERANCE,
                     checker.isSASDeviationBelowTolerance(TOLERANCE));
     }

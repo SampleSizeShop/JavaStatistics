@@ -126,7 +126,7 @@ public class ConditionalMultivariateWithConfidenceLimitsTest {
 
         // output the results
         ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
-        reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+        reportBuilder.createValidationReportAsStdout(checker, TITLE, true);
         assertTrue("SAS deviation " + checker.getMaxSasDeviation() + " is not below tolerance " + TOLERANCE,
                     checker.isSASDeviationBelowTolerance(TOLERANCE));
     }

@@ -123,10 +123,10 @@ public class PowerChecker
         double sasCILower;
         double sasCIUpper;
         double simulatedPower;
-        double sasDeviation;
+        public double sasDeviation;
         double sasCILowerDeviation;
         double sasCIUpperDeviation;
-        double simulationDeviation;
+        public double simulationDeviation;
 
         public Result(GLMMPower calculatedPower,
                 double sasPower,
@@ -147,6 +147,21 @@ public class PowerChecker
             this.sasCIUpperDeviation = sasCIUpperDeviation;
             this.simulatedPower = simulatedPower;
             this.simulationDeviation = simulationDeviation;
+        }
+
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "calculatedPower=" + calculatedPower.toString() +
+                    ", sasPower=" + sasPower +
+                    ", sasCILower=" + sasCILower +
+                    ", sasCIUpper=" + sasCIUpper +
+                    ", simulatedPower=" + simulatedPower +
+                    ", sasDeviation=" + sasDeviation +
+                    ", sasCILowerDeviation=" + sasCILowerDeviation +
+                    ", sasCIUpperDeviation=" + sasCIUpperDeviation +
+                    ", simulationDeviation=" + simulationDeviation +
+                    '}';
         }
     };
 
@@ -259,6 +274,9 @@ public class PowerChecker
                 System.out.println("Simulation failed: " + e.getMessage());
             }
         }
+
+        // simResults.forEach((result) -> System.out.println(result.toString()));
+
 
         // accumulate results and calculate maximum absolute deviation
         for(int i = 0; i < results.size(); i++, sasResultsIndex++)

@@ -142,7 +142,7 @@ public class TestUnirepExactQuantile extends TestCase
             params50.clearBetaScaleList();
             params50.clearSampleSizeList();
             ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
-            reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+            reportBuilder.createValidationReportAsStdout(checker, TITLE, true);
             reportBuilder.createValidationReportAsLaTex(
                     OUTPUT_FILE, TITLE, AUTHOR, STUDY_DESIGN_DESCRIPTION, 
                     params50, checker);

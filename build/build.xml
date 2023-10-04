@@ -200,9 +200,9 @@
 		    <zipfileset file="${basedir}/../README.txt"/>
 		</zip>
 	</target>
-	
+
 	<!-- build all distributions -->
-	<target name="distributions" 
+	<target name="distributions"
 		depends="compress,
 		distribution.binary,
 		distribution.javadoc,

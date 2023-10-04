@@ -554,7 +554,7 @@ public class GLMMPowerParameters extends PowerParameters
      * Get the covariance matrix of the baseline covariate (1x1)
      * @return sigma G
      */
-    public RealMatrix getSigmaGaussianRandom()
+    public RealMatrix  getSigmaGaussianRandom()
     {
         return sigmaGaussianRandom;
     }

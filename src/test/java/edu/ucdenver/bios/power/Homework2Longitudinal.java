@@ -36,24 +36,20 @@ import java.util.List;
 import static org.junit.Assert.assertTrue;
 
 /**
-*
-* Power for a paired t-test       
-* 
-*  based on the example 2 from POWERLIB:
-*   Johnson J.L., Muller K.E., Slaughter J.C., Gurka M.J., Gribbin M.J. and Simpson S.L. 
-*   (2009) POWERLIB: SAS/IML software for computing power in multivariate linear models, 
-*   Journal of Statistical Software, 30(5), 1-27.
-*
-* @author Sarah Kreidler
-*
-*/
-public class ConditionalPairedTTestTest {
+ * Test case for approximate unconditional power for the HLT.  Values should match
+ * approximate unconditional power values from Table II in Glueck & Muller 2003.
+ * 
+ * @author Sarah Kreidler
+ *
+ */
+public class Homework2Longitudinal {
 
-	private static final String DATA_FILE =  "TestConditionalPairedTTest.xml";
-	private static final String TITLE = "GLMM(F) Example 2. Power results for a Paired T-test";
-    private static final double TOLERANCE = 0.000001;
+	private static final String DATA_FILE =  "Homework2Longitudinal.xml";
+	private static final String TITLE = "Test matrices printed by GLIMMPSE for original Homework 2";
+    private static final double[] ALPHA_LIST = {0.05};
+    private static final double TOLERANCE = 0.001;
 
-	private PowerChecker checker;
+    private PowerChecker checker;
 
     @Before
 	public void setUp() {
@@ -62,54 +58,59 @@ public class ConditionalPairedTTestTest {
 	}
 	
     /**
-     * Compare 2 sample t-test results between JavaStatistics, 
-     * POWERLIB, and simulation
+     * Compare the calculated HLT approximate unconditional powers against simulation
      */
     @Test
-    public void testPairedTTEst()
+    public void testPower()
     {
         GLMMPowerParameters params = new GLMMPowerParameters();
-        
-        // add tests
-        params.addTest(GLMMTestFactory.Test.UNIREP);
-        
-        // add alpha values
-        params.addAlpha(0.05);
 
-        // build beta matrix
-        double [][] beta = {{0,1}};
-        params.setBeta(new FixedRandomMatrix(beta, null, false));
-        // add beta scale values
-        for(double betaScale = 0; betaScale <= 2.5; betaScale += 0.5) params.addBetaScale(betaScale);
-        
-        // build theta null matrix
-        double [][] theta0 = {{0}};
-        params.setTheta(new Array2DRowRealMatrix(theta0));
-        
+        // add HLT as the statistical test
+        params.addTest(GLMMTestFactory.Test.HOTELLING_LAWLEY_TRACE);
+
+        // add alpha values
+        for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
+
+        int Q = 2;
+        // create design matrix
+        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(Q));
+        // add sample size multipliers
+        //  for(int sampleSize: SAMPLE_SIZE_LIST) params.addSampleSize(sampleSize);
+        params.addSampleSize(19);
         // build sigma matrix
-        double [][] sigma = {{2, 1}, {1, 2}};
+        double [][] sigma = {{0.81*1.0,  0.81*0.5,  0.81*0.4} ,
+                             {0.81*0.5,  0.81*1.0,  0.81*0.5 },
+                             {0.81*0.4,  0.81*0.5,  0.81*1.0 }};
         params.setSigmaError(new Array2DRowRealMatrix(sigma));
         // add sigma scale values
         params.addSigmaScale(1);
-        
-        // build design matrix
-        params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(1));
-        // add sample size multipliers
-        params.addSampleSize(10);
-        
+
+        // build beta matrix
+        double [][] beta = {{ 3.6, 2.8, 0.9 },
+                            { 4.5, 4.3, 3.0 }};
+        params.setBeta(new FixedRandomMatrix(beta, null, false));
+        // add beta scale values
+        params.addBetaScale(1);
+
+        // build theta null matrix
+        double [][] theta0 = {{0, 0}};
+        params.setTheta(new Array2DRowRealMatrix(theta0));
+
         // build between subject contrast
-        double [][] between = {{1}};
+        double [][] between = {{1, -1}};
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
 
         // build within subject contrast
-        double [][] within = {{1},{-1}};
+        double [][] within = {{ 1,  1 },
+                              {-1,  0 },
+                              { 0, -1 }};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
-        
-        checker.checkPower(params);
-        
-        // output the results
+
+
+		checker.checkPower(params);
         ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
-        reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
-        assertTrue("results outside tolerance: " + TOLERANCE, checker.isSASDeviationBelowTolerance(TOLERANCE));
+        reportBuilder.createValidationReportAsStdout(checker, TITLE, true);
+		assertTrue(checker.isSASDeviationBelowTolerance(TOLERANCE));
     }
+
 }

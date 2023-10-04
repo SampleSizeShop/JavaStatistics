@@ -63,7 +63,7 @@ public class HotellingLawleyApproximateQuantileTest {
     @Before
     public void setUp() throws ParserConfigurationException, SAXException {
         List<GLMMPower> sasPowers = Utils.readSasPowers(DATA_FILE);
-        checker = new PowerChecker(sasPowers, false);
+        checker = new PowerChecker(sasPowers, true);
     }
 
     /**
@@ -96,7 +96,7 @@ public class HotellingLawleyApproximateQuantileTest {
 
         // output the results
         ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
-        reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+        reportBuilder.createValidationReportAsStdout(checker, TITLE, true);
 
         assertTrue("results outside tolerance: " + TOLERANCE, checker.isSASDeviationBelowTolerance(TOLERANCE));
         checker.reset();
@@ -137,6 +137,7 @@ public class HotellingLawleyApproximateQuantileTest {
         // add HLT as the statistical test
         params.addTest(GLMMTestFactory.Test.HOTELLING_LAWLEY_TRACE);
 
+        // add alpha values
         // add alpha values
         for(double alpha: ALPHA_LIST) params.addAlpha(alpha);
 

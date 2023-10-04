@@ -185,7 +185,7 @@ public class ConditionalOrthogonalPolynomial3FactorTest {
             params.addTest(test);
         }
         ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
-        reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+        reportBuilder.createValidationReportAsStdout(checker, TITLE, true);
         assertTrue("results outside tolerance: " + TOLERANCE, checker.isSASDeviationBelowTolerance(TOLERANCE));
     }
 

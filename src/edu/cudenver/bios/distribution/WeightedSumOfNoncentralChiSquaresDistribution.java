@@ -255,6 +255,13 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 				U = findTruncationPoint(16 / sd, sigmaSquared, halfAccuracy, counter);
 			}
 		}
+
+
+
+		System.out.println("sd: " + sd);
+
+		System.out.println("mean: " + mean);
+		System.out.println("U: " + U);
 		
 		// Auxiliary integration loop
 		double numTermsMain = 0;
@@ -268,10 +275,12 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 			// of the range
 			double cutoff = findCutoffPoint(4.5 / sd, mean, sigmaSquared, halfAccuracy, counter);
 			double cutoffDiffUpper = cutoff - quantile;
+			System.out.println("cutoffDiffUpper: " + cutoffDiffUpper);
 			if (cutoffDiffUpper < 0) return 1; // requested quantile past range
 			// get the lower cutoff
 			cutoff = findCutoffPoint(-4.5 / sd, mean, sigmaSquared, halfAccuracy, counter);
 			double cutoffDiffLower = quantile - cutoff;
+			System.out.println("cutoffDiffLower: " + cutoffDiffLower);
 			if (cutoffDiffLower < 0) return 0;
 
 			// pick the larger potential integration interval
@@ -290,6 +299,7 @@ public class WeightedSumOfNoncentralChiSquaresDistribution
 
 				double integrationIntervalAux = U / numTermsAux;
 				integrationLimit = 2*Math.PI/integrationIntervalAux;
+				System.out.println("integrationLimit: " + integrationLimit);
 				if (integrationLimit <= Math.abs(quantile))
 				{
 					double lowerConvergenceFactor = calculateConvergenceFactor(quantile-integrationLimit, counter);

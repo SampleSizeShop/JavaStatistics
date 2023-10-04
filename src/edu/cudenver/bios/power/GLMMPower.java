@@ -297,4 +297,22 @@ public class GLMMPower extends Power implements Serializable
         return buffer.toString();
 
     }
+
+    @Override
+    public String toString() {
+        return "GLMMPower{" +
+                "betaScale=" + betaScale +
+                ", sigmaScale=" + sigmaScale +
+                ", test=" + test +
+                ", powerMethod=" + powerMethod +
+                ", quantile=" + quantile +
+                ", confidenceInterval=" + confidenceInterval +
+                ", errorMessage='" + errorMessage + '\'' +
+                ", errorCode=" + errorCode +
+                ", nominalPower=" + nominalPower +
+                ", actualPower=" + actualPower +
+                ", totalSampleSize=" + totalSampleSize +
+                ", alpha=" + alpha +
+                '}';
+    }
 }

@@ -1,0 +1,3 @@
+<powerList>
+    <glmmPower test='hlt' alpha='     0.05' nominalPower='             0.922469' actualPower='             0.922469' betaScale='        0' sigmaScale='        1' sampleSize='       45' powerMethod='conditional' />
+</powerList>

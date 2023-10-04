@@ -138,8 +138,10 @@ public class NonCentralFDistribution extends AbstractRealDistribution
      * @param denominatorDegreesOfFreedom
      * @param nonCentralityParameter
      */
-    public NonCentralFDistribution(double numeratorDegreesOfFreedom,
-            double denominatorDegreesOfFreedom, double nonCentralityParameter)
+    public NonCentralFDistribution(
+            double numeratorDegreesOfFreedom,
+            double denominatorDegreesOfFreedom,
+            double nonCentralityParameter)
     {
         super(null);
         ndf = numeratorDegreesOfFreedom;

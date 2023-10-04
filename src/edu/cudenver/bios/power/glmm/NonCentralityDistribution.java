@@ -151,10 +151,17 @@ public class NonCentralityDistribution
     /**
      * Pre-calculate intermediate matrices, perform setup, etc.
      */
-    private void initialize(Test test, RealMatrix FEssence, RealMatrix FtFinverse, int perGroupN,
-            FixedRandomMatrix CFixedRand, RealMatrix U,
-            RealMatrix thetaNull, RealMatrix beta,
-            RealMatrix sigmaError, RealMatrix sigmaG, boolean exact)
+    private void initialize(Test test,
+                            RealMatrix FEssence,
+                            RealMatrix FtFinverse,
+                            int perGroupN,
+                            FixedRandomMatrix CFixedRand,
+                            RealMatrix U,
+                            RealMatrix thetaNull,
+                            RealMatrix beta,
+                            RealMatrix sigmaError,
+                            RealMatrix sigmaG,
+                            boolean exact)
     throws PowerException {
         debug("entering initialize");
 
@@ -268,7 +275,13 @@ public class NonCentralityDistribution
             // TODO: NO: throw error if sStar != sEigenValues.length instead???
             double stddevG = Math.sqrt(sigmaG.getEntry(0, 0));
             RealMatrix svec = sEigenDecomp.getVT();
+            System.out.println("svec: " + svec);
+            System.out.println("FT1: " + FT1);
+            System.out.println("CGaussian: " + CGaussian);
+            System.out.println("stddevG: " + stddevG);
             mzSq = svec.multiply(FT1.transpose()).multiply(CGaussian).scalarMultiply(1/stddevG);
+            System.out.println("mzSq: " + mzSq);
+            System.out.println();
             for(int i = 0; i < mzSq.getRowDimension(); i++)
             {
                 for (int j = 0; j < mzSq.getColumnDimension(); j++)
@@ -372,6 +385,7 @@ public class NonCentralityDistribution
                     // non-central (delta = mz^2), 1 df, lambda = (b0 - kth eigen value of S)
                     nu = 1;
                     lambda = b0 - sEigenValues[k];
+                    System.out.println("mzSq: " + mzSq);
                     delta = mzSq.getEntry(k, 0);
                     chiSquareTerms.add(new ChiSquareTerm(lambda, nu, delta));
                 }
@@ -381,6 +395,7 @@ public class NonCentralityDistribution
                     // lambda = b0
                     nu = 1;
                     lambda = b0;
+                    System.out.println("mzSq: " + mzSq);
                     delta = mzSq.getEntry(k, 0);
                     chiSquareTerms.add(new ChiSquareTerm(lambda, nu, delta));
                 }
@@ -416,13 +431,20 @@ public class NonCentralityDistribution
                 if (lastPositiveNoncentrality >= 0 && lastNegativeNoncentrality == 0)
                 {
                     // handle special case: CGaussian = 0, s* = 1
-                    NonCentralFDistribution nonCentralFDist = new NonCentralFDistribution(Nstar, 1, lastPositiveNoncentrality);
+                    NonCentralFDistribution nonCentralFDist = new NonCentralFDistribution(
+                            Nstar,
+                            1,
+                            lastPositiveNoncentrality);
                     return nonCentralFDist.cdf(Fstar);
                 }
                 else if (lastPositiveNoncentrality == 0 && lastNegativeNoncentrality > 0)
                 {
                     // handle special case: CGaussian = 1
-                    NonCentralFDistribution nonCentralFDist = new NonCentralFDistribution(1, Nstar, lastNegativeNoncentrality);
+                    NonCentralFDistribution nonCentralFDist = new NonCentralFDistribution(
+                            1, Nstar, lastNegativeNoncentrality);
+                    System.out.println("Fstar:" + Fstar);
+                    System.out.println("Nstar:" + Nstar);
+                    System.out.println("lastNegativeNoncentrality:" + lastNegativeNoncentrality);
                     return 1 - nonCentralFDist.cdf(1/Fstar);
                 }
             }
@@ -492,6 +514,7 @@ public class NonCentralityDistribution
         RealMatrix sigmaStar = forceSymmetric(U.transpose().multiply(sigmaError).multiply(U));
         debug("U", U);
         debug("sigmaError", sigmaError);
+        debug("sigmaStar", sigmaStar);
         debug("sigmaStar = U transpose * sigmaError * U", sigmaStar);
 
         if (! MatrixUtils.isPositiveDefinite(sigmaStar)) {
@@ -540,7 +563,7 @@ public class NonCentralityDistribution
      * @param message The message.
      */
     private static void debug(Object message) {
-        LOGGER.debug(message);
+        System.out.println(message);
     }
 
     /**
@@ -551,7 +574,7 @@ public class NonCentralityDistribution
      * @param t       The throwable.
      */
     private static void debug(Object message, Throwable t) {
-        LOGGER.debug(message, t);
+        System.out.println(message.toString() + t.getMessage());
     }
 
     /**
@@ -562,6 +585,10 @@ public class NonCentralityDistribution
      * @param realMatrix The matrix.
      */
     private static void debug(String label, RealMatrix realMatrix) {
-        LOGGER.debug(MatrixUtilities.logMessageSupplier(label, realMatrix));
+        String msg = "null";
+        if (realMatrix != null) {
+            msg = realMatrix.toString();
+        }
+        System.out.println(label +  msg);
     }
 }

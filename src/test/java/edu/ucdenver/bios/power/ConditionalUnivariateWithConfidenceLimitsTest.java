@@ -59,7 +59,7 @@ public class ConditionalUnivariateWithConfidenceLimitsTest {
     @Before
     public void setUp() {
         List<GLMMPower> sasPowers = Utils.readSasPowers(DATA_FILE);
-        checker = new PowerChecker(sasPowers, false);
+        checker = new PowerChecker(sasPowers, true);
     }
 
     /**
@@ -78,10 +78,11 @@ public class ConditionalUnivariateWithConfidenceLimitsTest {
         params.addAlpha(0.01);
 
         // build beta matrix
-        double [][] beta = {{0},{1}};
+        double [][] beta = {{0},{0.75}};
         params.setBeta(new FixedRandomMatrix(beta, null, false));
         // add beta scale values from 0 to 0.75
         for(double betaScale = 0; betaScale < 0.76; betaScale += 0.01) params.addBetaScale(betaScale);
+//        params.addBetaScale(0.4);
 
         // build theta null matrix
         double [][] theta0 = {{0}};
@@ -123,7 +124,7 @@ public class ConditionalUnivariateWithConfidenceLimitsTest {
 
         // output the results
         ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
-        reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+        reportBuilder.createValidationReportAsStdout(checker, TITLE, true);
 
         assertTrue("results outside tolerance: " + TOLERANCE, checker.isSASDeviationBelowTolerance(TOLERANCE));
     }

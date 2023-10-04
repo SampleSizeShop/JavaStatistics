@@ -174,7 +174,7 @@ public abstract class GLMMTest
      * @param U
      * @param thetaNull
      */
-    public GLMMTest(FApproximation fMethod,
+    public  GLMMTest(FApproximation fMethod,
             RealMatrix X, RealMatrix XtXInverse, int rank, RealMatrix Y,
             RealMatrix C, RealMatrix U, RealMatrix thetaNull)
     {

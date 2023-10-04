@@ -5,12 +5,12 @@ REM
 echo =====================
 echo Starting replication of Table 2. 
 echo Please note that simulations from this table may take several hours to complete.
-java -cp "lib/edu.ucdenver.bios.javastatistics-UNKNOWN.jar;thirdparty/junit/4.7/lib/junit-4.7.jar;thirdparty/ApacheCommonsMath/3.0/lib/commons-math3-3.0.jar;thirdparty/jsc/1.0/lib/jsc.jar" edu.cudenver.bios.power.test.paper.PaperTable2TestSuite > tables2.out
+java -cp "lib/edu.ucdenver.bios.javastatistics-1.2.4.0.jar;thirdparty/junit/4.7/lib/junit-4.7.jar;thirdparty/ApacheCommonsMath/3.0/lib/commons-math3-3.0.jar;thirdparty/jsc/1.0/lib/jsc.jar" edu.cudenver.bios.power.test.paper.PaperTable2TestSuite > tables2.out
 echo Done replicating results from Table 2.  Please see tables2.out for results.
 echo =====================
 echo Starting replication of Table 3. 
 echo Please note that simulations from this table may take several hours to complete.
-java -cp "lib/edu.ucdenver.bios.javastatistics-UNKNOWN.jar;thirdparty/junit/4.7/lib/junit-4.7.jar;thirdparty/ApacheCommonsMath/3.0/lib/commons-math3-3.0.jar;thirdparty/jsc/1.0/lib/jsc.jar" edu.cudenver.bios.power.test.paper.PaperTable3TestSuite > tables3.out
+java -cp "lib/edu.ucdenver.bios.javastatistics-1.2.4.0.jar;thirdparty/junit/4.7/lib/junit-4.7.jar;thirdparty/ApacheCommonsMath/3.0/lib/commons-math3-3.0.jar;thirdparty/jsc/1.0/lib/jsc.jar" edu.cudenver.bios.power.test.paper.PaperTable3TestSuite > tables3.out
 echo Done replicating results from Table 3.  Please see tables3.out for results.
 
 REM

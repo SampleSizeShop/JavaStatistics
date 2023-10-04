@@ -134,7 +134,9 @@ File.separator + "TestConditionalMultivariateInteraction.xml";
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
-        
+        for (PowerChecker.Result result : checker.getResults()) {
+            System.out.println(result.toString());
+        }
 		assertTrue(checker.isSASDeviationBelowTolerance());
 		checker.reset();
     }

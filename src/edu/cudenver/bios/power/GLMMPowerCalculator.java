@@ -1586,14 +1586,16 @@ public class GLMMPowerCalculator implements PowerCalculator
             NonCentralityDistribution nonCentralityDist = null;
             if (method != PowerMethod.CONDITIONAL_POWER)
             {
-                nonCentralityDist = new NonCentralityDistribution(test,
+                nonCentralityDist = new NonCentralityDistribution(
+                        test,
                         params.getDesignEssence(),
                         params.getXtXInverse(),
                         sampleSize,
                         params.getBetweenSubjectContrast(),
                         params.getWithinSubjectContrast(),
                         params.getTheta(),
-                        scaledBeta, scaledSigmaError,
+                        scaledBeta,
+                        scaledSigmaError,
                         params.getSigmaGaussianRandom(),
                         params.isNonCentralityCDFExact());
             }

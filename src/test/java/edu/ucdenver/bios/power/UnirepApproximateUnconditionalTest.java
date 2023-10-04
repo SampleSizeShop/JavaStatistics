@@ -58,7 +58,7 @@ public class UnirepApproximateUnconditionalTest {
     @Before
     public void setUp() {
         List<GLMMPower> sasPowers = Utils.readSasPowers(DATA_FILE);
-        checker = new PowerChecker(sasPowers, false);
+        checker = new PowerChecker(sasPowers, true);
     }
 
     /**
@@ -110,7 +110,7 @@ public class UnirepApproximateUnconditionalTest {
         params50.clearBetaScaleList();
         params50.clearSampleSizeList();
         ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
-        reportBuilder.createValidationReportAsStdout(checker, TITLE, false);
+        reportBuilder.createValidationReportAsStdout(checker, TITLE, true);
         assertTrue("results outside tolerance: " + TOLERANCE, checker.isSASDeviationBelowTolerance(TOLERANCE));
     }
 

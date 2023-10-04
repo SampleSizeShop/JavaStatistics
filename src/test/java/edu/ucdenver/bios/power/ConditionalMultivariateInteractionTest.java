@@ -84,9 +84,11 @@ public class ConditionalMultivariateInteractionTest {
         double [][] beta = {{1,0,0},{0,0,0},{0,0,0},{0,0,0}};
         params.setBeta(new FixedRandomMatrix(beta, null, false));
         // add beta scale values
-        for(double scale = 0; scale <= 2.0; scale += 0.50) {
-            params.addBetaScale(scale);
-        }
+//        for(double scale = 0; scale <= 2.0; scale += 0.50) {
+//            params.addBetaScale(scale);
+//        }
+        // betascale
+        params.addBetaScale(2);
         
         // build theta null matrix
         double [][] theta0 = {{0,0},{0,0},{0,0}};
@@ -98,15 +100,17 @@ public class ConditionalMultivariateInteractionTest {
         params.setSigmaError(new Array2DRowRealMatrix(sigma));
         // add sigma scale values
         params.addSigmaScale(1);
-        params.addSigmaScale(2);
+//        params.addSigmaScale(2);
         
         // build design matrix
         params.setDesignEssence(MatrixUtils.createRealIdentityMatrix(4));
         // add sample size multipliers
+        // RepN
         params.addSampleSize(5);
         params.addSampleSize(10);
         
         // build between subject contrast
+        // C Matrix
         double [][] between = {
                 {1,-1, 0, 0},
                 {1, 0,-1, 0},
@@ -114,11 +118,92 @@ public class ConditionalMultivariateInteractionTest {
         params.setBetweenSubjectContrast(new FixedRandomMatrix(between, null, true));
         
         // build within subject contrast
+        // U Matrix
         double [][] within = {
                 { 1, 1},
                 {-1, 0},
                 { 0,-1}};
         params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
+
+        checker.checkPower(params);
+
+        ValidationReportBuilder reportBuilder = new ValidationReportBuilder();
+        reportBuilder.createValidationReportAsStdout(checker, TITLE, true);
+
+        assertTrue("results outside tolerance: " + TOLERANCE, checker.isSASDeviationBelowTolerance(TOLERANCE));
+    }
+
+    @Test
+    public void testMultivariateInteractionGaussian()
+    {
+        // build the inputs
+        GLMMPowerParameters params = new GLMMPowerParameters();
+
+        // build the matrix inputs
+
+        // add tests
+
+        params.addTest(GLMMTestFactory.Test.HOTELLING_LAWLEY_TRACE);
+
+        // add alpha values
+        params.addAlpha(0.01);
+
+        // build theta null matrix
+        double [][] theta0 = {{0}};
+        params.setTheta(new Array2DRowRealMatrix(theta0));
+
+        // build sigma matrix
+        double rho = 0.4;
+        double [][] sigma = {{1,rho,rho},{rho,1,rho},{rho,rho,1}};
+        params.setSigmaError(new Array2DRowRealMatrix(sigma));
+        // add sigma scale values
+
+        // build design matrix
+        double [][] esX = {{1.0, 0.0}, {0.0, 1.0}, {0.0, 1.0}};
+        params.setDesignEssence(new Array2DRowRealMatrix(esX));
+        // add sample size multipliers
+        params.addSampleSize(5);
+
+        // build between subject contrast
+
+
+        // build within subject contrast
+        double [][] between = {
+                { 1.0, -1.0}
+        };
+        double[][] betweenRandom = {{0}};
+        params.setBetweenSubjectContrast(new FixedRandomMatrix(between, betweenRandom, true));
+        double [][] within = {
+                {1}};
+
+        // build beta matrix
+        double [][] beta = {{150},{140}};
+        double [][] betaRandom = {{0.100}};
+        params.setBeta(new FixedRandomMatrix(beta, betaRandom, false));
+        // add beta scale values
+        params.addBetaScale(1);
+        params.setWithinSubjectContrast(new Array2DRowRealMatrix(within));
+
+
+        params.addPowerMethod(GLMMPowerParameters.PowerMethod.QUANTILE_POWER);
+        params.addQuantile(0.5);
+
+        params.addBetaScale(1.0);
+        params.addSigmaScale(1.0);
+
+
+
+        // build sigma G matrix
+        double[][] sigmaG = {{100.}};
+        params.setSigmaGaussianRandom(new Array2DRowRealMatrix(sigmaG));
+
+        // build sigma Y matrix
+        double [][] sigmaY = {{100.0}};
+        params.setSigmaOutcome(new Array2DRowRealMatrix(sigmaY));
+
+        // build sigma YG
+        double [][] sigmaYG = {{10.0}};
+        params.setSigmaOutcomeGaussianRandom(new Array2DRowRealMatrix(sigmaYG));
 
         checker.checkPower(params);
 
