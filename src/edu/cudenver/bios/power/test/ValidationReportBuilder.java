@@ -855,8 +855,8 @@ public class ValidationReportBuilder {
         System.out.println("===========================================");
         System.out.println("Total Calculation Time: " + ((double) timer.calculationMilliseconds / 1000));
         System.out.println("Mean Calculation Time: " + (((double) timer.calculationMilliseconds / 1000)/checkerResults.size()));
-        System.out.println("Total Simulation Time: " + ((double) timer.simulationMilliseconds / 1000));
-        System.out.println("Mean Simulation Time: " + (((double) timer.simulationMilliseconds / 1000)/checkerResults.size()));
+        System.out.println("Total Simulation Time: " + ((double) timer.simulationMilliseconds / (double) 1000));
+        System.out.println("Mean Simulation Time: " + (((double) timer.simulationMeanMilliseconds / (double) 1000)/checkerResults.size()));
         System.out.println("Max Deviation from Published: " + LongNumber.format(checker.getMaxSasDeviation()));
         System.out.println("Max Deviation from Simulation: " + LongNumber.format(checker.getMaxSimDeviation()));
         if (checker.getMaxSaslowerCIDeviation() >= 0 || checker.getMaxSasUpperCIDeviation() >=0)

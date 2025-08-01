@@ -89,6 +89,7 @@ public class PowerChecker
     {
         public long calculationMilliseconds;
         public long simulationMilliseconds;
+        public long simulationMeanMilliseconds;
 
         public Timer()
         {
@@ -99,6 +100,7 @@ public class PowerChecker
         {
             calculationMilliseconds = 0;
             simulationMilliseconds = 0;
+            simulationMeanMilliseconds = 0;
         }
 
         public void addCalculationTime(long time)
@@ -110,6 +112,8 @@ public class PowerChecker
         {
             simulationMilliseconds += time;
         }
+
+        public void addMeanSimulationTime(long time) { simulationMeanMilliseconds += time; }
     }
 
     /**
@@ -207,7 +211,7 @@ public class PowerChecker
     throws IllegalArgumentException
     {
         this.simulate = compareAgainstSimulation;
-        //this.simulate = false;
+        this.simulate = true;
         FileReader reader = null;
         // parse the sas xml file
         try
@@ -257,22 +261,33 @@ public class PowerChecker
         long calcTime = System.currentTimeMillis() - startTime;
         if (verbose) System.out.println("Done.  Elapsed time: " +  ((double) calcTime / (double) 1000) + " seconds");
         timer.addCalculationTime(calcTime);
-
+        int reps = 10000;
         // perform the simulation if requested
         List<Power> simResults = null;
         if (simulate)
         {
-            try {
-                if (verbose) System.out.println("Simulating power...");
-                startTime = System.currentTimeMillis();
+            long[] simList = new long[reps];
+            for (int i = 0; i < reps; i++) {
+                try {
+                    if (verbose) System.out.println("Simulating power...");
+                    startTime = System.currentTimeMillis();
 
-                simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
-                long simTime = System.currentTimeMillis() - startTime;
-                if (verbose) System.out.println("Done.  Elapsed time: " +  ((double) simTime / (double) 1000) + " seconds");
-                timer.addSimulationTime(simTime);
-            } catch (PowerException e) {
-                System.out.println("Simulation failed: " + e.getMessage());
+                    simResults = calc.getSimulatedPower(params, SIMULATION_SIZE);
+                    long simTime = System.currentTimeMillis() - startTime;
+                    if (verbose) System.out.println("Done.  Elapsed time: " +  ((double) simTime / (double) 1000) + " seconds");
+                    simList[i] = simTime;
+
+                } catch (PowerException e) {
+                    System.out.println("Simulation failed: " + e.getMessage());
+                }
             }
+            long sum = 0;
+            for (int i = 0; i < reps; i++)
+                sum = sum + simList[i];
+
+            timer.addMeanSimulationTime(sum/(long)reps);
+            timer.addSimulationTime(sum);
+
         }
 
         // simResults.forEach((result) -> System.out.println(result.toString()));
